@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WEBH2T — Tin học THPT song ngữ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#0F1C2E;
+    --ink-soft:#16233A;
+    --paper:#EFF3F1;
+    --paper-card:#FFFFFF;
+    --amber:#FFC845;
+    --teal:#2EC4B6;
+    --line: rgba(15,28,46,0.12);
+    --radius: 14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:'Be Vietnam Pro', sans-serif;
+    background:var(--paper);
+    color:var(--ink-soft);
+    line-height:1.55;
+  }
+  .mono{ font-family:'Space Grotesk', monospace; letter-spacing:.04em; }
+  a{color:inherit;}
+
+  /* ---------- Header ---------- */
+  header{
+    background:var(--ink);
+    color:#fff;
+    position:sticky; top:0; z-index:50;
+    border-bottom:3px solid var(--amber);
+  }
+  .nav-wrap{
+    max-width:1120px; margin:0 auto; padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between; gap:16px;
+    flex-wrap:wrap;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.15rem;}
+  .brand .dot{
+    width:10px; height:10px; border-radius:50%; background:var(--teal);
+    box-shadow:0 0 0 4px rgba(46,196,182,.25);
+  }
+  .brand small{ display:block; font-family:'Space Grotesk',monospace; font-size:.65rem; color:var(--amber); letter-spacing:.12em; font-weight:600;}
+  nav ul{ list-style:none; display:flex; gap:26px; flex-wrap:wrap;}
+  nav a{ text-decoration:none; font-size:.92rem; font-weight:500; color:#DCE4EE; transition:color .15s;}
+  nav a:hover, nav a:focus-visible{ color:var(--amber); outline:none;}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    background:
+      radial-gradient(circle at 85% 20%, rgba(46,196,182,.22), transparent 45%),
+      var(--ink);
+    color:#fff;
+    padding:72px 24px 56px;
+    position:relative; overflow:hidden;
+  }
+  .hero::before{
+    content:"01001001 01010100 01000111"; /* IT chữ nhị phân trang trí */
+    position:absolute; right:-30px; top:20px;
+    font-family:'Space Grotesk',monospace; font-size:1.4rem;
+    color:rgba(255,255,255,.06); letter-spacing:.3em; white-space:nowrap;
+    transform:rotate(6deg);
+  }
+  .hero-inner{ max-width:1120px; margin:0 auto; position:relative;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600;
+    color:var(--amber); letter-spacing:.14em; text-transform:uppercase;
+    border:1px solid rgba(255,200,69,.4); padding:6px 12px; border-radius:999px;
+    margin-bottom:20px;
+  }
+  h1{
+    font-size:clamp(1.9rem, 4vw, 3rem); font-weight:800; max-width:820px; line-height:1.18;
+  }
+  h1 .vi{ display:block; }
+  h1 .en{
+    display:block; font-family:'Space Grotesk',monospace; font-weight:500;
+    font-size:.5em; color:var(--teal); margin-top:10px; letter-spacing:.02em;
+  }
+  .hero p.sub{ max-width:620px; margin-top:20px; color:#B9C4D4; font-size:1.02rem;}
+  .hero-actions{ margin-top:32px; display:flex; gap:14px; flex-wrap:wrap;}
+  .btn{
+    display:inline-block; padding:13px 24px; border-radius:10px; font-weight:600;
+    text-decoration:none; font-size:.95rem; transition:transform .15s ease;
+  }
+  .btn:hover{ transform:translateY(-2px); }
+  .btn-primary{ background:var(--amber); color:var(--ink);}
+  .btn-ghost{ border:1px solid rgba(255,255,255,.3); color:#fff;}
+
+  /* ---------- Section shell ---------- */
+  section{ max-width:1120px; margin:0 auto; padding:64px 24px;}
+  .section-head{ display:flex; align-items:baseline; gap:12px; margin-bottom:28px; flex-wrap:wrap;}
+  .section-head .tag{
+    font-family:'Space Grotesk',monospace; font-size:.8rem; font-weight:600;
+    color:var(--teal); background:rgba(46,196,182,.1); padding:4px 10px; border-radius:6px;
+  }
+  .section-head h2{ font-size:1.55rem; font-weight:700; color:var(--ink);}
+  .section-head span.en{ font-family:'Space Grotesk',monospace; font-size:.85rem; color:#7C8AA0;}
+
+  /* ---------- Thời khóa biểu ---------- */
+  .tkb-card{
+    background:var(--paper-card); border-radius:var(--radius);
+    border:1px solid var(--line); overflow:hidden;
+    box-shadow:0 1px 3px rgba(15,28,46,.05);
+  }
+  table.tkb{ width:100%; border-collapse:collapse; font-size:.9rem;}
+  table.tkb th{
+    background:var(--ink); color:#fff; font-family:'Space Grotesk',monospace;
+    font-weight:600; font-size:.75rem; letter-spacing:.08em; text-transform:uppercase;
+    padding:12px 10px; text-align:left;
+  }
+  table.tkb td{ padding:12px 10px; border-top:1px solid var(--line); vertical-align:top;}
+  table.tkb tr:nth-child(even) td{ background:rgba(46,196,182,.04);}
+  .tag-class{
+    display:inline-block; font-family:'Space Grotesk',monospace; font-size:.72rem;
+    font-weight:600; background:var(--amber); color:var(--ink); padding:2px 8px; border-radius:5px;
+  }
+
+  /* ---------- Lesson cards ---------- */
+  .grid3{ display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:20px;}
+  .card{
+    background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:22px; transition:box-shadow .15s, transform .15s;
+  }
+  .card:hover{ box-shadow:0 10px 24px rgba(15,28,46,.08); transform:translateY(-3px);}
+  .card .num{ font-family:'Space Grotesk',monospace; color:var(--teal); font-weight:700; font-size:.8rem;}
+  .card h3{ margin-top:8px; font-size:1.05rem; color:var(--ink);}
+  .card p{ margin-top:8px; font-size:.88rem; color:#5B6B82;}
+  .card a.more{ display:inline-block; margin-top:14px; font-size:.85rem; font-weight:600; color:var(--ink); text-decoration:none; border-bottom:2px solid var(--amber);}
+
+  /* ---------- Năng lực số badges ---------- */
+  .badges{ display:flex; flex-wrap:wrap; gap:12px; }
+  .badge{
+    background:var(--ink); color:#fff; padding:10px 16px; border-radius:999px;
+    font-size:.83rem; display:flex; align-items:center; gap:8px;
+  }
+  .badge b{ color:var(--amber); font-family:'Space Grotesk',monospace;}
+
+  /* ---------- Donate ---------- */
+  .donate{
+    background:linear-gradient(135deg, var(--ink), #14283F);
+    border-radius:20px; color:#fff; padding:44px; display:flex; gap:36px;
+    align-items:center; flex-wrap:wrap;
+  }
+  .donate-text{ flex:1 1 320px;}
+  .donate-text h2{ font-size:1.4rem; margin-bottom:10px;}
+  .donate-text p{ color:#B9C4D4; font-size:.93rem; max-width:480px;}
+  .donate-qr{
+    background:#fff; padding:16px; border-radius:16px; text-align:center;
+    flex:0 0 auto; box-shadow:0 12px 30px rgba(0,0,0,.25);
+  }
+  .donate-qr img{ width:170px; height:170px; display:block; border-radius:6px;}
+  .donate-qr p{ font-family:'Space Grotesk',monospace; font-size:.72rem; color:var(--ink-soft); margin-top:8px;}
+  .donate-note{ margin-top:16px; font-size:.78rem; color:#8393A8;}
+
+  footer{
+    background:var(--ink); color:#8393A8; text-align:center; padding:28px 24px; font-size:.82rem;
+  }
+
+  @media (max-width:640px){
+    nav ul{ gap:14px; font-size:.85rem;}
+    section{ padding:48px 18px;}
+    .donate{ padding:28px;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="nav-wrap">
+    <div class="brand">
+      <span class="dot"></span>
+      <div>WEBH2T<small>TIN HỌC THPT · SONG NGỮ</small></div>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="#home">HOME</a></li>
+        <li><a href="#tkb">LỊCH HỌC</a></li>
+        <li><a href="#lesson">LESSON</a></li>
+        <li><a href="#practice">PRACTICE</a></li>
+        <li><a href="#exam">EXAM</a></li>
+        <li><a href="#donate">DONATE</a></li>
+      </ul>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <span class="eyebrow">● Tin học 10 · 11 · 12 — Năng lực số</span>
+    <h1>
+      <span class="vi">Học Tin học thời 4.0 —<br>song ngữ, thực hành, đúng năng lực số</span>
+      <span class="en">Learning Informatics the modern way — bilingual, practical, digitally competent</span>
+    </h1>
+    <p class="sub">Bài giảng, bài tập, đề kiểm tra và thời khóa biểu môn Tin học THPT, biên soạn theo chương trình GDPT 2018, tích hợp song ngữ Anh–Việt và khung năng lực số cho học sinh.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="#lesson">Xem bài giảng / Lessons</a>
+      <a class="btn btn-ghost" href="#exam">Nộp bài kiểm tra</a>
+    </div>
+  </div>
+</section>
+
+<section id="tkb">
+  <div class="section-head">
+    <span class="tag">SCHEDULE</span>
+    <h2>Thời khóa biểu môn Tin học</h2>
+    <span class="en">Weekly Timetable</span>
+  </div>
+  <div class="tkb-card">
+    <table class="tkb">
+      <tr><th>Thứ / Day</th><th>Tiết / Period</th><th>Lớp / Class</th><th>Nội dung / Content</th></tr>
+      <tr><td>Thứ 2</td><td>Tiết 3</td><td><span class="tag-class">TIN 10</span></td><td>Bài 1 — Thông tin và dữ liệu</td></tr>
+      <tr><td>Thứ 3</td><td>Tiết 5</td><td><span class="tag-class">TIN 11</span></td><td>Bài 2 — Thiết bị số thông minh</td></tr>
+      <tr><td>Thứ 5</td><td>Tiết 2</td><td><span class="tag-class">TIN 12</span></td><td>Bài 1 — Thiết bị và giao thức mạng</td></tr>
+      <tr><td>Thứ 6</td><td>Tiết 4</td><td><span class="tag-class">HSG</span></td><td>Ôn luyện học sinh giỏi</td></tr>
+    </table>
+  </div>
+</section>
+
+<section id="lesson">
+  <div class="section-head">
+    <span class="tag">LESSON</span>
+    <h2>Bài giảng theo khối</h2>
+    <span class="en">Lessons by grade</span>
+  </div>
+  <div class="grid3">
+    <div class="card">
+      <div class="num">GRADE 10</div>
+      <h3>Tin học 10</h3>
+      <p>Thông tin, dữ liệu và nhập môn năng lực số cho học sinh đầu cấp.</p>
+      <a class="more" href="https://sites.google.com/view/webh2t/bai_giang/tin-10">Xem bài giảng →</a>
+    </div>
+    <div class="card">
+      <div class="num">GRADE 11</div>
+      <h3>Tin học 11</h3>
+      <p>Kiến trúc máy tính, thiết bị số thông minh và hệ điều hành.</p>
+      <a class="more" href="https://sites.google.com/view/webh2t/bai_giang/tin11">Xem bài giảng →</a>
+    </div>
+    <div class="card">
+      <div class="num">GRADE 12</div>
+      <h3>Tin học 12</h3>
+      <p>Mạng máy tính, giao thức và chức năng mạng của hệ điều hành.</p>
+      <a class="more" href="https://sites.google.com/view/webh2t/bai_giang/t12">Xem bài giảng →</a>
+    </div>
+  </div>
+</section>
+
+<section id="practice">
+  <div class="section-head">
+    <span class="tag">DIGITAL COMPETENCE</span>
+    <h2>Khung năng lực số tích hợp</h2>
+    <span class="en">Digital competency framework</span>
+  </div>
+  <div class="badges">
+    <span class="badge"><b>01</b> Khai thác thông tin</span>
+    <span class="badge"><b>02</b> An toàn kỹ thuật số</span>
+    <span class="badge"><b>03</b> Giải quyết vấn đề</span>
+    <span class="badge"><b>04</b> Sáng tạo nội dung số</span>
+    <span class="badge"><b>05</b> Giao tiếp &amp; hợp tác</span>
+  </div>
+</section>
+
+<section id="donate">
+  <div class="donate">
+    <div class="donate-text">
+      <span class="eyebrow" style="margin-bottom:14px;">☕ Ủng hộ trang</span>
+      <h2>Đồng hành cùng WEBH2T</h2>
+      <p>Nếu tài liệu hữu ích cho việc dạy và học, bạn có thể ủng hộ để mình duy trì và cập nhật nội dung mới mỗi tuần. Mọi đóng góp đều được trân trọng.</p>
+      <p class="donate-note">Support the site — scan the QR code to make a small donation and help keep the lessons updated.</p>
+    </div>
+    <div class="donate-qr">
+      <!-- Thay link bên dưới bằng mã QR ngân hàng / VietQR / Momo thật của bạn -->
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https://www.buymeacoffee.com/webh2t" alt="QR code donate">
+      <p>QUÉT ĐỂ ỦNG HỘ</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  © 2026 WEBH2T · Tài liệu giáo dục Tin học THPT · Liên hệ: websiteh2t@gmail.com
+</footer>
+
+</body>
+</html>
