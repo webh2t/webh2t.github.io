@@ -74,6 +74,25 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
 
 @media(max-width:900px){.nav-wrap{padding:10px 16px}.menu-toggle{display:block}nav{display:none;width:100%}nav.open{display:block}nav>ul{flex-direction:column;align-items:stretch;gap:2px;padding-bottom:8px}nav a{padding:10px 12px}.dropdown-menu{position:static;display:none;box-shadow:none;border:0;background:#1a2a40;margin:0 8px}.dropdown:hover .dropdown-menu,.dropdown:focus-within .dropdown-menu{display:block;opacity:1;visibility:visible;transform:none}.dropdown-menu a{color:#dce4ee}.grade-grid{grid-template-columns:1fr 1fr}.knowledge-grid,.contact-grid{grid-template-columns:1fr}}
 @media(max-width:620px){.hero{padding:58px 0 46px}section{padding:48px 0}.container{width:min(100% - 24px,1160px)}.latest-card{flex-basis:84vw}.grade-grid{grid-template-columns:1fr}.book-cover{height:215px}.slider-btns{position:static;margin-top:-5px;margin-bottom:12px}.contact-grid{grid-template-columns:1fr}.donate{align-items:flex-start;flex-direction:column}.qr{align-self:center}.tkb th,.tkb td{font-size:.76rem;padding:9px}}
+
+/* CURRENT TIME BAR */
+.time-bar{background:#fff;border-bottom:1px solid rgba(15,28,46,.08);box-shadow:0 3px 12px rgba(15,28,46,.05);color:var(--ink);font:.78rem 'Space Grotesk'}
+.time-bar .container{min-height:38px;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}.time-dot{width:7px;height:7px;border-radius:50%;background:#18a999;box-shadow:0 0 0 4px rgba(46,196,182,.12)}#currentTime{font-weight:700}
+/* EXAMS */
+.exam-menu{background:#0d6efd!important;color:#fff!important;font-weight:800!important}.exam-menu:hover{background:#0b5ed7!important;color:#fff!important}.dropdown-menu.exam-dropdown{min-width:220px;border-top:3px solid #0d6efd}.dropdown-menu.exam-dropdown a{color:#0756b8!important;font-weight:700}.dropdown-menu.exam-dropdown a:hover{background:#eaf3ff!important;color:#064b9e!important}.dropdown-sub{position:relative}.dropdown-sub>a::after{content:'›';float:right;font-size:1.1em}.dropdown-menu.nested{left:calc(100% + 6px);top:-7px;min-width:210px;border-top:3px solid #e53935}.dropdown-menu.nested a{color:#d62828!important}.dropdown-menu.nested a:hover{background:#fff0f0!important;color:#b71c1c!important}
+/* SEARCH */
+.search-section{padding:26px 0 8px}.search-box{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px 10px 8px 15px;box-shadow:0 4px 14px rgba(15,28,46,.04)}.search-icon{font-size:1.1rem;color:#6d7d92}#siteSearch{flex:1;border:0;outline:0;background:transparent;color:var(--ink);font:500 .92rem 'Be Vietnam Pro';min-width:0}#siteSearch::placeholder{color:#9aa6b5}.search-clear{border:0;background:#eef3f8;color:#506078;border-radius:9px;padding:7px 10px;cursor:pointer;display:none}.search-clear.show{display:block}.search-status{min-height:22px;margin:8px 2px 0;color:#718097;font-size:.75rem}.search-hit{outline:3px solid rgba(255,200,69,.55);scroll-margin-top:100px}
+/* HERO BUTTONS */
+.hero-actions{gap:10px}.hero-actions .btn{font-size:.84rem;padding:11px 15px}.btn.blue{background:#0d6efd;color:#fff}.btn.red{background:#e53935;color:#fff}.btn.blue:hover{background:#0b5ed7}.btn.red:hover{background:#c62828}
+/* LATEST POSTS */
+.latest-scroller{padding:7px 3px 18px;scrollbar-width:none}.latest-scroller::-webkit-scrollbar{display:none}.latest-card{flex-basis:315px;box-shadow:0 8px 24px rgba(15,28,46,.07);transition:transform .2s,box-shadow .2s}.latest-card:hover{transform:translateY(-5px);box-shadow:0 16px 30px rgba(15,28,46,.12)}.thumb{height:175px;background-size:cover!important;background-position:center!important}.thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(6,16,28,.58))}.thumb b{font-size:1.15rem;text-shadow:0 2px 8px rgba(0,0,0,.25)}.post-body{min-height:164px;display:flex;flex-direction:column}.post-link{margin-top:auto;align-self:flex-start}.slider-btn{box-shadow:0 4px 12px rgba(15,28,46,.08)}.latest-progress{height:4px;background:#dfe6ee;border-radius:999px;margin-top:2px;overflow:hidden}.latest-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--amber));border-radius:inherit;transition:width .25s}
+/* TIMETABLE */
+.tkb th:nth-child(6),.tkb th:nth-child(7){min-width:170px}.tkb td:nth-child(6){color:#34445a}.check-time{font-weight:700;color:#0d6efd}
+/* STATS */
+.stats-section{padding:22px 0 55px}.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.stat-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 14px rgba(15,28,46,.04)}.stat-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:#eef6ff;color:#0d6efd;font-size:1.25rem}.stat-card strong{display:block;color:var(--ink);font:800 1.35rem 'Space Grotesk'}.stat-card span{display:block;color:#7a8799;font-size:.76rem;margin-top:2px}
+@media(max-width:900px){.dropdown-sub>a::after{content:'⌄'}.dropdown-menu.nested{position:static;margin:0 8px;display:none;background:#122943;border-left:3px solid #e53935}.dropdown-sub:hover .nested,.dropdown-sub:focus-within .nested{display:block}.dropdown-menu.exam-dropdown a{color:#cfe2ff!important}.dropdown-menu.nested a{color:#ffb2b2!important}.time-bar .container{padding:7px 16px;min-height:44px}.stats-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){.stats-grid{grid-template-columns:1fr}.latest-card{flex-basis:84vw}.slider-btns{position:static;margin:-8px 0 8px;justify-content:flex-end}}
+
 </style>
 </head>
 <body>
@@ -85,20 +104,29 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
       <ul>
         <li><a href="#home">HOME</a></li>
         <li><a href="#timetable">TIMETABLE</a></li>
-        <li class="dropdown">
-          <a href="#lessons">LESSONS</a>
+        <li class="dropdown"><a href="#lessons">LESSONS</a>
           <ul class="dropdown-menu">
-            <li><a href="tin10.html">TIN 10</a></li>
-            <li><a href="tin11.html">TIN 11</a></li>
-            <li><a href="tin12.html">TIN 12</a></li>
+            <li><a href="tin10.html">TIN 10</a></li><li><a href="tin11.html">TIN 11</a></li><li><a href="tin12.html">TIN 12</a></li>
           </ul>
         </li>
-        <li><a href="#knowledge">KNOWLEDGE</a></li>
-        <li><a href="#contact">CONTACT</a></li>
+        <li class="dropdown"><a class="exam-menu" href="exam.html">EXAMS</a>
+          <ul class="dropdown-menu exam-dropdown">
+            <li><a href="exam.html#question-bank">QUESTION BANK</a></li>
+            <li class="dropdown-sub"><a href="exam.html#submit">SUBMIT TEST</a>
+              <ul class="dropdown-menu nested">
+                <li><a href="exam.html#submit-10">SUBMIT TEST 10</a></li><li><a href="exam.html#submit-11">SUBMIT TEST 11</a></li><li><a href="exam.html#submit-12">SUBMIT TEST 12</a></li>
+              </ul>
+            </li>
+            <li><a href="exam.html#results">EXAM RESULTS</a></li>
+          </ul>
+        </li>
+        <li><a href="#knowledge">KNOWLEDGE</a></li><li><a href="#contact">CONTACT</a></li>
       </ul>
     </nav>
   </div>
 </header>
+
+<div class="time-bar" aria-live="polite"><div class="container"><span class="time-dot"></span><span id="currentTime">Đang cập nhật thời gian HCM…</span><span class="mono">GMT+7</span></div></div>
 
 <main>
 <section class="hero" id="home">
@@ -106,9 +134,14 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
     <span class="eyebrow">● TIN HỌC 10 · 11 · 12 · DIGITAL COMPETENCE</span>
     <h1><span>Học Tin học thời 4.0 — song ngữ, thực hành, đúng năng lực số</span><span class="en">Learning Informatics the modern way — bilingual, practical and digitally competent.</span></h1>
     <p>WEBH2T là không gian học tập dành cho Tin học THPT: bài giảng theo khối, kiến thức năng lực số, thời khóa biểu và các bài viết mới.</p>
-    <div class="hero-actions"><a class="btn primary" href="#lessons">Xem bài giảng</a><a class="btn ghost" href="#knowledge">Khám phá kiến thức</a></div>
+    <div class="hero-actions">
+      <a class="btn primary" href="#lessons">Xem bài giảng</a><a class="btn ghost" href="#knowledge">Khám phá kiến thức</a><a class="btn blue" href="exam.html#question-bank">Ngân hàng đề</a><a class="btn red" href="exam.html#submit-10">Nộp bài 10</a><a class="btn red" href="exam.html#submit-11">Nộp bài 11</a><a class="btn red" href="exam.html#submit-12">Nộp bài 12</a>
+    </div>
   </div>
 </section>
+
+<!-- SEARCH -->
+<section class="search-section" id="search"><div class="container"><div class="search-box"><span class="search-icon">⌕</span><input id="siteSearch" type="search" autocomplete="off" placeholder="Tìm kiếm bài giảng, kiến thức, đề kiểm tra…" aria-label="Tìm kiếm trên website"><button class="search-clear" id="searchClear" type="button">×</button></div><div class="search-status" id="searchStatus">Tìm nhanh nội dung đang có trên trang chủ.</div></div></section>
 
 <!-- 3. Bài viết mới nhất -->
 <section id="latest">
@@ -122,7 +155,7 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
       <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#3d2a16,#ffc845)"><b>Tin học 12</b></div><div class="post-body"><div class="post-meta">BÀI GIẢNG · TIN 12</div><h3>Tài liệu và bài học Tin học 12</h3><p>Ôn tập, kiến thức mạng và các chủ đề trọng tâm.</p><a class="post-link" href="tin12.html">Xem Tin 12 →</a></div></article>
       <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#26324b,#8c9bb8)"><b>Học tập hiệu quả</b></div><div class="post-body"><div class="post-meta">GÓC HỌC TẬP</div><h3>Mẹo học Tin học và thực hành kỹ năng số</h3><p>Gợi ý cách học, tự luyện và quản lý tài liệu.</p><a class="post-link" href="#knowledge">Xem thêm →</a></div></article>
       <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#14342e,#2ec4b6)"><b>Digital Skills</b></div><div class="post-body"><div class="post-meta">DIGITAL COMPETENCE</div><h3>Kỹ năng số an toàn cho học sinh THPT</h3><p>Những nguyên tắc cơ bản để học tập an toàn trên môi trường số.</p><a class="post-link" href="#knowledge">Đọc bài →</a></div></article>
-    </div>
+    </div><div class="latest-progress" aria-hidden="true"><span id="latestProgress"></span></div>
   </div>
 </section>
 
@@ -130,13 +163,13 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
 <section id="timetable">
   <div class="container">
     <div class="section-head"><span class="tag">TIMETABLE</span><h2>Thời khóa biểu tuần</h2><span class="en">Weekly teaching schedule</span></div>
-    <div class="tkb-card"><table class="tkb"><thead><tr><th>Ngày</th><th>Buổi</th><th>Tiết</th><th>Môn / Hoạt động</th><th>Lớp</th></tr></thead><tbody>
-      <tr><td>Thứ 2</td><td class="session">Sáng</td><td>1</td><td>Tin học</td><td><span class="class-tag">C5</span></td></tr>
-      <tr><td>Thứ 2</td><td class="session">Sáng</td><td>3</td><td>HĐTN2</td><td><span class="class-tag">B1</span></td></tr>
-      <tr><td>Thứ 3</td><td class="session">Sáng</td><td>2</td><td>Tin học</td><td><span class="class-tag">A2</span></td></tr>
-      <tr><td>Thứ 3</td><td class="session">Chiều</td><td>5</td><td>Tin học</td><td><span class="class-tag">B8</span></td></tr>
-      <tr><td>Thứ 7</td><td class="session">Sáng</td><td>2</td><td>Bồi dưỡng học sinh giỏi</td><td><span class="class-tag">HSG</span></td></tr>
-    </tbody></table></div>
+    <div class="tkb-card"><table class="tkb"><thead><tr><th>Ngày</th><th>Buổi</th><th>Tiết</th><th>Môn / Hoạt động</th><th>Lớp</th><th>Nội dung</th><th>Kiểm tra / Thời gian</th></tr></thead><tbody>
+<tr><td>Thứ 2</td><td class="session">Sáng</td><td>1</td><td>Tin học</td><td><span class="class-tag">C5</span></td><td>Giảng dạy theo kế hoạch tuần</td><td class="check-time">—</td></tr>
+<tr><td>Thứ 2</td><td class="session">Sáng</td><td>3</td><td>HĐTN2</td><td><span class="class-tag">B1</span></td><td>Hoạt động trải nghiệm</td><td class="check-time">—</td></tr>
+<tr><td>Thứ 3</td><td class="session">Sáng</td><td>2</td><td>Tin học</td><td><span class="class-tag">A2</span></td><td>Bài học và thực hành</td><td class="check-time">—</td></tr>
+<tr><td>Thứ 3</td><td class="session">Chiều</td><td>5</td><td>Tin học</td><td><span class="class-tag">B8</span></td><td>Bài học và thực hành</td><td class="check-time">—</td></tr>
+<tr><td>Thứ 7</td><td class="session">Sáng</td><td>2</td><td>Bồi dưỡng học sinh giỏi</td><td><span class="class-tag">HSG</span></td><td>Luyện tập chuyên sâu</td><td class="check-time">—</td></tr>
+</tbody></table></div>
   </div>
 </section>
 
@@ -168,7 +201,10 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
   </div>
 </section>
 
-<!-- 7. Contact + Donate -->
+<!-- 7. THỐNG KÊ -->
+<section class="stats-section" id="stats"><div class="container"><div class="stats-grid"><div class="stat-card"><div class="stat-icon">◉</div><div><strong id="viewCount">—</strong><span>Tổng số lượt xem</span></div></div><div class="stat-card"><div class="stat-icon">▤</div><div><strong id="postCount">0</strong><span>Tổng số bài viết</span></div></div></div></div></section>
+
+<!-- 8. Contact + Donate -->
 <section id="contact">
   <div class="container">
     <div class="section-head"><span class="tag">CONTACT</span><h2>Liên hệ & ủng hộ</h2><span class="en">Author · Contact · Donate</span></div>
@@ -184,24 +220,19 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
 <button class="to-top" id="toTop" aria-label="Lên đầu trang">↑</button>
 
 <script>
-// Mobile menu
-const menuToggle=document.getElementById('menuToggle');
-const mainNav=document.getElementById('mainNav');
-menuToggle.addEventListener('click',()=>{const open=mainNav.classList.toggle('open');menuToggle.setAttribute('aria-expanded',open?'true':'false')});
-mainNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mainNav.classList.remove('open');menuToggle.setAttribute('aria-expanded','false')}));
-
-// Latest-post horizontal slider
-const scroller=document.getElementById('latestScroller');
-document.getElementById('slidePrev').addEventListener('click',()=>scroller.scrollBy({left:-320,behavior:'smooth'}));
-document.getElementById('slideNext').addEventListener('click',()=>scroller.scrollBy({left:320,behavior:'smooth'}));
-let autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:316,behavior:'smooth'})},4500);
-scroller.addEventListener('mouseenter',()=>clearInterval(autoSlide));
-scroller.addEventListener('mouseleave',()=>{autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:316,behavior:'smooth'})},4500)});
-
+const menuToggle=document.getElementById('menuToggle'),mainNav=document.getElementById('mainNav');
+menuToggle.addEventListener('click',()=>{const open=mainNav.classList.toggle('open');menuToggle.setAttribute('aria-expanded',open?'true':'false')});mainNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mainNav.classList.remove('open');menuToggle.setAttribute('aria-expanded','false')}));
+// GMT+7 Ho Chi Minh time
+const currentTime=document.getElementById('currentTime'),weekdays=['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
+function updateHCMTime(){const now=new Date(),parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(now),get=k=>parts.find(x=>x.type===k)?.value||'',d=new Date(Date.UTC(+get('year'),+get('month')-1,+get('day')));currentTime.textContent=`Hôm nay: ${weekdays[d.getUTCDay()]}, ngày ${get('day')}/ ${get('month')}/ ${get('year')} – ${get('hour')}:${get('minute')}:${get('second')}`;}updateHCMTime();setInterval(updateHCMTime,1000);
+// Latest slider
+const scroller=document.getElementById('latestScroller'),progress=document.getElementById('latestProgress');function updateSliderProgress(){const max=scroller.scrollWidth-scroller.clientWidth;progress.style.width=(max<=0?100:Math.min(100,18+(scroller.scrollLeft/max)*82))+'%';}document.getElementById('slidePrev').addEventListener('click',()=>scroller.scrollBy({left:-330,behavior:'smooth'}));document.getElementById('slideNext').addEventListener('click',()=>scroller.scrollBy({left:330,behavior:'smooth'}));scroller.addEventListener('scroll',updateSliderProgress,{passive:true});let autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:325,behavior:'smooth'})},4800);scroller.addEventListener('mouseenter',()=>clearInterval(autoSlide));scroller.addEventListener('mouseleave',()=>{autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:325,behavior:'smooth'})},4800)});updateSliderProgress();
+// Search
+const search=document.getElementById('siteSearch'),clearSearch=document.getElementById('searchClear'),searchStatus=document.getElementById('searchStatus'),searchable=[...document.querySelectorAll('main section:not(.search-section)')];function runSearch(){const q=search.value.trim().toLowerCase();document.querySelectorAll('.search-hit').forEach(el=>el.classList.remove('search-hit'));clearSearch.classList.toggle('show',!!q);if(!q){searchStatus.textContent='Tìm nhanh nội dung đang có trên trang chủ.';return;}const hits=searchable.filter(el=>el.innerText.toLowerCase().includes(q));searchStatus.textContent=hits.length?`Tìm thấy ${hits.length} khu vực phù hợp với “${search.value.trim()}”.`:`Chưa tìm thấy nội dung phù hợp với “${search.value.trim()}”.`;if(hits[0]){hits[0].classList.add('search-hit');hits[0].scrollIntoView({behavior:'smooth',block:'start'});}}search.addEventListener('input',runSearch);clearSearch.addEventListener('click',()=>{search.value='';runSearch();search.focus()});
+// Statistics
+document.getElementById('postCount').textContent=document.querySelectorAll('.latest-card').length;const viewCount=document.getElementById('viewCount');fetch('https://api.countapi.xyz/hit/webh2t-github-io/views').then(r=>r.ok?r.json():Promise.reject()).then(data=>{viewCount.textContent=Number(data.value||0).toLocaleString('vi-VN')}).catch(()=>{viewCount.textContent='—'});
 // Back to top
-const toTop=document.getElementById('toTop');
-window.addEventListener('scroll',()=>toTop.classList.toggle('show',window.scrollY>450));
-toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
+const toTop=document.getElementById('toTop');window.addEventListener('scroll',()=>toTop.classList.toggle('show',window.scrollY>450));toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
 </script>
 </body>
 </html>
