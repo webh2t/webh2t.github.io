@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="description" content="WEBH2T - Website học Tin học THPT, bài giảng Tin 10, Tin 11, Tin 12, thời khóa biểu và kiến thức năng lực số.">
-<title>WEBH2T | Tin học THPT</title>
+<title>WEBH2T | Informatics Subject</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -93,6 +93,27 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
 @media(max-width:900px){.dropdown-sub>a::after{content:'⌄'}.dropdown-menu.nested{position:static;margin:0 8px;display:none;background:#122943;border-left:3px solid #e53935}.dropdown-sub:hover .nested,.dropdown-sub:focus-within .nested{display:block}.dropdown-menu.exam-dropdown a{color:#cfe2ff!important}.dropdown-menu.nested a{color:#ffb2b2!important}.time-bar .container{padding:7px 16px;min-height:44px}.stats-grid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.stats-grid{grid-template-columns:1fr}.latest-card{flex-basis:84vw}.slider-btns{position:static;margin:-8px 0 8px;justify-content:flex-end}}
 
+
+/* FINAL CUSTOMIZATION */
+:root{--purple:#7c3aed;--green-deep:#166534;--green-deep-hover:#14532d}
+.lessons-dropdown{border-top:3px solid var(--green-deep)}
+.lessons-dropdown a{background:var(--green-deep);color:#fff!important;font-weight:800!important}
+.lessons-dropdown a:hover{background:var(--green-deep-hover)!important;color:#fff!important}
+nav a.lessons-menu, .dropdown > a[href="#lessons"]{background:var(--purple)!important;color:#fff!important;font-weight:800!important}
+nav a.lessons-menu:hover, .dropdown > a[href="#lessons"]:hover{background:#6d28d9!important;color:#fff!important}
+.time-grid{display:grid!important;grid-template-columns:2fr 1fr;align-items:center;gap:14px;min-height:48px!important;text-align:left!important}
+.time-col{display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:hidden}
+.time-col #currentTime{overflow:hidden;text-overflow:ellipsis}
+.time-search{display:flex;align-items:center;gap:8px;background:#f5f7fa;border:1px solid rgba(15,28,46,.1);border-radius:10px;padding:4px 7px 4px 10px;min-width:0}
+.time-search #siteSearch{flex:1;border:0;outline:0;background:transparent;color:var(--ink);font:500 .78rem 'Be Vietnam Pro';min-width:0}
+.time-search #siteSearch::placeholder{color:#8a96a8}
+.time-search .search-icon{font-size:1rem;color:#6d7d92}
+.time-search .search-clear{border:0;background:#e6ebf1;color:#506078;border-radius:7px;padding:4px 8px;cursor:pointer;display:none}
+.time-search .search-clear.show{display:block}
+.purple{background:var(--purple)!important;color:#fff!important}.purple:hover{background:#6d28d9!important}
+.search-status{min-height:22px;margin:8px 2px 0;color:#718097;font-size:.75rem}
+@media(max-width:900px){.dropdown-menu.lessons-dropdown a{background:#14532d;color:#fff!important}.time-grid{grid-template-columns:1fr;gap:7px;padding:7px 16px}.time-col{white-space:normal}.time-search{width:100%}}
+@media(max-width:620px){.time-col{font-size:.7rem}.time-search #siteSearch{font-size:.75rem}}
 </style>
 </head>
 <body>
@@ -105,7 +126,7 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
         <li><a href="#home">HOME</a></li>
         <li><a href="#timetable">TIMETABLE</a></li>
         <li class="dropdown"><a href="#lessons">LESSONS</a>
-          <ul class="dropdown-menu">
+          <ul class="dropdown-menu lessons-dropdown">
             <li><a href="tin10.html">TIN 10</a></li><li><a href="tin11.html">TIN 11</a></li><li><a href="tin12.html">TIN 12</a></li>
           </ul>
         </li>
@@ -126,7 +147,7 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
   </div>
 </header>
 
-<div class="time-bar" aria-live="polite"><div class="container"><span class="time-dot"></span><span id="currentTime">Đang cập nhật thời gian HCM…</span><span class="mono">GMT+7</span></div></div>
+<div class="time-bar" aria-live="polite"><div class="container time-grid"><div class="time-col"><span class="time-dot"></span><span id="currentTime">Đang cập nhật thời gian HCM…</span><span class="mono">GMT+7</span></div><div class="time-search"><span class="search-icon">⌕</span><input id="siteSearch" type="search" autocomplete="off" placeholder="Tìm kiếm bài giảng, kiến thức, đề kiểm tra…" aria-label="Tìm kiếm trên website"><button class="search-clear" id="searchClear" type="button">×</button></div></div></div>
 
 <main>
 <section class="hero" id="home">
@@ -135,13 +156,11 @@ footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;f
     <h1><span>Học Tin học thời 4.0 — song ngữ, thực hành, đúng năng lực số</span><span class="en">Learning Informatics the modern way — bilingual, practical and digitally competent.</span></h1>
     <p>WEBH2T là không gian học tập dành cho Tin học THPT: bài giảng theo khối, kiến thức năng lực số, thời khóa biểu và các bài viết mới.</p>
     <div class="hero-actions">
-      <a class="btn primary" href="#lessons">Xem bài giảng</a><a class="btn ghost" href="#knowledge">Khám phá kiến thức</a><a class="btn blue" href="exam.html#question-bank">Ngân hàng đề</a><a class="btn red" href="exam.html#submit-10">Nộp bài 10</a><a class="btn red" href="exam.html#submit-11">Nộp bài 11</a><a class="btn red" href="exam.html#submit-12">Nộp bài 12</a>
+      <a class="btn primary" href="#lessons">Xem bài giảng</a><a class="btn purple" href="#knowledge">Khám phá kiến thức</a><a class="btn blue" href="exam.html#question-bank">Ngân hàng đề</a><a class="btn red" href="exam.html#submit-10">Nộp bài 10</a><a class="btn red" href="exam.html#submit-11">Nộp bài 11</a><a class="btn red" href="exam.html#submit-12">Nộp bài 12</a>
     </div>
   </div>
 </section>
 
-<!-- SEARCH -->
-<section class="search-section" id="search"><div class="container"><div class="search-box"><span class="search-icon">⌕</span><input id="siteSearch" type="search" autocomplete="off" placeholder="Tìm kiếm bài giảng, kiến thức, đề kiểm tra…" aria-label="Tìm kiếm trên website"><button class="search-clear" id="searchClear" type="button">×</button></div><div class="search-status" id="searchStatus">Tìm nhanh nội dung đang có trên trang chủ.</div></div></section>
 
 <!-- 3. Bài viết mới nhất -->
 <section id="latest">
@@ -228,7 +247,7 @@ function updateHCMTime(){const now=new Date(),parts=new Intl.DateTimeFormat('en-
 // Latest slider
 const scroller=document.getElementById('latestScroller'),progress=document.getElementById('latestProgress');function updateSliderProgress(){const max=scroller.scrollWidth-scroller.clientWidth;progress.style.width=(max<=0?100:Math.min(100,18+(scroller.scrollLeft/max)*82))+'%';}document.getElementById('slidePrev').addEventListener('click',()=>scroller.scrollBy({left:-330,behavior:'smooth'}));document.getElementById('slideNext').addEventListener('click',()=>scroller.scrollBy({left:330,behavior:'smooth'}));scroller.addEventListener('scroll',updateSliderProgress,{passive:true});let autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:325,behavior:'smooth'})},4800);scroller.addEventListener('mouseenter',()=>clearInterval(autoSlide));scroller.addEventListener('mouseleave',()=>{autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:325,behavior:'smooth'})},4800)});updateSliderProgress();
 // Search
-const search=document.getElementById('siteSearch'),clearSearch=document.getElementById('searchClear'),searchStatus=document.getElementById('searchStatus'),searchable=[...document.querySelectorAll('main section:not(.search-section)')];function runSearch(){const q=search.value.trim().toLowerCase();document.querySelectorAll('.search-hit').forEach(el=>el.classList.remove('search-hit'));clearSearch.classList.toggle('show',!!q);if(!q){searchStatus.textContent='Tìm nhanh nội dung đang có trên trang chủ.';return;}const hits=searchable.filter(el=>el.innerText.toLowerCase().includes(q));searchStatus.textContent=hits.length?`Tìm thấy ${hits.length} khu vực phù hợp với “${search.value.trim()}”.`:`Chưa tìm thấy nội dung phù hợp với “${search.value.trim()}”.`;if(hits[0]){hits[0].classList.add('search-hit');hits[0].scrollIntoView({behavior:'smooth',block:'start'});}}search.addEventListener('input',runSearch);clearSearch.addEventListener('click',()=>{search.value='';runSearch();search.focus()});
+const search=document.getElementById('siteSearch'),clearSearch=document.getElementById('searchClear'),searchable=[...document.querySelectorAll('main section')];function runSearch(){const q=search.value.trim().toLowerCase();document.querySelectorAll('.search-hit').forEach(el=>el.classList.remove('search-hit'));clearSearch.classList.toggle('show',!!q);if(!q)return;const hits=searchable.filter(el=>el.innerText.toLowerCase().includes(q));if(hits[0]){hits[0].classList.add('search-hit');hits[0].scrollIntoView({behavior:'smooth',block:'start'});}}search.addEventListener('input',runSearch);clearSearch.addEventListener('click',()=>{search.value='';runSearch();search.focus()});
 // Statistics
 document.getElementById('postCount').textContent=document.querySelectorAll('.latest-card').length;const viewCount=document.getElementById('viewCount');fetch('https://api.countapi.xyz/hit/webh2t-github-io/views').then(r=>r.ok?r.json():Promise.reject()).then(data=>{viewCount.textContent=Number(data.value||0).toLocaleString('vi-VN')}).catch(()=>{viewCount.textContent='—'});
 // Back to top
