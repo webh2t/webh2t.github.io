@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>WEBH2T | Tin học 11 | Informatics Subject</title>
+<title>WEBH2T | Informatics Subject</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -88,6 +88,15 @@
                             background:rgba(46,196,182,.12); color:var(--teal); padding:3px 9px; border-radius:6px;}
   .detail-meta .views, .detail-meta .date{ font-size:.78rem; color:#7C8AA0; font-family:'Space Grotesk',monospace;}
   .detail-title{ font-size:1.25rem; font-weight:700; color:var(--ink); margin:8px 0 16px;}
+  .detail-title .title-vi{display:inline;}
+  .detail-title .title-en{font-size:.9rem; font-weight:600; color:#7C8AA0; font-style:italic; margin-left:8px;}
+  .lesson-donate{ margin:28px 0 24px; padding:18px 20px; border:1px solid rgba(124,58,237,.18); border-radius:16px; background:linear-gradient(135deg,#faf7ff,#fff); display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;}
+  .lesson-donate-copy{flex:1 1 300px;}
+  .lesson-donate-copy h4{font-size:1rem; color:#5b21b6; margin-bottom:5px;}
+  .lesson-donate-copy p{font-size:.84rem; color:#667085; margin:0;}
+  .lesson-donate-qr{background:#fff; padding:8px; border-radius:12px; border:1px solid var(--line); text-align:center;}
+  .lesson-donate-qr img{width:120px; height:120px; display:block; object-fit:contain; background:#fff;}
+  .lesson-donate-qr small{display:block; margin-top:5px; color:#7C8AA0; font-size:.68rem; font-weight:700; letter-spacing:.05em;}
   .detail-text{ color:#3D4C63; font-size:.95rem; margin-bottom:18px;}
   .detail-text p{ margin-bottom:10px;}
   .detail-text ul, .detail-text ol{ margin:10px 0 10px 22px;}
@@ -108,11 +117,13 @@
   .detail-text details.answer-box summary::before{ content:"▸ "; }
   .detail-text details.answer-box[open] summary::before{ content:"▾ "; }
   .detail-text details.answer-box .answer-content{ margin-top:8px; color:#3D4C63; font-size:.88rem;}
-  .lesson-figure img{ width:100%; max-height:520px; object-fit:contain; background:var(--paper);
-    border-radius:12px; border:1px solid var(--line); margin-bottom:18px; display:block;}
+  .lesson-figure{ margin:18px 0; padding:0; }
+  .lesson-figure img{ width:100%; max-height:520px; object-fit:contain; background:#fff;
+    border-radius:12px; border:1px solid rgba(15,28,46,.08); padding:10px; margin-bottom:8px; display:block; box-shadow:0 2px 8px rgba(15,28,46,.04);}
+  .lesson-figure figcaption{ color:#7C8AA0; font-size:.82rem; text-align:center; margin-top:4px;}
   .two-col{ display:flex; gap:20px; align-items:flex-start; margin:16px 0; flex-wrap:wrap;}
-  .two-col img{ width:280px; max-width:100%; object-fit:contain; background:var(--paper);
-    border-radius:10px; border:1px solid var(--line); flex-shrink:0;}
+  .two-col img{ width:280px; max-width:100%; object-fit:contain; background:#fff;
+    border-radius:10px; border:1px solid rgba(15,28,46,.08); padding:10px; box-shadow:0 2px 8px rgba(15,28,46,.04); flex-shrink:0;}
   .two-col .two-col-text{ flex:1 1 260px; min-width:220px;}
   .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
@@ -223,6 +234,147 @@
 .site-nav .lesson-link{background:#166534;color:#fff}.site-nav .lesson-link:hover{background:#14532d;color:#fff}
 .site-nav .exam{background:#0d6efd;color:#fff}.site-nav .exam:hover{background:#0b5ed7;color:#fff}
 @media(max-width:640px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}}
+  @media(max-width:640px){.detail-title .title-en{display:block;margin:4px 0 0;}.lesson-donate{align-items:flex-start;}}
+
+  /* ======================================================
+     ẢNH TIN 11 — khung trắng đồng nhất, không méo ảnh
+     Áp dụng cho ảnh bài học, ảnh liên quan và slideshow.
+     ====================================================== */
+  .lesson-figure{
+    width:100%;
+    margin:18px 0;
+    padding:12px;
+    background:#fff;
+    border:1px solid #e6e9ee;
+    border-radius:12px;
+    box-sizing:border-box;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    overflow:hidden;
+  }
+  .lesson-figure img{
+    display:block;
+    width:auto;
+    max-width:100%;
+    height:auto;
+    max-height:620px;
+    object-fit:contain;
+    object-position:center;
+    background:#fff;
+    border-radius:6px;
+    margin:0 auto;
+  }
+
+  /* Ảnh nằm trực tiếp trong nội dung bài */
+  .detail-text img{
+    display:block;
+    width:auto;
+    max-width:100%;
+    height:auto;
+    max-height:620px;
+    object-fit:contain;
+    object-position:center;
+    margin:16px auto;
+    padding:10px;
+    background:#fff;
+    border:1px solid #e6e9ee;
+    border-radius:12px;
+    box-sizing:border-box;
+  }
+
+  /* Khối 2 cột có ảnh */
+  .two-col img{
+    width:100%;
+    height:auto;
+    max-height:520px;
+    object-fit:contain;
+    object-position:center;
+    background:#fff;
+    border:1px solid #e6e9ee;
+    border-radius:12px;
+    padding:10px;
+    box-sizing:border-box;
+  }
+
+  /* Ảnh trong Related Lessons */
+  .related-card .thumb{
+    width:100%;
+    height:180px;
+    object-fit:contain;
+    object-position:center;
+    display:block;
+    background:#fff;
+    border:1px solid #e6e9ee;
+    border-radius:10px 10px 0 0;
+    padding:8px;
+    box-sizing:border-box;
+  }
+
+  /* Latest Lessons: luôn giữ một khung thống nhất,
+     ảnh ngang/dọc đều được co vừa khung, KHÔNG crop */
+  .slideshow{
+    background:#fff;
+  }
+  .slide{
+    background:#fff;
+  }
+  .slide img{
+    width:100%;
+    height:380px;
+    object-fit:contain;
+    object-position:center;
+    display:block;
+    background:#fff;
+    padding:12px;
+    box-sizing:border-box;
+  }
+
+  @media (max-width: 768px){
+    .slide img{
+      height:260px;
+      padding:8px;
+    }
+    .lesson-figure{
+      padding:8px;
+      margin:14px 0;
+    }
+    .lesson-figure img,
+    .detail-text img{
+      max-height:480px;
+    }
+    .two-col img{
+      max-height:420px;
+      padding:8px;
+    }
+    .related-card .thumb{
+      height:150px;
+      padding:6px;
+    }
+  }
+
+  @media (max-width: 480px){
+    .slide img{
+      height:210px;
+      padding:6px;
+    }
+    .lesson-figure{
+      padding:6px;
+      border-radius:10px;
+    }
+    .lesson-figure img,
+    .detail-text img{
+      max-height:360px;
+    }
+    .two-col img{
+      max-height:340px;
+      padding:6px;
+    }
+    .related-card .thumb{
+      height:125px;
+    }
+  }
+
 </style>
 </head>
 <body>
@@ -282,6 +434,17 @@
         <div class="detail-text" id="d-text"></div>
         <div id="d-video"></div>
         <div id="d-doc"></div>
+
+        <div class="lesson-donate" aria-label="Ủng hộ tác giả">
+          <div class="lesson-donate-copy">
+            <h4>☕ Ủng hộ tác giả một ly cà phê</h4>
+            <p>Nếu bài học hữu ích, bạn có thể quét mã QR để ủng hộ chi phí duy trì và cập nhật nội dung cho WEBH2T.</p>
+          </div>
+          <div class="lesson-donate-qr">
+            <img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=https%3A%2F%2Fwww.buymeacoffee.com%2Fwebh2t" alt="QR code ủng hộ tác giả">
+            <small>SCAN TO DONATE</small>
+          </div>
+        </div>
 
         <div class="comments-section">
           <h4 id="comments-heading">Bình luận</h4>
@@ -569,14 +732,7 @@ const LESSON_CONTENT = {
   },
   2: {
     ngay: "26/08/2026",
-    text: `<p class="lesson-en">Lesson 2: Operating System Practice</p>
-
-<figure class="lesson-figure">
-  <img src="assets/tin11/21.jpg" alt="Tóm tắt kiến thức Bài 2">
-  <figcaption style="text-align:center; color:#7C8AA0; font-size:.82rem; margin-top:-10px;">Tóm tắt kiến thức</figcaption>
-</figure>
-
-<div class="activity-box">
+    text: `<div class="activity-box">
 <p><strong>KHỞI ĐỘNG</strong></p>
 <p>Các thiết bị di động thực tế cũng là máy tính cá nhân. Hệ điều hành của các loại máy tính cá nhân có nhiều lợi ích khác nhau nhưng giao diện người dùng có nhiều điểm tương đồng. <strong>Em hãy chỉ ra một vài điểm tương đồng đó.</strong></p>
 </div>
@@ -725,6 +881,9 @@ renderTopViewed();
    HIỂN THỊ CHI TIẾT BÀI HỌC
    ====================================================== */
 let currentLessonId = null;
+const LESSON_EN_TITLES = {
+  2: "Lesson 2: Operating System Practice"
+};
 
 function showLesson(id) {
   currentLessonId = id;
@@ -737,11 +896,11 @@ function showLesson(id) {
 
   document.getElementById('d-chude').textContent = CHUDE_NAMES[bai.chude];
   document.getElementById('d-date').textContent = `📅 ${content.ngay || '—'}`;
-  document.getElementById('d-title').textContent = `Bài ${bai.id}. ${bai.ten}`;
+  document.getElementById('d-title').innerHTML = `<span class="title-vi">Bài ${bai.id}. ${bai.ten}</span>${LESSON_EN_TITLES[id] ? `<span class="title-en">— ${LESSON_EN_TITLES[id]}</span>` : ''}`;
   document.getElementById('d-text').innerHTML = content.text;
 
   document.getElementById('d-image').innerHTML = content.img
-    ? `<figure class="lesson-figure"><img src="${content.img}" alt="${bai.ten}"></figure>` : '';
+    ? `<figure class="lesson-figure"><img src="${content.img}" alt="${bai.ten}" loading="lazy" decoding="async"></figure>` : '';
 
   document.getElementById('d-video').innerHTML = content.video
     ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${content.video}"
@@ -756,7 +915,7 @@ function showLesson(id) {
   document.getElementById('d-related').innerHTML = related.map(b => {
     const rc = LESSON_CONTENT[b.id];
     const thumb = rc && rc.img
-      ? `<img class="thumb" src="${rc.img}" alt="${b.ten}">`
+      ? `<img class="thumb" src="${rc.img}" alt="${b.ten}" loading="lazy" decoding="async">`
       : `<div class="thumb-placeholder">Bài ${b.id}</div>`;
     return `<a href="#" class="related-card" onclick="showLesson(${b.id}); return false;">
       ${thumb}
@@ -882,7 +1041,7 @@ if (slideCount === 0) {
     const c = LESSON_CONTENT[b.id];
     const img = c.img || 'assets/tin11/tin11-sgk.jpg';
     return `<div class="slide" onclick="showLesson(${b.id})">
-      <img src="${img}" alt="${b.ten}">
+      <img src="${img}" alt="${b.ten}" decoding="async">
       <div class="caption"><span class="tag">${c.ngay || ''}</span><br>Bài ${b.id}. ${b.ten}</div>
     </div>`;
   }).join('');
