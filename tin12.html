@@ -3,35 +3,716 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="WEBH2T - Trang bài giảng Tin học 12, tài liệu, bài tập và kiểm tra.">
 <title>WEBH2T | Tin học 12 | Informatics Subject</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#0F1C2E;--ink-soft:#16233A;--paper:#EFF3F1;--paper-card:#FFFFFF;--amber:#FFC845;--teal:#2EC4B6;--purple:#7C3AED;--green:#166534;--red:#E53935;--line:rgba(15,28,46,.12);--radius:14px}
-*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Be Vietnam Pro',sans-serif;background:var(--paper);color:var(--ink-soft);line-height:1.6}a{color:inherit}header{background:var(--ink);color:#fff;padding:16px 24px;border-bottom:3px solid var(--amber);position:sticky;top:0;z-index:50}header .wrap{max-width:1120px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}header a.back{color:#DCE4EE;text-decoration:none;font-size:.9rem}header a.back:hover{color:var(--amber)}
-.site-nav{background:var(--ink);border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08)}.site-nav .nav-inner{max-width:1120px;margin:auto;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;padding:7px 24px}.site-nav a{display:block;padding:9px 12px;border-radius:9px;color:#dce4ee;text-decoration:none;font-size:.78rem;font-weight:700}.site-nav a:hover{background:rgba(255,255,255,.08);color:var(--amber)}.site-nav .lessons{background:var(--purple);color:#fff}.site-nav .lessons:hover{background:#6d28d9;color:#fff}.site-nav .lesson-link{background:var(--green);color:#fff}.site-nav .lesson-link:hover{background:#14532d;color:#fff}.site-nav .exam{background:#0d6efd;color:#fff}.site-nav .exam:hover{background:#0b5ed7;color:#fff}
-main{max-width:1120px;margin:0 auto;padding:40px 24px 80px}.eyebrow{font-family:'Space Grotesk',monospace;font-size:.75rem;font-weight:600;color:var(--teal);letter-spacing:.12em;text-transform:uppercase}h1{font-size:2rem;font-weight:800;color:var(--ink);margin-top:8px}p.sub{margin-top:10px;color:#5B6B82;max-width:760px}section.block{margin-top:56px}.block-title{font-size:1.35rem;font-weight:700;color:var(--ink);margin:6px 0 20px}
-.hero-card{margin-top:22px;background:linear-gradient(145deg,var(--ink),#193550);border-radius:var(--radius);padding:28px;color:#fff;box-shadow:0 10px 28px rgba(15,28,46,.12)}.hero-card h2{font-size:1.25rem}.hero-card p{margin-top:8px;color:#c5cfdb;font-size:.9rem}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 15px;border-radius:9px;font-weight:800;text-decoration:none;font-size:.82rem}.primary{background:var(--amber);color:var(--ink)}.purple{background:var(--purple);color:#fff}.green{background:var(--green);color:#fff}.blue{background:#0d6efd;color:#fff}.red{background:var(--red);color:#fff}
-.book-panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;box-shadow:0 8px 22px rgba(15,28,46,.06)}.book-panel img{width:100%;height:300px;object-fit:cover;display:block;background:linear-gradient(135deg,#18304a,#2ec4b6)}.book-caption{padding:15px 18px;color:#53637a;font-size:.85rem}
-.update-box{background:#fff;border:1px dashed var(--line);border-radius:var(--radius);padding:22px;color:#526178}.update-box strong{color:var(--ink)}.lesson-placeholder{margin-top:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.placeholder-card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}.placeholder-card .num{font:800 .72rem 'Space Grotesk';color:var(--teal)}.placeholder-card h3{margin-top:5px;color:var(--ink);font-size:1rem}.placeholder-card p{margin-top:5px;color:#7b8899;font-size:.8rem}
-.resource-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.resource{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px}.resource h3{font-size:.98rem;color:var(--ink)}.resource p{margin-top:6px;color:#748196;font-size:.82rem}
-footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:26px 16px;font-size:.82rem}footer strong{color:#fff}footer a{color:#fff;font-weight:700}
-@media(max-width:760px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}.lesson-placeholder,.resource-grid{grid-template-columns:1fr}main{padding:32px 16px 60px}}
-</style></head><body>
-<header><div class="wrap"><strong>WEBH2T+</strong><a class="back" href="index.html">← Về trang chủ / Back to Home</a></div></header>
-<nav class="site-nav" aria-label="Điều hướng website"><div class="nav-inner">
-<a href="index.html">HOME</a><a href="index.html#timetable">TIMETABLE</a><a class="lessons" href="index.html#lessons">LESSONS</a><a class="lesson-link" href="tin10.html">TIN 10</a><a class="lesson-link" href="tin11.html">TIN 11</a><a class="lesson-link" href="tin12.html">TIN 12</a><a class="exam" href="exam.html">EXAMS</a><a href="index.html#knowledge">KNOWLEDGE</a><a href="index.html#contact">CONTACT</a>
-</div></nav>
+  :root{
+    --ink:#0F1C2E; --ink-soft:#16233A; --paper:#EFF3F1; --paper-card:#FFFFFF;
+    --amber:#FFC845; --teal:#2EC4B6; --line: rgba(15,28,46,0.12); --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ font-family:'Be Vietnam Pro',sans-serif; background:var(--paper); color:var(--ink-soft);}
+  a{color:inherit;}
+
+  /* ---------- Header ---------- */
+  header{ background:var(--ink); color:#fff; padding:16px 24px; border-bottom:3px solid var(--amber);
+          position:sticky; top:0; z-index:50;}
+  header .wrap{ max-width:1120px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;}
+  header a.back{ color:#DCE4EE; text-decoration:none; font-size:.9rem;}
+  header a.back:hover{ color:var(--amber);}
+  main{ max-width:1120px; margin:0 auto; padding:40px 24px 80px;}
+
+  .eyebrow{ font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600; color:var(--teal); letter-spacing:.12em; text-transform:uppercase;}
+  h1{ font-size:2rem; font-weight:800; color:var(--ink); margin-top:8px;}
+  .grade-hero{ text-align:center; margin:8px 0 32px;}
+  .grade-hero h1{ font-size:clamp(2.2rem, 5vw, 3.4rem); font-weight:800; color:var(--teal);
+                  letter-spacing:.01em; margin:0; text-transform:none;}
+  p.sub{ margin-top:10px; color:#5B6B82; max-width:640px;}
+  section.block{ margin-top:56px;}
+  .block-title{ font-size:1.35rem; font-weight:700; color:var(--teal); margin:6px 0 20px;}
+
+  /* ---------- Khối 1: Slideshow ---------- */
+  .slideshow{ position:relative; border-radius:var(--radius); overflow:hidden; background:var(--ink);
+              box-shadow:0 10px 28px rgba(15,28,46,.12);}
+  .slides-track{ display:flex; transition:transform .45s ease;}
+  .slide{ min-width:100%; position:relative; cursor:pointer;}
+  .slide img{ width:100%; height:380px; object-fit:cover; display:block;}
+  .slide .caption{ position:absolute; left:0; bottom:0; right:0;
+                    background:linear-gradient(0deg, rgba(15,28,46,.85), transparent);
+                    color:#fff; padding:16px 20px; font-size:.9rem;}
+  .slide .caption .tag{ display:inline-block; font-family:'Space Grotesk',monospace; font-size:.7rem;
+                         color:var(--amber); margin-bottom:4px;}
+  .slide-empty{ min-width:100%; height:200px; display:flex; align-items:center; justify-content:center;
+                color:#7C8AA0; font-size:.9rem;}
+  .slide-btn{ position:absolute; top:50%; transform:translateY(-50%);
+              background:rgba(255,255,255,.85); color:var(--ink); border:none;
+              width:38px; height:38px; border-radius:50%; font-size:1.05rem; cursor:pointer;
+              display:flex; align-items:center; justify-content:center;}
+  .slide-btn:hover{ background:var(--amber);}
+  .slide-prev{ left:12px;} .slide-next{ right:12px;}
+  .dots{ display:flex; justify-content:center; gap:8px; padding:12px 0; background:var(--ink);}
+  .dot{ width:8px; height:8px; border-radius:50%; background:rgba(255,255,255,.3); border:none; cursor:pointer;}
+  .dot.active{ background:var(--amber);}
+
+  /* ---------- Khối 2: Mục lục ---------- */
+  .toc-wrap{ max-width:640px; margin:0 auto; padding:20px; border:3px solid #E5342B; border-radius:var(--radius);
+             background:var(--paper-card);}
+  .toc{ display:grid; gap:12px;}
+  details.chude{ background:var(--paper); border:1px solid var(--line); border-radius:12px; overflow:hidden;}
+  details.chude summary{ cursor:pointer; padding:14px 18px; font-weight:700; color:#0047AB;
+                          list-style:none; display:flex; align-items:center; justify-content:space-between;
+                          font-size:.88rem;}
+  details.chude summary::-webkit-details-marker{ display:none;}
+  details.chude summary::after{ content:"+"; font-family:'Space Grotesk',monospace; color:var(--teal); font-size:1.2rem;}
+  details.chude[open] summary::after{ content:"–";}
+  .bai-list{ list-style:none; border-top:1px solid var(--line);}
+  .bai-list li{ border-bottom:1px solid var(--line);}
+  .bai-list li:last-child{ border-bottom:none;}
+  .bai-list button{
+    width:100%; text-align:left; background:none; border:none; cursor:pointer;
+    padding:11px 18px 11px 34px; font-family:inherit; font-size:.88rem; color:#3D4C63;
+    display:flex; gap:8px; align-items:baseline; transition:background .12s;
+  }
+  .bai-list button:hover, .bai-list button:focus-visible{ background:rgba(46,196,182,.07); color:var(--ink); outline:none;}
+  .bai-list button .id{ font-family:'Space Grotesk',monospace; color:var(--teal); font-weight:600; font-size:.8rem;}
+  .bai-list button.active{ background:rgba(255,200,69,.15); color:var(--ink); font-weight:600;}
+
+  /* ---------- Khung chi tiết bài học ---------- */
+  #lesson-detail{ margin-top:24px;}
+  .detail-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
+                padding:28px; display:none;}
+  .detail-card.show{ display:block;}
+  .detail-meta{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:6px;}
+  .detail-meta .chude-tag{ font-family:'Space Grotesk',monospace; font-size:.72rem; font-weight:600;
+                            background:rgba(46,196,182,.12); color:var(--teal); padding:3px 9px; border-radius:6px;}
+  .detail-meta .views, .detail-meta .date{ font-size:.78rem; color:#7C8AA0; font-family:'Space Grotesk',monospace;}
+  .detail-title{ font-size:1.25rem; font-weight:700; color:var(--ink); margin:8px 0 16px;}
+  .detail-text{ color:#3D4C63; font-size:.95rem; margin-bottom:18px;}
+  .detail-text p{ margin-bottom:10px;}
+  .detail-text ul, .detail-text ol{ margin:10px 0 10px 22px;}
+  .detail-text strong{ color:var(--ink);}
+  .detail-text table{ width:100%; border-collapse:collapse; margin:14px 0; font-size:.88rem;}
+  .detail-text table td, .detail-text table th{ border:1px solid var(--line); padding:8px 10px; text-align:left;}
+  .detail-text table th{ background:var(--paper); font-weight:700; color:var(--ink);}
+  .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0;}
+  .detail-text a{ color:var(--teal); text-decoration:underline;}
+  .lesson-figure img{ width:100%; max-height:380px; object-fit:cover; border-radius:12px; border:1px solid var(--line); margin-bottom:18px;}
+  .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
+  .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
+  .drive-frame{ width:100%; height:440px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px;}
+  .caption-small{ font-size:.8rem; color:#7C8AA0; margin-bottom:18px;}
+
+  /* ---------- Related posts: lưới ảnh 3 cột ---------- */
+  .related-box{ margin-top:28px; padding-top:22px; border-top:1px dashed var(--line);}
+  .related-box h4{ font-size:.85rem; font-weight:700; color:var(--teal); text-transform:uppercase;
+                    letter-spacing:.06em; margin-bottom:14px;}
+  .related-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
+  .related-card{ text-decoration:none; color:inherit; display:block; border-radius:12px; overflow:hidden;
+                 border:1px solid var(--line); background:var(--paper); transition:transform .15s, box-shadow .15s;}
+  .related-card:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(15,28,46,.1);}
+  .related-card .thumb{ width:100%; height:120px; object-fit:cover; display:block; background:var(--ink);}
+  .related-card .thumb-placeholder{ width:100%; height:120px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--ink), #1C3252); color:var(--amber);
+    font-family:'Space Grotesk',monospace; font-weight:700; font-size:1.3rem;}
+  .related-card .rtitle{ padding:10px 12px; font-size:.82rem; font-weight:600; color:var(--ink); line-height:1.35;}
+  .related-card.current .rtitle{ color:var(--teal);}
+
+  /* ---------- Bình luận (Firebase: Google / Facebook) ---------- */
+  .comments-section{ margin-top:28px; padding-top:22px; border-top:1px solid var(--line);}
+  .comments-section h4{ font-size:.85rem; font-weight:700; color:var(--ink); text-transform:uppercase;
+                         letter-spacing:.06em; margin-bottom:14px;}
+  .auth-box{ margin-bottom:18px;}
+  .btn-mini{ background:var(--ink); color:#fff; border:none; padding:9px 16px; border-radius:8px;
+             font-size:.85rem; font-weight:600; cursor:pointer; margin-right:8px; margin-bottom:8px;}
+  .btn-mini:hover{ opacity:.9;}
+  .btn-mini-primary{ background:var(--teal);}
+  .auth-user{ display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:.9rem;}
+  .comment-avatar{ width:32px; height:32px; border-radius:50%; object-fit:cover; background:var(--line);}
+  textarea#comment-input{ width:100%; min-height:70px; border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; font-family:inherit; font-size:.9rem; resize:vertical; margin-bottom:10px;}
+  .comments-list{ display:grid; gap:14px;}
+  .comment-item{ display:flex; gap:10px; align-items:flex-start;}
+  .comment-num{ font-family:'Space Grotesk',monospace; font-weight:700; color:var(--teal); font-size:.8rem; min-width:22px;}
+  .comment-body{ flex:1;}
+  .comment-meta{ font-size:.82rem; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;}
+  .comment-meta strong{ color:var(--ink);}
+  .comment-meta span{ color:#9AA6B8; font-size:.75rem;}
+
+  /* ---------- Bài tập thực hành ---------- */
+  .homework-text{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); padding:24px; color:#3D4C63; font-size:.94rem;}
+  .homework-text > p{ margin-bottom:14px;}
+  .homework-steps{ list-style:none; display:grid; gap:10px;}
+  .homework-steps li{ display:flex; gap:12px; align-items:flex-start;}
+  .homework-steps .step-num{ flex-shrink:0; width:24px; height:24px; border-radius:50%; background:var(--teal);
+    color:#fff; font-family:'Space Grotesk',monospace; font-weight:700; font-size:.78rem;
+    display:flex; align-items:center; justify-content:center;}
+  .hw-grid{ display:grid; gap:14px; margin-top:20px;}
+  .hw-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:12px;
+             padding:18px 20px; display:flex; align-items:center; justify-content:space-between;
+             gap:14px; flex-wrap:wrap; transition:transform .15s, box-shadow .15s;}
+  .hw-card:hover{ transform:translateY(-2px); box-shadow:0 10px 20px rgba(15,28,46,.08);}
+  .hw-card .hw-tag{ display:inline-block; font-family:'Space Grotesk',monospace; font-size:.68rem; font-weight:700;
+    background:rgba(0,71,171,.1); color:#0047AB; padding:3px 9px; border-radius:6px; margin-bottom:6px;}
+  .hw-card .hw-name{ font-weight:700; color:var(--ink); font-size:.95rem;}
+  .hw-card .hw-desc{ font-size:.82rem; color:#7C8AA0; margin-top:3px;}
+  .hw-card a{ font-size:.85rem; font-weight:700; color:#fff; background:var(--teal); padding:9px 18px;
+    border-radius:8px; text-decoration:none; white-space:nowrap;}
+  .hw-card a:hover{ opacity:.9;}
+  .comment-text{ font-size:.88rem; color:#3D4C63; margin-top:3px;}
+   /* ---------- Thống kê ---------- */
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; margin-bottom:24px;}
+  .stat-card{ background:var(--ink); color:#fff; border-radius:var(--radius); padding:22px;}
+  .stat-card .num{ font-family:'Space Grotesk',monospace; font-size:2rem; font-weight:700; color:var(--amber);}
+  .stat-card .label{ font-size:.82rem; color:#B9C4D4; margin-top:4px;}
+  .stat-card .progress-track{ margin-top:12px; height:8px; background:rgba(255,255,255,.15); border-radius:6px; overflow:hidden;}
+  .stat-card .progress-fill{ height:100%; background:var(--amber); border-radius:6px;}
+  .top-list{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .top-item{ display:flex; align-items:center; gap:14px; padding:13px 18px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .top-item:last-child{ border-bottom:none;}
+  .top-item:hover{ background:rgba(46,196,182,.06);}
+  .top-item .rank{ font-family:'Space Grotesk',monospace; font-weight:700; color:var(--amber); background:var(--ink);
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; flex-shrink:0;}
+  .top-item .ttitle{ flex:1; font-size:.88rem; color:var(--ink); font-weight:500;}
+  .top-item .tviews{ font-family:'Space Grotesk',monospace; font-size:.78rem; color:#7C8AA0; white-space:nowrap;}
+
+
+  @media (max-width:760px){
+    .related-grid{ grid-template-columns:repeat(2,1fr);}
+  }
+  @media (max-width:640px){
+    main{ padding:32px 16px 60px;}
+    .detail-card{ padding:18px;}
+    .related-grid{ grid-template-columns:1fr;}
+  }
+
+  /* ---------- Nút về đầu trang ---------- */
+  #back-to-top{
+    position:fixed; right:22px; bottom:22px; width:46px; height:46px; border-radius:50%;
+    background:var(--ink); color:var(--amber); border:2px solid var(--amber);
+    font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 20px rgba(15,28,46,.25); z-index:60;
+    opacity:0; visibility:hidden; transform:translateY(12px);
+    transition:opacity .2s, transform .2s, visibility .2s;
+  }
+  #back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0);}
+  #back-to-top:hover{ background:var(--amber); color:var(--ink);}
+
+/* SITE NAVIGATION — đồng bộ với index.html / exam.html */
+.site-nav{background:var(--ink);border-top:1px solid rgba(255,255,255,.05);border-bottom:1px solid rgba(255,255,255,.08)}
+.site-nav .nav-inner{max-width:1120px;margin:auto;display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;padding:7px 24px}
+.site-nav a{display:block;padding:9px 12px;border-radius:9px;color:#dce4ee;text-decoration:none;font-size:.78rem;font-weight:700}
+.site-nav a:hover{background:rgba(255,255,255,.08);color:var(--amber)}
+.site-nav .lessons{background:#7c3aed;color:#fff}.site-nav .lessons:hover{background:#6d28d9;color:#fff}
+.site-nav .lesson-link{background:#166534;color:#fff}.site-nav .lesson-link:hover{background:#14532d;color:#fff}
+.site-nav .exam{background:#0d6efd;color:#fff}.site-nav .exam:hover{background:#0b5ed7;color:#fff}
+@media(max-width:640px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <strong>WEBH2T+</strong>
+    <a class="back" href="index.html">← Back to Home</a>
+  </div>
+</header>
+<nav class="site-nav" aria-label="Điều hướng website">
+  <div class="nav-inner">
+    <a href="index.html">HOME</a>
+    <a href="index.html#timetable">TIMETABLE</a>
+    <a class="lessons" href="index.html#lessons">LESSONS</a>
+    <a class="lesson-link" href="tin10.html">TIN 10</a>
+    <a class="lesson-link" href="tin11.html">TIN 11</a>
+    <a class="lesson-link" href="tin12.html">TIN 12</a>
+    <a class="exam" href="exam.html">EXAMS</a>
+    <a href="index.html#knowledge">KNOWLEDGE</a>
+    <a href="index.html#contact">CONTACT</a>
+  </div>
+</nav>
+
 <main>
-<span class="eyebrow">Grade 12</span><h1>Tin học 12 — Bài giảng &amp; tài liệu</h1>
-<p class="sub">Trang con Tin học 12 được xây dựng cùng cấu trúc với Tin học 10: mục lục bài học, nội dung chi tiết, bài tập, đề kiểm tra và thống kê. Nội dung chương trình sẽ được cập nhật theo tài liệu thực tế của giáo viên.</p>
-<div class="hero-card"><h2>Không gian học tập Tin học 12</h2><p>Cấu trúc trang đã sẵn sàng để bổ sung bài giảng, hình ảnh, video, tài liệu và liên kết nộp bài.</p><div class="actions"><a class="btn primary" href="exam.html#submit-12">Nộp bài 12</a><a class="btn purple" href="index.html#knowledge">Khám phá kiến thức</a><a class="btn green" href="tin11.html">Chuyển sang Tin 11</a></div></div>
-<section class="block"><span class="eyebrow">Khối 1</span><h2 class="block-title">Hình đại diện sách giáo khoa</h2><div class="book-panel"><img src="assets/tin12-sgk.jpg" alt="Sách giáo khoa Tin học 12" onerror="this.style.display='none'"><div class="book-caption"><strong>Tin học 12</strong> · Hình bìa sách có thể thay bằng ảnh SGK chính thức của bạn.</div></div></section>
-<section class="block"><span class="eyebrow">Khối 2</span><h2 class="block-title">Mục lục &amp; bài giảng</h2><div class="update-box"><strong>Nội dung đang cập nhật.</strong><br>Để tránh tự ý thay đổi hoặc bịa nội dung chương trình, phần bài học của Tin 12 đang để trống và sẵn sàng nhận danh sách bài học chính thức từ bạn. Khi có danh sách, có thể nhập trực tiếp vào cấu trúc này giống trang Tin 10.</div><div class="lesson-placeholder"><div class="placeholder-card"><div class="num">01</div><h3>Bài học</h3><p>Tiêu đề và nội dung bài học sẽ được cập nhật.</p></div><div class="placeholder-card"><div class="num">02</div><h3>Tài liệu</h3><p>Video, hình minh họa và tài liệu Google Drive.</p></div><div class="placeholder-card"><div class="num">03</div><h3>Bình luận</h3><p>Có thể tích hợp Disqus riêng cho từng bài học.</p></div></div></section>
-<section class="block"><span class="eyebrow">Khối 3</span><h2 class="block-title">Bài tập &amp; kiểm tra</h2><div class="resource-grid"><div class="resource"><h3>Bài tập thực hành</h3><p>Thêm Google Forms, Drive hoặc tài liệu nộp bài tại đây.</p><a class="btn blue" style="margin-top:12px" href="exam.html#submit-12">Nộp bài 12</a></div><div class="resource"><h3>Đề kiểm tra</h3><p>Kết nối với ngân hàng đề và bài kiểm tra trực tuyến.</p><a class="btn red" style="margin-top:12px" href="exam.html#question-bank">Ngân hàng đề</a></div><div class="resource"><h3>Kết quả</h3><p>Liên kết tới hệ thống kết quả khi Firebase/Google Sheets được cấu hình.</p><a class="btn primary" style="margin-top:12px" href="exam.html#results">Xem kết quả</a></div></div></section>
-<section class="block"><span class="eyebrow">Khối 4</span><h2 class="block-title">Thống kê trang</h2><div class="resource-grid"><div class="resource"><h3 id="page-views">—</h3><p>Lượt xem trang Tin 12</p></div><div class="resource"><h3>Disqus</h3><p>Sẵn sàng tích hợp bình luận riêng cho từng bài học sau khi có danh sách bài.</p></div><div class="resource"><h3>WEBH2T</h3><p>© 2026 · Tin học THPT</p></div></div></section>
-</main><footer>© 2026 WEBH2T · Tin học THPT · Liên hệ: <a href="mailto:websiteh2t@gmail.com">websiteh2t@gmail.com</a></footer>
+  <div class="grade-hero">
+    <h1>Grade 12 Informatics</h1>
+  </div>
+  
+<!-- ============ Bài giảng mới ============ -->
+  <section class="block">
+    <h2 class="block-title">Latest Lessons</h2>
+    <div class="slideshow" id="slideshow">
+      <div class="slides-track" id="track"></div>
+      <button class="slide-btn slide-prev" onclick="moveSlide(-1)" aria-label="Ảnh trước">‹</button>
+      <button class="slide-btn slide-next" onclick="moveSlide(1)" aria-label="Ảnh sau">›</button>
+      <div class="dots" id="dots"></div>
+    </div>
+  </section>
+
+  <!-- ============ Mục lục sách giáo khoa ============ -->
+  <section class="block">
+    <h2 class="block-title" style="text-align:center;">Textbook Contents</h2>
+    <div class="toc-wrap">
+      <div class="toc" id="toc"></div>
+    </div>
+
+    <div id="lesson-detail">
+      <div class="detail-card" id="detail-card">
+        <div class="detail-meta">
+          <span class="chude-tag" id="d-chude"></span>
+          <span class="date" id="d-date">📅 —</span>
+          <span class="views" id="d-views">👁 0 lượt xem</span>
+        </div>
+        <h3 class="detail-title" id="d-title"></h3>
+        <div class="detail-text" id="d-text"></div>
+        <div id="d-image"></div>
+        <div id="d-video"></div>
+        <div id="d-doc"></div>
+
+        <div class="comments-section">
+          <h4 id="comments-heading">Bình luận</h4>
+          <div class="auth-box" id="auth-box"></div>
+          <div class="comments-list" id="comments-list"></div>
+        </div>
+
+        <div class="related-box">
+          <h4>Related Posts</h4>
+          <div class="related-grid" id="d-related"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ Bài tập thực hành ============ -->
+  <section class="block">
+    <h2 class="block-title">Practice Exercises</h2>
+    <div class="homework-text">
+      <p><strong>Yêu cầu chung</strong></p>
+      <ul class="homework-steps">
+        <li><span class="step-num">1</span> Đọc kỹ nội dung lý thuyết trong mục "Mục lục sách giáo khoa" ở trên trước khi làm bài.</li>
+        <li><span class="step-num">2</span> Trình bày bài làm rõ ràng, có thể viết tay chụp ảnh hoặc đánh máy.</li>
+        <li><span class="step-num">3</span> Nộp bài đúng link được giáo viên cung cấp trong từng buổi học, đúng thời hạn quy định.</li>
+      </ul>
+    </div>
+    <div class="hw-grid">
+      <div class="hw-card">
+        <div>
+          <span class="hw-tag">CHỦ ĐỀ 1</span>
+          <div class="hw-name">Phiếu bài tập — Trí tuệ nhân tạo</div>
+          <div class="hw-desc">10 câu trắc nghiệm + 2 câu tự luận</div>
+        </div>
+        <a href="https://forms.gle/FORM_ID_BAITAP_CD1" target="_blank" rel="noopener">Làm bài →</a>
+      </div>
+      <div class="hw-card">
+        <div>
+          <span class="hw-tag">CHỦ ĐỀ 4</span>
+          <div class="hw-name">Phiếu bài tập — Thiết kế trang web HTML/CSS</div>
+          <div class="hw-desc">Nộp file trang web qua Drive</div>
+        </div>
+        <a href="https://drive.google.com/drive/folders/FOLDER_ID_NOPBAI" target="_blank" rel="noopener">Nộp bài →</a>
+      </div>
+    </div>
+  </section>
+
+  
+
+  <!-- ============ Thống kê ============ -->
+  <section class="block">
+    <h2 class="block-title">Page Statistics</h2>
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="num" id="page-views">…</div>
+        <div class="label">Lượt xem trang này / Page views</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="total-posts">…</div>
+        <div class="label">Tổng số bài học trong chương trình</div>
+      </div>
+      <div class="stat-card">
+        <div class="num" id="posted-ratio">…</div>
+        <div class="label" id="posted-ratio-label">Tỉ lệ bài đã đăng nội dung</div>
+        <div class="progress-track"><div class="progress-fill" id="posted-ratio-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <h4 style="font-size:.85rem; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;">Most Viewed Posts</h4>
+    <div class="top-list" id="top-list">
+      <div class="top-item"><span class="ttitle">Đang tải…</span></div>
+    </div>
+  </section>
+
+</main>
+
+<button id="back-to-top" aria-label="Về đầu trang" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+
+<!-- Firebase SDK (compat) — dùng cho đăng nhập Google/Facebook + lưu bình luận -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+
 <script>
-fetch('https://api.countapi.xyz/hit/webh2t-github-io/tin12-page').then(r=>r.ok?r.json():Promise.reject()).then(d=>document.getElementById('page-views').textContent=Number(d.value||0).toLocaleString('vi-VN')).catch(()=>document.getElementById('page-views').textContent='—');
-</script></body></html>
+/* ======================================================
+   CẤU HÌNH FIREBASE — thay bằng thông số dự án của bạn
+   (Firebase Console → Project settings → General → Your apps)
+   ====================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDOqMkioHhQ9YuFY9mCpx_kRLOLL_tf9jU",
+  authDomain: "webh2t-tin.firebaseapp.com",
+  projectId: "webh2t-tin",
+  storageBucket: "webh2t-tin.firebasestorage.app",
+  messagingSenderId: "1016309715061",
+  appId: "1:1016309715061:web:2a180eeb66dfb02877e83c",
+  measurementId: "G-JZM7JNE09J"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+try { firebase.analytics(); } catch (e) { /* Analytics không bắt buộc cho bình luận, bỏ qua nếu lỗi mạng */ }
+const PAGE_PREFIX = 'tin12'; // định danh riêng cho trang này, tránh trùng bình luận với tin11/tin12
+
+function escapeHTML(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ======================================================
+   DỮ LIỆU 34 BÀI HỌC
+   ====================================================== */
+const CHUDE_NAMES = {
+  1: "CHỦ ĐỀ 1: MÁY TÍNH VÀ XÃ HỘI TRI THỨC",
+  2: "CHỦ ĐỀ 2: MẠNG MÁY TÍNH VÀ INTERNET",
+  3: "CHỦ ĐỀ 3: ĐẠO ĐỨC, PHÁP LUẬT VÀ VĂN HOÁ TRONG MÔI TRƯỜNG SỐ",
+  4: "CHỦ ĐỀ 4: GIẢI QUYẾT VẤN ĐỀ VỚI SỰ TRỢ GIÚP CỦA MÁY TÍNH",
+  5: "CHỦ ĐỀ 5: HƯỚNG NGHIỆP VỚI TIN HỌC",
+  6: "CHỦ ĐỀ 6: MÁY TÍNH VÀ XÃ HỘI TRI THỨC",
+  7: "CHỦ ĐỀ 7: ỨNG DỤNG TIN HỌC"
+};
+
+const LESSONS = [
+  {id:1,  chude:1, ten:"Làm quen với Trí tuệ nhân tạo"},
+  {id:2,  chude:1, ten:"Trí tuệ nhân tạo trong khoa học và đời sống"},
+  {id:3,  chude:2, ten:"Một số thiết bị mạng thông dụng"},
+  {id:4,  chude:2, ten:"Giao thức mạng"},
+  {id:5,  chude:2, ten:"Thực hành chia sẻ tài nguyên trên mạng"},
+  {id:6,  chude:3, ten:"Giao tiếp và ứng xử trong không gian mạng"},
+  {id:7,  chude:4, ten:"HTML và cấu trúc trang web"},
+  {id:8,  chude:4, ten:"Định dạng văn bản"},
+  {id:9,  chude:4, ten:"Tạo danh sách, bảng"},
+  {id:10, chude:4, ten:"Tạo liên kết"},
+  {id:11, chude:4, ten:"Chèn tệp tin đa phương tiện và khung nội tuyến vào trang web"},
+  {id:12, chude:4, ten:"Tạo biểu mẫu"},
+  {id:13, chude:4, ten:"Khái niệm, vai trò của CSS"},
+  {id:14, chude:4, ten:"Định dạng văn bản bằng CSS"},
+  {id:15, chude:4, ten:"Tạo màu cho chữ và nền"},
+  {id:16, chude:4, ten:"Định dạng khung"},
+  {id:17, chude:4, ten:"Các mức ưu tiên của bộ chọn"},
+  {id:18, chude:4, ten:"Thực hành tổng hợp thiết kế trang web"},
+  {id:19, chude:5, ten:"Dịch vụ sửa chữa và bảo trì máy tính"},
+  {id:20, chude:5, ten:"Nhóm nghề quản trị thuộc ngành Công nghệ thông tin"},
+  {id:21, chude:5, ten:"Hội thảo hướng nghiệp"},
+  {id:22, chude:6, ten:"Thực hành kết nối các thiết bị số"},
+  {id:23, chude:7, ten:"Chuẩn bị xây dựng trang web"},
+  {id:24, chude:7, ten:"Xây dựng phần đầu trang web"},
+  {id:25, chude:7, ten:"Xây dựng phần thân và chân trang web"},
+  {id:26, chude:7, ten:"Liên kết và thanh điều hướng"},
+  {id:27, chude:7, ten:"Biểu mẫu trên trang web"},
+  {id:28, chude:7, ten:"Thực hành tổng hợp"}
+];
+
+/* Nội dung chi tiết — chỉ Bài 1 có sẵn mẫu đầy đủ.
+   Thêm object mới vào đây theo id để bổ sung nội dung cho bài tương ứng.
+   ngay: định dạng dd/mm/yyyy */
+/* ======================================================
+   📌 MẪU "NEW POST" — COPY khối bên dưới, đổi số ID cho đúng
+   bài học, dán vào bên trong object LESSON_CONTENT ở dưới,
+   rồi điền nội dung. Không cần sửa gì khác, trang tự cập nhật.
+
+   ID_BAI: {
+     ngay: "dd/mm/yyyy",
+     text: `<p>Nội dung bài học...</p>`,
+     img: "assets/tin12-baiX-minhhoa.jpg",   // để "" nếu không có ảnh
+     video: "ID_VIDEO_YOUTUBE",               // để "" nếu không có video
+     doc: "ID_FILE_GOOGLE_DRIVE"              // để "" nếu không có tài liệu
+   },
+   ====================================================== */
+const LESSON_CONTENT = {
+  1: {
+    ngay: "25/08/2026",
+    text: `<p>Trí tuệ nhân tạo (Artificial Intelligence – AI) là lĩnh vực nghiên cứu giúp máy tính thực hiện các nhiệm vụ vốn cần trí thông minh của con người:</p>
+           <ul>
+             <li><strong>Nhận dạng</strong> — nhận diện hình ảnh, giọng nói, chữ viết</li>
+             <li><strong>Suy luận và ra quyết định</strong> — dựa trên dữ liệu và mô hình học được</li>
+             <li><strong>Học từ dữ liệu</strong> — cải thiện qua quá trình huấn luyện (Machine Learning)</li>
+             <li><strong>Xử lí ngôn ngữ tự nhiên</strong> — hiểu và tạo văn bản như con người</li>
+           </ul>
+           <p><em>(EN) Artificial Intelligence enables computers to perform tasks that normally require human intelligence, such as recognition, reasoning, and learning from data.</em></p>`,
+    img: "assets/tin12-bai1-minhhoa.jpg",
+    video: "YOUTUBE_VIDEO_ID_BAI1",
+    doc: "FILE_ID_BAI1"
+  }
+};
+const DEFAULT_CONTENT = { ngay: "", text: "<p>Bài viết chưa cập nhật mới.</p>", img: "", video: "", doc: "" };
+
+/* ======================================================
+   RENDER MỤC LỤC — bài chưa có nội dung hiện "(đang cập nhật)"
+   ====================================================== */
+const tocEl = document.getElementById('toc');
+Object.keys(CHUDE_NAMES).forEach((cd, idx) => {
+  const baiCuaChude = LESSONS.filter(b => b.chude == cd);
+  const det = document.createElement('details');
+  det.className = 'chude';
+  if (idx === 0) det.open = true; // chỉ mở sẵn chủ đề đầu tiên, đỡ rối mắt
+  det.innerHTML = `
+    <summary>${CHUDE_NAMES[cd]}</summary>
+    <ul class="bai-list">
+      ${baiCuaChude.map(b => `
+        <li><button data-id="${b.id}" onclick="showLesson(${b.id})">
+          <span class="id">Bài ${b.id}</span> ${b.ten}
+          ${!LESSON_CONTENT[b.id] ? '<span class="pending">(đang cập nhật)</span>' : ''}
+        </button></li>`).join('')}
+    </ul>`;
+  tocEl.appendChild(det);
+});
+
+/* ======================================================
+   ĐẾM LƯỢT XEM — CountAPI (miễn phí, không cần đăng ký)
+   ====================================================== */
+const CA_NAMESPACE = 'webh2t-github-io';
+
+async function bumpAndShowViews(key, elId) {
+  try {
+    const res = await fetch(`https://api.countapi.xyz/hit/${CA_NAMESPACE}/${key}`);
+    const data = await res.json();
+    document.getElementById(elId).textContent = `👁 ${data.value.toLocaleString('vi-VN')} lượt xem`;
+    return data.value;
+  } catch (e) {
+    document.getElementById(elId).textContent = '👁 —';
+    return 0;
+  }
+}
+async function getViews(key) {
+  try {
+    const res = await fetch(`https://api.countapi.xyz/get/${CA_NAMESPACE}/${key}`);
+    const data = await res.json();
+    return data.value || 0;
+  } catch (e) { return 0; }
+}
+bumpAndShowViews('tin12-page', 'page-views');
+
+/* Tổng số bài viết & tỉ lệ đã đăng nội dung */
+function renderPostStats(){
+  const total = LESSONS.length;
+  const posted = Object.keys(LESSON_CONTENT).length;
+  const percent = total ? Math.round((posted/total)*100) : 0;
+  document.getElementById('total-posts').textContent = total;
+  document.getElementById('posted-ratio').textContent = `${posted}/${total}`;
+  document.getElementById('posted-ratio-label').textContent = `Tỉ lệ bài đã đăng (${percent}%)`;
+  document.getElementById('posted-ratio-bar').style.width = percent + '%';
+}
+renderPostStats();
+
+/* Bài viết xem nhiều nhất — đọc lượt xem của cả 34 bài (không cộng thêm), sắp xếp giảm dần, hiện top 5 */
+async function renderTopViewed() {
+  const results = await Promise.all(LESSONS.map(async b => ({...b, views: await getViews(`tin12-bai-${b.id}`)})));
+  const top5 = results.sort((a,b) => b.views - a.views).slice(0,5);
+  const listEl = document.getElementById('top-list');
+  listEl.innerHTML = top5.map((b,i) => `
+    <div class="top-item" onclick="showLesson(${b.id})">
+      <span class="rank">${i+1}</span>
+      <span class="ttitle">Bài ${b.id}. ${b.ten}</span>
+      <span class="tviews">${b.views.toLocaleString('vi-VN')} lượt xem</span>
+    </div>`).join('');
+}
+renderTopViewed();
+
+/* ======================================================
+   HIỂN THỊ CHI TIẾT BÀI HỌC
+   ====================================================== */
+let currentLessonId = null;
+
+function showLesson(id) {
+  currentLessonId = id;
+  const bai = LESSONS.find(b => b.id === id);
+  const content = LESSON_CONTENT[id] || DEFAULT_CONTENT;
+
+  document.querySelectorAll('.bai-list button').forEach(b => {
+    b.classList.toggle('active', Number(b.dataset.id) === id);
+  });
+
+  document.getElementById('d-chude').textContent = CHUDE_NAMES[bai.chude];
+  document.getElementById('d-date').textContent = `📅 ${content.ngay || '—'}`;
+  document.getElementById('d-title').textContent = `Bài ${bai.id}. ${bai.ten}`;
+  document.getElementById('d-text').innerHTML = content.text;
+
+  document.getElementById('d-image').innerHTML = content.img
+    ? `<figure class="lesson-figure"><img src="${content.img}" alt="${bai.ten}"></figure>` : '';
+
+  document.getElementById('d-video').innerHTML = content.video
+    ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${content.video}"
+        title="Video ${bai.ten}" frameborder="0" allowfullscreen></iframe></div>` : '';
+
+  document.getElementById('d-doc').innerHTML = content.doc
+    ? `<p class="caption-small">Tài liệu minh hoạ (Google Drive):</p>
+       <iframe class="drive-frame" src="https://drive.google.com/file/d/${content.doc}/preview" allow="autoplay"></iframe>` : '';
+
+  // Related posts: 3 cột, ảnh lớn trên + tiêu đề dưới, cùng chủ đề, loại trừ bài hiện tại, tối đa 3
+  const related = LESSONS.filter(b => b.chude === bai.chude && b.id !== id).slice(0, 3);
+  document.getElementById('d-related').innerHTML = related.map(b => {
+    const rc = LESSON_CONTENT[b.id];
+    const thumb = rc && rc.img
+      ? `<img class="thumb" src="${rc.img}" alt="${b.ten}">`
+      : `<div class="thumb-placeholder">Bài ${b.id}</div>`;
+    return `<a href="#" class="related-card" onclick="showLesson(${b.id}); return false;">
+      ${thumb}
+      <div class="rtitle">Bài ${b.id}. ${b.ten}</div>
+    </a>`;
+  }).join('') || '<p class="caption-small">Không có bài liên quan.</p>';
+
+  document.getElementById('detail-card').classList.add('show');
+  document.getElementById('lesson-detail').scrollIntoView({behavior:'smooth', block:'start'});
+
+  bumpAndShowViews(`tin12-bai-${id}`, 'd-views');
+  loadComments(id);
+}
+
+/* ======================================================
+   BÌNH LUẬN — đăng nhập Google / Facebook qua Firebase Auth,
+   lưu vào Firestore, sắp xếp mới → cũ, đánh số 1,2,3...
+   ====================================================== */
+function signInGoogle(){
+  if (location.protocol === 'file:') {
+    alert('Tính năng đăng nhập chỉ hoạt động khi trang được mở qua địa chỉ web thật (https://...), không hoạt động khi mở trực tiếp file trên máy tính.\n\nHãy mở trang qua địa chỉ GitHub Pages của bạn, ví dụ:\nhttps://webh2t.github.io/tin10.html');
+    return;
+  }
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .catch(err => alert('Đăng nhập Google lỗi: ' + err.message));
+}
+function signOutUser(){ auth.signOut(); }
+
+function renderAuthUI(user){
+  const box = document.getElementById('auth-box');
+  if (user) {
+    box.innerHTML = `
+      <div class="auth-user">
+        <img class="comment-avatar" src="${user.photoURL || ''}" alt="">
+        <span>${escapeHTML(user.displayName || 'Người dùng')}</span>
+        <button class="btn-mini" onclick="signOutUser()">Đăng xuất</button>
+      </div>
+      <textarea id="comment-input" placeholder="Viết bình luận của bạn..."></textarea>
+      <button class="btn-mini btn-mini-primary" onclick="postComment()">Gửi bình luận</button>`;
+  } else {
+    box.innerHTML = `
+      <p class="caption-small" style="margin-bottom:10px;">Đăng nhập để bình luận:</p>
+      <button class="btn-mini" onclick="signInGoogle()">Đăng nhập với Google</button>`;
+  }
+}
+auth.onAuthStateChanged(renderAuthUI);
+
+function postComment(){
+  const user = auth.currentUser;
+  if (!user) { alert('Vui lòng đăng nhập trước khi bình luận.'); return; }
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text) return;
+  db.collection('comments').add({
+    lessonId: `${PAGE_PREFIX}-${currentLessonId}`,
+    name: user.displayName || 'Người dùng ẩn danh',
+    photo: user.photoURL || '',
+    text: text,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    input.value = '';
+    loadComments(currentLessonId);
+  }).catch(err => alert('Không gửi được bình luận: ' + err.message));
+}
+
+function loadComments(lessonId){
+  const wrap = document.getElementById('comments-list');
+  const heading = document.getElementById('comments-heading');
+  wrap.innerHTML = '<p class="caption-small">Đang tải bình luận…</p>';
+  db.collection('comments').where('lessonId','==',`${PAGE_PREFIX}-${lessonId}`).orderBy('createdAt','desc').get()
+    .then(snap => {
+      if (snap.empty) {
+        heading.textContent = 'Bình luận (0 comment)';
+        wrap.innerHTML = '<p class="caption-small">0 comment</p>';
+        return;
+      }
+      heading.textContent = `Bình luận (${snap.size} comment)`;
+      let i = 0;
+      wrap.innerHTML = snap.docs.map(doc => {
+        i++;
+        const c = doc.data();
+        const date = c.createdAt ? c.createdAt.toDate().toLocaleDateString('vi-VN') : '';
+        return `<div class="comment-item">
+          <span class="comment-num">#${i}</span>
+          ${c.photo ? `<img class="comment-avatar" src="${c.photo}" alt="">` : ''}
+          <div class="comment-body">
+            <div class="comment-meta"><strong>${escapeHTML(c.name)}</strong><span>${date}</span></div>
+            <div class="comment-text">${escapeHTML(c.text)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    })
+    .catch(err => {
+      wrap.innerHTML = '<p class="caption-small">Không tải được bình luận, vui lòng thử lại.</p>';
+      console.error(err);
+    });
+}
+
+/* ======================================================
+   SLIDESHOW — tự lấy các bài đã có nội dung (LESSON_CONTENT),
+   mới nhất theo ngày lên trước, bấm vào slide sẽ mở đúng bài
+   ====================================================== */
+const track = document.getElementById('track');
+const dotsWrap = document.getElementById('dots');
+
+function parseDate(d){
+  if(!d) return 0;
+  const [dd,mm,yyyy] = d.split('/').map(Number);
+  return new Date(yyyy, mm-1, dd).getTime();
+}
+
+const postsWithContent = LESSONS
+  .filter(b => LESSON_CONTENT[b.id])
+  .sort((a,b) => parseDate(LESSON_CONTENT[b.id].ngay) - parseDate(LESSON_CONTENT[a.id].ngay));
+
+let slideCount = postsWithContent.length;
+let sIndex = 0;
+
+if (slideCount === 0) {
+  track.innerHTML = '<div class="slide-empty">Chưa có bài viết nào được đăng.</div>';
+} else {
+  track.innerHTML = postsWithContent.map(b => {
+    const c = LESSON_CONTENT[b.id];
+    const img = c.img || 'assets/tin12-sgk.jpg';
+    return `<div class="slide" onclick="showLesson(${b.id})">
+      <img src="${img}" alt="${b.ten}">
+      <div class="caption"><span class="tag">${c.ngay || ''}</span><br>Bài ${b.id}. ${b.ten}</div>
+    </div>`;
+  }).join('');
+  for (let i = 0; i < slideCount; i++) {
+    const d = document.createElement('button');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = (e) => { e.stopPropagation(); sIndex = i; renderSlide(); };
+    dotsWrap.appendChild(d);
+  }
+}
+function renderSlide() {
+  track.style.transform = `translateX(-${sIndex * 100}%)`;
+  [...dotsWrap.children].forEach((d, i) => d.classList.toggle('active', i === sIndex));
+}
+function moveSlide(dir) { if(!slideCount) return; sIndex = (sIndex + dir + slideCount) % slideCount; renderSlide(); }
+if (slideCount > 1) setInterval(() => moveSlide(1), 5000);
+
+/* Mở sẵn Bài 1 khi tải trang lần đầu */
+showLesson(1);
+
+/* Nút về đầu trang — chỉ hiện khi đã cuộn xuống một đoạn */
+const backToTopBtn = document.getElementById('back-to-top');
+window.addEventListener('scroll', () => {
+  backToTopBtn.classList.toggle('show', window.scrollY > 400);
+});
+</script>
+  
+
+</body>
+</html>
