@@ -110,6 +110,10 @@
   .detail-text details.answer-box .answer-content{ margin-top:8px; color:#3D4C63; font-size:.88rem;}
   .lesson-figure img{ width:100%; max-height:520px; object-fit:contain; background:var(--paper);
     border-radius:12px; border:1px solid var(--line); margin-bottom:18px; display:block;}
+  .two-col{ display:flex; gap:20px; align-items:flex-start; margin:16px 0; flex-wrap:wrap;}
+  .two-col img{ width:280px; max-width:100%; object-fit:contain; background:var(--paper);
+    border-radius:10px; border:1px solid var(--line); flex-shrink:0;}
+  .two-col .two-col-text{ flex:1 1 260px; min-width:220px;}
   .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
   .drive-frame{ width:100%; height:440px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px;}
@@ -560,6 +564,79 @@ const LESSON_CONTENT = {
 </div>
 </details>`,
     img: "assets/tin11/11b1.jpg",
+    video: "",
+    doc: ""
+  },
+  2: {
+    ngay: "26/08/2026",
+    text: `<p class="lesson-en">Lesson 2: Operating System Practice</p>
+
+<figure class="lesson-figure">
+  <img src="assets/tin11/21.jpg" alt="Tóm tắt kiến thức Bài 2">
+  <figcaption style="text-align:center; color:#7C8AA0; font-size:.82rem; margin-top:-10px;">Tóm tắt kiến thức</figcaption>
+</figure>
+
+<div class="activity-box">
+<p><strong>KHỞI ĐỘNG</strong></p>
+<p>Các thiết bị di động thực tế cũng là máy tính cá nhân. Hệ điều hành của các loại máy tính cá nhân có nhiều lợi ích khác nhau nhưng giao diện người dùng có nhiều điểm tương đồng. <strong>Em hãy chỉ ra một vài điểm tương đồng đó.</strong></p>
+</div>
+<details class="answer-box"><summary>Xem đáp án Khởi động</summary>
+<div class="answer-content">Giao diện thân thiện, dễ sử dụng. Nhìn chung giao diện của các thiết bị di động sẽ có các chức năng cơ bản giống nhau.</div>
+</details>
+
+<p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
+<div class="activity-box">
+<p style="color:#D32F2F;"><strong>Luyện tập 1:</strong> Tiện ích danh bạ còn có chức năng quản lí nhóm. Mỗi nhóm có thể gồm nhiều số điện thoại, mỗi số điện thoại có thể thuộc nhiều nhóm. Hãy thực hiện việc tạo nhóm, xoá nhóm, đăng kí vào danh bạ.</p>
+</div>
+<details class="answer-box"><summary>Xem hướng dẫn Luyện tập 1</summary>
+<div class="answer-content">Các em mở điện thoại di động, vào phần danh bạ và thực hiện việc tạo nhóm, xóa nhóm, đăng kí vào danh bạ.</div>
+</details>
+
+<div class="activity-box">
+<p style="color:#D32F2F;"><strong>Luyện tập 2:</strong> Đồng hồ là một tiện ích cơ bản của hệ điều hành di động. Ứng dụng này không chỉ cho phép đặt nhắc hẹn (một lần hay định kì) mà còn có khả năng đếm thời gian chính xác đến 1% giây, rất cần cho các hoạt động cần độ chính xác cao như đo các kỉ lục thể thao. Hãy sử dụng các chức năng đếm thời gian tiến hay lùi của tiện ích này.</p>
+</div>
+<details class="answer-box"><summary>Xem hướng dẫn Luyện tập 2</summary>
+<div class="answer-content">
+<ul>
+  <li><strong>Chức năng đếm ngược thời gian về 0:</strong> Mở Đồng hồ → Đồng hồ hẹn giờ → Chọn/nhập thời lượng muốn → ► → Khi đồng hồ hẹn giờ kết thúc, nhấn ∎.</li>
+  <li><strong>Chức năng đếm xuôi thời gian từ 0:</strong> Mở Đồng hồ → Đồng hồ bấm giờ → ► → Để tạm dừng, nhấn biểu tượng dừng.</li>
+</ul>
+</div>
+</details>
+
+<p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p>
+<div class="activity-box">
+<p style="color:#D32F2F;"><strong>Vận dụng 1:</strong> Hình 2.7 là cửa sổ Properties mở theo Tab Tools. Nếu mở theo Tab General em sẽ thấy có nút lệnh của tiện ích dọn đĩa (Disk Cleanup). Hãy tìm hiểu chức năng và cách sử dụng tiện ích này.</p>
+</div>
+
+<div class="two-col">
+  <img src="assets/tin11/22.jpg" alt="Cửa sổ Properties - Disk Cleanup">
+  <div class="two-col-text">
+    <p><strong>Chức năng:</strong> Dọn dẹp máy tính.</p>
+    <p><strong>Bước 1:</strong> Sử dụng File Explorer để chọn ổ đĩa. Nháy nút chuột phải lên ổ đĩa muốn xử lí rồi chọn Properties.</p>
+    <p><strong>Bước 2:</strong> Trong cửa sổ Properties của đĩa cứng, chọn General.</p>
+    <p><strong>Bước 3:</strong> Chọn Disk Cleanup và tích vào những file/tập tin cần xóa.</p>
+    <p><strong>Bước 4:</strong> Nhấn vào Clean up system files → Delete Files.</p>
+  </div>
+</div>
+
+<figure class="lesson-figure">
+  <img src="assets/tin11/23.jpg" alt="Minh hoạ các bước dọn đĩa Disk Cleanup">
+</figure>
+
+<div class="activity-box">
+<p style="color:#D32F2F;"><strong>Vận dụng 2:</strong> Ngoài cách đăng nhập dùng mật khẩu, các thiết bị di động còn cung cấp nhiều phương pháp đăng nhập khác như nhận dạng vân tay, nhận dạng khuôn mặt hay dùng khẩu hình. Hãy tìm hiểu các phương pháp đó và so sánh các điểm mạnh, điểm yếu của chúng.</p>
+</div>
+<details class="answer-box"><summary>Xem đáp án Vận dụng 2</summary>
+<div class="answer-content">
+<table>
+<tr><th></th><th>Mật khẩu</th><th>Hình vẽ</th><th>Vân tay</th><th>Khuôn mặt</th></tr>
+<tr><td><strong>Ưu điểm</strong></td><td>Bảo mật khá cao, khó bị phá bỏ</td><td>Tiện thao tác, dễ nhớ</td><td>Khả năng bảo mật rất cao, khó bị làm giả, không cần nhớ mật khẩu</td><td>Cách mở khoá khá thú vị, không phải thao tác nhiều lên màn hình</td></tr>
+<tr><td><strong>Nhược điểm</strong></td><td>Dễ quên mật khẩu</td><td>Dễ bị người khác nhìn thấy</td><td>Ngón tay bị ướt sẽ không mở khoá được</td><td>Khả năng bảo mật kém, có thể dùng hình để mở khoá</td></tr>
+</table>
+</div>
+</details>`,
+    img: "assets/tin11/21.jpg",
     video: "",
     doc: ""
   }
