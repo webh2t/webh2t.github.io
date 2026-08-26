@@ -9,7 +9,7 @@
 <style>
   :root{
     --ink:#0F1C2E; --ink-soft:#16233A; --paper:#EFF3F1; --paper-card:#FFFFFF;
-    --amber:#FFC845; --teal:#2EC4B6; --line: rgba(15,28,46,0.12); --radius:14px;
+    --amber:#FFC845; --teal:#2EC4B6; --brilliant-blue:#2752D6; --line: rgba(15,28,46,0.12); --radius:14px;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{ font-family:'Be Vietnam Pro',sans-serif; background:var(--paper); color:var(--ink-soft);}
@@ -26,11 +26,11 @@
   .eyebrow{ font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600; color:var(--teal); letter-spacing:.12em; text-transform:uppercase;}
   h1{ font-size:2rem; font-weight:800; color:var(--ink); margin-top:8px;}
   .grade-hero{ text-align:center; margin:8px 0 32px;}
-  .grade-hero h1{ font-size:clamp(2.2rem, 5vw, 3.4rem); font-weight:800; color:var(--teal);
+  .grade-hero h1{ font-size:clamp(2.2rem, 5vw, 3.4rem); font-weight:800; color:var(--brilliant-blue);
                   letter-spacing:.01em; margin:0; text-transform:none;}
   p.sub{ margin-top:10px; color:#5B6B82; max-width:640px;}
   section.block{ margin-top:56px;}
-  .block-title{ font-size:1.35rem; font-weight:700; color:var(--teal); margin:6px 0 20px;}
+  .block-title{ font-size:1.35rem; font-weight:700; color:var(--brilliant-blue); margin:6px 0 20px;}
 
   /* ---------- Khối 1: Slideshow ---------- */
   .slideshow{ position:relative; border-radius:var(--radius); overflow:hidden; background:var(--ink);
@@ -97,6 +97,17 @@
   .detail-text table th{ background:var(--paper); font-weight:700; color:var(--ink);}
   .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0;}
   .detail-text a{ color:var(--teal); text-decoration:underline;}
+  .detail-text .lesson-en{ color:#7C8AA0; font-style:italic; font-size:.85rem;}
+  .detail-text .activity-box{ background:rgba(46,196,182,.07); border-left:3px solid var(--teal);
+    padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0;}
+  .detail-text details.answer-box{ background:rgba(255,200,69,.08); border:1px solid rgba(255,200,69,.35);
+    border-radius:10px; padding:10px 16px; margin:10px 0;}
+  .detail-text details.answer-box summary{ cursor:pointer; font-weight:700; color:#B4830A; font-size:.85rem;
+    list-style:none;}
+  .detail-text details.answer-box summary::-webkit-details-marker{ display:none;}
+  .detail-text details.answer-box summary::before{ content:"▸ "; }
+  .detail-text details.answer-box[open] summary::before{ content:"▾ "; }
+  .detail-text details.answer-box .answer-content{ margin-top:8px; color:#3D4C63; font-size:.88rem;}
   .lesson-figure img{ width:100%; max-height:380px; object-fit:cover; border-radius:12px; border:1px solid var(--line); margin-bottom:18px;}
   .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
@@ -105,7 +116,7 @@
 
   /* ---------- Related posts: lưới ảnh 3 cột ---------- */
   .related-box{ margin-top:28px; padding-top:22px; border-top:1px dashed var(--line);}
-  .related-box h4{ font-size:.85rem; font-weight:700; color:var(--teal); text-transform:uppercase;
+  .related-box h4{ font-size:.85rem; font-weight:700; color:var(--brilliant-blue); text-transform:uppercase;
                     letter-spacing:.06em; margin-bottom:14px;}
   .related-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
   .related-card{ text-decoration:none; color:inherit; display:block; border-radius:12px; overflow:hidden;
@@ -332,7 +343,7 @@
         <div class="progress-track"><div class="progress-fill" id="posted-ratio-bar" style="width:0%"></div></div>
       </div>
     </div>
-    <h4 style="font-size:.85rem; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;">Most Viewed Posts</h4>
+    <h4 style="font-size:.85rem; font-weight:700; color:var(--brilliant-blue); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;">Most Viewed Posts</h4>
     <div class="top-list" id="top-list">
       <div class="top-item"><span class="ttitle">Đang tải…</span></div>
     </div>
@@ -432,7 +443,7 @@ const LESSONS = [
    ID_BAI: {
      ngay: "dd/mm/yyyy",
      text: `<p>Nội dung bài học...</p>`,
-     img: "assets/tin11-baiX-minhhoa.jpg",   // để "" nếu không có ảnh
+     img: "assets/tin11/tin11-baiX-minhhoa.jpg",   // để "" nếu không có ảnh
      video: "ID_VIDEO_YOUTUBE",               // để "" nếu không có video
      doc: "ID_FILE_GOOGLE_DRIVE"              // để "" nếu không có tài liệu
    },
@@ -440,17 +451,116 @@ const LESSONS = [
 const LESSON_CONTENT = {
   1: {
     ngay: "25/08/2026",
-    text: `<p>Hệ điều hành (Operating System) là phần mềm trung gian giữa người dùng và phần cứng máy tính, có nhiệm vụ:</p>
-           <ul>
-             <li><strong>Quản lí phần cứng</strong> — điều phối CPU, bộ nhớ, thiết bị ngoại vi</li>
-             <li><strong>Quản lí tệp và thư mục</strong> — tổ chức lưu trữ dữ liệu có hệ thống</li>
-             <li><strong>Cung cấp giao diện</strong> — cho phép người dùng tương tác với máy tính</li>
-             <li><strong>Chạy và quản lí ứng dụng</strong> — cấp phát tài nguyên cho từng chương trình</li>
-           </ul>
-           <p><em>(EN) An operating system is the software layer between users and computer hardware, managing hardware resources, files, the user interface, and running applications.</em></p>`,
-    img: "assets/tin11-bai1-minhhoa.jpg",
-    video: "YOUTUBE_VIDEO_ID_BAI1",
-    doc: "FILE_ID_BAI1"
+    text: `<p class="lesson-en">Lesson 1: Operating Systems</p>
+
+<div class="activity-box">
+<p><strong>KHỞI ĐỘNG</strong></p>
+<p>Khi chưa có hệ điều hành, con người phải can thiệp vào hầu hết quá trình hoạt động của máy tính nên hiệu quả khai thác sử dụng máy tính rất thấp. Sự ra đời của hệ điều hành đã giúp khắc phục được tình trạng đó. Việc sử dụng máy tính về cơ bản được thực hiện thông qua hệ điều hành. <strong>Em hãy chỉ ra một số công việc mà hệ điều hành thực hiện.</strong></p>
+</div>
+<details class="answer-box"><summary>Xem đáp án Khởi động</summary>
+<div class="answer-content">Hệ điều hành khởi động và kiểm soát mọi hoạt động của máy tính; quản lí các tài khoản người dùng máy tính, phần mềm ứng dụng và các tệp dữ liệu; hỗ trợ sao lưu dữ liệu, phòng chống virus.</div>
+</details>
+
+<p><strong>1. LỊCH SỬ PHÁT TRIỂN CỦA HỆ ĐIỀU HÀNH MÁY TÍNH CÁ NHÂN</strong></p>
+<div class="activity-box">
+<p><strong>Hoạt động 1:</strong> Theo em, nhóm chức năng nào thể hiện rõ nhất đặc thù của hệ điều hành máy tính cá nhân?</p>
+<p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Nêu các nhóm chức năng chính của hệ điều hành.</p>
+<p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Nêu các đặc điểm cơ bản của hệ điều hành máy tính cá nhân.</p>
+</div>
+<details class="answer-box"><summary>Xem đáp án mục 1</summary>
+<div class="answer-content">
+<p><strong>Đáp án Hoạt động 1:</strong> Nhóm chức năng thể hiện rõ nhất là quản lí thiết bị.</p>
+<p><strong>Đáp án Câu hỏi 1:</strong></p>
+<ul>
+  <li>Quản lí thiết bị.</li>
+  <li>Quản lí việc lưu trữ dữ liệu.</li>
+  <li>Tổ chức thực hiện chương trình, điều phối tài nguyên.</li>
+  <li>Cung cấp môi trường giao tiếp với người sử dụng.</li>
+  <li>Cung cấp một số tiện ích nâng cao hiệu quả sử dụng máy tính.</li>
+</ul>
+<p><strong>Đáp án Câu hỏi 2:</strong></p>
+<ul>
+  <li>Tài nguyên dạy học &amp; Lớp học</li>
+  <li>Giao diện thân thiện, khả năng nhận biết các thiết bị ngoại vi với cơ chế plug &amp; play.</li>
+</ul>
+</div>
+</details>
+
+<p><strong>2. HỆ ĐIỀU HÀNH CHO THIẾT BỊ DI ĐỘNG</strong></p>
+<div class="activity-box">
+<p><strong>Hoạt động 2:</strong> Điện thoại thông minh, máy tính bảng (gọi chung là thiết bị di động) thực chất là các máy tính cá nhân. Sự khác nhau giữa hệ điều hành cho thiết bị di động và hệ điều hành của máy tính có nguồn gốc từ sự khác biệt về tính năng, tác dụng của hai loại thiết bị này. Hãy cùng thảo luận để chỉ ra những điểm khác nhau đó.</p>
+<p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Vì sao hệ điều hành di động ưu tiên cao cho giao tiếp thân thiện và kết nối mạng di động?</p>
+<p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Kể tên ba tiện ích thường có trên thiết bị di động và chức năng của nó.</p>
+</div>
+
+<table>
+<tr><td></td><th>Hệ điều hành cho thiết bị di động</th><th>Hệ điều hành cho máy tính</th></tr>
+<tr><td>Kết nối mạng di động</td><td>Dễ dàng và nhanh chóng</td><td>Khó khăn hơn và ít được sử dụng đến</td></tr>
+<tr><td>Giao diện</td><td>Thân thiện hơn</td><td>Ít thân thiện hơn</td></tr>
+<tr><td>Tiện ích hỗ trợ cá nhân</td><td>Nhiều</td><td>Ít hơn so với thiết bị di động</td></tr>
+<tr><td>Ví dụ</td><td>iOS, Android</td><td>MacOS, Windows,…</td></tr>
+</table>
+
+<details class="answer-box"><summary>Xem đáp án mục 2</summary>
+<div class="answer-content">
+<p><strong>Đáp án Câu hỏi 1:</strong> Vì tính di động, dùng ở mọi nơi, mọi thời điểm nên chú trọng đến khả năng kết nối mạng không dây.</p>
+<p><strong>Đáp án Câu hỏi 2:</strong></p>
+<ul>
+  <li>Nghe nhạc: giải trí</li>
+  <li>Gọi điện: liên lạc</li>
+  <li>Lên mạng: tìm hiểu thông tin, mở rộng hiểu biết.</li>
+</ul>
+</div>
+</details>
+
+<p><strong>3. QUAN HỆ GIỮA HỆ ĐIỀU HÀNH, PHẦN CỨNG VÀ PHẦN MỀM</strong></p>
+<div class="activity-box">
+<p><strong>Hoạt động 3:</strong> Có hay không trường hợp phần mềm chạy trên thiết bị không có hệ điều hành? Khi nào cần phải có hệ điều hành?</p>
+<p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Nêu lí do thiết bị xử lí đa năng cần có hệ điều hành?</p>
+<p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Nêu mối quan hệ giữa phần cứng, phần mềm ứng dụng và hệ điều hành.</p>
+</div>
+<details class="answer-box"><summary>Xem đáp án mục 3</summary>
+<div class="answer-content">
+<p><strong>Đáp án Hoạt động 3:</strong> Có trường hợp đó. Cần phải có hệ điều hành khi các thiết bị đa năng như máy tính thực hiện nhiều công việc.</p>
+<p><strong>Đáp án Câu hỏi 1:</strong> Với thiết bị đa năng, khi phần mềm chạy, cần điều phối tài nguyên cho các ứng dụng → Cần có hệ điều hành để đáp ứng các nhu cầu trên.</p>
+<p><strong>Đáp án Câu hỏi 2:</strong> Phần cứng là thiết bị xử lí thông tin, hệ điều hành là môi trường trung gian giúp phần mềm ứng dụng khai thác phần cứng.</p>
+</div>
+</details>
+
+<figure class="lesson-figure" style="margin:18px 0;">
+  <img src="assets/tin11/12b1.jpg" alt="Sơ đồ minh hoạ quan hệ hệ điều hành - phần cứng - phần mềm">
+</figure>
+
+<p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
+<div class="activity-box">
+<p style="color:#D32F2F;"><strong>Luyện tập 1:</strong> Em hiểu thế nào về tính thân thiện của hệ điều hành?</p>
+<p style="color:#D32F2F;"><strong>Luyện tập 2:</strong> Hệ điều hành cung cấp môi trường giao tiếp với người sử dụng như thế nào? Môi trường giao tiếp đó thể hiện như thế nào trên hệ điều hành Windows?</p>
+</div>
+<details class="answer-box"><summary>Xem đáp án Luyện tập</summary>
+<div class="answer-content">
+<p><strong>Đáp án LT1:</strong> Đối với hệ điều hành máy tính cá nhân, tính thân thiện được cải thiện từ giao diện dòng lệnh chuyển sang giao diện đồ hoạ. Đối với hệ điều hành cho thiết bị di động, tính thân thiện thông qua nhận dạng hành vi của người dùng.</p>
+<p><strong>Đáp án LT2:</strong></p>
+<ul>
+  <li>Cung cấp môi trường giao tiếp giữa người dùng và hệ thống: thông qua hệ thống câu lệnh được nhập từ bàn phím.</li>
+  <li>Trên hệ điều hành Windows, giao tiếp thông qua bàn phím và chuột.</li>
+</ul>
+</div>
+</details>
+
+<p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p>
+<div class="activity-box">
+<p style="color:#D32F2F;"><strong>Vận dụng 1:</strong> Em hãy tìm hiểu xem ngoài máy tính còn có thiết bị điện gia dụng nào sử dụng hệ điều hành không?</p>
+<p style="color:#D32F2F;"><strong>Vận dụng 2:</strong> Thực ra, LINUX là hệ điều hành có nguồn gốc từ hệ điều hành UNIX. Hãy tìm hiểu lịch sử của hệ điều hành LINUX để biết thêm về hệ điều hành UNIX.</p>
+</div>
+<details class="answer-box"><summary>Xem đáp án Vận dụng</summary>
+<div class="answer-content">
+<p><strong>Đáp án VD1:</strong> Các dòng Smart Tivi dùng: Android TV, Web OS, Tizen,…</p>
+<p><strong>Đáp án VD2:</strong> Linux là một hệ điều hành máy tính được phát triển từ năm 1991 dựa trên hệ điều hành Unix và bằng viết bằng ngôn ngữ C, được phát hành miễn phí và có nhiều ưu điểm vượt trội.</p>
+</div>
+</details>`,
+    img: "assets/tin11/11b1.jpg",
+    video: "",
+    doc: ""
   }
 };
 const DEFAULT_CONTENT = { ngay: "", text: "<p>Bài viết chưa cập nhật mới.</p>", img: "", video: "", doc: "" };
@@ -686,7 +796,7 @@ if (slideCount === 0) {
 } else {
   track.innerHTML = postsWithContent.map(b => {
     const c = LESSON_CONTENT[b.id];
-    const img = c.img || 'assets/tin11-sgk.jpg';
+    const img = c.img || 'assets/tin11/tin11-sgk.jpg';
     return `<div class="slide" onclick="showLesson(${b.id})">
       <img src="${img}" alt="${b.ten}">
       <div class="caption"><span class="tag">${c.ngay || ''}</span><br>Bài ${b.id}. ${b.ten}</div>
