@@ -69,7 +69,7 @@
   .bai-list button .id{ font-family:'Space Grotesk',monospace; color:var(--teal); font-weight:600; font-size:.8rem;}
   .bai-list button.active{ background:rgba(255,200,69,.15); color:var(--ink); font-weight:600;}
 
-  /* ---------- Khung nội dung chi tiết bài học ---------- */
+  /* ---------- Khung chi tiết bài học ---------- */
   #lesson-detail{ margin-top:24px;}
   .detail-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
                 padding:28px; display:none;}
@@ -77,48 +77,81 @@
   .detail-meta{ display:flex; gap:14px; align-items:center; flex-wrap:wrap; margin-bottom:6px;}
   .detail-meta .chude-tag{ font-family:'Space Grotesk',monospace; font-size:.72rem; font-weight:600;
                             background:rgba(46,196,182,.12); color:var(--teal); padding:3px 9px; border-radius:6px;}
-  .detail-meta .views{ font-size:.78rem; color:#7C8AA0; font-family:'Space Grotesk',monospace;}
+  .detail-meta .views, .detail-meta .date{ font-size:.78rem; color:#7C8AA0; font-family:'Space Grotesk',monospace;}
   .detail-title{ font-size:1.25rem; font-weight:700; color:var(--ink); margin:8px 0 16px;}
-  .detail-text{ color:#3D4C63; font-size:.95rem; margin-bottom:18px; white-space:pre-line;}
+  .detail-text{ color:#3D4C63; font-size:.95rem; margin-bottom:18px;}
+  .detail-text p{ margin-bottom:10px;}
+  .detail-text ul, .detail-text ol{ margin:10px 0 10px 22px;}
+  .detail-text strong{ color:var(--ink);}
+  .detail-text table{ width:100%; border-collapse:collapse; margin:14px 0; font-size:.88rem;}
+  .detail-text table td, .detail-text table th{ border:1px solid var(--line); padding:8px 10px; text-align:left;}
+  .detail-text table th{ background:var(--paper); font-weight:700; color:var(--ink);}
+  .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0;}
+  .detail-text a{ color:var(--teal); text-decoration:underline;}
   .lesson-figure img{ width:100%; max-height:380px; object-fit:cover; border-radius:12px; border:1px solid var(--line); margin-bottom:18px;}
   .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
   .drive-frame{ width:100%; height:440px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px;}
   .caption-small{ font-size:.8rem; color:#7C8AA0; margin-bottom:18px;}
 
+  /* ---------- Related posts: lưới ảnh 3 cột ---------- */
   .related-box{ margin-top:28px; padding-top:22px; border-top:1px dashed var(--line);}
   .related-box h4{ font-size:.85rem; font-weight:700; color:var(--ink); text-transform:uppercase;
-                    letter-spacing:.06em; margin-bottom:12px;}
-  .related-list{ display:grid; gap:8px;}
-  .related-list a{ font-size:.88rem; text-decoration:none; color:#3D4C63; display:flex; gap:8px;}
-  .related-list a:hover{ color:var(--teal);}
-  .related-list a .id{ font-family:'Space Grotesk',monospace; color:var(--teal); font-weight:600;}
-  .related-list a.current{ color:var(--ink); font-weight:700;}
+                    letter-spacing:.06em; margin-bottom:14px;}
+  .related-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
+  .related-card{ text-decoration:none; color:inherit; display:block; border-radius:12px; overflow:hidden;
+                 border:1px solid var(--line); background:var(--paper); transition:transform .15s, box-shadow .15s;}
+  .related-card:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(15,28,46,.1);}
+  .related-card .thumb{ width:100%; height:120px; object-fit:cover; display:block; background:var(--ink);}
+  .related-card .thumb-placeholder{ width:100%; height:120px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(135deg, var(--ink), #1C3252); color:var(--amber);
+    font-family:'Space Grotesk',monospace; font-weight:700; font-size:1.3rem;}
+  .related-card .rtitle{ padding:10px 12px; font-size:.82rem; font-weight:600; color:var(--ink); line-height:1.35;}
+  .related-card.current .rtitle{ color:var(--teal);}
 
-  #disqus_thread{ margin-top:26px; padding-top:22px; border-top:1px solid var(--line);}
-  .placeholder-box{ background:var(--paper); border:1px dashed var(--line); border-radius:10px;
-                     padding:16px; font-size:.82rem; color:#7C8AA0; text-align:center;}
-
-  /* ---------- Khối 3 & 4 ---------- */
-  .lesson-list{ display:grid; gap:14px;}
-  .lesson-item{ background:var(--paper-card); border:1px solid var(--line); border-radius:12px;
-                padding:16px 20px; display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap;}
-  .lesson-item .name{ font-weight:600; color:var(--ink);}
-  .lesson-item .name span{ display:block; font-size:.8rem; font-weight:400; color:#7C8AA0; margin-top:2px;}
-  .lesson-item a{ font-size:.85rem; font-weight:600; color:var(--ink); text-decoration:none; border-bottom:2px solid var(--amber); white-space:nowrap;}
-  .homework-text{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); padding:22px; color:#3D4C63; font-size:.94rem;}
-  .homework-text ul{ margin:10px 0 0 20px;}
-
-  /* ---------- Khối 5 ---------- */
-  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px;}
+  /* ---------- Bình luận (Firebase: Google / Facebook) ---------- */
+  .comments-section{ margin-top:28px; padding-top:22px; border-top:1px solid var(--line);}
+  .comments-section h4{ font-size:.85rem; font-weight:700; color:var(--ink); text-transform:uppercase;
+                         letter-spacing:.06em; margin-bottom:14px;}
+  .auth-box{ margin-bottom:18px;}
+  .btn-mini{ background:var(--ink); color:#fff; border:none; padding:9px 16px; border-radius:8px;
+             font-size:.85rem; font-weight:600; cursor:pointer; margin-right:8px; margin-bottom:8px;}
+  .btn-mini:hover{ opacity:.9;}
+  .btn-mini-primary{ background:var(--teal);}
+  .auth-user{ display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:.9rem;}
+  .comment-avatar{ width:32px; height:32px; border-radius:50%; object-fit:cover; background:var(--line);}
+  textarea#comment-input{ width:100%; min-height:70px; border:1px solid var(--line); border-radius:10px;
+    padding:10px 12px; font-family:inherit; font-size:.9rem; resize:vertical; margin-bottom:10px;}
+  .comments-list{ display:grid; gap:14px;}
+  .comment-item{ display:flex; gap:10px; align-items:flex-start;}
+  .comment-num{ font-family:'Space Grotesk',monospace; font-weight:700; color:var(--teal); font-size:.8rem; min-width:22px;}
+  .comment-body{ flex:1;}
+  .comment-meta{ font-size:.82rem; display:flex; gap:8px; align-items:baseline; flex-wrap:wrap;}
+  .comment-meta strong{ color:var(--ink);}
+  .comment-meta span{ color:#9AA6B8; font-size:.75rem;}
+  .comment-text{ font-size:.88rem; color:#3D4C63; margin-top:3px;}
+   /* ---------- Thống kê ---------- */
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; margin-bottom:24px;}
   .stat-card{ background:var(--ink); color:#fff; border-radius:var(--radius); padding:22px;}
   .stat-card .num{ font-family:'Space Grotesk',monospace; font-size:2rem; font-weight:700; color:var(--amber);}
   .stat-card .label{ font-size:.82rem; color:#B9C4D4; margin-top:4px;}
-  #recent-comments{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); padding:20px;}
+  .top-list{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  .top-item{ display:flex; align-items:center; gap:14px; padding:13px 18px; border-bottom:1px solid var(--line); cursor:pointer;}
+  .top-item:last-child{ border-bottom:none;}
+  .top-item:hover{ background:rgba(46,196,182,.06);}
+  .top-item .rank{ font-family:'Space Grotesk',monospace; font-weight:700; color:var(--amber); background:var(--ink);
+    width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:.8rem; flex-shrink:0;}
+  .top-item .ttitle{ flex:1; font-size:.88rem; color:var(--ink); font-weight:500;}
+  .top-item .tviews{ font-family:'Space Grotesk',monospace; font-size:.78rem; color:#7C8AA0; white-space:nowrap;}
 
+
+  @media (max-width:760px){
+    .related-grid{ grid-template-columns:repeat(2,1fr);}
+  }
   @media (max-width:640px){
     main{ padding:32px 16px 60px;}
     .detail-card{ padding:18px;}
+    .related-grid{ grid-template-columns:1fr;}
   }
 
 /* SITE NAVIGATION — đồng bộ với index.html / exam.html */
