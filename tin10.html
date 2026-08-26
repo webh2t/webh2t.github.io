@@ -137,7 +137,7 @@
 <header>
   <div class="wrap">
     <strong>WEBH2T+</strong>
-    <a class="back" href="index.html">← Về trang chủ / Back to Home</a>
+    <a class="back" href="index.html">← Back to Home</a>
   </div>
 </header>
 <nav class="site-nav" aria-label="Điều hướng website">
@@ -156,13 +156,11 @@
 
 <main>
   <span class="eyebrow">Grade 10</span>
-  <h1>Tin học 10 — Sách giáo khoa &amp; Bài giảng</h1>
-  <p class="sub">Trọn bộ 6 chủ đề, 34 bài học theo chương trình GDPT 2018, tích hợp song ngữ Anh–Việt và năng lực số. / Full Grade-10 Informatics curriculum — bilingual, digitally competent.</p>
-
-  <!-- ============ KHỐI 1: SLIDE HÌNH ẢNH BÀI GIẢNG ============ -->
+  <h1>Tin học 10 </h1>
+  
+<!-- ============ Ảnh bìa sách giáo khoa ============ -->
   <section class="block">
-    <span class="eyebrow">Khối 1</span>
-    <h2 class="block-title">Ảnh bìa sách giáo khoa</h2>
+    <h2 class="block-title">Bài giảng mới </h2>
     <div class="slideshow" id="slideshow">
       <div class="slides-track" id="track">
         <div class="slide">
@@ -180,9 +178,8 @@
     </div>
   </section>
 
-  <!-- ============ KHỐI 2: MỤC LỤC SGK ============ -->
+  <!-- ============ Mục lục sách giáo khoa ============ -->
   <section class="block">
-    <span class="eyebrow">Khối 2</span>
     <h2 class="block-title">Mục lục sách giáo khoa</h2>
     <div class="toc" id="toc"></div>
 
@@ -190,6 +187,7 @@
       <div class="detail-card" id="detail-card">
         <div class="detail-meta">
           <span class="chude-tag" id="d-chude"></span>
+          <span class="date" id="d-date">📅 —</span>
           <span class="views" id="d-views">👁 0 lượt xem</span>
         </div>
         <h3 class="detail-title" id="d-title"></h3>
@@ -199,18 +197,21 @@
         <div id="d-doc"></div>
 
         <div class="related-box">
-          <h4>Các bài cùng chủ đề</h4>
-          <div class="related-list" id="d-related"></div>
+          <h4>Bài viết liên quan</h4>
+          <div class="related-grid" id="d-related"></div>
         </div>
 
-        <div id="disqus_thread"></div>
+        <div class="comments-section">
+          <h4 id="comments-heading">Bình luận</h4>
+          <div class="auth-box" id="auth-box"></div>
+          <div class="comments-list" id="comments-list"></div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ============ KHỐI 3: BÀI TẬP THỰC HÀNH ============ -->
+  <!-- ============ Bài tập thực hành ============ -->
   <section class="block">
-    <span class="eyebrow">Khối 3</span>
     <h2 class="block-title">Bài tập thực hành</h2>
     <div class="homework-text">
       <p><strong>Yêu cầu chung:</strong> Học sinh hoàn thành bài tập tương ứng với bài học đã học trên lớp, nộp đúng thời hạn giáo viên quy định.</p>
@@ -232,29 +233,10 @@
     </div>
   </section>
 
-  <!-- ============ KHỐI 4: ĐỀ THI ============ -->
-  <section class="block">
-    <span class="eyebrow">Khối 4</span>
-    <h2 class="block-title">Đề thi</h2>
-    <div class="lesson-list">
-      <div class="lesson-item">
-        <div class="name">a. Đề kiểm tra thường xuyên 1<span>Hình thức: trắc nghiệm 15 phút</span></div>
-        <a href="https://docs.google.com/forms/d/e/FORM_ID_TX1/viewform" target="_blank" rel="noopener">Làm bài →</a>
-      </div>
-      <div class="lesson-item">
-        <div class="name">b. Đề kiểm tra thường xuyên 2<span>Hình thức: trắc nghiệm 15 phút</span></div>
-        <a href="https://docs.google.com/forms/d/e/FORM_ID_TX2/viewform" target="_blank" rel="noopener">Làm bài →</a>
-      </div>
-      <div class="lesson-item">
-        <div class="name">c. Đề thi<span>Kiểm tra giữa kỳ / cuối kỳ</span></div>
-        <a href="https://docs.google.com/forms/d/e/FORM_ID_DETHI/viewform" target="_blank" rel="noopener">Làm bài →</a>
-      </div>
-    </div>
-  </section>
+  
 
-  <!-- ============ KHỐI 5: THỐNG KÊ ============ -->
+  <!-- ============ Thống kê ============ -->
   <section class="block">
-    <span class="eyebrow">Khối 5</span>
     <h2 class="block-title">Thống kê trang</h2>
     <div class="stats-grid">
       <div class="stat-card">
@@ -262,21 +244,47 @@
         <div class="label">Lượt xem trang này / Page views</div>
       </div>
     </div>
-    <div style="margin-top:20px;">
-      <h4 style="font-size:.85rem; font-weight:700; color:var(--ink); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;">Bình luận mới nhất</h4>
-      <div id="recent-comments">
-        <div class="placeholder-box">
-          Widget "Bình luận mới nhất" của Disqus sẽ hiển thị tại đây sau khi bạn dán mã nhúng lấy từ Disqus Admin → xem hướng dẫn bên dưới cuộc trò chuyện.
-        </div>
-      </div>
+    <h4 style="font-size:.85rem; font-weight:700; color:var(--ink); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;">Bài viết xem nhiều nhất</h4>
+    <div class="top-list" id="top-list">
+      <div class="top-item"><span class="ttitle">Đang tải…</span></div>
     </div>
   </section>
 
 </main>
 
+<!-- Firebase SDK (compat) — dùng cho đăng nhập Google/Facebook + lưu bình luận -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics-compat.js"></script>
+
 <script>
 /* ======================================================
-   DỮ LIỆU 34 BÀI HỌC — sửa/thêm trực tiếp trong mảng này
+   CẤU HÌNH FIREBASE — thay bằng thông số dự án của bạn
+   (Firebase Console → Project settings → General → Your apps)
+   ====================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyDOqMkioHhQ9YuFY9mCpx_kRLOLL_tf9jU",
+  authDomain: "webh2t-tin.firebaseapp.com",
+  projectId: "webh2t-tin",
+  storageBucket: "webh2t-tin.firebasestorage.app",
+  messagingSenderId: "1016309715061",
+  appId: "1:1016309715061:web:2a180eeb66dfb02877e83c",
+  measurementId: "G-JZM7JNE09J"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+try { firebase.analytics(); } catch (e) { /* Analytics không bắt buộc cho bình luận, bỏ qua nếu lỗi mạng */ }
+
+function escapeHTML(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+/* ======================================================
+   DỮ LIỆU 34 BÀI HỌC
    ====================================================== */
 const CHUDE_NAMES = {
   1: "CHỦ ĐỀ 1: MÁY TÍNH VÀ XÃ HỘI TRI THỨC",
@@ -324,24 +332,29 @@ const LESSONS = [
   {id:34, chude:6, ten:"Nghề phát triển phần mềm"}
 ];
 
-/* Nội dung chi tiết — chỉ Bài 1 có sẵn mẫu đầy đủ, các bài khác
-   dùng nội dung mặc định "đang cập nhật". Thêm object mới vào đây
-   theo id để bổ sung nội dung cho bài tương ứng. */
+/* Nội dung chi tiết — chỉ Bài 1 có sẵn mẫu đầy đủ.
+   Thêm object mới vào đây theo id để bổ sung nội dung cho bài tương ứng.
+   ngay: định dạng dd/mm/yyyy */
 const LESSON_CONTENT = {
   1: {
-    text: "Thông tin là những gì đem lại hiểu biết cho con người về thế giới xung quanh và về chính bản thân mình. Quá trình xử lí thông tin gồm 4 bước: thu thập – lưu trữ – xử lí – truyền tải.\n\n(EN) Information is what gives people understanding of the world and themselves. Information processing has four steps: collect, store, process, transmit.",
+    ngay: "25/08/2026",
+    text: `<p>Thông tin là những gì đem lại hiểu biết cho con người về thế giới xung quanh và về chính bản thân mình. Quá trình xử lí thông tin gồm 4 bước:</p>
+           <ul>
+             <li><strong>Thu thập</strong> — tiếp nhận dữ liệu đầu vào</li>
+             <li><strong>Lưu trữ</strong> — ghi giữ dữ liệu để dùng sau</li>
+             <li><strong>Xử lí</strong> — biến đổi dữ liệu thành thông tin</li>
+             <li><strong>Truyền tải</strong> — chuyển thông tin tới nơi cần</li>
+           </ul>
+           <p><em>(EN) Information is what gives people understanding of the world and themselves. Information processing has four steps: collect, store, process, transmit.</em></p>`,
     img: "assets/tin10-bai1-minhhoa.jpg",
     video: "YOUTUBE_VIDEO_ID_BAI1",
     doc: "FILE_ID_BAI1"
   }
 };
-const DEFAULT_CONTENT = {
-  text: "Nội dung bài học đang được biên soạn, thầy/cô sẽ cập nhật trong thời gian tới.",
-  img: "", video: "", doc: ""
-};
+const DEFAULT_CONTENT = { ngay: "", text: "<p>Bài viết chưa cập nhật mới.</p>", img: "", video: "", doc: "" };
 
 /* ======================================================
-   RENDER MỤC LỤC (Khối 2)
+   RENDER MỤC LỤC — bài chưa có nội dung hiện "(đang cập nhật)"
    ====================================================== */
 const tocEl = document.getElementById('toc');
 Object.keys(CHUDE_NAMES).forEach(cd => {
@@ -354,14 +367,14 @@ Object.keys(CHUDE_NAMES).forEach(cd => {
       ${baiCuaChude.map(b => `
         <li><button data-id="${b.id}" onclick="showLesson(${b.id})">
           <span class="id">Bài ${b.id}</span> ${b.ten}
+          ${!LESSON_CONTENT[b.id] ? '<span class="pending">(đang cập nhật)</span>' : ''}
         </button></li>`).join('')}
     </ul>`;
   tocEl.appendChild(det);
 });
 
 /* ======================================================
-   ĐẾM LƯỢT XEM — dùng CountAPI (miễn phí, không cần đăng ký)
-   Namespace lấy theo tên site để không trùng với site khác
+   ĐẾM LƯỢT XEM — CountAPI (miễn phí, không cần đăng ký)
    ====================================================== */
 const CA_NAMESPACE = 'webh2t-github-io';
 
@@ -370,17 +383,42 @@ async function bumpAndShowViews(key, elId) {
     const res = await fetch(`https://api.countapi.xyz/hit/${CA_NAMESPACE}/${key}`);
     const data = await res.json();
     document.getElementById(elId).textContent = `👁 ${data.value.toLocaleString('vi-VN')} lượt xem`;
+    return data.value;
   } catch (e) {
     document.getElementById(elId).textContent = '👁 —';
+    return 0;
   }
 }
-// Lượt xem toàn trang (Khối 5) — tăng 1 lần khi tải trang
+async function getViews(key) {
+  try {
+    const res = await fetch(`https://api.countapi.xyz/get/${CA_NAMESPACE}/${key}`);
+    const data = await res.json();
+    return data.value || 0;
+  } catch (e) { return 0; }
+}
 bumpAndShowViews('tin10-page', 'page-views');
 
+/* Bài viết xem nhiều nhất — đọc lượt xem của cả 34 bài (không cộng thêm), sắp xếp giảm dần, hiện top 5 */
+async function renderTopViewed() {
+  const results = await Promise.all(LESSONS.map(async b => ({...b, views: await getViews(`tin10-bai-${b.id}`)})));
+  const top5 = results.sort((a,b) => b.views - a.views).slice(0,5);
+  const listEl = document.getElementById('top-list');
+  listEl.innerHTML = top5.map((b,i) => `
+    <div class="top-item" onclick="showLesson(${b.id})">
+      <span class="rank">${i+1}</span>
+      <span class="ttitle">Bài ${b.id}. ${b.ten}</span>
+      <span class="tviews">${b.views.toLocaleString('vi-VN')} lượt xem</span>
+    </div>`).join('');
+}
+renderTopViewed();
+
 /* ======================================================
-   HIỂN THỊ CHI TIẾT BÀI HỌC (Khối 2)
+   HIỂN THỊ CHI TIẾT BÀI HỌC
    ====================================================== */
+let currentLessonId = null;
+
 function showLesson(id) {
+  currentLessonId = id;
   const bai = LESSONS.find(b => b.id === id);
   const content = LESSON_CONTENT[id] || DEFAULT_CONTENT;
 
@@ -389,8 +427,9 @@ function showLesson(id) {
   });
 
   document.getElementById('d-chude').textContent = CHUDE_NAMES[bai.chude];
+  document.getElementById('d-date').textContent = `📅 ${content.ngay || '—'}`;
   document.getElementById('d-title').textContent = `Bài ${bai.id}. ${bai.ten}`;
-  document.getElementById('d-text').textContent = content.text;
+  document.getElementById('d-text').innerHTML = content.text;
 
   document.getElementById('d-image').innerHTML = content.img
     ? `<figure class="lesson-figure"><img src="${content.img}" alt="${bai.ten}"></figure>` : '';
@@ -403,46 +442,121 @@ function showLesson(id) {
     ? `<p class="caption-small">Tài liệu minh hoạ (Google Drive):</p>
        <iframe class="drive-frame" src="https://drive.google.com/file/d/${content.doc}/preview" allow="autoplay"></iframe>` : '';
 
-  // Danh sách bài cùng chủ đề, sắp xếp tăng dần, đánh dấu bài hiện tại
-  const cungChude = LESSONS.filter(b => b.chude === bai.chude).sort((a,b) => a.id - b.id);
-  document.getElementById('d-related').innerHTML = cungChude.map(b => `
-    <a href="#" class="${b.id === id ? 'current' : ''}" onclick="showLesson(${b.id}); return false;">
-      <span class="id">Bài ${b.id}</span> ${b.ten}${b.id === id ? ' (đang xem)' : ''}
-    </a>`).join('');
+  // Related posts: 3 cột, ảnh lớn trên + tiêu đề dưới, cùng chủ đề, loại trừ bài hiện tại, tối đa 3
+  const related = LESSONS.filter(b => b.chude === bai.chude && b.id !== id).slice(0, 3);
+  document.getElementById('d-related').innerHTML = related.map(b => {
+    const rc = LESSON_CONTENT[b.id];
+    const thumb = rc && rc.img
+      ? `<img class="thumb" src="${rc.img}" alt="${b.ten}">`
+      : `<div class="thumb-placeholder">Bài ${b.id}</div>`;
+    return `<a href="#" class="related-card" onclick="showLesson(${b.id}); return false;">
+      ${thumb}
+      <div class="rtitle">Bài ${b.id}. ${b.ten}</div>
+    </a>`;
+  }).join('') || '<p class="caption-small">Không có bài liên quan.</p>';
 
   document.getElementById('detail-card').classList.add('show');
   document.getElementById('lesson-detail').scrollIntoView({behavior:'smooth', block:'start'});
 
   bumpAndShowViews(`tin10-bai-${id}`, 'd-views');
-  loadDisqus(id, bai.ten);
+  loadComments(id);
 }
 
 /* ======================================================
-   BÌNH LUẬN — Disqus, đổi 'YOUR_DISQUS_SHORTNAME' sau khi đăng ký
-   tại disqus.com. Mỗi bài học có 1 luồng bình luận riêng.
+   BÌNH LUẬN — đăng nhập Google / Facebook qua Firebase Auth,
+   lưu vào Firestore, sắp xếp mới → cũ, đánh số 1,2,3...
    ====================================================== */
-const DISQUS_SHORTNAME = 'webh2ttin10';
-let disqusLoaded = false;
+function signInGoogle(){
+  if (location.protocol === 'file:') {
+    alert('Tính năng đăng nhập chỉ hoạt động khi trang được mở qua địa chỉ web thật (https://...), không hoạt động khi mở trực tiếp file trên máy tính.\n\nHãy mở trang qua địa chỉ GitHub Pages của bạn, ví dụ:\nhttps://webh2t.github.io/tin10.html');
+    return;
+  }
+  auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
+    .catch(err => alert('Đăng nhập Google lỗi: ' + err.message));
+}
+function signInFacebook(){
+  if (location.protocol === 'file:') {
+    alert('Tính năng đăng nhập chỉ hoạt động khi trang được mở qua địa chỉ web thật (https://...), không hoạt động khi mở trực tiếp file trên máy tính.\n\nHãy mở trang qua địa chỉ GitHub Pages của bạn, ví dụ:\nhttps://webh2t.github.io/tin10.html');
+    return;
+  }
+  auth.signInWithPopup(new firebase.auth.FacebookAuthProvider())
+    .catch(err => alert('Đăng nhập Facebook lỗi: ' + err.message));
+}
+function signOutUser(){ auth.signOut(); }
 
-function loadDisqus(id, ten) {
-  window.disqus_config = function () {
-    this.page.url = `${window.location.origin}${window.location.pathname}#bai-${id}`;
-    this.page.identifier = 'tin10-bai-' + id;
-    this.page.title = 'Bài ' + id + '. ' + ten;
-  };
-  if (!disqusLoaded) {
-    const d = document.createElement('script');
-    d.src = `https://${DISQUS_SHORTNAME}.disqus.com/embed.js`;
-    d.setAttribute('data-timestamp', String(Date.now()));
-    (document.head || document.body).appendChild(d);
-    disqusLoaded = true;
-  } else if (window.DISQUS) {
-    window.DISQUS.reset({ reload: true, config: window.disqus_config });
+function renderAuthUI(user){
+  const box = document.getElementById('auth-box');
+  if (user) {
+    box.innerHTML = `
+      <div class="auth-user">
+        <img class="comment-avatar" src="${user.photoURL || ''}" alt="">
+        <span>${escapeHTML(user.displayName || 'Người dùng')}</span>
+        <button class="btn-mini" onclick="signOutUser()">Đăng xuất</button>
+      </div>
+      <textarea id="comment-input" placeholder="Viết bình luận của bạn..."></textarea>
+      <button class="btn-mini btn-mini-primary" onclick="postComment()">Gửi bình luận</button>`;
+  } else {
+    box.innerHTML = `
+      <p class="caption-small" style="margin-bottom:10px;">Đăng nhập để bình luận:</p>
+      <button class="btn-mini" onclick="signInGoogle()">Đăng nhập với Google</button>
+      <button class="btn-mini" onclick="signInFacebook()">Đăng nhập với Facebook</button>`;
   }
 }
+auth.onAuthStateChanged(renderAuthUI);
+
+function postComment(){
+  const user = auth.currentUser;
+  if (!user) { alert('Vui lòng đăng nhập trước khi bình luận.'); return; }
+  const input = document.getElementById('comment-input');
+  const text = input.value.trim();
+  if (!text) return;
+  db.collection('comments').add({
+    lessonId: currentLessonId,
+    name: user.displayName || 'Người dùng ẩn danh',
+    photo: user.photoURL || '',
+    text: text,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    input.value = '';
+    loadComments(currentLessonId);
+  }).catch(err => alert('Không gửi được bình luận: ' + err.message));
+}
+
+function loadComments(lessonId){
+  const wrap = document.getElementById('comments-list');
+  const heading = document.getElementById('comments-heading');
+  wrap.innerHTML = '<p class="caption-small">Đang tải bình luận…</p>';
+  db.collection('comments').where('lessonId','==',lessonId).orderBy('createdAt','desc').get()
+    .then(snap => {
+      if (snap.empty) {
+        heading.textContent = 'Bình luận (0 comment)';
+        wrap.innerHTML = '<p class="caption-small">0 comment</p>';
+        return;
+      }
+      heading.textContent = `Bình luận (${snap.size} comment)`;
+      let i = 0;
+      wrap.innerHTML = snap.docs.map(doc => {
+        i++;
+        const c = doc.data();
+        const date = c.createdAt ? c.createdAt.toDate().toLocaleDateString('vi-VN') : '';
+        return `<div class="comment-item">
+          <span class="comment-num">#${i}</span>
+          ${c.photo ? `<img class="comment-avatar" src="${c.photo}" alt="">` : ''}
+          <div class="comment-body">
+            <div class="comment-meta"><strong>${escapeHTML(c.name)}</strong><span>${date}</span></div>
+            <div class="comment-text">${escapeHTML(c.text)}</div>
+          </div>
+        </div>`;
+      }).join('');
+    })
+    .catch(err => {
+      wrap.innerHTML = '<p class="caption-small">Không tải được bình luận, vui lòng thử lại.</p>';
+      console.error(err);
+    });
+}
 
 /* ======================================================
-   SLIDESHOW (Khối 1)
+   SLIDESHOW
    ====================================================== */
 const track = document.getElementById('track');
 const dotsWrap = document.getElementById('dots');
@@ -464,6 +578,7 @@ setInterval(() => moveSlide(1), 5000);
 /* Mở sẵn Bài 1 khi tải trang lần đầu */
 showLesson(1);
 </script>
+  
 
 </body>
 </html>
