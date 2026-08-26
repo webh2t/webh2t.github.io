@@ -32,7 +32,7 @@
   section.block{ margin-top:56px;}
   .block-title{ font-size:1.35rem; font-weight:700; color:var(--brilliant-blue); margin:6px 0 20px;}
 
-  /* ---------- Khối 1: Latest Lessons Widget (Bố cục Split Modern 2 cột) ---------- */
+  /* ---------- Khối 1: Slideshow ---------- */
   .latest-widget {
     background: #ffffff;
     border-radius: var(--radius);
@@ -433,6 +433,7 @@
 
   /* ======================================================
      ẢNH TIN 11 — khung trắng đồng nhất, không méo ảnh
+     Áp dụng cho ảnh bài học, ảnh liên quan và slideshow.
      ====================================================== */
   .lesson-figure{
     width:100%;
@@ -460,6 +461,7 @@
     margin:0 auto;
   }
 
+  /* Ảnh nằm trực tiếp trong nội dung bài */
   .detail-text img{
     display:block;
     width:auto;
@@ -476,6 +478,7 @@
     box-sizing:border-box;
   }
 
+  /* Khối 2 cột có ảnh */
   .two-col img{
     width:100%;
     height:auto;
@@ -489,6 +492,7 @@
     box-sizing:border-box;
   }
 
+  /* Ảnh trong Related Lessons */
   .related-card .thumb{
     width:100%;
     height:180px;
@@ -502,7 +506,30 @@
     box-sizing:border-box;
   }
 
+  /* Latest Lessons: luôn giữ một khung thống nhất,
+     ảnh ngang/dọc đều được co vừa khung, KHÔNG crop */
+  .slideshow{
+    background:#fff;
+  }
+  .slide{
+    background:#fff;
+  }
+  .slide img{
+    width:100%;
+    height:380px;
+    object-fit:contain;
+    object-position:center;
+    display:block;
+    background:#fff;
+    padding:12px;
+    box-sizing:border-box;
+  }
+
   @media (max-width: 768px){
+    .slide img{
+      height:260px;
+      padding:8px;
+    }
     .lesson-figure{
       padding:8px;
       margin:14px 0;
@@ -522,6 +549,10 @@
   }
 
   @media (max-width: 480px){
+    .slide img{
+      height:210px;
+      padding:6px;
+    }
     .lesson-figure{
       padding:6px;
       border-radius:10px;
@@ -568,7 +599,7 @@
     <h1>Grade 11 Informatics</h1>
   </div>
   
-  <!-- ============ Bài giảng mới (Latest Lessons Split Layout) ============ -->
+<!-- ============ Bài giảng mới (Latest Lessons Split Layout) ============ -->
   <section class="block">
     <h2 class="block-title">Latest Lessons</h2>
     <div class="latest-widget" id="latest-widget">
@@ -662,6 +693,8 @@
     </div>
   </section>
 
+  
+
   <!-- ============ Thống kê ============ -->
   <section class="block">
     <h2 class="block-title">Page Statistics</h2>
@@ -699,6 +732,7 @@
 <script>
 /* ======================================================
    CẤU HÌNH FIREBASE — thay bằng thông số dự án của bạn
+   (Firebase Console → Project settings → General → Your apps)
    ====================================================== */
 const firebaseConfig = {
   apiKey: "AIzaSyDOqMkioHhQ9YuFY9mCpx_kRLOLL_tf9jU",
@@ -712,8 +746,8 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
-try { firebase.analytics(); } catch (e) { /* Analytics không bắt buộc */ }
-const PAGE_PREFIX = 'tin11';
+try { firebase.analytics(); } catch (e) { /* Analytics không bắt buộc cho bình luận, bỏ qua nếu lỗi mạng */ }
+const PAGE_PREFIX = 'tin11'; // định danh riêng cho trang này, tránh trùng bình luận với tin11/tin12
 
 function escapeHTML(str){
   const d = document.createElement('div');
@@ -768,6 +802,22 @@ const LESSONS = [
   {id:31, chude:7, ten:"Thực hành tạo phim hoạt hình"}
 ];
 
+/* Nội dung chi tiết — chỉ Bài 1 có sẵn mẫu đầy đủ.
+   Thêm object mới vào đây theo id để bổ sung nội dung cho bài tương ứng.
+   ngay: định dạng dd/mm/yyyy */
+/* ======================================================
+   📌 MẪU "NEW POST" — COPY khối bên dưới, đổi số ID cho đúng
+   bài học, dán vào bên trong object LESSON_CONTENT ở dưới,
+   rồi điền nội dung. Không cần sửa gì khác, trang tự cập nhật.
+
+   ID_BAI: {
+     ngay: "dd/mm/yyyy",
+     text: `<p>Nội dung bài học...</p>`,
+     img: "assets/tin11/tin11-baiX-minhhoa.jpg",   // để "" nếu không có ảnh
+     video: "ID_VIDEO_YOUTUBE",               // để "" nếu không có video
+     doc: "ID_FILE_GOOGLE_DRIVE"              // để "" nếu không có tài liệu
+   },
+   ====================================================== */
 const LESSON_CONTENT = {
   1: {
     ngay: "25/08/2026",
@@ -952,14 +1002,14 @@ const LESSON_CONTENT = {
 const DEFAULT_CONTENT = { ngay: "", text: "<p>Bài viết chưa cập nhật mới.</p>", img: "", video: "", doc: "" };
 
 /* ======================================================
-   RENDER MỤC LỤC
+   RENDER MỤC LỤC — bài chưa có nội dung hiện "(đang cập nhật)"
    ====================================================== */
 const tocEl = document.getElementById('toc');
 Object.keys(CHUDE_NAMES).forEach((cd, idx) => {
   const baiCuaChude = LESSONS.filter(b => b.chude == cd);
   const det = document.createElement('details');
   det.className = 'chude';
-  if (idx === 0) det.open = true;
+  if (idx === 0) det.open = true; // chỉ mở sẵn chủ đề đầu tiên, đỡ rối mắt
   det.innerHTML = `
     <summary>${CHUDE_NAMES[cd]}</summary>
     <ul class="bai-list">
@@ -973,7 +1023,10 @@ Object.keys(CHUDE_NAMES).forEach((cd, idx) => {
 });
 
 /* ======================================================
-   ĐẾM LƯỢT XEM
+   ĐẾM LƯỢT XEM — countapi.xyz đã NGỪNG HOẠT ĐỘNG vĩnh viễn,
+   chuyển sang countapi.mileshilliard.com (miễn phí, không cần đăng ký,
+   thay thế tương thích). Namespace ghép sẵn vào key vì dịch vụ mới
+   không hỗ trợ namespace riêng.
    ====================================================== */
 const CA_NAMESPACE = 'webh2t-github-io';
 const CA_BASE = 'https://countapi.mileshilliard.com/api/v1';
@@ -993,13 +1046,14 @@ async function bumpAndShowViews(key, elId) {
 async function getViews(key) {
   try {
     const res = await fetch(`${CA_BASE}/get/${CA_NAMESPACE}_${key}`);
-    if (!res.ok) return 0;
+    if (!res.ok) return 0; // key chưa từng được "hit" → API trả 404, coi như 0 lượt xem
     const data = await res.json();
     return parseInt(data.value, 10) || 0;
   } catch (e) { return 0; }
 }
 bumpAndShowViews('tin11-page', 'page-views');
 
+/* Tổng số bài viết & tỉ lệ đã đăng nội dung */
 function renderPostStats(){
   const total = LESSONS.length;
   const posted = Object.keys(LESSON_CONTENT).length;
@@ -1011,6 +1065,7 @@ function renderPostStats(){
 }
 renderPostStats();
 
+/* Bài viết xem nhiều nhất — đọc lượt xem của cả 34 bài (không cộng thêm), sắp xếp giảm dần, hiện top 5 */
 async function renderTopViewed() {
   const results = await Promise.all(LESSONS.map(async b => ({...b, views: await getViews(`tin11-bai-${b.id}`)})));
   const top5 = results.sort((a,b) => b.views - a.views).slice(0,5);
@@ -1057,6 +1112,7 @@ function showLesson(id) {
     ? `<p class="caption-small">Tài liệu minh hoạ (Google Drive):</p>
        <iframe class="drive-frame" src="https://drive.google.com/file/d/${content.doc}/preview" allow="autoplay"></iframe>` : '';
 
+  // Related posts: 3 cột, ảnh lớn trên + tiêu đề dưới, cùng chủ đề, loại trừ bài hiện tại, tối đa 3
   const related = LESSONS.filter(b => b.chude === bai.chude && b.id !== id).slice(0, 3);
   document.getElementById('d-related').innerHTML = related.map(b => {
     const rc = LESSON_CONTENT[b.id];
@@ -1077,14 +1133,12 @@ function showLesson(id) {
 }
 
 /* ======================================================
-   BÌNH LUẬN
+   BÌNH LUẬN — đăng nhập Google / Facebook qua Firebase Auth,
+   lưu vào Firestore, sắp xếp mới → cũ, đánh số 1,2,3...
    ====================================================== */
 function signInGoogle(){
   if (location.protocol === 'file:') {
-    alert('Tính năng đăng nhập chỉ hoạt động khi trang được mở qua địa chỉ web thật (https://...), không hoạt động khi mở trực tiếp file trên máy tính.
-
-Hãy mở trang qua địa chỉ GitHub Pages của bạn, ví dụ:
-https://webh2t.github.io/tin10.html');
+    alert('Tính năng đăng nhập chỉ hoạt động khi trang được mở qua địa chỉ web thật (https://...), không hoạt động khi mở trực tiếp file trên máy tính.\n\nHãy mở trang qua địa chỉ GitHub Pages của bạn, ví dụ:\nhttps://webh2t.github.io/tin10.html');
     return;
   }
   auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
@@ -1163,83 +1217,60 @@ function loadComments(lessonId){
 }
 
 /* ======================================================
-   LATEST LESSONS WIDGET (CHIA 2 CỘT TỰ ĐỘNG TỪ LESSON_CONTENT)
+   SLIDESHOW — tự lấy các bài đã có nội dung (LESSON_CONTENT),
+   mới nhất theo ngày lên trước, bấm vào slide sẽ mở đúng bài
    ====================================================== */
+const track = document.getElementById('track');
+const dotsWrap = document.getElementById('dots');
+
 function parseDate(d){
   if(!d) return 0;
   const [dd,mm,yyyy] = d.split('/').map(Number);
   return new Date(yyyy, mm-1, dd).getTime();
 }
 
-function renderLatestWidget() {
-  const featuredCol = document.getElementById('featured-col');
-  const recentList = document.getElementById('recent-list');
-  const recentCount = document.getElementById('recent-count');
+const postsWithContent = LESSONS
+  .filter(b => LESSON_CONTENT[b.id])
+  .sort((a,b) => parseDate(LESSON_CONTENT[b.id].ngay) - parseDate(LESSON_CONTENT[a.id].ngay));
 
-  // Lấy danh sách bài đã có nội dung, sắp xếp Ngày Mới -> Cũ
-  const postsWithContent = LESSONS
-    .filter(b => LESSON_CONTENT[b.id])
-    .sort((a,b) => parseDate(LESSON_CONTENT[b.id].ngay) - parseDate(LESSON_CONTENT[a.id].ngay));
+let slideCount = postsWithContent.length;
+let sIndex = 0;
 
-  if (postsWithContent.length === 0) {
-    featuredCol.innerHTML = '<div style="padding:40px; text-align:center; color:#7C8AA0;">Chưa có bài viết nào được cập nhật.</div>';
-    recentList.innerHTML = '';
-    return;
-  }
-
-  // 1. Cột trái: Featured (Bài mới nhất)
-  const featured = postsWithContent[0];
-  const featuredData = LESSON_CONTENT[featured.id];
-  const featuredImg = featuredData.img || 'assets/tin11/11b1.jpg';
-
-  featuredCol.onclick = () => showLesson(featured.id);
-  featuredCol.innerHTML = `
-    <div class="featured-badge">MỚI NHẤT</div>
-    <div class="featured-img-wrap">
-      <img src="${featuredImg}" alt="${featured.ten}" decoding="async" loading="lazy">
-    </div>
-    <div class="featured-info">
-      <div class="featured-date">📅 ${featuredData.ngay || 'Mới cập nhật'}</div>
-      <div class="featured-title">Bài ${featured.id}. ${featured.ten}</div>
-    </div>
-  `;
-
-  // 2. Cột phải: Tối đa 4 bài gần đây
-  const recents = postsWithContent.slice(1, 5);
-  recentCount.textContent = `${postsWithContent.length} POSTS`;
-
-  if (recents.length === 0) {
-    recentList.innerHTML = '<div style="padding:20px; text-align:center; color:#7C8AA0; font-size:.85rem;">Không có bài đăng bổ sung.</div>';
-  } else {
-    recentList.innerHTML = recents.map(b => {
-      const c = LESSON_CONTENT[b.id];
-      const thumb = c.img
-        ? `<img src="${c.img}" alt="${b.ten}" decoding="async" loading="lazy">`
-        : `<div class="recent-thumb-placeholder">Bài ${b.id}</div>`;
-      return `
-        <div class="recent-item" onclick="showLesson(${b.id})">
-          <div class="recent-thumb">${thumb}</div>
-          <div class="recent-text">
-            <span class="recent-date">📅 ${c.ngay || ''}</span>
-            <div class="recent-title">Bài ${b.id}. ${b.ten}</div>
-          </div>
-        </div>
-      `;
-    }).join('');
+if (slideCount === 0) {
+  track.innerHTML = '<div class="slide-empty">Chưa có bài viết nào được đăng.</div>';
+} else {
+  track.innerHTML = postsWithContent.map(b => {
+    const c = LESSON_CONTENT[b.id];
+    const img = c.img || 'assets/tin11/tin11-sgk.jpg';
+    return `<div class="slide" onclick="showLesson(${b.id})">
+      <img src="${img}" alt="${b.ten}" decoding="async">
+      <div class="caption"><span class="tag">${c.ngay || ''}</span><br>Bài ${b.id}. ${b.ten}</div>
+    </div>`;
+  }).join('');
+  for (let i = 0; i < slideCount; i++) {
+    const d = document.createElement('button');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = (e) => { e.stopPropagation(); sIndex = i; renderSlide(); };
+    dotsWrap.appendChild(d);
   }
 }
-
-renderLatestWidget();
+function renderSlide() {
+  track.style.transform = `translateX(-${sIndex * 100}%)`;
+  [...dotsWrap.children].forEach((d, i) => d.classList.toggle('active', i === sIndex));
+}
+function moveSlide(dir) { if(!slideCount) return; sIndex = (sIndex + dir + slideCount) % slideCount; renderSlide(); }
+if (slideCount > 1) setInterval(() => moveSlide(1), 5000);
 
 /* Mở sẵn Bài 1 khi tải trang lần đầu */
 showLesson(1);
 
-/* Nút về đầu trang */
+/* Nút về đầu trang — chỉ hiện khi đã cuộn xuống một đoạn */
 const backToTopBtn = document.getElementById('back-to-top');
 window.addEventListener('scroll', () => {
   backToTopBtn.classList.toggle('show', window.scrollY > 400);
 });
 </script>
+  
 
 </body>
 </html>
