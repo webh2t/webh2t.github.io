@@ -123,9 +123,9 @@
   .lesson-figure img{ width:100%; max-height:520px; object-fit:contain; background:#FFFFFF;
     border-radius:12px; border:1px solid var(--line); margin-bottom:18px; display:block;}
   .two-col{ display:flex; gap:20px; align-items:flex-start; margin:16px 0; flex-wrap:wrap;}
-  .two-col img{ width:52%; max-width:100%; object-fit:contain; background:#FFFFFF;
+  .two-col img{ width:58%; max-width:100%; object-fit:contain; background:#FFFFFF;
     border-radius:10px; border:1px solid var(--line); flex-shrink:0;}
-  .two-col .two-col-text{ flex:1 1 260px; min-width:220px; max-width:calc(48% - 22px);}
+  .two-col .two-col-text{ flex:1 1 260px; min-width:220px; max-width:calc(42% - 22px);}
   .coffee-box{ margin:26px 0 6px; padding:20px 24px; background:linear-gradient(135deg, var(--ink), #1C3252);
     border-radius:14px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; color:#fff;}
   .coffee-box .coffee-text{ flex:1 1 220px;}
@@ -243,6 +243,32 @@
 .site-nav .lesson-link{background:#166534;color:#fff}.site-nav .lesson-link:hover{background:#14532d;color:#fff}
 .site-nav .exam{background:#0d6efd;color:#fff}.site-nav .exam:hover{background:#0b5ed7;color:#fff}
 @media(max-width:640px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}.grade-hero h1{font-size:clamp(2.2rem,10vw,3rem)}}
+
+/* =========================================================
+   DIGITAL LEARNING PLATFORM — giao diện năng lực số + AI
+   ========================================================= */
+:root{
+  --blue-deep:#003B8F; --blue:#0066CC; --green:#16865B; --orange:#D97706; --purple:#7C3AED;
+  --red:#C62828; --shadow:0 12px 32px rgba(15,28,46,.09);
+}
+.platform-hero{margin:22px 0 28px;padding:28px;border-radius:20px;background:linear-gradient(135deg,#052b67,#0b5bb5);color:#fff;box-shadow:var(--shadow)}
+.platform-hero .hero-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:22px;align-items:center}
+.platform-kicker{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#bfe3ff}
+.platform-hero h2{font-size:clamp(1.5rem,3vw,2.25rem);margin:6px 0 8px;line-height:1.15}.platform-hero p{color:#e4f1ff;max-width:720px;font-size:.92rem}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.hero-btn,.ai-btn{border:0;border-radius:10px;padding:10px 14px;font:700 .82rem inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px}.hero-btn{background:#fff;color:var(--blue-deep)}.hero-btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.hero-progress{background:rgba(255,255,255,.1);padding:18px;border:1px solid rgba(255,255,255,.16);border-radius:16px}.hero-progress strong{font-size:1.8rem}.hero-progress .progress-track{height:9px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;margin:10px 0 6px}.hero-progress .progress-fill{height:100%;background:#FFC845;width:0;transition:width .4s}.hero-progress small{color:#d7e8ff}
+.learning-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 26px}.learning-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 5px 16px rgba(15,28,46,.04)}.learning-card .icon{font-size:1.35rem}.learning-card strong{display:block;color:var(--ink);font-size:.88rem;margin:5px 0}.learning-card span{font-size:.77rem;color:#68788f}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:.68rem;font-weight:800;margin:3px 3px 0 0}.badge-blue{background:#e7f1ff;color:#0057B8}.badge-green{background:#e7f7ef;color:#14764f}.badge-orange{background:#fff2df;color:#a65f00}.badge-purple{background:#f0e9ff;color:#6d28d9}.badge-red{background:#ffebeb;color:#b42323}
+.lesson-tools{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;padding:12px 14px;background:#f7faff;border:1px solid #dbe8f7;border-radius:12px}.lesson-tools button{border:1px solid #cbd9ea;background:#fff;color:#174a86;border-radius:9px;padding:8px 11px;font:700 .76rem inherit;cursor:pointer}.lesson-tools button:hover{background:#eaf3ff}
+.lesson-goals{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0 0 22px}.goal-card{padding:14px;border-radius:12px;border:1px solid var(--line);background:#fff}.goal-card h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}.goal-card p{font-size:.82rem;color:#52647b;line-height:1.55}.goal-card.blue h4{color:#0066CC}.goal-card.green h4{color:#16865B}.goal-card.purple h4{color:#7C3AED}.goal-card.orange h4{color:#D97706}
+.ai-lab{margin:24px 0;padding:18px;border-radius:16px;background:linear-gradient(135deg,#faf7ff,#f4efff);border:1px solid #e4d8ff}.ai-lab h3{color:#6d28d9;font-size:1rem;margin-bottom:5px}.ai-lab p{font-size:.8rem;color:#62557a}.ai-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ai-btn{background:#7c3aed;color:#fff}.ai-btn.alt{background:#fff;color:#6d28d9;border:1px solid #d8c8ff}.ai-note{font-size:.72rem!important;margin-top:9px;color:#75658d!important}
+.digital-section{margin-top:28px;padding:22px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:0 5px 18px rgba(15,28,46,.04)}.digital-section h3{color:var(--blue-deep);font-size:1rem;margin-bottom:14px}.skill-row{display:flex;gap:10px;align-items:center;margin:10px 0}.skill-row .skill-name{width:185px;font-size:.78rem;font-weight:700;color:#42536b}.skill-meter{height:8px;flex:1;background:#e8edf3;border-radius:8px;overflow:hidden}.skill-meter i{display:block;height:100%;background:#16865B;border-radius:8px}.skill-row b{font-size:.7rem;color:#64748b;width:34px;text-align:right}
+.progress-checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.progress-check{display:flex;align-items:center;gap:8px;padding:9px 10px;background:#f8fafc;border-radius:9px;font-size:.78rem;color:#52647b}.progress-check input{accent-color:#16865B}
+.ai-modal{position:fixed;inset:0;background:rgba(5,20,42,.58);z-index:10000;display:none;align-items:center;justify-content:center;padding:18px}.ai-modal.show{display:flex}.ai-dialog{width:min(680px,100%);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.3);overflow:hidden}.ai-dialog-head{padding:16px 18px;background:#6d28d9;color:#fff;display:flex;justify-content:space-between;align-items:center}.ai-dialog-head button{background:transparent;color:#fff;border:0;font-size:1.4rem;cursor:pointer}.ai-dialog-body{padding:18px}.ai-dialog textarea{width:100%;min-height:125px;border:1px solid #d7ddea;border-radius:10px;padding:12px;font:inherit;font-size:.86rem;resize:vertical}.ai-presets{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.ai-presets button{border:1px solid #ddd1f7;background:#faf8ff;color:#6d28d9;border-radius:8px;padding:7px 9px;font-size:.72rem;font-weight:700;cursor:pointer}.ai-output{margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;font-size:.8rem;color:#52647b;display:none}.ai-output.show{display:block}
+.search-panel{display:flex;gap:10px;margin:0 0 18px}.search-panel input{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font:inherit;font-size:.86rem}.search-panel button{border:0;background:var(--blue-deep);color:#fff;border-radius:10px;padding:0 15px;font-weight:700;cursor:pointer}
+.filtered-out{display:none!important}
+@media(max-width:760px){.platform-hero .hero-grid,.lesson-goals{grid-template-columns:1fr}.learning-panel{grid-template-columns:repeat(2,1fr)}.progress-checklist{grid-template-columns:1fr}.skill-row .skill-name{width:135px}.two-col img{width:100%!important}.two-col .two-col-text{max-width:100%!important}}
+@media(max-width:480px){.learning-panel{grid-template-columns:1fr}.platform-hero{padding:20px}.hero-progress{margin-top:4px}}
+
 </style>
 </head>
 <body>
@@ -271,6 +297,37 @@
   <div class="grade-hero">
     <h1><span>Grade 11</span><span>Informatics</span></h1>
   </div>
+
+  <section class="platform-hero" aria-label="TIN HỌC 11 Digital Learning Platform">
+    <div class="hero-grid">
+      <div>
+        <div class="platform-kicker">Digital Learning Platform • AI Era</div>
+        <h2>💻 TIN HỌC 11 – HỌC TẬP SỐ • NĂNG LỰC SỐ • AI</h2>
+        <p>Không chỉ học kiến thức: học sinh đọc hiểu, thực hành, giải quyết vấn đề, sử dụng công cụ số có trách nhiệm và biết hợp tác với AI.</p>
+        <div class="hero-actions">
+          <button class="hero-btn" onclick="openAILab()">🤖 Mở AI Tutor</button>
+          <button class="hero-btn secondary" onclick="document.getElementById('digital-dashboard').scrollIntoView({behavior:'smooth'})">📊 Năng lực số</button>
+        </div>
+      </div>
+      <div class="hero-progress">
+        <div><strong id="global-progress">0%</strong></div>
+        <div class="progress-track"><div class="progress-fill" id="global-progress-bar"></div></div>
+        <small>Tiến độ bài học đã đánh dấu hoàn thành trên thiết bị này.</small>
+      </div>
+    </div>
+  </section>
+
+  <div class="search-panel">
+    <input id="lesson-search" type="search" placeholder="🔎 Tìm bài học, chủ đề, từ khóa..." oninput="filterLessons(this.value)">
+    <button onclick="document.getElementById('lesson-search').value='';filterLessons('')">Xóa</button>
+  </div>
+
+  <section class="learning-panel" id="digital-dashboard">
+    <div class="learning-card"><div class="icon">📚</div><strong>Kiến thức</strong><span>Nắm khái niệm và nội dung cốt lõi.</span></div>
+    <div class="learning-card"><div class="icon">💻</div><strong>Năng lực số</strong><span>Thực hành, quản lý dữ liệu và an toàn số.</span></div>
+    <div class="learning-card"><div class="icon">🤖</div><strong>Năng lực AI</strong><span>Biết hỏi, kiểm chứng và dùng AI có trách nhiệm.</span></div>
+    <div class="learning-card"><div class="icon">🚀</div><strong>Vận dụng</strong><span>Giải quyết tình huống và tạo sản phẩm số.</span></div>
+  </section>
   
 <!-- ============ Bài giảng mới ============ -->
   <section class="block">
@@ -298,10 +355,47 @@
           <span class="views" id="d-views">👁 0 lượt xem</span>
         </div>
         <h1 class="detail-title" id="d-title"></h1>
+        <div class="lesson-tools">
+          <button onclick="toggleLessonComplete()" id="complete-btn">☐ Đánh dấu hoàn thành</button>
+          <button onclick="openAILab('Giải thích bài học này theo cách dễ hiểu cho học sinh lớp 11, không làm bài hộ.')">🤖 AI Gia sư</button>
+          <button onclick="openAILab('Tạo 5 câu hỏi kiểm tra nhanh dựa trên bài học hiện tại. Sau mỗi câu hãy chờ học sinh trả lời.')">🧪 AI Kiểm tra</button>
+          <button onclick="openAILab('Đưa ra một tình huống thực tế để học sinh vận dụng kiến thức bài này. Chỉ gợi ý, không đưa đáp án ngay.')">🚀 AI Thử thách</button>
+          <button onclick="copyLessonPrompt()">📋 Copy prompt</button>
+          <button onclick="toggleTeacherMode()">👨‍🏫 Chế độ giáo viên</button>
+        </div>
+        <div class="lesson-goals" id="lesson-goals"></div>
         <div id="d-image"></div>
         <div class="detail-text" id="d-text"></div>
         <div id="d-video"></div>
         <div id="d-doc"></div>
+
+        <div class="ai-lab">
+          <h3>🤖 AI LEARNING LAB</h3>
+          <p>AI là <strong>trợ lý học tập</strong>: gợi ý, đặt câu hỏi, giải thích và phản biện. Học sinh cần tự suy nghĩ và kiểm chứng thông tin.</p>
+          <div class="ai-actions">
+            <button class="ai-btn" onclick="openAILab()">Mở AI Tutor</button>
+            <button class="ai-btn alt" onclick="openAILab('Hãy gợi ý từng bước để em tự giải bài này. Không đưa đáp án cuối cùng.')">💡 Gợi ý từng bước</button>
+            <button class="ai-btn alt" onclick="openAILab('Hãy đóng vai giáo viên và đặt câu hỏi Socratic để kiểm tra xem em thực sự hiểu bài này chưa.')">🧠 Hỏi ngược Socratic</button>
+          </div>
+          <p class="ai-note">🟡 Quy tắc AI: dùng để học và kiểm chứng; không sao chép nguyên câu trả lời để nộp như sản phẩm cá nhân.</p>
+        </div>
+
+        <div class="digital-section">
+          <h3>📊 NĂNG LỰC SỐ & TIẾN ĐỘ CÁ NHÂN</h3>
+          <div id="skill-dashboard"></div>
+          <div class="progress-checklist" id="lesson-checklist"></div>
+        </div>
+
+        <div class="digital-section teacher-mode" id="teacher-mode" style="display:none">
+          <h3>👨‍🏫 TEACHER MODE — GỢI Ý TỔ CHỨC DẠY HỌC</h3>
+          <div class="progress-checklist">
+            <div class="progress-check">🎯 Xác định mục tiêu và yêu cầu cần đạt</div>
+            <div class="progress-check">👥 Tổ chức cá nhân/nhóm theo nhiệm vụ</div>
+            <div class="progress-check">🤖 Quy định mức độ được phép dùng AI</div>
+            <div class="progress-check">📝 Đánh giá sản phẩm và quá trình</div>
+          </div>
+          <div class="ai-actions"><button class="ai-btn alt" onclick="openAILab('Hãy đóng vai chuyên gia sư phạm Tin học 11. Dựa trên bài học hiện tại, đề xuất mục tiêu, hoạt động khởi động, hoạt động khám phá, luyện tập, vận dụng, câu hỏi đánh giá và một hoạt động AI có kiểm soát.')">🤖 AI soạn kế hoạch</button><button class="ai-btn alt" onclick="openAILab('Hãy tạo rubric 4 mức để đánh giá sản phẩm học tập của học sinh trong bài hiện tại, chú trọng kiến thức, thực hành, năng lực số và việc sử dụng AI có trách nhiệm.')">📊 AI tạo rubric</button></div>
+        </div>
 
         <div class="coffee-box">
           <div class="coffee-text">
@@ -385,6 +479,27 @@
   </section>
 
 </main>
+
+<div class="ai-modal" id="ai-modal" onclick="if(event.target===this) closeAILab()">
+  <div class="ai-dialog" role="dialog" aria-modal="true" aria-labelledby="ai-dialog-title">
+    <div class="ai-dialog-head"><strong id="ai-dialog-title">🤖 AI Tutor – Tin học 11</strong><button onclick="closeAILab()" aria-label="Đóng">×</button></div>
+    <div class="ai-dialog-body">
+      <p style="font-size:.8rem;color:#64748b;margin-bottom:9px">Nhập yêu cầu cho AI. Website tạo prompt theo bài đang học; bạn có thể sao chép sang ChatGPT, Gemini, Copilot hoặc công cụ AI của trường.</p>
+      <div class="ai-presets">
+        <button onclick="setAIPrompt('Giải thích bài học hiện tại thật dễ hiểu, dùng ví dụ đời sống.')">Giải thích dễ hiểu</button>
+        <button onclick="setAIPrompt('Đặt câu hỏi Socratic để kiểm tra em hiểu bài, từng câu một.')">Socratic</button>
+        <button onclick="setAIPrompt('Tạo 5 câu trắc nghiệm từ dễ đến khó, chưa cho đáp án ngay.')">Kiểm tra</button>
+        <button onclick="setAIPrompt('Cho một nhiệm vụ thực tế để em vận dụng kiến thức bài này.')">Vận dụng</button>
+      </div>
+      <textarea id="ai-prompt" placeholder="Ví dụ: Hãy gợi ý cho em cách giải..."></textarea>
+      <div class="ai-actions">
+        <button class="ai-btn" onclick="copyAIPrompt()">📋 Sao chép prompt</button>
+        <button class="ai-btn alt" onclick="openChatGPTWithPrompt()">↗ Mở ChatGPT</button>
+      </div>
+      <div class="ai-output" id="ai-output">Đã tạo prompt. Hãy dán vào công cụ AI bạn đang sử dụng.</div>
+    </div>
+  </div>
+</div>
 
 <button id="back-to-top" aria-label="Về đầu trang" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
 
@@ -1122,6 +1237,8 @@ function showLesson(id) {
   document.getElementById('d-chude').textContent = CHUDE_NAMES[bai.chude];
   document.getElementById('d-date').textContent = `📅 ${content.ngay || '—'}`;
   document.getElementById('d-title').innerHTML = `<span class="title-vi">Bài ${bai.id}. ${bai.ten}</span>` + (content.en ? `<span class="title-en">${content.en}</span>` : '');
+  renderLessonLearning(id);
+  renderLessonGoals(id);
   document.getElementById('d-text').innerHTML = content.text;
 
   document.getElementById('d-image').innerHTML = content.img
@@ -1264,6 +1381,81 @@ document.addEventListener('mouseover',e=>{
 });
 document.addEventListener('mousemove',e=>{ if(zoomImg && !zoomImg.matches(':hover')) removeZoomLens(); else moveZoomLens(e); });
 document.addEventListener('mouseout',e=>{ if(zoomImg && e.target===zoomImg && !e.relatedTarget?.closest?.('img')) removeZoomLens(); });
+
+
+/* ======================================================
+   DIGITAL LEARNING PLATFORM — AI + NĂNG LỰC SỐ
+   Không yêu cầu API key: tạo prompt an toàn và mở công cụ AI do người dùng chọn.
+   ====================================================== */
+const SKILL_PROFILES = {
+  1:{skills:[['Sử dụng thiết bị & hệ điều hành',80],['Quản lý dữ liệu',75],['An toàn số',65],['Giải quyết vấn đề',60]]},
+  2:{skills:[['Sử dụng thiết bị & phần mềm',85],['Quản lý dữ liệu',80],['An toàn số',70],['Thực hành số',90]]},
+  3:{skills:[['Khám phá công nghệ số',80],['Đánh giá phần mềm',75],['Tìm kiếm thông tin',70],['Tư duy phản biện',75]]},
+  4:{skills:[['Hiểu hệ thống số',85],['Thiết bị số',80],['Giải quyết vấn đề',75],['Tư duy hệ thống',70]]},
+  5:{skills:[['Kết nối thiết bị',85],['Thực hành số',85],['Xử lý sự cố',75],['An toàn thiết bị',70]]},
+  6:{skills:[['Lưu trữ đám mây',85],['Chia sẻ dữ liệu',80],['Quản lý dữ liệu',85],['An toàn thông tin',70]]},
+  7:{skills:[['Tìm kiếm thông tin',90],['Đánh giá nguồn tin',85],['Từ khóa & truy vấn',85],['Tư duy phản biện',80]]},
+  8:{skills:[['Giao tiếp số',85],['Cộng tác trực tuyến',80],['Quyền riêng tư',75],['Văn hóa số',80]]},
+  9:{skills:[['An toàn trực tuyến',90],['Bảo vệ dữ liệu',85],['Nhận diện rủi ro',85],['Ứng xử số',80]]},
+  10:{skills:[['Quản lý dữ liệu',85],['Khai thác thông tin',80],['Tư duy dữ liệu',75],['Giải quyết vấn đề',75]]}
+};
+function renderLessonGoals(id){
+  const b=LESSONS.find(x=>x.id===id), c=LESSON_CONTENT[id]||{};
+  const p=skillProfile(id), names=p.skills.map(x=>x[0]).slice(0,3).join(' • ');
+  const goals=[
+    ['blue','🎯 MỤC TIÊU','Hiểu và vận dụng kiến thức cốt lõi của bài học; chủ động giải thích bằng ngôn ngữ của mình.'],
+    ['green','💻 NĂNG LỰC SỐ',names||'Sử dụng công cụ số, xử lý thông tin và giải quyết vấn đề.'],
+    ['purple','🤖 NĂNG LỰC AI','Biết đặt câu hỏi, yêu cầu AI gợi ý, kiểm chứng đầu ra và nhận diện giới hạn của AI.'],
+    ['orange','🌱 VẬN DỤNG','Kết nối kiến thức với tình huống thực tế và tạo sản phẩm học tập có bằng chứng.']
+  ];
+  const el=document.getElementById('lesson-goals'); if(el)el.innerHTML=goals.map(g=>`<div class="goal-card ${g[0]}"><h4>${g[1]}</h4><p>${g[2]}</p></div>`).join('');
+}
+function toggleTeacherMode(){const el=document.getElementById('teacher-mode');if(el)el.style.display=el.style.display==='none'?'block':'none'}
+
+function skillProfile(id){
+  if(SKILL_PROFILES[id]) return SKILL_PROFILES[id];
+  const b=LESSONS.find(x=>x.id===id)||{};
+  const generic={1:[['Kiến thức số',75],['Thực hành công cụ số',80],['Giải quyết vấn đề',75],['An toàn & trách nhiệm số',70]],2:[['Quản lý dữ liệu',80],['Khai thác thông tin',75],['Tư duy phản biện',75],['Cộng tác số',70]],3:[['Cơ sở dữ liệu',85],['Phân tích dữ liệu',80],['An toàn dữ liệu',75],['Giải quyết vấn đề',80]],4:[['Định hướng nghề nghiệp',80],['Giao tiếp số',75],['Tạo sản phẩm số',75],['Tự học số',80]],5:[['Quản trị dữ liệu',85],['Thực hành hệ thống',85],['An toàn dữ liệu',80],['Giải quyết vấn đề',80]],6:[['Sáng tạo nội dung số',85],['Chỉnh sửa ảnh/video',85],['Bản quyền số',75],['Sáng tạo',85]]};
+  return {skills:generic[b.chude||1]||generic[1]};
+}
+function lessonKey(id){return `tin11-complete-${id}`}
+function isLessonComplete(id){return localStorage.getItem(lessonKey(id))==='1'}
+function updateGlobalProgress(){
+  const done=LESSONS.filter(b=>isLessonComplete(b.id)).length, pct=LESSONS.length?Math.round(done/LESSONS.length*100):0;
+  const t=document.getElementById('global-progress'), bar=document.getElementById('global-progress-bar');
+  if(t)t.textContent=pct+'%'; if(bar)bar.style.width=pct+'%';
+}
+function toggleLessonComplete(){
+  if(currentLessonId==null)return;
+  const k=lessonKey(currentLessonId);
+  if(isLessonComplete(currentLessonId)) localStorage.removeItem(k); else localStorage.setItem(k,'1');
+  renderLessonLearning(currentLessonId); updateGlobalProgress();
+}
+function renderLessonLearning(id){
+  const profile=skillProfile(id), done=isLessonComplete(id);
+  const sd=document.getElementById('skill-dashboard');
+  if(sd) sd.innerHTML=profile.skills.map(x=>`<div class="skill-row"><span class="skill-name">${x[0]}</span><span class="skill-meter"><i style="width:${x[1]}%"></i></span><b>${x[1]}%</b></div>`).join('');
+  const list=[['📖 Đọc nội dung','Đọc và hiểu kiến thức cốt lõi'],['🎬 Xem/khám phá','Xem hình ảnh, video hoặc tài liệu'],['🛠 Thực hành','Hoàn thành hoạt động'],['📝 Luyện tập','Tự trả lời trước khi xem đáp án'],['🚀 Vận dụng','Tạo sản phẩm/giải quyết tình huống'],['🤖 AI phản biện','Dùng AI để gợi ý và kiểm chứng']];
+  const cl=document.getElementById('lesson-checklist');
+  if(cl)cl.innerHTML=list.map((x,i)=>{const checked=localStorage.getItem(`tin11-${id}-step-${i}`)==='1'; return `<label class="progress-check"><input type="checkbox" ${checked?'checked':''} onchange="saveSubProgress(${id},${i},this.checked)"> ${x[0]}</label>`}).join('');
+  const cb=document.getElementById('complete-btn'); if(cb)cb.textContent=done?'☑ Đã hoàn thành':'☐ Đánh dấu hoàn thành';
+}
+function saveSubProgress(id,i,val){localStorage.setItem(`tin11-${id}-step-${i}`,val?'1':'0');
+  const steps=[0,1,2,3,4,5].filter(i=>localStorage.getItem(`tin11-${id}-step-${i}`)==='1').length;
+  if(steps===6 && !isLessonComplete(id)){localStorage.setItem(lessonKey(id),'1');updateGlobalProgress();renderLessonLearning(id)}
+}
+function lessonPrompt(extra=''){
+  const b=LESSONS.find(x=>x.id===currentLessonId), c=LESSON_CONTENT[currentLessonId]||{};
+  return `Bạn là gia sư AI hỗ trợ môn Tin học 11.\nBài đang học: Bài ${b?.id||''}. ${b?.ten||''}\nTiêu đề tiếng Anh: ${c.en||''}\n\nNguyên tắc sư phạm: không làm bài hộ; ưu tiên gợi ý từng bước, đặt câu hỏi để học sinh tự suy luận, nhắc kiểm chứng thông tin và tôn trọng bản quyền.\n\nYêu cầu của học sinh: ${extra||'Hãy giúp em học bài này theo cách dễ hiểu và có ví dụ thực tế.'}`;
+}
+function openAILab(prefill=''){const m=document.getElementById('ai-modal'); if(!m)return; m.classList.add('show');setAIPrompt(prefill||'');setTimeout(()=>document.getElementById('ai-prompt')?.focus(),80)}
+function closeAILab(){document.getElementById('ai-modal')?.classList.remove('show')}
+function setAIPrompt(text){document.getElementById('ai-prompt').value=lessonPrompt(text)}
+function copyAIPrompt(){const v=document.getElementById('ai-prompt').value; navigator.clipboard?.writeText(v).then(()=>{const o=document.getElementById('ai-output');o.textContent='✅ Đã sao chép prompt. Bạn có thể dán vào ChatGPT, Gemini, Copilot hoặc AI của trường.';o.classList.add('show')}).catch(()=>alert('Hãy bôi đen prompt và sao chép thủ công.'))}
+function copyLessonPrompt(){openAILab();setAIPrompt('Hãy tạo một kế hoạch tự học 15 phút cho bài này, gồm mục tiêu, 3 câu hỏi tự kiểm tra và 1 nhiệm vụ vận dụng.')}
+function openChatGPTWithPrompt(){const v=document.getElementById('ai-prompt').value;window.open('https://chatgpt.com/?q='+encodeURIComponent(v),'_blank','noopener')}
+function filterLessons(q){q=(q||'').toLowerCase().trim();document.querySelectorAll('.bai-list li').forEach(li=>{li.classList.toggle('filtered-out',!!q&&!li.textContent.toLowerCase().includes(q))});document.querySelectorAll('details.chude').forEach(d=>{const has=[...d.querySelectorAll('.bai-list li')].some(li=>!li.classList.contains('filtered-out'));if(q&&has)d.open=true;if(q&&!has)d.classList.add('filtered-out');else d.classList.remove('filtered-out')})}
+updateGlobalProgress();
 
 /* ======================================================
    SLIDESHOW — tự lấy các bài đã có nội dung (LESSON_CONTENT),
