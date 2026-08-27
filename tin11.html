@@ -26,8 +26,9 @@
   .eyebrow{ font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600; color:var(--teal); letter-spacing:.12em; text-transform:uppercase;}
   h1{ font-size:2rem; font-weight:800; color:var(--ink); margin-top:8px;}
   .grade-hero{ text-align:center; margin:8px 0 32px;}
-  .grade-hero h1{ font-size:clamp(2.2rem, 5vw, 3.4rem); font-weight:800; color:var(--brilliant-blue);
-                  letter-spacing:.01em; margin:0; text-transform:none;}
+  .grade-hero h1{ font-size:clamp(2.6rem, 6vw, 4.2rem); font-weight:800; color:#0047AB;
+                  letter-spacing:.01em; margin:0; text-align:center; line-height:1.05; text-transform:none;}
+  .grade-hero h1 span{display:block;}
   p.sub{ margin-top:10px; color:#5B6B82; max-width:640px;}
   section.block{ margin-top:56px;}
   .block-title{ font-size:1.35rem; font-weight:700; color:var(--brilliant-blue); margin:6px 0 20px;}
@@ -37,7 +38,9 @@
               box-shadow:0 10px 28px rgba(15,28,46,.12);}
   .slides-track{ display:flex; transition:transform .45s ease;}
   .slide{ min-width:100%; position:relative; cursor:pointer;}
-  .slide img{ width:100%; height:380px; object-fit:cover; display:block;}
+  .slide{ overflow:hidden;}
+  .slide img{ width:100%; height:380px; object-fit:cover; display:block; transition:transform .3s ease;}
+  .slide:hover img{ transform:scale(1.05);}
   .slide .caption{ position:absolute; left:0; bottom:0; right:0;
                     background:linear-gradient(0deg, rgba(15,28,46,.85), transparent);
                     color:#fff; padding:16px 20px; font-size:.9rem;}
@@ -93,10 +96,15 @@
   .detail-text p{ margin-bottom:10px;}
   .detail-text ul, .detail-text ol{ margin:10px 0 10px 22px;}
   .detail-text strong{ color:var(--ink);}
+  .detail-text > p > strong,
+  .detail-text .activity-box > p > strong:first-child{ color:#0066CC;}
+  .detail-text > p > strong:first-child{ font-weight:800;}
   .detail-text table{ width:100%; border-collapse:collapse; margin:14px 0; font-size:.88rem;}
   .detail-text table td, .detail-text table th{ border:1px solid var(--line); padding:8px 10px; text-align:left;}
   .detail-text table th{ background:var(--paper); font-weight:700; color:var(--ink);}
-  .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0;}
+  .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0; transition:transform .25s ease, box-shadow .25s ease; transform-origin:center center; position:relative; z-index:1;}
+  .detail-text img:hover{ transform:scale(1.06); box-shadow:0 14px 32px rgba(15,28,46,.22); z-index:5;}
+  .lesson-figure img:hover, .two-col img:hover{ transform:scale(1.06);}
   .detail-text a{ color:var(--teal); text-decoration:underline;}
   .detail-text .lesson-en{ color:#7C8AA0; font-style:italic; font-size:.85rem;}
   .detail-text .activity-box{ background:rgba(46,196,182,.07); border-left:3px solid var(--teal);
@@ -135,7 +143,8 @@
   .related-card{ text-decoration:none; color:inherit; display:block; border-radius:12px; overflow:hidden;
                  border:1px solid var(--line); background:var(--paper); transition:transform .15s, box-shadow .15s;}
   .related-card:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(15,28,46,.1);}
-  .related-card .thumb{ width:100%; height:120px; object-fit:cover; display:block; background:var(--ink);}
+  .related-card .thumb{ width:100%; height:120px; object-fit:cover; display:block; background:var(--ink); transition:transform .3s ease;}
+  .related-card:hover .thumb{ transform:scale(1.06);}
   .related-card .thumb-placeholder{ width:100%; height:120px; display:flex; align-items:center; justify-content:center;
     background:linear-gradient(135deg, var(--ink), #1C3252); color:var(--amber);
     font-family:'Space Grotesk',monospace; font-weight:700; font-size:1.3rem;}
@@ -230,7 +239,7 @@
 .site-nav .lessons{background:#7c3aed;color:#fff}.site-nav .lessons:hover{background:#6d28d9;color:#fff}
 .site-nav .lesson-link{background:#166534;color:#fff}.site-nav .lesson-link:hover{background:#14532d;color:#fff}
 .site-nav .exam{background:#0d6efd;color:#fff}.site-nav .exam:hover{background:#0b5ed7;color:#fff}
-@media(max-width:640px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}}
+@media(max-width:640px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}.grade-hero h1{font-size:clamp(2.2rem,10vw,3rem)}}
 </style>
 </head>
 <body>
@@ -257,7 +266,7 @@
 
 <main>
   <div class="grade-hero">
-    <h1>Grade 11 Informatics</h1>
+    <h1><span>Grade 11</span><span>Informatics</span></h1>
   </div>
   
 <!-- ============ Bài giảng mới ============ -->
@@ -297,7 +306,7 @@
             <p>Nếu bài viết hữu ích cho việc dạy và học, bạn có thể ủng hộ nhỏ để mình duy trì và cập nhật nội dung mới mỗi tuần.</p>
           </div>
           <div class="coffee-qr">
-            <img src="assets/qr-donate.png" alt="QR code ủng hộ tác giả">
+            <img id="coffee-qr-img" src="" alt="QR code ủng hộ tác giả" loading="lazy">
           </div>
         </div>
 
@@ -387,6 +396,26 @@
    CẤU HÌNH FIREBASE — thay bằng thông số dự án của bạn
    (Firebase Console → Project settings → General → Your apps)
    ====================================================== */
+/* ======================================================
+   QR ỦNG HỘ TÁC GIẢ
+   - QR được tạo tự động, không cần thêm file ảnh vào GitHub Pages.
+   - Hãy thay DONATION_QR_DATA bằng nội dung chuyển khoản/VietQR
+     của bạn nếu muốn QR mở đúng thông tin tài khoản.
+   ====================================================== */
+const DONATION_QR_DATA = "WEBH2T - Ung ho tac gia";
+const DONATION_QR_API = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=";
+
+function setupCoffeeQR(){
+  const qr = document.getElementById('coffee-qr-img');
+  if(!qr) return;
+  qr.src = DONATION_QR_API + encodeURIComponent(DONATION_QR_DATA);
+  qr.onerror = () => {
+    qr.alt = "QR ủng hộ tác giả chưa tải được";
+    qr.title = "Kiểm tra kết nối Internet hoặc cấu hình DONATION_QR_DATA";
+  };
+}
+setupCoffeeQR();
+
 const firebaseConfig = {
   apiKey: "AIzaSyDOqMkioHhQ9YuFY9mCpx_kRLOLL_tf9jU",
   authDomain: "webh2t-tin.firebaseapp.com",
@@ -489,10 +518,12 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Nêu các nhóm chức năng chính của hệ điều hành.</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Nêu các đặc điểm cơ bản của hệ điều hành máy tính cá nhân.</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 1</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 1:</strong> Nhóm chức năng thể hiện rõ nhất là quản lí thiết bị.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong></p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 1</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 1:</strong> Nhóm chức năng thể hiện rõ nhất là quản lí thiết bị.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong></p>
 <ul>
   <li>Quản lí thiết bị.</li>
   <li>Quản lí việc lưu trữ dữ liệu.</li>
@@ -500,7 +531,10 @@ const LESSON_CONTENT = {
   <li>Cung cấp môi trường giao tiếp với người sử dụng.</li>
   <li>Cung cấp một số tiện ích nâng cao hiệu quả sử dụng máy tính.</li>
 </ul>
-<p><strong>Đáp án Câu hỏi 2:</strong></p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong></p>
 <ul>
   <li>Tài nguyên dạy học &amp; Lớp học</li>
   <li>Giao diện thân thiện, khả năng nhận biết các thiết bị ngoại vi với cơ chế plug &amp; play.</li>
@@ -523,10 +557,12 @@ const LESSON_CONTENT = {
 <tr><td>Ví dụ</td><td>iOS, Android</td><td>MacOS, Windows,…</td></tr>
 </table>
 
-<details class="answer-box"><summary>Xem đáp án mục 2</summary>
-<div class="answer-content">
-<p><strong>Đáp án Câu hỏi 1:</strong> Vì tính di động, dùng ở mọi nơi, mọi thời điểm nên chú trọng đến khả năng kết nối mạng không dây.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong></p>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Vì tính di động, dùng ở mọi nơi, mọi thời điểm nên chú trọng đến khả năng kết nối mạng không dây.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong></p>
 <ul>
   <li>Nghe nhạc: giải trí</li>
   <li>Gọi điện: liên lạc</li>
@@ -541,11 +577,16 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Nêu lí do thiết bị xử lí đa năng cần có hệ điều hành?</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Nêu mối quan hệ giữa phần cứng, phần mềm ứng dụng và hệ điều hành.</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 3</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 3:</strong> Có trường hợp đó. Cần phải có hệ điều hành khi các thiết bị đa năng như máy tính thực hiện nhiều công việc.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong> Với thiết bị đa năng, khi phần mềm chạy, cần điều phối tài nguyên cho các ứng dụng → Cần có hệ điều hành để đáp ứng các nhu cầu trên.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong> Phần cứng là thiết bị xử lí thông tin, hệ điều hành là môi trường trung gian giúp phần mềm ứng dụng khai thác phần cứng.</p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 3</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 3:</strong> Có trường hợp đó. Cần phải có hệ điều hành khi các thiết bị đa năng như máy tính thực hiện nhiều công việc.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Với thiết bị đa năng, khi phần mềm chạy, cần điều phối tài nguyên cho các ứng dụng → Cần có hệ điều hành để đáp ứng các nhu cầu trên.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong> Phần cứng là thiết bị xử lí thông tin, hệ điều hành là môi trường trung gian giúp phần mềm ứng dụng khai thác phần cứng.</p>
 </div>
 </details>
 
@@ -558,10 +599,12 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Luyện tập 1:</strong> Em hiểu thế nào về tính thân thiện của hệ điều hành?</p>
 <p style="color:#D32F2F;"><strong>Luyện tập 2:</strong> Hệ điều hành cung cấp môi trường giao tiếp với người sử dụng như thế nào? Môi trường giao tiếp đó thể hiện như thế nào trên hệ điều hành Windows?</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án Luyện tập</summary>
-<div class="answer-content">
-<p><strong>Đáp án LT1:</strong> Đối với hệ điều hành máy tính cá nhân, tính thân thiện được cải thiện từ giao diện dòng lệnh chuyển sang giao diện đồ hoạ. Đối với hệ điều hành cho thiết bị di động, tính thân thiện thông qua nhận dạng hành vi của người dùng.</p>
-<p><strong>Đáp án LT2:</strong></p>
+<details class="answer-box"><summary>Xem Đáp án LT1</summary>
+<div class="answer-content"><p><strong>Đáp án LT1:</strong> Đối với hệ điều hành máy tính cá nhân, tính thân thiện được cải thiện từ giao diện dòng lệnh chuyển sang giao diện đồ hoạ. Đối với hệ điều hành cho thiết bị di động, tính thân thiện thông qua nhận dạng hành vi của người dùng.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án LT2</summary>
+<div class="answer-content"><p><strong>Đáp án LT2:</strong></p>
 <ul>
   <li>Cung cấp môi trường giao tiếp giữa người dùng và hệ thống: thông qua hệ thống câu lệnh được nhập từ bàn phím.</li>
   <li>Trên hệ điều hành Windows, giao tiếp thông qua bàn phím và chuột.</li>
@@ -574,10 +617,12 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Vận dụng 1:</strong> Em hãy tìm hiểu xem ngoài máy tính còn có thiết bị điện gia dụng nào sử dụng hệ điều hành không?</p>
 <p style="color:#D32F2F;"><strong>Vận dụng 2:</strong> Thực ra, LINUX là hệ điều hành có nguồn gốc từ hệ điều hành UNIX. Hãy tìm hiểu lịch sử của hệ điều hành LINUX để biết thêm về hệ điều hành UNIX.</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án Vận dụng</summary>
-<div class="answer-content">
-<p><strong>Đáp án VD1:</strong> Các dòng Smart Tivi dùng: Android TV, Web OS, Tizen,…</p>
-<p><strong>Đáp án VD2:</strong> Linux là một hệ điều hành máy tính được phát triển từ năm 1991 dựa trên hệ điều hành Unix và bằng viết bằng ngôn ngữ C, được phát hành miễn phí và có nhiều ưu điểm vượt trội.</p>
+<details class="answer-box"><summary>Xem Đáp án VD1</summary>
+<div class="answer-content"><p><strong>Đáp án VD1:</strong> Các dòng Smart Tivi dùng: Android TV, Web OS, Tizen,…</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án VD2</summary>
+<div class="answer-content"><p><strong>Đáp án VD2:</strong> Linux là một hệ điều hành máy tính được phát triển từ năm 1991 dựa trên hệ điều hành Unix và bằng viết bằng ngôn ngữ C, được phát hành miễn phí và có nhiều ưu điểm vượt trội.</p>
 </div>
 </details>`,
     img: "assets/tin11/11b1.jpg",
@@ -654,9 +699,7 @@ const LESSON_CONTENT = {
   3: {
     ngay: "27/08/2026",
     en: "Lesson 3: Open-Source Software and Internet-Based Software",
-    text: `<figure class="lesson-figure">
-  <img src="assets/tin11/31.jpg" alt="Tóm tắt kiến thức Bài 3">
-</figure>
+    text: `
 
 <div class="activity-box">
 <p><strong>KHỞI ĐỘNG</strong></p>
@@ -674,17 +717,25 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Em hãy cho biết ý nghĩa của yêu cầu "người sửa đổi, nâng cấp phần mềm nguồn mở phải công bố rõ ràng phần nào đã sửa, sửa thế nào so với bản gốc."</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Ý nghĩa của yêu cầu "phần mềm sửa đổi một phần mềm nguồn mở theo GPL cũng phải mở theo giấy phép của GPL" là gì?</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 1</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 1:</strong></p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 1</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 1:</strong></p>
 <ul>
   <li>Mức 1: Người dùng chỉ được phép sử dụng phần mềm khi mua phần mềm.</li>
   <li>Mức 2: Được dùng miễn phí nhưng không thể tự sửa đổi, cải tiến, phát triển phần mềm.</li>
   <li>Mức 3: Tự do sử dụng mà không cần xin phép; có thể sửa, nâng cấp, phát triển và chuyển giao lại phần mềm vì được cung cấp mã nguồn.</li>
 </ul>
-<p><strong>Đáp án Hoạt động 2:</strong> Theo quy định bản quyền, tác giả có quyền bảo vệ phần mềm khỏi bị sửa đổi gây phương hại uy tín, và giữ quyền sao chép, sửa đổi, chuyển giao. Theo giấy phép nguồn mở, người dùng được sao chép, phân phối, sửa đổi phần mềm miễn là công bố rõ phần đã sửa. <strong>Mâu thuẫn:</strong> giấy phép nguồn mở cấp cho người dùng những quyền vốn bị cấm bởi quy định bản quyền truyền thống.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong> Để người dùng có thể nắm được đây là bản đã sửa đổi chứ không phải bản gốc.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong> Khi sửa đổi một phần mềm nguồn mở đã áp dụng GPL để tạo ra phần mềm mới, phần mềm mới đó cũng phải mở theo giấy phép GPL.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 2</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 2:</strong> Theo quy định bản quyền, tác giả có quyền bảo vệ phần mềm khỏi bị sửa đổi gây phương hại uy tín, và giữ quyền sao chép, sửa đổi, chuyển giao. Theo giấy phép nguồn mở, người dùng được sao chép, phân phối, sửa đổi phần mềm miễn là công bố rõ phần đã sửa. <strong>Mâu thuẫn:</strong> giấy phép nguồn mở cấp cho người dùng những quyền vốn bị cấm bởi quy định bản quyền truyền thống.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Để người dùng có thể nắm được đây là bản đã sửa đổi chứ không phải bản gốc.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong> Khi sửa đổi một phần mềm nguồn mở đã áp dụng GPL để tạo ra phần mềm mới, phần mềm mới đó cũng phải mở theo giấy phép GPL.</p>
 </div>
 </details>
 
@@ -694,11 +745,16 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Cho ví dụ về phần mềm đóng gói và phần mềm đặt hàng. Ưu điểm của phần mềm thương mại là gì?</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Cho ví dụ về một phần mềm thương mại và một phần mềm nguồn mở có thể thay thế. Ưu điểm của phần mềm nguồn mở là gì?</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 2</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 3:</strong> Không thể thay thế hoàn toàn. Phần mềm nguồn mở chỉ đáp ứng nhu cầu chung của nhiều người dùng, còn nhu cầu riêng, nâng cao chỉ phần mềm thương mại hoặc đặt hàng mới đáp ứng được.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong> Phần mềm đóng gói: Photoshop, Microsoft Word. Phần mềm đặt hàng: phần mềm điều khiển dây chuyền lắp ráp, phần mềm đặt xe của hãng taxi. Ưu điểm: tạo ra thị trường phần mềm phong phú, đáp ứng nhu cầu riêng và chung của xã hội.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong> Thương mại: Adobe Photoshop → Nguồn mở thay thế: GIMP. Ưu điểm phần mềm nguồn mở: miễn phí hoặc chi phí thấp, linh hoạt, được cộng đồng hỗ trợ.</p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 3</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 3:</strong> Không thể thay thế hoàn toàn. Phần mềm nguồn mở chỉ đáp ứng nhu cầu chung của nhiều người dùng, còn nhu cầu riêng, nâng cao chỉ phần mềm thương mại hoặc đặt hàng mới đáp ứng được.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Phần mềm đóng gói: Photoshop, Microsoft Word. Phần mềm đặt hàng: phần mềm điều khiển dây chuyền lắp ráp, phần mềm đặt xe của hãng taxi. Ưu điểm: tạo ra thị trường phần mềm phong phú, đáp ứng nhu cầu riêng và chung của xã hội.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong> Thương mại: Adobe Photoshop → Nguồn mở thay thế: GIMP. Ưu điểm phần mềm nguồn mở: miễn phí hoặc chi phí thấp, linh hoạt, được cộng đồng hỗ trợ.</p>
 </div>
 </details>
 
@@ -708,11 +764,16 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Em hãy nêu những ưu điểm của phần mềm chạy trên Internet.</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Em hãy nêu tên một phần mềm trực tuyến khác với các phần mềm đã nêu trong bài.</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 3</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 4:</strong> Phần mềm chạy trên Internet là phần mềm sử dụng qua Internet mà không cần cài đặt vào máy — ví dụ: Google Docs, Google Sheets. Ưu điểm: dùng được ở bất cứ đâu, bất cứ máy tính nào miễn có kết nối Internet; chi phí rẻ hoặc miễn phí.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong> Có thể sử dụng ở bất cứ đâu, bất cứ máy tính nào miễn là có kết nối Internet.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong> Microsoft Teams.</p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 4</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 4:</strong> Phần mềm chạy trên Internet là phần mềm sử dụng qua Internet mà không cần cài đặt vào máy — ví dụ: Google Docs, Google Sheets. Ưu điểm: dùng được ở bất cứ đâu, bất cứ máy tính nào miễn có kết nối Internet; chi phí rẻ hoặc miễn phí.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Có thể sử dụng ở bất cứ đâu, bất cứ máy tính nào miễn là có kết nối Internet.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong> Microsoft Teams.</p>
 </div>
 </details>
 
@@ -721,10 +782,12 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Luyện tập 1:</strong> Có thể nói "Phần mềm nguồn mở ngày càng phát triển thì thị trường phần mềm thương mại càng suy giảm" hay không? Tại sao?</p>
 <p style="color:#D32F2F;"><strong>Luyện tập 2:</strong> Phần mềm ở các trạm ATM (rút tiền tự động) có phải là phần mềm trực tuyến không?</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án Luyện tập</summary>
-<div class="answer-content">
-<p><strong>Đáp án LT1:</strong> Không thể nói như vậy. Vì phần mềm thương mại cung cấp loại phần mềm "đặt hàng" đáp ứng nhu cầu cá nhân, tổ chức, hoặc phần mềm "đóng gói" hoàn thiện đáp ứng nhu cầu chung của nhiều người.</p>
-<p><strong>Đáp án LT2:</strong> Phần mềm ở các trạm ATM không phải phần mềm trực tuyến.</p>
+<details class="answer-box"><summary>Xem Đáp án LT1</summary>
+<div class="answer-content"><p><strong>Đáp án LT1:</strong> Không thể nói như vậy. Vì phần mềm thương mại cung cấp loại phần mềm "đặt hàng" đáp ứng nhu cầu cá nhân, tổ chức, hoặc phần mềm "đóng gói" hoàn thiện đáp ứng nhu cầu chung của nhiều người.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án LT2</summary>
+<div class="answer-content"><p><strong>Đáp án LT2:</strong> Phần mềm ở các trạm ATM không phải phần mềm trực tuyến.</p>
 </div>
 </details>
 
@@ -733,10 +796,12 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Vận dụng 1:</strong> Em hãy tìm hiểu trên Internet và cho biết tên một số phần mềm đồ hoạ nguồn mở và một số phần mềm đồ hoạ thương mại.</p>
 <p style="color:#D32F2F;"><strong>Vận dụng 2:</strong> Các môi trường lập trình Python thường không có chức năng biên dịch để chuyển mã nguồn thành mã máy — chương trình Python luôn ở dạng mã nguồn. Liệu có thể coi mọi phần mềm viết bằng Python đều là phần mềm nguồn mở hay không?</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án Vận dụng</summary>
-<div class="answer-content">
-<p><strong>Đáp án VD1:</strong> Phần mềm đồ hoạ nguồn mở: GIMP, Paint, Inkscape. Phần mềm đồ hoạ thương mại: Adobe Photoshop, Adobe InDesign, AutoCAD.</p>
-<p><strong>Đáp án VD2:</strong> Có thể coi mọi phần mềm viết bằng Python đều là phần mềm nguồn mở.</p>
+<details class="answer-box"><summary>Xem Đáp án VD1</summary>
+<div class="answer-content"><p><strong>Đáp án VD1:</strong> Phần mềm đồ hoạ nguồn mở: GIMP, Paint, Inkscape. Phần mềm đồ hoạ thương mại: Adobe Photoshop, Adobe InDesign, AutoCAD.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án VD2</summary>
+<div class="answer-content"><p><strong>Đáp án VD2:</strong> Có thể coi mọi phần mềm viết bằng Python đều là phần mềm nguồn mở.</p>
 </div>
 </details>`,
     img: "assets/tin11/31.jpg",
@@ -746,9 +811,7 @@ const LESSON_CONTENT = {
   4: {
     ngay: "28/08/2026",
     en: "Lesson 4: Inside the Computer",
-    text: `<figure class="lesson-figure">
-  <img src="assets/tin11/41.jpg" alt="Tóm tắt kiến thức Bài 4">
-</figure>
+    text: `
 
 <div class="activity-box">
 <p><strong>KHỞI ĐỘNG</strong></p>
@@ -769,11 +832,16 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Có thể đo tốc độ của CPU bằng số phép tính thực hiện trong một giây không?</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Giá tiền của mỗi thiết bị nhớ có phải là một thông số đo chất lượng không?</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 1</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 1:</strong> a) CPU — b) Đĩa cứng — c) RAM — d) Bảng mạch mở rộng.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong> Có thể đo được. Tốc độ xung nhịp của CPU biểu thị số chu kỳ CPU thực thi được mỗi giây, đo bằng Hertz (Hz), còn gọi là tần số CPU. Ví dụ CPU 3.2 GHz thực hiện 3.2 tỷ chu kỳ mỗi giây.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong> Giá tiền chưa chắc là thông số đo chất lượng — chất lượng còn tuỳ hãng sản xuất, thương hiệu,...</p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 1</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 1:</strong> a) CPU — b) Đĩa cứng — c) RAM — d) Bảng mạch mở rộng.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Có thể đo được. Tốc độ xung nhịp của CPU biểu thị số chu kỳ CPU thực thi được mỗi giây, đo bằng Hertz (Hz), còn gọi là tần số CPU. Ví dụ CPU 3.2 GHz thực hiện 3.2 tỷ chu kỳ mỗi giây.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong> Giá tiền chưa chắc là thông số đo chất lượng — chất lượng còn tuỳ hãng sản xuất, thương hiệu,...</p>
 </div>
 </details>
 
@@ -788,11 +856,16 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Thế nào là một mạch lôgic?</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Nêu tầm quan trọng của mạch lôgic.</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 2</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 2:</strong> z = x AND y; t = x XOR y.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong> Mạch lôgic (mạch số) là mạch điện/điện tử có đầu vào, đầu ra thể hiện các giá trị lôgic. Mọi mạch lôgic đều có thể xây dựng từ các cổng AND, OR và NOT.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong> Cho phép xử lí tín hiệu điện nhanh chóng, chính xác, tạo ra các chức năng điều khiển và tính toán phức tạp; giúp tăng tốc độ, giảm kích thước, giảm chi phí sản xuất và tiêu thụ năng lượng của thiết bị điện tử.</p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 2</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 2:</strong> z = x AND y; t = x XOR y.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Mạch lôgic (mạch số) là mạch điện/điện tử có đầu vào, đầu ra thể hiện các giá trị lôgic. Mọi mạch lôgic đều có thể xây dựng từ các cổng AND, OR và NOT.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong> Cho phép xử lí tín hiệu điện nhanh chóng, chính xác, tạo ra các chức năng điều khiển và tính toán phức tạp; giúp tăng tốc độ, giảm kích thước, giảm chi phí sản xuất và tiêu thụ năng lượng của thiết bị điện tử.</p>
 </div>
 </details>
 
@@ -801,15 +874,17 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Luyện tập 1:</strong> Trong các thiết bị của máy tính, thiết bị nào có ảnh hưởng đến tốc độ xử lí của máy tính? Tại sao?</p>
 <p style="color:#D32F2F;"><strong>Luyện tập 2:</strong> Thực hiện các phép cộng số nhị phân nhiều chữ số sau rồi chuyển sang hệ thập phân — Ví dụ: 111 + 110 = 1101 → 7 + 6 = 13.<br>a) 1010 + 101 &nbsp; b) 1001 + 1011</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án Luyện tập</summary>
-<div class="answer-content">
-<p><strong>Đáp án LT1:</strong></p>
+<details class="answer-box"><summary>Xem Đáp án LT1</summary>
+<div class="answer-content"><p><strong>Đáp án LT1:</strong></p>
 <ul>
   <li>Chip và tốc độ chip: chip đời cao, tốc độ nhanh → máy chạy nhanh hơn.</li>
   <li>Bộ nhớ RAM: dung lượng càng lớn, tốc độ xử lí càng nhanh.</li>
   <li>Card màn hình: card onboard làm máy chậm hơn card rời.</li>
 </ul>
-<p><strong>Đáp án LT2:</strong> a) 1010 + 101 = 1111 (10 + 5 = 15) &nbsp; b) 1001 + 1011 = 10100 (9 + 11 = 20)</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án LT2</summary>
+<div class="answer-content"><p><strong>Đáp án LT2:</strong> a) 1010 + 101 = 1111 (10 + 5 = 15) &nbsp; b) 1001 + 1011 = 10100 (9 + 11 = 20)</p>
 </div>
 </details>
 
@@ -827,9 +902,7 @@ const LESSON_CONTENT = {
   5: {
     ngay: "29/08/2026",
     en: "Lesson 5: Connecting Computers to Digital Devices",
-    text: `<figure class="lesson-figure">
-  <img src="assets/tin11/51.jpg" alt="Tóm tắt kiến thức Bài 5">
-</figure>
+    text: `
 
 <div class="activity-box">
 <p><strong>KHỞI ĐỘNG</strong></p>
@@ -845,9 +918,8 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Câu hỏi 1:</strong> Nêu và giải thích ý nghĩa các thông số của màn hình.</p>
 <p style="color:#D32F2F;"><strong>Câu hỏi 2:</strong> Nêu và giải thích các thông số máy in.</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án mục 1</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 1:</strong></p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 1</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 1:</strong></p>
 <ul>
   <li><strong>Chuột:</strong> điều khiển con trỏ trên màn hình.</li>
   <li><strong>Bàn phím:</strong> nhập liệu và điều khiển các chức năng máy tính.</li>
@@ -855,7 +927,10 @@ const LESSON_CONTENT = {
   <li><strong>Máy quét:</strong> quét ảnh/tài liệu và số hoá để lưu trữ, chỉnh sửa.</li>
   <li><strong>Webcam:</strong> ghi hình ảnh hoặc quay phim.</li>
 </ul>
-<p><strong>Đáp án Câu hỏi 1 (thông số màn hình):</strong></p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1 (thông số màn hình)</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1 (thông số màn hình):</strong></p>
 <ul>
   <li><strong>Kích thước:</strong> đo bằng độ dài đường chéo màn hình (inch).</li>
   <li><strong>Độ phân giải:</strong> số điểm ảnh ngang × dọc — ví dụ Full HD 1920×1080. Càng nhiều điểm ảnh, càng nét.</li>
@@ -863,7 +938,10 @@ const LESSON_CONTENT = {
   <li><strong>Tần số quét:</strong> số lần hiển thị lại hình ảnh/giây (thường 50-100 Hz) — quét cao giúp ảnh không giật, đỡ mỏi mắt.</li>
   <li><strong>Thời gian phản hồi:</strong> thời gian đổi màu một điểm ảnh — màn hình tốt có thể đạt 1 ms.</li>
 </ul>
-<p><strong>Đáp án Câu hỏi 2 (thông số máy in):</strong></p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2 (thông số máy in)</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2 (thông số máy in):</strong></p>
 <ul>
   <li><strong>Độ phân giải:</strong> đo bằng dpi (dots per inch).</li>
   <li><strong>Tốc độ in:</strong> đo bằng trang/phút (ppm).</li>
@@ -881,11 +959,16 @@ const LESSON_CONTENT = {
 <figure class="lesson-figure">
   <img src="assets/tin11/52.jpg" alt="Các cổng kết nối của máy tính">
 </figure>
-<details class="answer-box"><summary>Xem đáp án mục 2</summary>
-<div class="answer-content">
-<p><strong>Đáp án Hoạt động 2:</strong> A. VGA — B. Cổng HDMI — C, D, E. Cổng USB — F. Cổng LAN.</p>
-<p><strong>Đáp án Câu hỏi 1:</strong> Có phụ thuộc — mỗi thiết bị có cổng kết nối và yêu cầu phương thức kết nối khác nhau.</p>
-<p><strong>Đáp án Câu hỏi 2:</strong> Tham số kết nối là các thông số/thông tin cần thiết để thiết lập kết nối giữa ứng dụng và thiết bị phần cứng, ví dụ địa chỉ IP, tên miền, cổng kết nối, tên người dùng, mật khẩu.</p>
+<details class="answer-box"><summary>Xem Đáp án Hoạt động 2</summary>
+<div class="answer-content"><p><strong>Đáp án Hoạt động 2:</strong> A. VGA — B. Cổng HDMI — C, D, E. Cổng USB — F. Cổng LAN.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 1</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 1:</strong> Có phụ thuộc — mỗi thiết bị có cổng kết nối và yêu cầu phương thức kết nối khác nhau.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án Câu hỏi 2</summary>
+<div class="answer-content"><p><strong>Đáp án Câu hỏi 2:</strong> Tham số kết nối là các thông số/thông tin cần thiết để thiết lập kết nối giữa ứng dụng và thiết bị phần cứng, ví dụ địa chỉ IP, tên miền, cổng kết nối, tên người dùng, mật khẩu.</p>
 </div>
 </details>
 
@@ -894,16 +977,18 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Luyện tập 1:</strong> Thực hiện kết nối máy tính với một điện thoại thông minh qua cổng USB để lấy ảnh từ điện thoại về máy tính.</p>
 <p style="color:#D32F2F;"><strong>Luyện tập 2:</strong> Thực hiện kết nối máy tính hay điện thoại với một tai nghe/loa Bluetooth, sau đó bật nhạc để trải nghiệm.</p>
 </div>
-<details class="answer-box"><summary>Xem hướng dẫn Luyện tập</summary>
-<div class="answer-content">
-<p><strong>Hướng dẫn LT1:</strong></p>
+<details class="answer-box"><summary>Xem Hướng dẫn LT1</summary>
+<div class="answer-content"><p><strong>Hướng dẫn LT1:</strong></p>
 <ul>
   <li>Gắn 1 đầu cáp vào điện thoại, đầu còn lại vào máy tính.</li>
   <li>Trên điện thoại, cho phép kết nối USB khi có thông báo hiện lên.</li>
   <li>Trên máy tính, mở Windows Explorer để truy cập ổ đĩa điện thoại.</li>
   <li>Tìm thư mục chứa ảnh, chọn và sao chép vào một thư mục trên máy tính.</li>
 </ul>
-<p><strong>Hướng dẫn LT2:</strong></p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Hướng dẫn LT2</summary>
+<div class="answer-content"><p><strong>Hướng dẫn LT2:</strong></p>
 <ul>
   <li>Bật Bluetooth trên máy tính/điện thoại.</li>
   <li>Bật tai nghe/loa và chuyển sang chế độ ghép nối Bluetooth.</li>
@@ -919,11 +1004,16 @@ const LESSON_CONTENT = {
 <p style="color:#D32F2F;"><strong>Vận dụng 2:</strong> Tìm hiểu máy chiếu: là thiết bị ra hay vào? Mô tả chức năng, các công nghệ chế tạo và thông số của máy chiếu.</p>
 <p style="color:#D32F2F;"><strong>Vận dụng 3:</strong> Máy chiếu khi kết nối sẽ trở thành màn hình mở rộng của máy tính. Có thể dùng ti vi thông minh làm màn hình mở rộng — hãy tìm hiểu cách kết nối ti vi với máy tính để làm điều này.</p>
 </div>
-<details class="answer-box"><summary>Xem đáp án Vận dụng</summary>
-<div class="answer-content">
-<p><strong>Đáp án VD1 — Máy quét:</strong> Là thiết bị vào. Chức năng: quét thông tin vào máy tính. Công nghệ: cảm biến CCD (dùng ống kính quang học và hệ gương, cần bộ chuyển đổi A/D) hoặc chip CIS (nhỏ gọn, rẻ, không cần hệ quang học).</p>
-<p><strong>Đáp án VD2 — Máy chiếu:</strong> Là thiết bị ra. Chức năng: truyền tải hình ảnh lên màn chiếu kích thước lớn. Công nghệ LCD tổng hợp ảnh màu từ 3 màu cơ bản (đỏ, lục, xanh dương). Thông số chính: độ sáng (ANSI Lumens), độ phân giải (Full HD, 4K), tỷ lệ chiếu (16:9, 4:3), độ tương phản, kích thước ảnh chiếu.</p>
-<p><strong>Đáp án VD3:</strong> Gắn một đầu cáp HDMI vào máy tính, đầu còn lại vào ti vi thông minh; dùng remote chọn nguồn vào của ti vi đúng với cổng HDMI đã cắm.</p>
+<details class="answer-box"><summary>Xem Đáp án VD1 — Máy quét</summary>
+<div class="answer-content"><p><strong>Đáp án VD1 — Máy quét:</strong> Là thiết bị vào. Chức năng: quét thông tin vào máy tính. Công nghệ: cảm biến CCD (dùng ống kính quang học và hệ gương, cần bộ chuyển đổi A/D) hoặc chip CIS (nhỏ gọn, rẻ, không cần hệ quang học).</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án VD2 — Máy chiếu</summary>
+<div class="answer-content"><p><strong>Đáp án VD2 — Máy chiếu:</strong> Là thiết bị ra. Chức năng: truyền tải hình ảnh lên màn chiếu kích thước lớn. Công nghệ LCD tổng hợp ảnh màu từ 3 màu cơ bản (đỏ, lục, xanh dương). Thông số chính: độ sáng (ANSI Lumens), độ phân giải (Full HD, 4K), tỷ lệ chiếu (16:9, 4:3), độ tương phản, kích thước ảnh chiếu.</p>
+</div>
+</details>
+<details class="answer-box"><summary>Xem Đáp án VD3</summary>
+<div class="answer-content"><p><strong>Đáp án VD3:</strong> Gắn một đầu cáp HDMI vào máy tính, đầu còn lại vào ti vi thông minh; dùng remote chọn nguồn vào của ti vi đúng với cổng HDMI đã cắm.</p>
 </div>
 </details>`,
     img: "assets/tin11/51.jpg",
