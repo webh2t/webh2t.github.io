@@ -104,7 +104,16 @@
   .detail-text table td, .detail-text table th{ border:1px solid var(--line); padding:8px 10px; text-align:left;}
   .detail-text table th{ background:var(--paper); font-weight:700; color:var(--ink);}
   .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0; transition:transform .25s ease, box-shadow .25s ease; transform-origin:center center; position:relative; z-index:1;}
-  .detail-text img:hover{ transform:scale(1.06); box-shadow:0 14px 32px rgba(15,28,46,.22); z-index:5;}
+  .detail-text img:hover{ transform:none; box-shadow:none; z-index:1;}
+  /* Lens / Magnifier Zoom */
+  .lens-wrap{position:relative;display:inline-block;max-width:100%;line-height:0;overflow:visible;}
+  .lens-wrap > img{display:block;max-width:100%;height:auto;margin:10px 0;transition:filter .18s ease;}
+  .lens-wrap:hover > img{filter:brightness(.96);}
+  .zoom-lens{position:absolute;width:170px;height:170px;border-radius:50%;border:3px solid #fff;box-shadow:0 8px 28px rgba(15,28,46,.30),0 0 0 2px rgba(0,71,171,.55);pointer-events:none;display:none;background-repeat:no-repeat;background-color:#fff;z-index:30;}
+  .lens-wrap.is-active .zoom-lens{display:block;}
+  .summary-map .lens-wrap{display:block;width:100%;}
+  .summary-map .lens-wrap > img{width:100%;}
+
   .lesson-figure img:hover, .two-col img:hover{ transform:scale(1.06);}
   .zoomable-image{cursor:crosshair}
   .zoom-lens{position:fixed;width:190px;height:190px;border-radius:50%;border:4px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,.18);pointer-events:none;z-index:99999;display:none;overflow:hidden;background-repeat:no-repeat;background-color:#fff;will-change:left,top,background-position}
@@ -1219,6 +1228,35 @@ const REVIEW_QUIZZES = {
   ]}
 };
 
+function attachZoomableImages(){
+  const root=document.getElementById('detail-card');
+  if(!root) return;
+  root.querySelectorAll('img.zoomable-image, .detail-text img').forEach(img=>{
+    if(img.closest('.lens-wrap')) return;
+    const wrap=document.createElement('span');
+    wrap.className='lens-wrap';
+    img.parentNode.insertBefore(wrap,img);
+    wrap.appendChild(img);
+    const lens=document.createElement('span');
+    lens.className='zoom-lens';
+    wrap.appendChild(lens);
+    const update=(e)=>{
+      const r=img.getBoundingClientRect();
+      const x=Math.max(0,Math.min(r.width,e.clientX-r.left));
+      const y=Math.max(0,Math.min(r.height,e.clientY-r.top));
+      const zoom=2.35;
+      lens.style.left=(x-85)+'px';
+      lens.style.top=(y-85)+'px';
+      lens.style.backgroundImage=`url("${img.currentSrc || img.src}")`;
+      lens.style.backgroundSize=`${r.width*zoom}px ${r.height*zoom}px`;
+      lens.style.backgroundPosition=`${85-x*zoom}px ${85-y*zoom}px`;
+    };
+    wrap.addEventListener('mouseenter',e=>{wrap.classList.add('is-active');update(e)});
+    wrap.addEventListener('mousemove',update);
+    wrap.addEventListener('mouseleave',()=>wrap.classList.remove('is-active'));
+  });
+}
+
 function renderLessonSummary(id){
   const c=LESSON_SUMMARIES[id], el=document.getElementById('lesson-summary');
   if(!el) return;
@@ -1377,6 +1415,7 @@ function showLesson(id) {
 
   renderLessonSummary(id);
   renderReviewQuiz(id);
+  attachZoomableImages();
 
   document.getElementById('d-video').innerHTML = content.video
     ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${content.video}"
