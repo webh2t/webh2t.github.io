@@ -259,14 +259,25 @@
 .hero-progress{background:rgba(255,255,255,.1);padding:18px;border:1px solid rgba(255,255,255,.16);border-radius:16px}.hero-progress strong{font-size:1.8rem}.hero-progress .progress-track{height:9px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;margin:10px 0 6px}.hero-progress .progress-fill{height:100%;background:#FFC845;width:0;transition:width .4s}.hero-progress small{color:#d7e8ff}
 .learning-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 26px}.learning-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 5px 16px rgba(15,28,46,.04)}.learning-card .icon{font-size:1.35rem}.learning-card strong{display:block;color:var(--ink);font-size:.88rem;margin:5px 0}.learning-card span{font-size:.77rem;color:#68788f}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:.68rem;font-weight:800;margin:3px 3px 0 0}.badge-blue{background:#e7f1ff;color:#0057B8}.badge-green{background:#e7f7ef;color:#14764f}.badge-orange{background:#fff2df;color:#a65f00}.badge-purple{background:#f0e9ff;color:#6d28d9}.badge-red{background:#ffebeb;color:#b42323}
 .lesson-tools{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;padding:12px 14px;background:#f7faff;border:1px solid #dbe8f7;border-radius:12px}.lesson-tools button{border:1px solid #cbd9ea;background:#fff;color:#174a86;border-radius:9px;padding:8px 11px;font:700 .76rem inherit;cursor:pointer}.lesson-tools button:hover{background:#eaf3ff}
-.lesson-goals{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:0 0 22px}.goal-card{padding:14px;border-radius:12px;border:1px solid var(--line);background:#fff}.goal-card h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:7px}.goal-card p{font-size:.82rem;color:#52647b;line-height:1.55}.goal-card.blue h4{color:#0066CC}.goal-card.green h4{color:#16865B}.goal-card.purple h4{color:#7C3AED}.goal-card.orange h4{color:#D97706}
+.lesson-goals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 26px;align-items:stretch}.goal-card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;min-height:0;height:100%;display:flex;flex-direction:column;box-shadow:0 5px 16px rgba(15,28,46,.06)}.goal-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}.goal-card.blue:before{background:#0066CC}.goal-card.green:before{background:#16865B}.goal-card.purple:before{background:#7C3AED}.goal-card.orange:before{background:#D97706}.goal-card h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px}.goal-card p{font-size:.82rem;color:#52647b;line-height:1.62}.goal-card.blue h4{color:#0066CC}.goal-card.green h4{color:#16865B}.goal-card.purple h4{color:#7C3AED}.goal-card.orange h4{color:#D97706}.goal-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,28,46,.08);transition:.25s ease}
 .ai-lab{margin:24px 0;padding:18px;border-radius:16px;background:linear-gradient(135deg,#faf7ff,#f4efff);border:1px solid #e4d8ff}.ai-lab h3{color:#6d28d9;font-size:1rem;margin-bottom:5px}.ai-lab p{font-size:.8rem;color:#62557a}.ai-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ai-btn{background:#7c3aed;color:#fff}.ai-btn.alt{background:#fff;color:#6d28d9;border:1px solid #d8c8ff}.ai-note{font-size:.72rem!important;margin-top:9px;color:#75658d!important}
 .digital-section{margin-top:28px;padding:22px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:0 5px 18px rgba(15,28,46,.04)}.digital-section h3{color:var(--blue-deep);font-size:1rem;margin-bottom:14px}.skill-row{display:flex;gap:10px;align-items:center;margin:10px 0}.skill-row .skill-name{width:185px;font-size:.78rem;font-weight:700;color:#42536b}.skill-meter{height:8px;flex:1;background:#e8edf3;border-radius:8px;overflow:hidden}.skill-meter i{display:block;height:100%;background:#16865B;border-radius:8px}.skill-row b{font-size:.7rem;color:#64748b;width:34px;text-align:right}
 .progress-checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.progress-check{display:flex;align-items:center;gap:8px;padding:9px 10px;background:#f8fafc;border-radius:9px;font-size:.78rem;color:#52647b}.progress-check input{accent-color:#16865B}
 .ai-modal{position:fixed;inset:0;background:rgba(5,20,42,.58);z-index:10000;display:none;align-items:center;justify-content:center;padding:18px}.ai-modal.show{display:flex}.ai-dialog{width:min(680px,100%);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.3);overflow:hidden}.ai-dialog-head{padding:16px 18px;background:#6d28d9;color:#fff;display:flex;justify-content:space-between;align-items:center}.ai-dialog-head button{background:transparent;color:#fff;border:0;font-size:1.4rem;cursor:pointer}.ai-dialog-body{padding:18px}.ai-dialog textarea{width:100%;min-height:125px;border:1px solid #d7ddea;border-radius:10px;padding:12px;font:inherit;font-size:.86rem;resize:vertical}.ai-presets{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.ai-presets button{border:1px solid #ddd1f7;background:#faf8ff;color:#6d28d9;border-radius:8px;padding:7px 9px;font-size:.72rem;font-weight:700;cursor:pointer}.ai-output{margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;font-size:.8rem;color:#52647b;display:none}.ai-output.show{display:block}
 .search-panel{display:flex;gap:10px;margin:0 0 18px}.search-panel input{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font:inherit;font-size:.86rem}.search-panel button{border:0;background:var(--blue-deep);color:#fff;border-radius:10px;padding:0 15px;font-weight:700;cursor:pointer}
 .filtered-out{display:none!important}
-@media(max-width:760px){.platform-hero .hero-grid,.lesson-goals{grid-template-columns:1fr}.learning-panel{grid-template-columns:repeat(2,1fr)}.progress-checklist{grid-template-columns:1fr}.skill-row .skill-name{width:135px}.two-col img{width:100%!important}.two-col .two-col-text{max-width:100%!important}}
+
+  /* ---------- ÔN TẬP CUỐI BÀI ---------- */
+  .lesson-review{margin:34px 0 26px;padding:24px;border:1px solid rgba(39,82,214,.18);border-radius:16px;background:linear-gradient(180deg,#fff,#f7f9ff);box-shadow:0 8px 24px rgba(15,28,46,.07)}
+  .review-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}.review-head h3{margin:0;color:#003B8F;font-size:1.35rem}.review-head p{margin:6px 0 0;color:#66758b;font-size:.88rem}
+  .review-rule{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 20px}.rule-chip{padding:10px 12px;border-radius:10px;background:#eef4ff;border:1px solid #d9e4ff;font-size:.82rem;color:#24436d}.rule-chip strong{color:#003B8F}
+  .quiz-question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;margin:12px 0}.quiz-question .q-title{font-weight:700;color:#16233A;margin-bottom:12px;line-height:1.5}.quiz-options{display:grid;gap:8px}.quiz-option{display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border:1px solid transparent;border-radius:8px;cursor:pointer}.quiz-option:hover{background:#f5f8ff;border-color:#dbe5ff}.quiz-option input{margin-top:4px;accent-color:#2752D6}.tf-grid{display:grid;gap:8px}.tf-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:9px 10px;background:#f8fafc;border-radius:8px}.tf-row select{border:1px solid #ccd6e5;border-radius:7px;padding:7px 10px;background:#fff;font:inherit}.short-answer{width:100%;min-height:120px;resize:vertical;border:1px solid #ccd6e5;border-radius:10px;padding:12px;font:inherit;color:#26364e;outline:none}.short-answer:focus{border-color:#2752D6;box-shadow:0 0 0 3px rgba(39,82,214,.1)}
+  .review-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.review-btn{border:0;border-radius:10px;padding:11px 16px;font:700 .9rem 'Be Vietnam Pro',sans-serif;cursor:pointer;background:#2752D6;color:#fff}.review-btn.secondary{background:#eef4ff;color:#17429b}.review-btn:hover{transform:translateY(-1px)}
+  .quiz-result{display:none;margin-top:18px;padding:16px;border-radius:12px;background:#eef8f4;border:1px solid #bfe7d7}.quiz-result.show{display:block}.score-big{font-size:1.5rem;font-weight:800;color:#006b4f}.score-detail{margin-top:7px;color:#3d4c63;font-size:.9rem;line-height:1.6}.ai-grade-note{margin-top:10px;padding:11px 12px;border-left:3px solid #7c4dff;background:#f5f0ff;color:#51416e;border-radius:0 8px 8px 0;font-size:.84rem}.quiz-feedback{display:none;margin-top:8px;font-size:.83rem}.quiz-feedback.show{display:block}.correct{color:#087f5b}.wrong{color:#c62828}
+
+  .lesson-summary{margin:8px 0 24px;padding:20px;border:1px solid rgba(39,82,214,.16);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(15,28,46,.05)}.summary-title{display:flex;gap:12px;align-items:center;margin-bottom:16px}.summary-title>span{font-size:1.7rem}.summary-title h3{margin:0;color:#003B8F;font-size:1.18rem}.summary-title p{margin:4px 0 0;color:#748198;font-size:.82rem}.summary-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;align-items:stretch}.summary-map{display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:12px;padding:10px;min-height:220px}.summary-map img{width:100%;max-height:500px;object-fit:contain;border-radius:10px;border:1px solid var(--line)}.summary-points{display:grid;gap:10px;align-content:start}.summary-point{display:flex;gap:10px;padding:11px 12px;background:#f7f9ff;border:1px solid #e1e8f7;border-radius:10px;font-size:.87rem;line-height:1.55;color:#3d4c63}.summary-point b{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2752D6;color:#fff;flex:none;font-size:.78rem}.caption-small{text-align:center;margin-top:6px}
+
+  @media(max-width:760px){.platform-hero .hero-grid,.lesson-goals{grid-template-columns:1fr;grid-template-rows:none}.learning-panel{grid-template-columns:repeat(2,1fr)}.progress-checklist{grid-template-columns:1fr}.skill-row .skill-name{width:135px}.two-col img{width:100%!important}.two-col .two-col-text{max-width:100%!important}}
 @media(max-width:480px){.learning-panel{grid-template-columns:1fr}.platform-hero{padding:20px}.hero-progress{margin-top:4px}}
 
 </style>
@@ -355,6 +366,9 @@
           <span class="views" id="d-views">👁 0 lượt xem</span>
         </div>
         <h1 class="detail-title" id="d-title"></h1>
+        <div id="d-image"></div>
+        <div id="lesson-summary"></div>
+        <div class="lesson-goals" id="lesson-goals"></div>
         <div class="lesson-tools">
           <button onclick="toggleLessonComplete()" id="complete-btn">☐ Đánh dấu hoàn thành</button>
           <button onclick="openAILab('Giải thích bài học này theo cách dễ hiểu cho học sinh lớp 11, không làm bài hộ.')">🤖 AI Gia sư</button>
@@ -363,11 +377,10 @@
           <button onclick="copyLessonPrompt()">📋 Copy prompt</button>
           <button onclick="toggleTeacherMode()">👨‍🏫 Chế độ giáo viên</button>
         </div>
-        <div class="lesson-goals" id="lesson-goals"></div>
-        <div id="d-image"></div>
         <div class="detail-text" id="d-text"></div>
         <div id="d-video"></div>
         <div id="d-doc"></div>
+        <div id="lesson-review"></div>
 
         <div class="ai-lab">
           <h3>🤖 AI LEARNING LAB</h3>
@@ -709,7 +722,7 @@ const LESSON_CONTENT = {
 </details>
 
 <figure class="lesson-figure" style="margin:18px 0;">
-  <img src="assets/tin11/12b1.jpg" alt="Sơ đồ minh hoạ quan hệ hệ điều hành - phần cứng - phần mềm">
+  <img src="assets/tin11/13.jpg" alt="Sơ đồ minh hoạ quan hệ hệ điều hành - phần cứng - phần mềm">
 </figure>
 
 <p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
@@ -743,7 +756,7 @@ const LESSON_CONTENT = {
 <div class="answer-content"><p><strong>Đáp án VD2:</strong> Linux là một hệ điều hành máy tính được phát triển từ năm 1991 dựa trên hệ điều hành Unix và bằng viết bằng ngôn ngữ C, được phát hành miễn phí và có nhiều ưu điểm vượt trội.</p>
 </div>
 </details>`,
-    img: "assets/tin11/11b1.jpg",
+    img: "assets/tin11/10.jpg",
     video: "",
     doc: ""
   },
@@ -810,7 +823,7 @@ const LESSON_CONTENT = {
 </table>
 </div>
 </details>`,
-    img: "assets/tin11/21.jpg",
+    img: "assets/tin11/20.jpg",
     video: "",
     doc: ""
   },
@@ -922,7 +935,7 @@ const LESSON_CONTENT = {
 <div class="answer-content"><p><strong>Đáp án VD2:</strong> Có thể coi mọi phần mềm viết bằng Python đều là phần mềm nguồn mở.</p>
 </div>
 </details>`,
-    img: "assets/tin11/31.jpg",
+    img: "assets/tin11/30.jpg",
     video: "",
     doc: ""
   },
@@ -1013,7 +1026,7 @@ const LESSON_CONTENT = {
 <details class="answer-box"><summary>Xem đáp án Vận dụng</summary>
 <div class="answer-content">FLOPS là chỉ số đo hiệu suất tính toán của máy tính, tính bằng số phép tính dấu chấm động thực hiện được trong một giây. FLOPS ít dùng cho máy tính cá nhân vì các chỉ số như tốc độ xử lí, bộ nhớ, tốc độ bus,... đã trở thành yếu tố quan trọng hơn để đo hiệu suất máy tính cá nhân.</div>
 </details>`,
-    img: "assets/tin11/41.jpg",
+    img: "assets/tin11/40.jpg",
     video: "",
     doc: ""
   },
@@ -1134,12 +1147,130 @@ const LESSON_CONTENT = {
 <div class="answer-content"><p><strong>Đáp án VD3:</strong> Gắn một đầu cáp HDMI vào máy tính, đầu còn lại vào ti vi thông minh; dùng remote chọn nguồn vào của ti vi đúng với cổng HDMI đã cắm.</p>
 </div>
 </details>`,
-    img: "assets/tin11/51.jpg",
+    img: "assets/tin11/50.jpg",
+    video: "",
+    doc: ""
+  },
+
+  6: {
+    ngay: "28/08/2026",
+    en: "Lesson 6: Storing and Sharing Files on the Internet",
+    text: `<div class="activity-box"><p><strong>KHỞI ĐỘNG</strong></p><p>Nhóm em đang cùng nhau làm một bài tập nhóm. Em được giao lập kế hoạch và phân công công việc cho cả nhóm. Có những cách nào để chia sẻ văn bản này cho các thành viên trong nhóm?</p></div><details class="answer-box"><summary>Xem đáp án Khởi động</summary><div class="answer-content">Tạo thành tệp tin rồi chia sẻ vào nhóm, hoặc chụp hình gửi vào nhóm.</div></details>
+<p><strong>1. LƯU TRỮ VÀ CHIA SẺ TỆP TIN TRÊN INTERNET - Ổ ĐĨA TRỰC TUYẾN</strong></p><div class="activity-box"><p><strong>Hoạt động 1:</strong> Quan sát các tính năng cơ bản của một dịch vụ lưu trữ và chia sẻ tệp tin trên Internet. Hãy mô tả các tính năng đó và cho biết ưu điểm, nhược điểm của việc lưu trữ và chia sẻ tệp trên Internet.</p><p><strong>Câu hỏi:</strong> Thảo luận nhóm để chỉ ra một vài ưu điểm và nhược điểm của việc lưu trữ và chia sẻ tệp trên Internet.</p></div><details class="answer-box"><summary>Xem Đáp án Hoạt động 1</summary><div class="answer-content"><p>Những tính năng cơ bản: tải tệp lên ổ đĩa trực tuyến, tạo mới và quản lí thư mục/tệp, chia sẻ thư mục và tệp. Dữ liệu được lưu trữ trên các máy chủ tại trung tâm dữ liệu.</p></div></details><details class="answer-box"><summary>Xem Đáp án Câu hỏi</summary><div class="answer-content"><p><strong>Ưu điểm:</strong> nhanh chóng, ít mất thời gian, nhiều người có thể cùng xem/chia sẻ. <strong>Nhược điểm:</strong> phụ thuộc kết nối Internet trong nhiều tình huống.</p></div></details>
+<p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p><div class="activity-box"><p><strong>Luyện tập 1:</strong> Thực hành tải thêm các tệp từ máy tính lên ổ đĩa trực tuyến.</p><p><strong>Luyện tập 2:</strong> Chia sẻ một vài tệp cho các bạn trong nhóm với chế độ chia sẻ khác nhau và kiểm tra sự khác biệt.</p></div><details class="answer-box"><summary>Xem Đáp án LT1</summary><div class="answer-content">Mở dịch vụ lưu trữ trực tuyến, đăng nhập tài khoản và tải tệp từ máy tính lên ổ đĩa trực tuyến.</div></details><details class="answer-box"><summary>Xem Đáp án LT2</summary><div class="answer-content">Có thể chia sẻ qua Internet với các quyền xem/chỉnh sửa khác nhau; cần kiểm tra đúng đối tượng được cấp quyền.</div></details>
+<p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p><div class="activity-box"><p><strong>Vận dụng 1:</strong> Sử dụng thêm dịch vụ lưu trữ trực tuyến của ít nhất hai nhà cung cấp khác và so sánh dung lượng miễn phí, khả năng tải lên, chia sẻ và chỉnh sửa.</p><p><strong>Vận dụng 2:</strong> Khám phá các chức năng khác của ổ đĩa trực tuyến và chia sẻ với bạn bè.</p></div><details class="answer-box"><summary>Xem Đáp án VD1</summary><div class="answer-content">Google Drive là dịch vụ lưu trữ trực tuyến của Google; Dropbox là một dịch vụ lưu trữ trực tuyến phổ biến khác. Khi so sánh cần dựa trên dung lượng, tính năng và khả năng cộng tác thực tế.</div></details><details class="answer-box"><summary>Xem Đáp án VD2</summary><div class="answer-content">Có thể khám phá chức năng tạo thư mục, chia sẻ, đồng bộ, quản lí quyền truy cập và kết nối ổ đĩa trực tuyến với máy tính.</div></details>`,
+    img: "assets/tin11/60.jpg",
     video: "",
     doc: ""
   }
 
 };
+const LESSON_SUMMARIES = {
+  1:{img:"assets/tin11/12.jpg",items:["Sơ bộ nắm được lịch sử phát triển của các hệ điều hành thông dụng cho máy tính cá nhân (PC), một hệ điều hành thương mại và một hệ điều hành nguồn mở.","Hiểu được đặc điểm của hệ điều hành cho thiết bị di động.","Hiểu được một cách khái quát mối quan hệ giữa phần cứng, hệ điều hành và phần mềm ứng dụng cũng như vai trò của mỗi thành phần trong hoạt động chung của cả hệ thống.","Trình bày được nội dung kiến thức kể trên."]},
+  2:{img:"assets/tin11/21.jpg",items:["Sử dụng được một số chức năng cơ bản của hệ điều hành cho máy tính cá nhân.","Sử dụng được một vài tiện ích của hệ điều hành nâng cao hiệu quả của máy tính cá nhân.","Sử dụng được một vài tiện ích cơ bản của hệ điều hành trên thiết bị di động."]},
+  3:{img:"assets/tin11/31.jpg",items:["Trình bày được một số khái niệm và nắm được sự khác nhau giữa phần mềm nguồn mở với phần mềm thương mại.","Hiểu được vai trò của phần mềm nguồn mở và phần mềm thương mại đối với sự phát triển của công nghệ thông tin.","Biết được phần mềm chạy trên Internet và lợi ích của chúng."]},
+  4:{img:"assets/tin11/41.jpg",items:["Nhận diện được một số thiết bị trong thân máy, nắm được chức năng và các thông số do hiệu năng của chúng.","Nhận biết được sơ đồ của các mạch logic AND, OR, NOT và giải thích được vai trò của các mạch logic đó trong thực hiện các tính toán nhị phân."]},
+  5:{img:"assets/tin11/51.jpg",items:["Biết một số thông số cơ bản của thiết bị vào - ra thông dụng.","Biết cách kết nối với máy tính cũng như tùy chỉnh được một số chức năng cơ bản để nâng cao hiệu quả và đáp ứng nhu cầu sử dụng.","Đọc hiểu và giải thích được một số thông số cơ bản của các thiết bị số thông dụng trong các tài liệu để kết nối chúng với máy tính."]},
+  6:{img:"assets/tin11/61.jpg",items:["Lưu trữ đám mây giúp khắc phục hạn chế về dung lượng của thiết bị lưu trữ vật lý.","Người dùng cần đăng ký tài khoản với nhà cung cấp dịch vụ để bắt đầu sử dụng ổ đĩa trực tuyến.","Quản lý tệp trên ổ đĩa trực tuyến tương tự như quản lý tệp trên hệ điều hành máy tính: tạo, xóa, đổi tên và di chuyển.","Chia sẻ tệp thông qua địa chỉ thư điện tử giúp nhóm làm việc cộng tác hiệu quả trong thời gian thực.","Chế độ chia sẻ cần được thiết lập cẩn thận để đảm bảo tính bảo mật và đúng đối tượng truy cập."]}
+};
+
+const REVIEW_QUIZZES = {
+  1:{q:[
+    {type:'mc',text:'Điều gì mô tả đúng nhất về giao diện đồ họa của hệ điều hành?',options:['Người dùng phải gõ các lệnh dòng lệnh','Giao diện đồ họa hiển thị các đối tượng bằng hình ảnh','Không hỗ trợ điều khiển bằng chuột','Chỉ sử dụng trong hệ điều hành UNIX'],answer:1,explain:'Giao diện đồ họa sử dụng hình ảnh và biểu tượng để người dùng tương tác trực quan.'},
+    {type:'mc',text:'Phiên bản Windows nào là phiên bản đầu tiên có giao diện đồ họa?',options:['Windows XP','Windows 95','Windows 1.0','Windows 3.11'],answer:2,explain:'Windows 1.0 là phiên bản đầu tiên giới thiệu giao diện đồ họa.'},
+    {type:'mc',text:'UNIX là hệ điều hành có đặc điểm gì?',options:['Chỉ dành cho máy tính cá nhân','Đa nhiệm và đa người dùng','Không hỗ trợ mạng','Độc quyền và không chia sẻ mã nguồn'],answer:1,explain:'UNIX nổi bật với khả năng đa nhiệm và đa người dùng.'},
+    {type:'tf',text:'Hệ điều hành có vai trò quan trọng nào sau đây?',items:[['a) Quản lý phần cứng, bộ nhớ và thiết bị ngoại vi.','T'],['b) Chỉ cung cấp giao diện đồ họa cho người dùng.','F'],['c) Tổ chức và điều phối việc thực hiện các chương trình.','T'],['d) Được tích hợp với mọi ứng dụng phần mềm trên máy tính.','F']]},
+    {type:'short',text:'Giao diện đồ họa giúp ích gì trong việc sử dụng hệ điều hành trên máy tính cá nhân?',keywords:['giao diện đồ họa','hình ảnh','biểu tượng','cửa sổ','tương tác','thân thiện','dễ dàng'],explain:'Nêu được vai trò của hình ảnh/biểu tượng/cửa sổ giúp người dùng tương tác dễ dàng, trực quan thay vì phải nhớ nhiều lệnh.'}
+  ]},
+  2:{q:[
+    {type:'mc',text:'Khi sử dụng File Explorer trong Windows, để xem nội dung của một thư mục, bạn cần thực hiện thao tác nào?',options:['Nhấn nút Start','Nháy chuột phải vào biểu tượng thư mục','Nháy đúp chuột vào biểu tượng thư mục','Kéo và thả biểu tượng thư mục'],answer:2,explain:'Nháy đúp chuột vào biểu tượng thư mục để mở và xem nội dung bên trong.'},
+    {type:'mc',text:'Tiện ích “Disk Cleanup” trên hệ điều hành có chức năng chính là gì?',options:['Tối ưu hóa đĩa cứng','Xóa các tập tin không cần thiết và giải phóng dung lượng','Sao lưu toàn bộ hệ điều hành','Chống phân mảnh dữ liệu'],answer:1,explain:'Disk Cleanup giúp loại bỏ các tệp rác/tạm thời để giải phóng dung lượng.'},
+    {type:'mc',text:'Chức năng quản lý nhóm trong danh bạ điện thoại có tác dụng gì?',options:['Quản lý số lượng tệp tin','Sắp xếp danh bạ theo từng nhóm liên hệ','Xóa toàn bộ danh bạ','Tạo bản sao danh bạ'],answer:1,explain:'Tính năng nhóm giúp tổ chức các liên hệ để dễ tìm kiếm và quản lý.'},
+    {type:'tf',text:'Tiện ích nào sau đây không có sẵn khi cài đặt hệ điều hành và cần được cài đặt thêm sau này?',items:[['a) Bộ gõ tiếng Việt Unikey','T'],['b) Kiểm tra đĩa (Check disk)','F'],['c) Tối ưu hóa đĩa (Defragment)','F'],['d) Quản lý tệp và thư mục','F']]},
+    {type:'short',text:'Tiện ích hợp mảnh đĩa (Defragment) hoạt động như thế nào và tại sao nó quan trọng?',keywords:['tổ chức lại','dữ liệu','liền kề','phân mảnh','hiệu suất','đọc','ghi','HDD'],explain:'Cần nêu việc sắp xếp lại dữ liệu giảm phân mảnh và cải thiện hiệu suất truy xuất, đặc biệt với HDD.'}
+  ]},
+  3:{q:[
+    {type:'mc',text:'Ưu điểm chính của phần mềm nguồn mở là gì?',options:['Được hỗ trợ kỹ thuật toàn diện từ nhà phát triển.','Miễn phí hoặc chi phí thấp và minh bạch.','Có tính hoàn chỉnh cao và dễ sử dụng cho mọi đối tượng.','Không cần cài đặt vào máy tính.'],answer:1,explain:'Phần mềm nguồn mở thường có chi phí thấp và mã nguồn minh bạch, cho phép kiểm tra/sửa đổi theo giấy phép.'},
+    {type:'mc',text:'Giấy phép GNU GPL (General Public License) cho phép điều gì?',options:['Sửa đổi và phân phối phần mềm mà không cần công bố mã nguồn.','Sao chép và phân phối phần mềm kèm bản quyền gốc, miễn trừ trách nhiệm bảo hành.','Chỉ sử dụng phần mềm cho mục đích phi lợi nhuận.','Cấm người dùng chỉnh sửa phần mềm.'],answer:1,explain:'GPL cho phép sao chép, sửa đổi và phân phối theo các điều kiện của giấy phép, trong đó có yêu cầu về mã nguồn đối với các tác phẩm phái sinh thuộc phạm vi GPL.'},
+    {type:'mc',text:'Phần mềm thương mại có ưu điểm gì so với phần mềm nguồn mở?',options:['Miễn phí hoàn toàn.','Cung cấp dịch vụ hỗ trợ kỹ thuật tốt hơn.','Mã nguồn mở cho người dùng tùy chỉnh.','Có sẵn trên mọi nền tảng và hệ điều hành.'],answer:1,explain:'Phần mềm thương mại thường đi kèm dịch vụ hỗ trợ kỹ thuật chuyên nghiệp.'},
+    {type:'tf',text:'Phần mềm chạy trên Internet có những đặc điểm nào dưới đây?',items:[['a) Không cần cài đặt vào máy tính, chỉ cần truy cập qua trình duyệt.','T'],['b) Chỉ có thể sử dụng khi máy tính kết nối với Internet.','T'],['c) Tất cả các phần mềm chạy trên Internet đều miễn phí.','F'],['d) Không thể thực hiện các chức năng phức tạp như phần mềm cài đặt truyền thống.','F']]},
+    {type:'short',text:'Phần mềm nguồn mở có thể thay thế hoàn toàn cho phần mềm thương mại được không? Tại sao?',keywords:['không','nhu cầu','nguồn mở','thương mại','đặt hàng','hỗ trợ kỹ thuật','chi phí','minh bạch'],explain:'Cần kết luận không hoàn toàn và giải thích hai loại phần mềm phục vụ nhu cầu khác nhau; phần mềm thương mại có thể đáp ứng yêu cầu riêng và hỗ trợ chuyên nghiệp.'}
+  ]},
+  4:{q:[
+    {type:'mc',text:'Bộ xử lý đa lõi (multi-core) có ưu điểm gì so với bộ xử lý đơn lõi (single-core)?',options:['Tăng dung lượng bộ nhớ','Thực hiện song song nhiều công việc','Tiết kiệm điện năng','Giảm kích thước bộ nhớ đệm'],answer:1,explain:'Nhiều lõi cho phép xử lý nhiều nhiệm vụ đồng thời hiệu quả hơn.'},
+    {type:'mc',text:'Bộ nhớ ngoài nào sau đây có tốc độ truy cập nhanh hơn?',options:['Đĩa cứng (HDD)','Đĩa quang','SSD','Đĩa mềm'],answer:2,explain:'SSD có tốc độ truy cập nhanh hơn HDD, đĩa quang và đĩa mềm.'},
+    {type:'mc',text:'Phép toán nhị phân nào sau đây sẽ sinh ra số nhớ khi cả hai bit đều bằng 1?',options:['Phép cộng','Phép nhân','Phép XOR','Phép NOT'],answer:0,explain:'Trong phép cộng nhị phân 1 + 1 tạo ra 0 và nhớ 1 sang hàng bên trái.'},
+    {type:'tf',text:'Phát biểu nào sau đây về CPU là đúng?',items:[['a) CPU chỉ có một đơn vị xử lý','F'],['b) CPU có thể thực hiện song song nhiều công việc nhờ có nhiều lõi xử lý','T'],['c) CPU không thể đồng bộ các hoạt động trong máy tính','F'],['d) CPU chỉ thực hiện các phép toán lôgic mà không thực hiện phép toán số học','F']]},
+    {type:'short',text:'Sự khác biệt giữa RAM và ROM là gì?',keywords:['RAM','tạm thời','mất','tắt máy','ROM','chỉ đọc','lâu dài','chương trình'],explain:'Cần phân biệt RAM lưu trữ tạm thời khi máy hoạt động và ROM lưu trữ chương trình/dữ liệu cố định lâu dài hơn.'}
+  ]},
+  5:{q:[
+    {type:'mc',text:'Cổng HDMI có chức năng chính là gì?',options:['Chỉ truyền tín hiệu âm thanh','Truyền tín hiệu video và âm thanh','Chỉ truyền tín hiệu video','Truyền dữ liệu qua mạng'],answer:1,explain:'HDMI truyền tín hiệu hình ảnh và âm thanh kỹ thuật số.'},
+    {type:'mc',text:'Cổng VGA được dùng để làm gì?',options:['Truyền tín hiệu âm thanh','Truyền tín hiệu hình ảnh số','Truyền tín hiệu hình ảnh tương tự','Truyền dữ liệu giữa các thiết bị qua mạng'],answer:2,explain:'VGA truyền tín hiệu hình ảnh tương tự.'},
+    {type:'mc',text:'Tần số quét của màn hình là gì?',options:['Số điểm ảnh trên màn hình','Số lần hình ảnh được tái hiện trên màn hình trong một giây','Độ sáng của màn hình','Kích thước của màn hình'],answer:1,explain:'Tần số quét cho biết số lần màn hình làm mới hình ảnh trong một giây, tính bằng Hz.'},
+    {type:'tf',text:'Thiết bị nào sau đây là thiết bị vào thông dụng nhất khi kết nối với máy tính?',items:[['a) Màn hình','F'],['b) Máy in','F'],['c) Bàn phím','T'],['d) Máy chiếu','F']]},
+    {type:'short',text:'Làm thế nào để kết nối máy tính với máy ảnh số qua cáp USB?',keywords:['cắm','USB','máy ảnh','máy tính','USB mode','Mass Storage','thẻ nhớ','truy cập'],explain:'Nêu việc cắm cáp USB vào máy ảnh và máy tính, chọn chế độ phù hợp để máy tính nhận máy ảnh/khối lưu trữ và truy cập dữ liệu.'}
+  ]},
+  6:{q:[
+    {type:'mc',text:'Một trong các tính năng chính của dịch vụ lưu trữ trực tuyến là gì?',options:['Chỉ cho phép xem tài liệu','Chia sẻ tài liệu với nhiều người','Không thể tạo thư mục','Giới hạn dung lượng tải lên'],answer:1,explain:'Chia sẻ tài liệu là một tính năng quan trọng giúp cộng tác và làm việc nhóm.'},
+    {type:'mc',text:'Một lợi ích của việc lưu trữ dữ liệu trên đám mây là gì?',options:['Tăng dung lượng ổ cứng máy tính','Tiết kiệm thời gian truy cập dữ liệu','Dữ liệu luôn được lưu trữ cục bộ','Dữ liệu dễ dàng truy cập từ bất kỳ đâu'],answer:3,explain:'Dữ liệu có thể được truy cập từ nhiều thiết bị, miễn là có kết nối phù hợp.'},
+    {type:'mc',text:'Tính năng nào không có trong dịch vụ lưu trữ và chia sẻ tập tin trực tuyến?',options:['Tạo thư mục mới','Chia sẻ tệp tin với người khác','Chỉnh sửa tài liệu trực tiếp','Cài đặt phần mềm trên máy tính'],answer:3,explain:'Dịch vụ lưu trữ trực tuyến không đồng nghĩa với việc phải cài đặt phần mềm trên máy tính để sử dụng qua trình duyệt.'},
+    {type:'tf',text:'Một trong những ưu điểm của việc lưu trữ tệp tin trực tuyến là gì?',items:[['a) Dữ liệu chỉ có thể được truy cập từ một thiết bị duy nhất.','F'],['b) Có thể chia sẻ tệp tin với nhiều người dùng và thiết lập quyền truy cập khác nhau.','T'],['c) Không cần kết nối Internet để truy cập dữ liệu.','F'],['d) Không thể quản lý và tổ chức dữ liệu hiệu quả.','F']]},
+    {type:'short',text:'Những tính năng cơ bản nào mà dịch vụ lưu trữ đám mây cung cấp cho người dùng?',keywords:['tải tệp','tạo','thư mục','quản lý','chia sẻ','quyền truy cập','chỉnh sửa'],explain:'Nêu các chức năng cốt lõi như tải tệp, tạo/quản lý thư mục và chia sẻ; có thể bổ sung mở/chỉnh sửa trực tuyến tùy dịch vụ.'}
+  ]}
+};
+
+function renderLessonSummary(id){
+  const c=LESSON_SUMMARIES[id], el=document.getElementById('lesson-summary');
+  if(!el) return;
+  if(!c){el.innerHTML='';return;}
+  el.innerHTML=`<section class="lesson-summary"><div class="summary-title"><span>🧠</span><div><h3>TÓM TẮT KIẾN THỨC</h3><p>Những ý chính cần nắm trước khi học sâu nội dung bài.</p></div></div><div class="summary-layout"><div class="summary-map"><img class="zoomable-image" src="${c.img}" alt="Sơ đồ tư duy Bài ${id}"></div><div class="summary-points">${c.items.map((x,i)=>`<div class="summary-point"><b>${i+1}</b><span>${x}</span></div>`).join('')}</div></div></section>`;
+  attachZoomableImages();
+}
+
+function renderReviewQuiz(id){
+  const el=document.getElementById('lesson-review'), quiz=REVIEW_QUIZZES[id];
+  if(!el) return;
+  if(!quiz){el.innerHTML=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>Bộ khung trắc nghiệm 5 câu đã sẵn sàng; nội dung câu hỏi của bài này sẽ được cập nhật theo tài liệu học.</p></div></div></section>`;return;}
+  let html=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>5 câu • 10 điểm • Làm bài trước, sau đó nhấn <strong>Chấm bài</strong>.</p></div></div><div class="review-rule"><div class="rule-chip"><strong>Câu 1–3</strong><br>Mỗi câu đúng: 2 điểm</div><div class="rule-chip"><strong>Câu 4</strong><br>4 ý T/F × 0,5 điểm = 2 điểm</div><div class="rule-chip"><strong>Câu 5</strong><br>Trả lời ngắn: 2 điểm</div></div><form id="quiz-form-${id}" onsubmit="submitReviewQuiz(event,${id})">`;
+  quiz.q.forEach((q,qi)=>{
+    html+=`<div class="quiz-question" id="q-${id}-${qi}"><div class="q-title">Câu ${qi+1}. ${q.text}</div>`;
+    if(q.type==='mc'){html+='<div class="quiz-options">'+q.options.map((o,oi)=>`<label class="quiz-option"><input type="radio" name="q${id}_${qi}" value="${oi}"> <span>${String.fromCharCode(65+oi)}. ${o}</span></label>`).join('')+'</div>';}
+    if(q.type==='tf'){html+='<div class="tf-grid">'+q.items.map((it,ii)=>`<div class="tf-row"><span>${it[0]}</span><select name="q${id}_${qi}_${ii}"><option value="">-- Chọn --</option><option value="T">Đúng (T)</option><option value="F">Sai (F)</option></select></div>`).join('')+'</div>';}
+    if(q.type==='short'){html+=`<textarea class="short-answer" name="q${id}_${qi}" placeholder="Nhập câu trả lời ngắn của em..."></textarea><div class="ai-grade-note">🤖 <strong>Câu 5:</strong> hệ thống tự chấm sơ bộ theo rubric từ khóa; nút <strong>Chấm bằng AI</strong> sẽ tạo phiếu chấm theo đúng thang 2 điểm để đưa vào ChatGPT/Gemini/Copilot.</div>`;}
+    html+='<div class="quiz-feedback" id="feedback-${id}-${qi}"></div></div>';
+  });
+  html+=`<div class="review-actions"><button class="review-btn" type="submit">✅ Chấm bài</button><button class="review-btn secondary" type="button" onclick="resetReviewQuiz(${id})">↻ Làm lại</button></div></form><div class="quiz-result" id="quiz-result-${id}"></div></section>`;
+  el.innerHTML=html;
+}
+
+function normalizeText(t){return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');}
+function shortRubricScore(answer,q){
+  const a=normalizeText(answer), keys=q.keywords||[]; if(!a.trim()) return 0;
+  const hits=[...new Set(keys.filter(k=>a.includes(normalizeText(k))))].length;
+  if(hits>=Math.max(4,Math.ceil(keys.length*.55))) return 2;
+  if(hits>=Math.max(3,Math.ceil(keys.length*.4))) return 1.5;
+  if(hits>=2) return 1;
+  if(hits===1) return .5; return 0;
+}
+function submitReviewQuiz(ev,id){
+  ev.preventDefault(); const quiz=REVIEW_QUIZZES[id], form=ev.target; let score=0, detail=[];
+  quiz.q.forEach((q,qi)=>{const fb=document.getElementById(`feedback-${id}-${qi}`); let pts=0, msg='';
+    if(q.type==='mc'){const v=form.querySelector(`[name="q${id}_${qi}"]:checked`)?.value; pts=(Number(v)===q.answer)?2:0; msg=v==null?'Chưa trả lời.':(pts?'✅ Đúng. ':'❌ Chưa đúng. ')+q.explain;}
+    if(q.type==='tf'){let ok=0;q.items.forEach((it,ii)=>{const v=form.querySelector(`[name="q${id}_${qi}_${ii}"]`)?.value;if(v===it[1])ok++});pts=ok*.5;msg=`${ok}/4 ý đúng → ${pts.toFixed(1)} điểm.`;}
+    if(q.type==='short'){const v=form.querySelector(`[name="q${id}_${qi}"]`)?.value||'';pts=shortRubricScore(v,q);msg=`Chấm sơ bộ theo rubric: ${pts}/2 điểm. ${q.explain}`;}
+    score+=pts; detail.push(`Câu ${qi+1}: ${pts} điểm`); if(fb){fb.innerHTML=msg;fb.className='quiz-feedback show '+(pts>0?'correct':'wrong');}
+  });
+  const result=document.getElementById(`quiz-result-${id}`);
+  result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính: ${score.toFixed(1)}/10</div><div class="score-detail">${detail.join(' • ')}<br>Q1–Q3 và Q4 được chấm tự động. Q5 đang là <strong>chấm sơ bộ theo rubric</strong>.</div><div class="review-actions"><button class="review-btn" type="button" onclick="openAIReviewGrader(${id})">🤖 Chấm câu 5 bằng AI</button></div><div class="ai-grade-note">🔐 Vì GitHub Pages là website tĩnh, không nên nhúng API key AI trực tiếp vào mã nguồn. Nút trên tạo phiếu chấm an toàn để AI bên ngoài chấm câu 5 theo đúng thang 2 điểm.</div>`;
+  result.classList.add('show'); result.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function openAIReviewGrader(id){
+  const quiz=REVIEW_QUIZZES[id], form=document.getElementById(`quiz-form-${id}`); if(!quiz||!form)return; const q=quiz.q[4], ans=form.querySelector(`[name="q${id}_4"]`)?.value||'(chưa trả lời)';
+  const b=LESSONS.find(x=>x.id===id); const prompt=`Bạn là giáo viên Tin học 11. Hãy chấm Câu 5 của Bài ${id} – ${b?.ten||''}.\n\nCâu hỏi: ${q.text}\n\nCâu trả lời của học sinh: ${ans}\n\nThang điểm: 2 điểm. Hãy cho điểm theo mức 0; 0,5; 1; 1,5; 2 dựa trên mức độ đúng ý. Không chấm theo độ dài. Nêu 1-2 ý giải thích ngắn, chỉ ra ý đúng/thiếu/sai và đề xuất cách cải thiện. Không cho điểm vượt 2. Trả kết quả theo mẫu: ĐIỂM: x/2\nNHẬN XÉT: ...`;
+  window.open('https://chatgpt.com/?q='+encodeURIComponent(prompt),'_blank','noopener');
+}
+function resetReviewQuiz(id){renderReviewQuiz(id);document.getElementById('lesson-review')?.scrollIntoView({behavior:'smooth',block:'start'});}
+
 const DEFAULT_CONTENT = { ngay: "", text: "<p>Bài viết chưa cập nhật mới.</p>", img: "", video: "", doc: "" };
 
 /* ======================================================
@@ -1242,7 +1373,10 @@ function showLesson(id) {
   document.getElementById('d-text').innerHTML = content.text;
 
   document.getElementById('d-image').innerHTML = content.img
-    ? `<figure class="lesson-figure"><img class="zoomable-image" src="${content.img}" alt="${bai.ten}"></figure>` : '';
+    ? `<figure class="lesson-figure"><img class="zoomable-image" src="${content.img}" alt="${bai.ten}"><figcaption class="caption-small">Ảnh bìa bài học</figcaption></figure>` : '';
+
+  renderLessonSummary(id);
+  renderReviewQuiz(id);
 
   document.getElementById('d-video').innerHTML = content.video
     ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${content.video}"
@@ -1399,16 +1533,73 @@ const SKILL_PROFILES = {
   9:{skills:[['An toàn trực tuyến',90],['Bảo vệ dữ liệu',85],['Nhận diện rủi ro',85],['Ứng xử số',80]]},
   10:{skills:[['Quản lý dữ liệu',85],['Khai thác thông tin',80],['Tư duy dữ liệu',75],['Giải quyết vấn đề',75]]}
 };
+/* ======================================================
+   🎯 HỒ SƠ HỌC TẬP THEO TỪNG BÀI
+   - MỤC TIÊU: ưu tiên lấy từ trường summary / TÓM TẮT KIẾN THỨC.
+   - NĂNG LỰC SỐ, NĂNG LỰC AI, VẬN DỤNG: chọn và diễn giải riêng
+     theo từng bài để tránh lặp nguyên văn giữa các bài.
+   ====================================================== */
+const LESSON_PEDAGOGY = {
+  1:{summary:"Hiểu vai trò, chức năng và đặc điểm cơ bản của hệ điều hành; nhận biết cách hệ điều hành quản lí thiết bị, dữ liệu, chương trình và tương tác với người dùng.", digital:"Năng lực tự chủ, tự học: chủ động khám phá các chức năng của hệ điều hành và trình bày được điều đã tìm hiểu.", ai:"Hiểu biết kỹ thuật cơ bản: dùng AI để giải thích ở mức phổ thông cách hệ điều hành phối hợp giữa phần mềm, phần cứng và dữ liệu; biết đối chiếu với kiến thức bài học.", apply:"Vận dụng khai thác Internet và an toàn số: kiểm tra thiết lập tài khoản, quyền truy cập và các thao tác quản lí tệp trên máy tính cá nhân."},
+  2:{summary:"Thực hiện được các thao tác cơ bản với hệ điều hành như quản lí tệp, thư mục, cửa sổ, thiết bị và một số tiện ích phục vụ học tập.", digital:"5.2.NC1b: áp dụng các công cụ số và giải pháp công nghệ phù hợp để xử lí tình huống trong quá trình sử dụng hệ điều hành.", ai:"Kỹ năng sử dụng: viết prompt rõ ràng để AI hướng dẫn từng bước một thao tác trên hệ điều hành, sau đó tự thực hiện và kiểm tra kết quả.", apply:"Vận dụng khai thác Internet và an toàn số: tổ chức thư mục học tập, sao lưu dữ liệu và thực hành bảo vệ tệp cá nhân trên máy tính."},
+  3:{summary:"Phân biệt phần mềm nguồn mở với phần mềm thương mại và hiểu đặc điểm của phần mềm chạy trên Internet; nhận biết lợi ích, hạn chế và cách lựa chọn phần mềm phù hợp.", digital:"2.1.NC1a: sử dụng nhiều công nghệ số để tương tác, trao đổi và chia sẻ hiểu biết về các loại phần mềm.", ai:"Tư duy phản biện: yêu cầu AI so sánh hai lựa chọn phần mềm, sau đó kiểm chứng giấy phép, nguồn thông tin và các nhận định do AI đưa ra.", apply:"Vận dụng công cụ trình chiếu: thiết kế một slide giới thiệu một phần mềm nguồn mở hoặc dịch vụ trực tuyến hữu ích cho học tập."},
+  4:{summary:"Nhận biết các thành phần chính bên trong máy tính, chức năng của từng thành phần và mối quan hệ giữa phần cứng với hiệu năng của hệ thống.", digital:"Năng lực giải quyết vấn đề và sáng tạo: phân tích tình huống phần cứng và lựa chọn giải pháp phù hợp dựa trên yêu cầu sử dụng.", ai:"Hiểu biết về AI: tìm hiểu cùng AI về vai trò của dữ liệu và bộ xử lí trong các hệ thống thông minh, đồng thời kiểm tra tính chính xác của giải thích.", apply:"Vận dụng xử lý văn bản: lập bảng cấu hình máy tính cho một nhu cầu cụ thể như học tập, lập trình hoặc thiết kế và giải thích lựa chọn của mình."},
+  5:{summary:"Hiểu cách máy tính kết nối với các thiết bị số; nhận biết các cổng, chuẩn kết nối và lựa chọn thiết bị phù hợp với nhu cầu sử dụng.", digital:"1.1.NC1b: áp dụng kỹ thuật tìm kiếm để lấy dữ liệu, thông tin và nội dung về chuẩn kết nối, thiết bị số trong môi trường số.", ai:"Kỹ năng ứng dụng và sáng tạo: dùng AI hỗ trợ lập bảng so sánh các phương án kết nối, nhưng tự xác minh thông số kỹ thuật từ nguồn chính thống.", apply:"Vận dụng khai thác Internet và an toàn số: tìm thông tin chính thống về một thiết bị số, kiểm tra thông số trước khi lựa chọn và mua sắm."},
+  6:{summary:"Hiểu cách lưu trữ, đồng bộ và chia sẻ tập tin trên Internet; lựa chọn được phương án chia sẻ phù hợp với nhu cầu học tập và làm việc.", digital:"1.1.NC1a: đáp ứng nhu cầu thông tin bằng cách xác định đúng loại dữ liệu, nơi lưu trữ và phương thức chia sẻ cần thiết.", ai:"Đạo đức và trách nhiệm: nhận diện nguy cơ khi đưa tài liệu lên dịch vụ trực tuyến và trao đổi với AI về quyền riêng tư, quyền tác giả trước khi chia sẻ.", apply:"Vận dụng khai thác Internet và an toàn số: tạo cấu trúc thư mục trực tuyến, đặt quyền chia sẻ và sao lưu tài liệu học tập an toàn."},
+  7:{summary:"Thực hiện được quy trình tìm kiếm thông tin trên Internet; biết lựa chọn từ khóa, đánh giá kết quả và kiểm chứng độ tin cậy của nguồn thông tin.", digital:"1.1.NC1b: áp dụng kỹ thuật tìm kiếm để lấy được dữ liệu, thông tin và nội dung phù hợp trong môi trường số.", ai:"Tư duy phản biện: so sánh kết quả từ công cụ tìm kiếm và chatbot AI, phát hiện thông tin thiếu nguồn hoặc có dấu hiệu sai lệch.", apply:"Vận dụng khai thác Internet và an toàn số: thực hiện một nhiệm vụ tìm kiếm thông tin, lưu nguồn và ghi lại bằng chứng kiểm chứng."},
+  8:{summary:"Thực hiện được các thao tác nâng cao với thư điện tử và mạng xã hội; biết tổ chức, trao đổi thông tin và ứng xử phù hợp trong môi trường trực tuyến.", digital:"2.1.NC1a: sử dụng nhiều công nghệ số để tương tác, trao đổi và phối hợp công việc trong môi trường trực tuyến.", ai:"Đạo đức và trách nhiệm AI: nhận diện thông tin nhạy cảm trong email, bài đăng và dữ liệu cá nhân; biết cân nhắc trước khi đưa dữ liệu vào công cụ AI.", apply:"Vận dụng khai thác Internet và an toàn số: soạn một email học tập chuyên nghiệp, kiểm tra người nhận, tệp đính kèm và quyền riêng tư trước khi gửi."},
+  9:{summary:"Nhận biết các nguy cơ khi giao tiếp trên Internet và biết thực hiện các biện pháp bảo vệ tài khoản, dữ liệu cá nhân, danh tính số và ứng xử văn minh.", digital:"Năng lực giao tiếp và hợp tác: thực hiện tốt nhiệm vụ nhóm khi xây dựng quy tắc giao tiếp an toàn, tôn trọng trong môi trường số.", ai:"Đạo đức và trách nhiệm: đánh giá rủi ro của nội dung do AI tạo ra, bảo vệ dữ liệu cá nhân và tôn trọng quyền riêng tư khi giao tiếp trực tuyến.", apply:"Vận dụng khai thác Internet và an toàn số: xây dựng bộ quy tắc giao tiếp an toàn trên mạng cho học sinh và xử lí một tình huống giả định."},
+  10:{summary:"Hiểu vai trò của dữ liệu trong quản lí; biết tổ chức dữ liệu và khai thác thông tin phục vụ việc ra quyết định trong một bài toán quản lí.", digital:"5.2.NC1b: lựa chọn công cụ số phù hợp để tổ chức, xử lí và khai thác dữ liệu phục vụ một nhiệm vụ quản lí.", ai:"Kỹ năng ứng dụng và sáng tạo: dùng AI gợi ý cách tổ chức dữ liệu cho một bài toán quản lí, sau đó tự đánh giá tính hợp lí của cấu trúc được đề xuất.", apply:"Vận dụng bảng tính điện tử: lập bảng dữ liệu quản lí đơn giản, tính toán các chỉ số cần thiết và trình bày kết quả bằng biểu đồ."},
+  11:{summary:"Nắm khái niệm cơ sở dữ liệu, vai trò của cơ sở dữ liệu trong lưu trữ và khai thác thông tin, cùng các thành phần cơ bản của một hệ thống dữ liệu.", digital:"Năng lực giải quyết vấn đề và sáng tạo: phân tích nhu cầu thông tin để đề xuất cách tổ chức dữ liệu có cấu trúc.", ai:"Hiểu biết kỹ thuật cơ bản: dùng AI giải thích khái niệm cơ sở dữ liệu bằng ví dụ gần gũi, sau đó kiểm tra lại thuật ngữ và quan hệ giữa các thành phần.", apply:"Vận dụng xử lý văn bản: thiết kế bản mô tả yêu cầu dữ liệu cho một bài toán quản lí như thư viện, lớp học hoặc cửa hàng."},
+  12:{summary:"Phân biệt hệ quản trị cơ sở dữ liệu với hệ cơ sở dữ liệu; hiểu vai trò của phần mềm quản trị trong việc tạo lập, cập nhật, bảo vệ và khai thác dữ liệu.", digital:"2.1.NC1a: sử dụng công nghệ số để tương tác với hệ quản trị cơ sở dữ liệu và thực hiện nhiệm vụ khai thác dữ liệu.", ai:"Kỹ năng sử dụng: tạo prompt yêu cầu AI giải thích quy trình làm việc với hệ quản trị cơ sở dữ liệu theo từng bước, không yêu cầu AI làm thay bài thực hành.", apply:"Vận dụng lập trình và thuật toán: mô tả quy trình ứng dụng phần mềm quản trị cơ sở dữ liệu để lưu trữ và truy xuất thông tin."},
+  13:{summary:"Hiểu mô hình cơ sở dữ liệu quan hệ; nhận biết bảng, bản ghi, trường và khóa, đồng thời hiểu cách các bảng có thể liên hệ với nhau.", digital:"5.2.NC1b: áp dụng công cụ số để mô hình hóa thông tin thành các bảng có cấu trúc và giải quyết yêu cầu quản lí.", ai:"Tư duy phản biện: yêu cầu AI kiểm tra một thiết kế bảng, phát hiện dữ liệu lặp hoặc thiếu khóa rồi tự quyết định có chấp nhận đề xuất hay không.", apply:"Vận dụng bảng tính điện tử: mô phỏng một cơ sở dữ liệu quan hệ bằng nhiều bảng, xác định trường khóa và thử liên kết dữ liệu."},
+  14:{summary:"Hiểu mục đích của SQL và thực hiện được các truy vấn cơ bản để lựa chọn, lọc, sắp xếp và khai thác dữ liệu trong cơ sở dữ liệu quan hệ.", digital:"Năng lực giải quyết vấn đề và sáng tạo: chuyển yêu cầu thông tin thành các bước truy vấn có cấu trúc và kiểm tra kết quả.", ai:"Kỹ năng sử dụng: dùng AI gợi ý cú pháp SQL cho một yêu cầu nhỏ, sau đó đọc hiểu, sửa và tự kiểm thử câu lệnh thay vì sao chép.", apply:"Vận dụng lập trình và thuật toán: viết và kiểm thử các truy vấn SQL phục vụ bài toán tìm kiếm, lọc hoặc tổng hợp dữ liệu."},
+  15:{summary:"Nhận biết các nguy cơ đối với cơ sở dữ liệu và thực hiện các biện pháp bảo mật, phân quyền, sao lưu và bảo vệ dữ liệu phù hợp.", digital:"Năng lực tự chủ, tự học: chủ động tìm hiểu rủi ro bảo mật và hình thành thói quen bảo vệ dữ liệu trong quá trình học tập.", ai:"Đạo đức và trách nhiệm AI: nhận diện rủi ro rò rỉ dữ liệu, thông tin sai lệch và quyền riêng tư khi sử dụng AI trong môi trường có dữ liệu nhạy cảm.", apply:"Vận dụng khai thác Internet và an toàn số: xây dựng checklist bảo vệ cơ sở dữ liệu gồm mật khẩu, phân quyền, sao lưu và kiểm tra truy cập."},
+  16:{summary:"Hiểu các nhiệm vụ chính của người quản trị cơ sở dữ liệu và vai trò của quản trị viên trong vận hành, bảo mật, sao lưu và đảm bảo khả năng phục hồi dữ liệu.", digital:"Năng lực giao tiếp và hợp tác: thực hiện nhiệm vụ nhóm theo vai trò quản trị viên, người dùng và người kiểm tra để giải quyết tình huống quản lí dữ liệu.", ai:"Tư duy lấy con người làm trung tâm: phân tích cùng AI cách cân bằng hiệu quả vận hành với quyền riêng tư, an toàn và nhu cầu của người sử dụng.", apply:"Vận dụng xử lý văn bản: lập quy trình ngắn về quản trị dữ liệu cho một đơn vị nhỏ, nêu rõ trách nhiệm và cách xử lí sự cố."},
+  17:{summary:"Thực hành các thao tác quản trị cơ sở dữ liệu trên máy tính, từ tạo cấu trúc đến quản lí dữ liệu và kiểm tra hoạt động của hệ thống.", digital:"5.2.NC1b: lựa chọn và sử dụng các công cụ số phù hợp để thực hiện nhiệm vụ quản trị cơ sở dữ liệu trên máy tính.", ai:"Kỹ năng ứng dụng và sáng tạo: dùng AI như trợ lý chẩn đoán lỗi theo mô tả của mình, sau đó tự tái hiện lỗi, kiểm tra nguyên nhân và xác nhận cách sửa.", apply:"Vận dụng lập trình và thuật toán: xây dựng quy trình thao tác lặp lại trong quản trị dữ liệu và đề xuất cách giảm thao tác thủ công."},
+  18:{summary:"Xác định được cấu trúc bảng, các trường dữ liệu và trường khóa; biết lựa chọn khóa phù hợp với yêu cầu quản lí thông tin.", digital:"1.1.NC1a: đáp ứng nhu cầu thông tin bằng cách xác định đúng trường dữ liệu cần thiết cho một bảng.", ai:"Hiểu biết kỹ thuật cơ bản: yêu cầu AI đưa ra các ví dụ về khóa và trường, sau đó tự đối chiếu để xác định trường khóa phù hợp cho bài thực hành.", apply:"Vận dụng bảng tính điện tử: tạo bảng dữ liệu mẫu, xác định khóa và kiểm tra trường hợp dữ liệu trùng hoặc thiếu."},
+  19:{summary:"Thực hành tạo lập cơ sở dữ liệu và các bảng; nhập dữ liệu ban đầu đúng cấu trúc và kiểm tra tính hợp lệ của dữ liệu.", digital:"Năng lực giải quyết vấn đề và sáng tạo: phân tích yêu cầu rồi tổ chức thành cơ sở dữ liệu và các bảng trước khi nhập dữ liệu.", ai:"Kỹ năng sử dụng: nhờ AI kiểm tra danh sách trường và kiểu dữ liệu theo yêu cầu, nhưng tự tạo cơ sở dữ liệu và xác nhận kết quả trên phần mềm.", apply:"Vận dụng xử lý văn bản: lập tài liệu đặc tả ngắn cho cơ sở dữ liệu, gồm mục đích, các bảng, trường và quy tắc nhập dữ liệu."},
+  20:{summary:"Thực hành tạo các bảng có khóa ngoài và thiết lập mối liên hệ giữa các bảng để biểu diễn dữ liệu có tham chiếu.", digital:"5.2.NC1b: áp dụng công cụ số để thiết lập và kiểm tra quan hệ tham chiếu giữa các bảng.", ai:"Tư duy phản biện: đưa sơ đồ quan hệ cho AI phân tích lỗi tiềm ẩn, sau đó tự kiểm tra khóa chính, khóa ngoài và tính nhất quán dữ liệu.", apply:"Vận dụng bảng tính điện tử: mô phỏng dữ liệu liên kết giữa hai hoặc nhiều bảng để quan sát cách khóa ngoài tham chiếu dữ liệu."},
+  21:{summary:"Thực hành cập nhật dữ liệu và truy xuất dữ liệu trong các bảng; biết kiểm tra kết quả sau khi thêm, sửa, xóa và tìm kiếm thông tin.", digital:"Năng lực tự chủ, tự học: thực hiện tuần tự các thao tác cập nhật, tự kiểm tra kết quả và ghi nhận lỗi phát sinh.", ai:"Kỹ năng ứng dụng và sáng tạo: sử dụng AI để gợi ý cách kiểm thử thao tác cập nhật, sau đó tự xây dựng bộ dữ liệu kiểm tra và đánh giá kết quả.", apply:"Vận dụng lập trình và thuật toán: xây dựng chuỗi thao tác cập nhật dữ liệu và kiểm tra điều kiện trước khi thay đổi dữ liệu."},
+  22:{summary:"Thực hành cập nhật dữ liệu ở các bảng có tham chiếu; hiểu ảnh hưởng của khóa và quan hệ giữa bảng khi thêm, sửa hoặc xóa dữ liệu.", digital:"Năng lực giải quyết vấn đề và sáng tạo: phân tích tình huống tham chiếu và lựa chọn cách cập nhật để giữ dữ liệu nhất quán.", ai:"Hiểu biết kỹ thuật cơ bản: dùng AI giải thích nguyên nhân lỗi tham chiếu bằng ví dụ đơn giản, rồi kiểm chứng bằng thao tác thực tế trên cơ sở dữ liệu.", apply:"Vận dụng khai thác Internet và an toàn số: xây dựng tình huống dữ liệu tham chiếu và đề xuất quy tắc cập nhật hạn chế mất mát hoặc sai lệch thông tin."},
+  23:{summary:"Thực hành truy xuất dữ liệu qua liên kết các bảng; biết kết hợp thông tin từ nhiều bảng để tạo kết quả có ý nghĩa.", digital:"2.1.NC1a: sử dụng công nghệ số để kết nối, khai thác và trình bày thông tin được lấy từ nhiều nguồn dữ liệu liên quan.", ai:"Kỹ năng sử dụng: nhờ AI diễn giải ý tưởng truy vấn liên kết bằng ngôn ngữ dễ hiểu, sau đó tự viết, chạy và điều chỉnh truy vấn.", apply:"Vận dụng bảng tính điện tử: kết hợp dữ liệu từ nhiều bảng mô phỏng để tạo báo cáo tổng hợp và rút ra nhận xét."},
+  24:{summary:"Hiểu ý nghĩa của sao lưu dữ liệu và thực hành sao lưu cơ sở dữ liệu; biết kiểm tra bản sao lưu và chuẩn bị phương án khôi phục khi cần.", digital:"Năng lực tự chủ, tự học: hình thành thói quen sao lưu định kì, kiểm tra bản sao và chủ động chuẩn bị phương án phục hồi dữ liệu.", ai:"Đạo đức và trách nhiệm: trao đổi với AI về rủi ro khi lưu trữ dữ liệu cá nhân trên dịch vụ trực tuyến và lựa chọn phương án bảo vệ phù hợp.", apply:"Vận dụng khai thác Internet và an toàn số: thiết kế lịch sao lưu 3-2-1 đơn giản cho tài liệu học tập và kiểm tra khả năng khôi phục."},
+  25:{summary:"Nhận biết giao diện và các chức năng cơ bản của phần mềm chỉnh sửa ảnh; thực hiện được những thao tác cần thiết để tạo và chỉnh sửa hình ảnh.", digital:"Năng lực giao tiếp và hợp tác: chia sẻ sản phẩm ảnh, tiếp nhận góp ý và phối hợp nhóm trong quá trình chỉnh sửa nội dung số.", ai:"Kỹ năng ứng dụng và sáng tạo: dùng AI đề xuất ý tưởng bố cục hoặc phong cách hình ảnh, nhưng tự thực hiện chỉnh sửa và chịu trách nhiệm về sản phẩm.", apply:"Vận dụng công cụ trình chiếu: tạo một slide giới thiệu sản phẩm với hình ảnh đã chỉnh sửa, chú ý bố cục và bản quyền."},
+  26:{summary:"Sử dụng được các công cụ tinh chỉnh màu sắc và công cụ chọn để điều chỉnh, tách vùng và nâng cao chất lượng hình ảnh.", digital:"5.2.NC1b: lựa chọn công cụ số phù hợp để xử lí màu sắc và vùng chọn nhằm giải quyết yêu cầu chỉnh sửa ảnh.", ai:"Tư duy phản biện: so sánh kết quả chỉnh màu do AI gợi ý với ảnh gốc, đánh giá mức độ tự nhiên và tự quyết định phương án phù hợp.", apply:"Vận dụng xử lý văn bản: tạo một tài liệu minh họa trước–sau khi chỉnh ảnh, kèm mô tả công cụ và mục đích của từng thay đổi."},
+  27:{summary:"Sử dụng các công cụ vẽ và kết hợp chúng để tạo hình, minh họa hoặc sản phẩm đồ họa phục vụ một yêu cầu cụ thể.", digital:"Năng lực giải quyết vấn đề và sáng tạo: thử nghiệm nhiều công cụ vẽ, lựa chọn cách thực hiện và cải tiến sản phẩm theo phản hồi.", ai:"Kỹ năng sử dụng: viết prompt để AI gợi ý ý tưởng thiết kế, sau đó chuyển hóa ý tưởng thành sản phẩm do chính mình thực hiện và chỉnh sửa.", apply:"Vận dụng công cụ trình chiếu: thiết kế một biểu tượng, poster hoặc hình minh họa số phục vụ hoạt động học tập của lớp."},
+ 28:{summary:"Hiểu nguyên lí tạo ảnh động và thực hiện được các bước xây dựng một ảnh động từ nhiều khung hình hoặc trạng thái hình ảnh.", digital:"Năng lực giao tiếp và hợp tác: phân công nhiệm vụ theo khung hình, thống nhất nội dung và ghép sản phẩm ảnh động trong nhóm.", ai:"Tư duy lấy con người làm trung tâm: sử dụng AI như công cụ gợi ý kịch bản chuyển động nhưng giữ quyền quyết định sáng tạo và kiểm soát nội dung của sản phẩm.", apply:"Vận dụng công cụ trình chiếu: tạo một ảnh động ngắn minh họa quy trình học tập hoặc thông điệp an toàn số."},
+  29:{summary:"Khám phá các chức năng cơ bản của phần mềm làm phim; hiểu quy trình đưa tư liệu vào dự án và tổ chức thành một sản phẩm video.", digital:"Năng lực tự chủ, tự học: chủ động khám phá giao diện, thử nghiệm chức năng và ghi lại quy trình làm việc với phần mềm.", ai:"Hiểu biết về AI: tìm hiểu AI được dùng ở những khâu nào trong sản xuất video như tạo ý tưởng, lời thoại, phụ đề; nhận biết giới hạn và rủi ro.", apply:"Vận dụng công cụ trình chiếu: xây dựng storyboard ngắn cho một video giới thiệu bài học, sản phẩm hoặc hoạt động của lớp."},
+  30:{summary:"Thực hiện được các thao tác biên tập phim như cắt ghép, sắp xếp cảnh, thêm âm thanh, chữ và hiệu ứng để hoàn thiện sản phẩm video.", digital:"2.1.NC1a: sử dụng nhiều công nghệ số để phối hợp tư liệu, chỉnh sửa và hoàn thiện một sản phẩm video.", ai:"Kỹ năng ứng dụng và sáng tạo: dùng AI hỗ trợ viết lời dẫn hoặc đề xuất nhịp dựng, sau đó tự biên tập, kiểm tra nội dung và bản quyền tư liệu.", apply:"Vận dụng khai thác Internet và an toàn số: biên tập video có trích dẫn nguồn tư liệu, nhạc và hình ảnh, tôn trọng bản quyền số."},
+  31:{summary:"Vận dụng quy trình tạo phim hoạt hình để xây dựng sản phẩm hoàn chỉnh, kết hợp hình ảnh, chuyển động, âm thanh và nội dung kể chuyện.", digital:"Năng lực giao tiếp và hợp tác: phân vai biên kịch, thiết kế, dựng hình, âm thanh và kiểm thử để hoàn thành sản phẩm hoạt hình nhóm.", ai:"Đạo đức và trách nhiệm AI: kiểm tra nội dung, hình ảnh, giọng nói hoặc tư liệu do AI hỗ trợ tạo ra; bảo đảm quyền tác giả, quyền riêng tư và tính minh bạch.", apply:"Vận dụng lập trình và thuật toán: mô tả kịch bản hoạt hình như một chuỗi bước/điều kiện và tự động hóa một thao tác đơn giản nếu công cụ cho phép."}
+};
+
+function extractKnowledgeSummary(html){
+  if(!html) return '';
+  const box=document.createElement('div'); box.innerHTML=html;
+  const nodes=[...box.querySelectorAll('p,h2,h3,h4,strong')];
+  const idx=nodes.findIndex(n=>/tóm\s*tắt\s*kiến\s*thức/i.test(n.textContent||''));
+  if(idx>=0){
+    const parts=[];
+    for(let i=idx+1;i<nodes.length && parts.length<3;i++){
+      const t=(nodes[i].textContent||'').trim();
+      if(t && !/^(KHỞI ĐỘNG|LUYỆN TẬP|VẬN DỤNG)$/i.test(t)) parts.push(t);
+    }
+    if(parts.length) return parts.join(' ');
+  }
+  return '';
+}
+
 function renderLessonGoals(id){
-  const b=LESSONS.find(x=>x.id===id), c=LESSON_CONTENT[id]||{};
-  const p=skillProfile(id), names=p.skills.map(x=>x[0]).slice(0,3).join(' • ');
+  const b=LESSONS.find(x=>x.id===id), c=LESSON_CONTENT[id]||{}, p=LESSON_PEDAGOGY[id]||{};
+  const summary=extractKnowledgeSummary(c.text)||p.summary||`Khám phá kiến thức trọng tâm của Bài ${id}: ${b?.ten||''}.`;
   const goals=[
-    ['blue','🎯 MỤC TIÊU','Hiểu và vận dụng kiến thức cốt lõi của bài học; chủ động giải thích bằng ngôn ngữ của mình.'],
-    ['green','💻 NĂNG LỰC SỐ',names||'Sử dụng công cụ số, xử lý thông tin và giải quyết vấn đề.'],
-    ['purple','🤖 NĂNG LỰC AI','Biết đặt câu hỏi, yêu cầu AI gợi ý, kiểm chứng đầu ra và nhận diện giới hạn của AI.'],
-    ['orange','🌱 VẬN DỤNG','Kết nối kiến thức với tình huống thực tế và tạo sản phẩm học tập có bằng chứng.']
+    ['blue','🎯 MỤC TIÊU',summary],
+    ['green','💻 NĂNG LỰC SỐ',p.digital||'Chủ động sử dụng công cụ số để học tập, hợp tác và giải quyết nhiệm vụ.'],
+    ['purple','🤖 NĂNG LỰC AI',p.ai||'Sử dụng AI có kiểm soát, biết kiểm chứng thông tin và chịu trách nhiệm với sản phẩm.'],
+    ['orange','🚀 VẬN DỤNG',p.apply||'Kết nối kiến thức với một nhiệm vụ thực tế và tạo sản phẩm học tập có bằng chứng.']
   ];
-  const el=document.getElementById('lesson-goals'); if(el)el.innerHTML=goals.map(g=>`<div class="goal-card ${g[0]}"><h4>${g[1]}</h4><p>${g[2]}</p></div>`).join('');
+  const el=document.getElementById('lesson-goals');
+  if(el) el.innerHTML=goals.map(g=>`<article class="goal-card ${g[0]}"><h4>${g[1]}</h4><p>${g[2]}</p></article>`).join('');
 }
 function toggleTeacherMode(){const el=document.getElementById('teacher-mode');if(el)el.style.display=el.style.display==='none'?'block':'none'}
 
