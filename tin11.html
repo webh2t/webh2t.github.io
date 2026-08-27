@@ -90,8 +90,9 @@
   .detail-meta .chude-tag{ font-family:'Space Grotesk',monospace; font-size:.72rem; font-weight:600;
                             background:rgba(46,196,182,.12); color:var(--teal); padding:3px 9px; border-radius:6px;}
   .detail-meta .views, .detail-meta .date{ font-size:.78rem; color:#7C8AA0; font-family:'Space Grotesk',monospace;}
-  .detail-title{ font-size:1.25rem; font-weight:700; color:var(--ink); margin:8px 0 16px;}
-  .detail-title .title-en{ font-size:.75em; font-weight:500; color:#7C8AA0; font-style:italic;}
+  .detail-title{font-size:clamp(2rem,4vw,3.15rem);font-weight:800;line-height:1.15;color:#003B8F;text-align:center;margin:10px 0 22px;letter-spacing:-.02em}
+  .detail-title .title-vi,.detail-title .title-en{display:block}
+  .detail-title .title-en{margin-top:7px;font-size:.56em;font-weight:600;color:#0057B8;font-style:italic;letter-spacing:0}
   .detail-text{ color:#3D4C63; font-size:.95rem; margin-bottom:18px;}
   .detail-text p{ margin-bottom:10px;}
   .detail-text ul, .detail-text ol{ margin:10px 0 10px 22px;}
@@ -105,6 +106,8 @@
   .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0; transition:transform .25s ease, box-shadow .25s ease; transform-origin:center center; position:relative; z-index:1;}
   .detail-text img:hover{ transform:scale(1.06); box-shadow:0 14px 32px rgba(15,28,46,.22); z-index:5;}
   .lesson-figure img:hover, .two-col img:hover{ transform:scale(1.06);}
+  .zoomable-image{cursor:crosshair}
+  .zoom-lens{position:fixed;width:190px;height:190px;border-radius:50%;border:4px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,.18);pointer-events:none;z-index:99999;display:none;overflow:hidden;background-repeat:no-repeat;background-color:#fff;will-change:left,top,background-position}
   .detail-text a{ color:var(--teal); text-decoration:underline;}
   .detail-text .lesson-en{ color:#7C8AA0; font-style:italic; font-size:.85rem;}
   .detail-text .activity-box{ background:rgba(46,196,182,.07); border-left:3px solid var(--teal);
@@ -120,9 +123,9 @@
   .lesson-figure img{ width:100%; max-height:520px; object-fit:contain; background:#FFFFFF;
     border-radius:12px; border:1px solid var(--line); margin-bottom:18px; display:block;}
   .two-col{ display:flex; gap:20px; align-items:flex-start; margin:16px 0; flex-wrap:wrap;}
-  .two-col img{ width:280px; max-width:100%; object-fit:contain; background:#FFFFFF;
+  .two-col img{ width:52%; max-width:100%; object-fit:contain; background:#FFFFFF;
     border-radius:10px; border:1px solid var(--line); flex-shrink:0;}
-  .two-col .two-col-text{ flex:1 1 260px; min-width:220px;}
+  .two-col .two-col-text{ flex:1 1 260px; min-width:220px; max-width:calc(48% - 22px);}
   .coffee-box{ margin:26px 0 6px; padding:20px 24px; background:linear-gradient(135deg, var(--ink), #1C3252);
     border-radius:14px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; color:#fff;}
   .coffee-box .coffee-text{ flex:1 1 220px;}
@@ -294,7 +297,7 @@
           <span class="date" id="d-date">📅 —</span>
           <span class="views" id="d-views">👁 0 lượt xem</span>
         </div>
-        <h3 class="detail-title" id="d-title"></h3>
+        <h1 class="detail-title" id="d-title"></h1>
         <div id="d-image"></div>
         <div class="detail-text" id="d-text"></div>
         <div id="d-video"></div>
@@ -1118,12 +1121,11 @@ function showLesson(id) {
 
   document.getElementById('d-chude').textContent = CHUDE_NAMES[bai.chude];
   document.getElementById('d-date').textContent = `📅 ${content.ngay || '—'}`;
-  document.getElementById('d-title').innerHTML = `Bài ${bai.id}. ${bai.ten}` +
-    (content.en ? ` <span class="title-en">— ${content.en}</span>` : '');
+  document.getElementById('d-title').innerHTML = `<span class="title-vi">Bài ${bai.id}. ${bai.ten}</span>` + (content.en ? `<span class="title-en">${content.en}</span>` : '');
   document.getElementById('d-text').innerHTML = content.text;
 
   document.getElementById('d-image').innerHTML = content.img
-    ? `<figure class="lesson-figure"><img src="${content.img}" alt="${bai.ten}"></figure>` : '';
+    ? `<figure class="lesson-figure"><img class="zoomable-image" src="${content.img}" alt="${bai.ten}"></figure>` : '';
 
   document.getElementById('d-video').innerHTML = content.video
     ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${content.video}"
@@ -1236,6 +1238,32 @@ function loadComments(lessonId){
       console.error(err);
     });
 }
+
+/* ======================================================
+   ZOOM SOI CHI TIẾT (LENS / MAGNIFIER)
+   ====================================================== */
+let zoomLens=null, zoomImg=null;
+function removeZoomLens(){ if(zoomLens){ zoomLens.remove(); zoomLens=null; zoomImg=null; } }
+function moveZoomLens(e){
+  if(!zoomLens || !zoomImg) return;
+  const r=zoomImg.getBoundingClientRect(), size=190, zoom=2.35;
+  const x=Math.max(0,Math.min(r.width,e.clientX-r.left)), y=Math.max(0,Math.min(r.height,e.clientY-r.top));
+  zoomLens.style.left=(e.clientX-size/2)+'px'; zoomLens.style.top=(e.clientY-size/2)+'px';
+  zoomLens.style.backgroundImage=`url("${zoomImg.currentSrc || zoomImg.src}")`;
+  zoomLens.style.backgroundSize=`${r.width*zoom}px ${r.height*zoom}px`;
+  zoomLens.style.backgroundPosition=`${size/2-x*zoom}px ${size/2-y*zoom}px`;
+}
+document.addEventListener('mouseover',e=>{
+  const img=e.target.closest('img');
+  if(!img || img.closest('.coffee-qr') || img.classList.contains('comment-avatar') || img.closest('.auth-user')) return;
+  img.classList.add('zoomable-image');
+  if(zoomImg===img) return;
+  removeZoomLens(); zoomImg=img;
+  zoomLens=document.createElement('div'); zoomLens.className='zoom-lens';
+  document.body.appendChild(zoomLens); zoomLens.style.display='block'; moveZoomLens(e);
+});
+document.addEventListener('mousemove',e=>{ if(zoomImg && !zoomImg.matches(':hover')) removeZoomLens(); else moveZoomLens(e); });
+document.addEventListener('mouseout',e=>{ if(zoomImg && e.target===zoomImg && !e.relatedTarget?.closest?.('img')) removeZoomLens(); });
 
 /* ======================================================
    SLIDESHOW — tự lấy các bài đã có nội dung (LESSON_CONTENT),
