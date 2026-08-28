@@ -25,6 +25,10 @@
 
   .eyebrow{ font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600; color:var(--teal); letter-spacing:.12em; text-transform:uppercase;}
   h1{ font-size:2rem; font-weight:800; color:var(--ink); margin-top:8px;}
+  .page-cover{ text-align:center; margin:18px 0 22px;}
+  .page-cover img{ width:100%; max-width:100%; height:auto; max-height:440px; object-fit:contain; object-position:center;
+    background:#fff; border-radius:16px; border:1px solid var(--line); box-shadow:0 10px 28px rgba(15,28,46,.12); display:block; margin:0 auto;}
+  .page-cover .page-clock{ margin-top:10px; font-size:.95rem; font-weight:700; color:#003B8F;}
   .grade-hero{ text-align:center; margin:8px 0 32px;}
   .grade-hero h1{ font-size:clamp(2.6rem, 6vw, 4.2rem); font-weight:800; color:#0047AB;
                   letter-spacing:.01em; margin:0; text-align:center; line-height:1.05; text-transform:none;}
@@ -149,6 +153,26 @@
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
   .drive-frame{ width:100%; height:440px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px;}
   .caption-small{ font-size:.8rem; color:#7C8AA0; margin-bottom:18px;}
+
+  /* ======================================================
+     LỚP TIỆN ÍCH ĐỊNH DẠNG NHANH — dùng khi soạn nội dung bài học
+     trong LESSON_CONTENT (chỉ cần thêm class="..." vào thẻ HTML,
+     không cần nhớ CSS). Xem hướng dẫn dùng chi tiết trong tài liệu
+     "Hướng dẫn biên soạn tin11.html".
+     ====================================================== */
+  .text-center{ text-align:center; }
+  .text-right{ text-align:right; }
+  .text-red{ color:#D32F2F; }
+  .text-blue{ color:#003B8F; }
+  .text-green{ color:#16865B; }
+  .text-amber{ color:#B8860B; }
+  .highlight-box{ background:#FFF8E1; border-left:4px solid #F0C14B; padding:14px 16px;
+                   border-radius:8px; margin:16px 0; }
+  .shadow-box{ box-shadow:0 6px 18px rgba(15,28,46,.14); border-radius:12px; padding:16px;
+                background:#fff; margin:16px 0; border:1px solid var(--line); }
+  .img-full{ width:100%; display:block; border-radius:8px; margin:14px 0; }
+  .img-center{ display:block; margin:14px auto; max-width:70%; border-radius:8px; }
+  @media(max-width:640px){ .img-center{ max-width:100%; } }
 
   /* ---------- Related posts: lưới ảnh 3 cột ---------- */
   .related-box{ margin-top:28px; padding-top:22px; border-top:1px dashed var(--line);}
@@ -338,6 +362,11 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
 </nav>
 
 <main>
+  <div class="page-cover">
+    <img src="assets/TIN11bia.jpg" alt="Ảnh bìa Tin học 11">
+    <div class="page-clock" id="page-clock">Khánh Hòa, ngày --/--/---- – --:--:--</div>
+  </div>
+
   <div class="grade-hero">
     <h1><span>Grade 11</span><span>Informatics</span></h1>
   </div>
@@ -411,6 +440,10 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
           <button onclick="toggleTeacherMode()">👨‍🏫 Chế độ giáo viên</button>
         </div>
         <div class="detail-text" id="d-text"></div>
+        <!-- 🔓/🔒 Video và Tài liệu tự ẩn khi không có: chỉ cần để
+             video:"" hoặc doc:"" trong LESSON_CONTENT của bài đó (xem
+             hướng dẫn phía trên object LESSON_CONTENT) — KHÔNG cần
+             xoá/khoá gì trong 2 dòng <div> dưới đây. -->
         <div id="d-video"></div>
         <div id="d-doc"></div>
         <div id="lesson-review"></div>
@@ -468,6 +501,20 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
   </section>
 
   <!-- ============ Bài tập thực hành ============ -->
+  <!-- 📌 KHOÁ/MỞ từng phiếu bài tập bên dưới:
+       - Mỗi chủ đề là 1 khối <div class="hw-card"> ... </div> độc lập.
+       - Chủ đề nào KHÔNG cần bài tập về nhà: bọc toàn bộ khối đó
+         (từ thẻ mở <div class="hw-card"> đến thẻ đóng </div> tương
+         ứng) trong một cặp comment HTML để "khoá" (ẩn) mà KHÔNG xoá
+         mất nội dung — cú pháp cặp comment: mở bằng dấu nhỏ-hơn, chấm
+         than, 2 gạch ngang; đóng bằng 2 gạch ngang rồi dấu lớn-hơn
+         (giống các dòng chú thích đang thấy quanh đây, ví dụ ngay
+         dòng phía trên "Bài tập thực hành").
+       - Muốn "mở" lại: xoá cặp mở/đóng comment đó đi, giữ nguyên
+         khối <div class="hw-card"> bên trong.
+       - Muốn thêm chủ đề mới: copy nguyên 1 khối <div class="hw-card">
+         đang có, dán vào trong .hw-grid, đổi hw-tag/hw-name/hw-desc
+         và link Google Form (href) cho đúng. -->
   <section class="block">
     <h2 class="block-title">Practice Exercises</h2>
     <div class="homework-text">
@@ -579,6 +626,21 @@ function setupCoffeeQR(){
     qr.src = DONATION_QR_API + encodeURIComponent(DONATION_QR_DATA);
   };
 }
+/* ======================================================
+   ĐỒNG HỒ THỜI GIAN THỰC dưới ảnh bìa đầu trang
+   ====================================================== */
+function updatePageClock(){
+  const el = document.getElementById('page-clock');
+  if(!el) return;
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dd = pad(now.getDate()), mm = pad(now.getMonth()+1), yyyy = now.getFullYear();
+  const hh = pad(now.getHours()), mi = pad(now.getMinutes()), ss = pad(now.getSeconds());
+  el.textContent = `Khánh Hòa, ngày ${dd}/${mm}/${yyyy} – ${hh}:${mi}:${ss}`;
+}
+updatePageClock();
+setInterval(updatePageClock, 1000);
+
 setupCoffeeQR();
 
 const firebaseConfig = {
@@ -653,17 +715,55 @@ const LESSONS = [
    Thêm object mới vào đây theo id để bổ sung nội dung cho bài tương ứng.
    ngay: định dạng dd/mm/yyyy */
 /* ======================================================
-   📌 MẪU "NEW POST" — COPY khối bên dưới, đổi số ID cho đúng
-   bài học, dán vào bên trong object LESSON_CONTENT ở dưới,
-   rồi điền nội dung. Không cần sửa gì khác, trang tự cập nhật.
+   📌 HƯỚNG DẪN VIẾT BÀI MỚI — ĐỌC KỸ TRƯỚC KHI DÁN NỘI DUNG
+
+   BƯỚC 1 — Xác định ID bài học: đã có sẵn trong mảng LESSONS ở trên
+   (ví dụ Bài 7 có id:7). Không tự đặt id mới, không trùng id đã dùng.
+
+   BƯỚC 2 — Vị trí dán: kéo xuống cuối object LESSON_CONTENT (ngay
+   trước dấu `};` đóng object, sau bài có id lớn nhất hiện có), dán
+   khối mẫu bên dưới rồi đổi ID_BAI thành số bài tương ứng. Sau đó
+   điền nội dung — không cần sửa bất kỳ đoạn code nào khác, các phần
+   Practice/Video/Tài liệu/Mục lục sẽ tự cập nhật theo id bạn thêm.
 
    ID_BAI: {
      ngay: "dd/mm/yyyy",
      text: `<p>Nội dung bài học...</p>`,
-     img: "assets/tin11/tin11-baiX-minhhoa.jpg",   // để "" nếu không có ảnh
+     img: "assets/tin11/tin11-baiX-minhhoa.jpg",   // để "" nếu không có ảnh bìa
      video: "ID_VIDEO_YOUTUBE",               // để "" nếu không có video
      doc: "ID_FILE_GOOGLE_DRIVE"              // để "" nếu không có tài liệu
    },
+
+   BƯỚC 3 — Lưu ý khi dán ảnh để KHÔNG bị lỗi hình:
+   • Ảnh minh hoạ trong "text" luôn đặt trong khối:
+       <figure class="lesson-figure"><img src="assets/tin11/TÊN_ẢNH.jpg" alt="Mô tả ảnh"></figure>
+   • Đường dẫn ảnh phải khớp CHÍNH XÁC (phân biệt hoa/thường) với tên
+     file đã upload vào thư mục assets/tin11/ trên GitHub — sai 1 ký
+     tự là ảnh sẽ không hiển thị (vỡ ảnh).
+   • Ảnh bìa của bài (hiện ở đầu trang chi tiết + Latest Lessons) là
+     trường "img" riêng, không phải ảnh trong "text".
+   • KHÔNG dùng ảnh từ máy tính (C:\...) hay Word — phải upload lên
+     GitHub trước rồi mới dùng đường dẫn dạng "assets/tin11/...".
+
+   BƯỚC 4 — Lưu ý cú pháp khi dán nội dung (text dùng dấu backtick `):
+   • Nếu nội dung bài có chứa dấu backtick ` hoặc ${ } thật sự (hiếm
+     khi cần), phải thêm dấu \\ phía trước để không làm vỡ code.
+   • Luôn đóng đủ thẻ mở: mỗi <div>, <details>, <figure> mở ra đều
+     phải có thẻ đóng tương ứng, nếu không cả trang có thể trắng.
+   • Có thể COPY nguyên khối HTML mẫu từ bài đã có (ví dụ Bài 1) rồi
+     sửa lại nội dung — cấu trúc class (activity-box, answer-box,
+     answer-content, lesson-en) cần giữ nguyên để giữ đúng định dạng.
+
+   BƯỚC 5 — Các khối dữ liệu khác cần bổ sung cho bài mới (không bắt
+   buộc nhưng nên có để bài hiển thị đầy đủ như các bài mẫu):
+   • LESSON_SUMMARIES[ID_BAI] = {img:"assets/tin11/...jpg", items:["ý 1","ý 2",...]}
+     → hiển thị khối "Tóm tắt kiến thức" (sơ đồ tư duy + mục tiêu).
+   • LESSON_PEDAGOGY[ID_BAI] = {summary:"...", digital:"...", ai:"...", apply:"..."}
+     → hiển thị 4 thẻ mục tiêu/năng lực đầu bài.
+   • REVIEW_QUIZZES[ID_BAI] = {q:[...]} → phần "Ôn tập cuối bài" (xem
+     cấu trúc câu hỏi mc/tf/short ở các bài đã có làm mẫu).
+   Nếu bỏ trống một trong các khối trên, trang sẽ tự dùng nội dung
+   mặc định hợp lý (không lỗi), nhưng nên bổ sung đủ để đồng bộ.
    ====================================================== */
 const LESSON_CONTENT = {
   1: {
@@ -756,7 +856,7 @@ const LESSON_CONTENT = {
 </details>
 
 <figure class="lesson-figure" style="margin:18px 0;">
-  <img src="assets/tin11/12.jpg" alt="Sơ đồ minh hoạ quan hệ hệ điều hành - phần cứng - phần mềm">
+  <img src="assets/tin11/13.jpg" alt="Sơ đồ minh hoạ quan hệ hệ điều hành - phần cứng - phần mềm">
 </figure>
 
 <p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
@@ -1200,7 +1300,7 @@ const LESSON_CONTENT = {
 
 };
 const LESSON_SUMMARIES = {
-  1:{img:"assets/tin11/11.jpg",items:["Sơ bộ nắm được lịch sử phát triển của các hệ điều hành thông dụng cho máy tính cá nhân (PC), một hệ điều hành thương mại và một hệ điều hành nguồn mở.","Hiểu được đặc điểm của hệ điều hành cho thiết bị di động.","Hiểu được một cách khái quát mối quan hệ giữa phần cứng, hệ điều hành và phần mềm ứng dụng cũng như vai trò của mỗi thành phần trong hoạt động chung của cả hệ thống.","Trình bày được nội dung kiến thức kể trên."]},
+  1:{img:"assets/tin11/12.jpg",items:["Sơ bộ nắm được lịch sử phát triển của các hệ điều hành thông dụng cho máy tính cá nhân (PC), một hệ điều hành thương mại và một hệ điều hành nguồn mở.","Hiểu được đặc điểm của hệ điều hành cho thiết bị di động.","Hiểu được một cách khái quát mối quan hệ giữa phần cứng, hệ điều hành và phần mềm ứng dụng cũng như vai trò của mỗi thành phần trong hoạt động chung của cả hệ thống.","Trình bày được nội dung kiến thức kể trên."]},
   2:{img:"assets/tin11/21.jpg",items:["Sử dụng được một số chức năng cơ bản của hệ điều hành cho máy tính cá nhân.","Sử dụng được một vài tiện ích của hệ điều hành nâng cao hiệu quả của máy tính cá nhân.","Sử dụng được một vài tiện ích cơ bản của hệ điều hành trên thiết bị di động."]},
   3:{img:"assets/tin11/31.jpg",items:["Trình bày được một số khái niệm và nắm được sự khác nhau giữa phần mềm nguồn mở với phần mềm thương mại.","Hiểu được vai trò của phần mềm nguồn mở và phần mềm thương mại đối với sự phát triển của công nghệ thông tin.","Biết được phần mềm chạy trên Internet và lợi ích của chúng."]},
   4:{img:"assets/tin11/41.jpg",items:["Nhận diện được một số thiết bị trong thân máy, nắm được chức năng và các thông số do hiệu năng của chúng.","Nhận biết được sơ đồ của các mạch logic AND, OR, NOT và giải thích được vai trò của các mạch logic đó trong thực hiện các tính toán nhị phân."]},
