@@ -25,10 +25,15 @@
 
   .eyebrow{ font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600; color:var(--teal); letter-spacing:.12em; text-transform:uppercase;}
   h1{ font-size:2rem; font-weight:800; color:var(--ink); margin-top:8px;}
-  .page-cover{ text-align:center; margin:18px 0 22px;}
-  .page-cover img{ width:100%; max-width:100%; height:auto; max-height:440px; object-fit:contain; object-position:center;
-    background:#fff; border-radius:16px; border:1px solid var(--line); box-shadow:0 10px 28px rgba(15,28,46,.12); display:block; margin:0 auto;}
-  .page-cover .page-clock{ margin-top:10px; font-size:.95rem; font-weight:700; color:#003B8F;}
+  .page-cover{ text-align:center; margin:0; width:100%; background:var(--ink);}
+  .page-cover .cover-link{ display:block; width:100%; height:640px; overflow:hidden;}
+  .page-cover img{ width:100%; height:100%; object-fit:cover; object-position:center;
+    display:block; margin:0 auto; transition:opacity .2s ease;}
+  .page-cover .cover-link:hover img{ opacity:.92;}
+  .page-cover .page-clock{ max-width:1120px; margin:0 auto; padding:10px 24px 0; text-align:left;
+    font-size:.95rem; font-weight:700; color:#003B8F;}
+  @media(max-width:900px){ .page-cover .cover-link{ height:420px;} }
+  @media(max-width:640px){ .page-cover .cover-link{ height:260px;} }
   .grade-hero{ text-align:center; margin:8px 0 32px;}
   .grade-hero h1{ font-size:clamp(2.6rem, 6vw, 4.2rem); font-weight:800; color:#0047AB;
                   letter-spacing:.01em; margin:0; text-align:center; line-height:1.05; text-transform:none;}
@@ -311,7 +316,7 @@
   .review-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.review-btn{border:0;border-radius:10px;padding:11px 16px;font:700 .9rem 'Be Vietnam Pro',sans-serif;cursor:pointer;background:#2752D6;color:#fff}.review-btn.secondary{background:#eef4ff;color:#17429b}.review-btn:hover{transform:translateY(-1px)}
   .quiz-result{display:none;margin-top:18px;padding:16px;border-radius:12px;background:#eef8f4;border:1px solid #bfe7d7}.quiz-result.show{display:block}.score-big{font-size:1.5rem;font-weight:800;color:#006b4f}.score-detail{margin-top:7px;color:#3d4c63;font-size:.9rem;line-height:1.6}.ai-grade-note{margin-top:10px;padding:11px 12px;border-left:3px solid #7c4dff;background:#f5f0ff;color:#51416e;border-radius:0 8px 8px 0;font-size:.84rem}.quiz-feedback{display:none;margin-top:8px;font-size:.83rem}.quiz-feedback.show{display:block}.correct{color:#087f5b}.wrong{color:#c62828}
 
-  .lesson-summary{margin:8px 0 24px;padding:20px;border:1px solid rgba(39,82,214,.16);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(15,28,46,.05)}.summary-title{display:flex;gap:12px;align-items:center;margin-bottom:16px}.summary-title>span{font-size:1.7rem}.summary-title h3{margin:0;color:#003B8F;font-size:1.18rem}.summary-title p{margin:4px 0 0;color:#748198;font-size:.82rem}.summary-layout{display:flex;flex-direction:column;gap:22px}.summary-map{display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:12px;padding:14px;width:100%}.summary-map img{width:100%;max-height:640px;object-fit:contain;border-radius:10px;border:1px solid var(--line)}.summary-points{display:grid;gap:16px;align-content:start;padding-left:24px;border-left:3px solid #dbe5ff}.summary-point{display:flex;gap:10px;padding:13px 14px;background:#f7f9ff;border:1px solid #e1e8f7;border-radius:10px;font-size:.9rem;line-height:1.9;color:#3d4c63}.summary-point b{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2752D6;color:#fff;flex:none;font-size:.78rem}.caption-small{text-align:center;margin-top:6px}
+  .lesson-summary{margin:8px 0 24px;padding:20px;border:1px solid rgba(39,82,214,.16);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(15,28,46,.05)}.summary-title{display:flex;gap:12px;align-items:center;margin-bottom:16px}.summary-title>span{font-size:1.7rem}.summary-title h3{margin:0;color:#003B8F;font-size:1.18rem}.summary-title p{margin:4px 0 0;color:#748198;font-size:.82rem}.summary-layout{display:flex;flex-direction:column;gap:22px}.summary-map{display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:12px;padding:14px;width:100%}.summary-map img{width:100%;max-height:640px;object-fit:contain;border-radius:10px;border:1px solid var(--line)}.summary-points{display:grid;gap:18px;align-content:start;padding-left:24px;border-left:3px solid #dbe5ff}.summary-point{display:flex;gap:16px;padding:18px 20px;background:#f7f9ff;border:1px solid #e1e8f7;border-radius:12px;font-size:1.05rem;line-height:1.9;color:#26344c;box-shadow:0 2px 10px rgba(15,28,46,.05)}.summary-point strong{color:#003B8F}.summary-point b{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2752D6;color:#fff;flex:none;font-size:.98rem;font-weight:800}.caption-small{text-align:center;margin-top:6px}
 
   @media(max-width:760px){.platform-hero .hero-grid,.lesson-goals{grid-template-columns:1fr;grid-template-rows:none}.learning-panel{grid-template-columns:repeat(2,1fr)}.progress-checklist{grid-template-columns:1fr}.skill-row .skill-name{width:135px}.two-col img{width:100%!important}.two-col .two-col-text{max-width:100%!important}}
 @media(max-width:480px){.learning-panel{grid-template-columns:1fr}.platform-hero{padding:20px}.hero-progress{margin-top:4px}}
@@ -361,12 +366,14 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
   </div>
 </nav>
 
-<main>
-  <div class="page-cover">
+<div class="page-cover">
+  <a href="https://webh2t.github.io/" class="cover-link" aria-label="Về trang chủ WEBH2T+" title="Về trang chủ WEBH2T+">
     <img src="assets/TIN11bia.jpg" alt="Ảnh bìa Tin học 11">
-    <div class="page-clock" id="page-clock">Khánh Hòa, ngày --/--/---- – --:--:--</div>
-  </div>
+  </a>
+  <div class="page-clock" id="page-clock">Khánh Hòa, ngày --/--/---- – --:--:--</div>
+</div>
 
+<main>
   <div class="grade-hero">
     <h1><span>Grade 11</span><span>Informatics</span></h1>
   </div>
@@ -515,6 +522,13 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
        - Muốn thêm chủ đề mới: copy nguyên 1 khối <div class="hw-card">
          đang có, dán vào trong .hw-grid, đổi hw-tag/hw-name/hw-desc
          và link Google Form (href) cho đúng. -->
+  <!-- 📌 TOÀN BỘ khối "Practice Exercises" bên dưới đang được KHOÁ (ẩn)
+       vì hiện chưa có phiếu bài tập thật cho các chủ đề. Khi có bài
+       tập thật, MỞ lại bằng cách xoá cặp comment HTML bao quanh khối
+       section bên dưới (cặp mở/đóng giống các dòng chú thích đang
+       thấy quanh đây), rồi cập nhật lại href từng hw-card cho đúng
+       link thật. -->
+  <!--
   <section class="block">
     <h2 class="block-title">Practice Exercises</h2>
     <div class="homework-text">
@@ -544,6 +558,7 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
       </div>
     </div>
   </section>
+  -->
 
   
 
@@ -856,7 +871,7 @@ const LESSON_CONTENT = {
 </details>
 
 <figure class="lesson-figure" style="margin:18px 0;">
-  <img src="assets/tin11/13.jpg" alt="Sơ đồ minh hoạ quan hệ hệ điều hành - phần cứng - phần mềm">
+  <img src="assets/tin11/12.jpg" alt="Sơ đồ minh hoạ quan hệ hệ điều hành - phần cứng - phần mềm">
 </figure>
 
 <p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
@@ -1300,7 +1315,7 @@ const LESSON_CONTENT = {
 
 };
 const LESSON_SUMMARIES = {
-  1:{img:"assets/tin11/12.jpg",items:["Sơ bộ nắm được lịch sử phát triển của các hệ điều hành thông dụng cho máy tính cá nhân (PC), một hệ điều hành thương mại và một hệ điều hành nguồn mở.","Hiểu được đặc điểm của hệ điều hành cho thiết bị di động.","Hiểu được một cách khái quát mối quan hệ giữa phần cứng, hệ điều hành và phần mềm ứng dụng cũng như vai trò của mỗi thành phần trong hoạt động chung của cả hệ thống.","Trình bày được nội dung kiến thức kể trên."]},
+  1:{img:"assets/tin11/11.jpg",items:["Sơ bộ nắm được <strong class=\"text-blue\">lịch sử phát triển</strong> của các hệ điều hành thông dụng cho máy tính cá nhân (PC), một <strong class=\"text-blue\">hệ điều hành thương mại</strong> và một <strong class=\"text-blue\">hệ điều hành nguồn mở</strong>.","Hiểu được <strong class=\"text-blue\">đặc điểm của hệ điều hành cho thiết bị di động</strong>.","Hiểu được một cách khái quát <strong class=\"text-blue\">mối quan hệ giữa phần cứng, hệ điều hành và phần mềm ứng dụng</strong> cũng như vai trò của mỗi thành phần trong hoạt động chung của cả hệ thống.","<strong class=\"text-blue\">Trình bày được</strong> nội dung kiến thức kể trên."]},
   2:{img:"assets/tin11/21.jpg",items:["Sử dụng được một số chức năng cơ bản của hệ điều hành cho máy tính cá nhân.","Sử dụng được một vài tiện ích của hệ điều hành nâng cao hiệu quả của máy tính cá nhân.","Sử dụng được một vài tiện ích cơ bản của hệ điều hành trên thiết bị di động."]},
   3:{img:"assets/tin11/31.jpg",items:["Trình bày được một số khái niệm và nắm được sự khác nhau giữa phần mềm nguồn mở với phần mềm thương mại.","Hiểu được vai trò của phần mềm nguồn mở và phần mềm thương mại đối với sự phát triển của công nghệ thông tin.","Biết được phần mềm chạy trên Internet và lợi ích của chúng."]},
   4:{img:"assets/tin11/41.jpg",items:["Nhận diện được một số thiết bị trong thân máy, nắm được chức năng và các thông số do hiệu năng của chúng.","Nhận biết được sơ đồ của các mạch logic AND, OR, NOT và giải thích được vai trò của các mạch logic đó trong thực hiện các tính toán nhị phân."]},
@@ -1314,42 +1329,42 @@ const REVIEW_QUIZZES = {
     {type:'mc',text:'Phiên bản Windows nào là phiên bản đầu tiên có giao diện đồ họa?',options:['Windows XP','Windows 95','Windows 1.0','Windows 3.11'],answer:2,explain:'Windows 1.0 là phiên bản đầu tiên giới thiệu giao diện đồ họa.'},
     {type:'mc',text:'UNIX là hệ điều hành có đặc điểm gì?',options:['Chỉ dành cho máy tính cá nhân','Đa nhiệm và đa người dùng','Không hỗ trợ mạng','Độc quyền và không chia sẻ mã nguồn'],answer:1,explain:'UNIX nổi bật với khả năng đa nhiệm và đa người dùng.'},
     {type:'tf',text:'Hệ điều hành có vai trò quan trọng nào sau đây?',items:[['a) Quản lý phần cứng, bộ nhớ và thiết bị ngoại vi.','T'],['b) Chỉ cung cấp giao diện đồ họa cho người dùng.','F'],['c) Tổ chức và điều phối việc thực hiện các chương trình.','T'],['d) Được tích hợp với mọi ứng dụng phần mềm trên máy tính.','F']]},
-    {type:'short',text:'Giao diện đồ họa giúp ích gì trong việc sử dụng hệ điều hành trên máy tính cá nhân?',keywords:['giao diện đồ họa','hình ảnh','biểu tượng','cửa sổ','tương tác','thân thiện','dễ dàng'],explain:'Nêu được vai trò của hình ảnh/biểu tượng/cửa sổ giúp người dùng tương tác dễ dàng, trực quan thay vì phải nhớ nhiều lệnh.'}
+    {type:'short',text:'Giao diện đồ họa giúp ích gì trong việc sử dụng hệ điều hành trên máy tính cá nhân?',keywords:['giao diện đồ họa','hình ảnh','biểu tượng','cửa sổ','tương tác','thân thiện','dễ dàng'],explain:'Giao diện đồ họa giúp người dùng dễ dàng tương tác với hệ điều hành thông qua các hình ảnh trực quan, biểu tượng, và cửa sổ thay vì phải gõ lệnh.'}
   ]},
   2:{q:[
     {type:'mc',text:'Khi sử dụng File Explorer trong Windows, để xem nội dung của một thư mục, bạn cần thực hiện thao tác nào?',options:['Nhấn nút Start','Nháy chuột phải vào biểu tượng thư mục','Nháy đúp chuột vào biểu tượng thư mục','Kéo và thả biểu tượng thư mục'],answer:2,explain:'Nháy đúp chuột vào biểu tượng thư mục để mở và xem nội dung bên trong.'},
     {type:'mc',text:'Tiện ích “Disk Cleanup” trên hệ điều hành có chức năng chính là gì?',options:['Tối ưu hóa đĩa cứng','Xóa các tập tin không cần thiết và giải phóng dung lượng','Sao lưu toàn bộ hệ điều hành','Chống phân mảnh dữ liệu'],answer:1,explain:'Disk Cleanup giúp loại bỏ các tệp rác/tạm thời để giải phóng dung lượng.'},
     {type:'mc',text:'Chức năng quản lý nhóm trong danh bạ điện thoại có tác dụng gì?',options:['Quản lý số lượng tệp tin','Sắp xếp danh bạ theo từng nhóm liên hệ','Xóa toàn bộ danh bạ','Tạo bản sao danh bạ'],answer:1,explain:'Tính năng nhóm giúp tổ chức các liên hệ để dễ tìm kiếm và quản lý.'},
     {type:'tf',text:'Tiện ích nào sau đây không có sẵn khi cài đặt hệ điều hành và cần được cài đặt thêm sau này?',items:[['a) Bộ gõ tiếng Việt Unikey','T'],['b) Kiểm tra đĩa (Check disk)','F'],['c) Tối ưu hóa đĩa (Defragment)','F'],['d) Quản lý tệp và thư mục','F']]},
-    {type:'short',text:'Tiện ích hợp mảnh đĩa (Defragment) hoạt động như thế nào và tại sao nó quan trọng?',keywords:['tổ chức lại','dữ liệu','liền kề','phân mảnh','hiệu suất','đọc','ghi','HDD'],explain:'Cần nêu việc sắp xếp lại dữ liệu giảm phân mảnh và cải thiện hiệu suất truy xuất, đặc biệt với HDD.'}
+    {type:'short',text:'Tiện ích hợp mảnh đĩa (Defragment) hoạt động như thế nào và tại sao nó quan trọng?',keywords:['tổ chức lại','dữ liệu','liền kề','phân mảnh','hiệu suất','đọc','ghi','HDD'],explain:'Tiện ích hợp mảnh đĩa giúp tổ chức lại dữ liệu trên đĩa cứng sao cho các tệp được sắp xếp liền kề nhau, giảm thiểu việc phân mảnh. Điều này giúp cải thiện hiệu suất đọc/ghi dữ liệu trên đĩa cứng, đặc biệt là với các đĩa cứng cơ học (HDD).'}
   ]},
   3:{q:[
     {type:'mc',text:'Ưu điểm chính của phần mềm nguồn mở là gì?',options:['Được hỗ trợ kỹ thuật toàn diện từ nhà phát triển.','Miễn phí hoặc chi phí thấp và minh bạch.','Có tính hoàn chỉnh cao và dễ sử dụng cho mọi đối tượng.','Không cần cài đặt vào máy tính.'],answer:1,explain:'Phần mềm nguồn mở thường có chi phí thấp và mã nguồn minh bạch, cho phép kiểm tra/sửa đổi theo giấy phép.'},
     {type:'mc',text:'Giấy phép GNU GPL (General Public License) cho phép điều gì?',options:['Sửa đổi và phân phối phần mềm mà không cần công bố mã nguồn.','Sao chép và phân phối phần mềm kèm bản quyền gốc, miễn trừ trách nhiệm bảo hành.','Chỉ sử dụng phần mềm cho mục đích phi lợi nhuận.','Cấm người dùng chỉnh sửa phần mềm.'],answer:1,explain:'GPL cho phép sao chép, sửa đổi và phân phối theo các điều kiện của giấy phép, trong đó có yêu cầu về mã nguồn đối với các tác phẩm phái sinh thuộc phạm vi GPL.'},
     {type:'mc',text:'Phần mềm thương mại có ưu điểm gì so với phần mềm nguồn mở?',options:['Miễn phí hoàn toàn.','Cung cấp dịch vụ hỗ trợ kỹ thuật tốt hơn.','Mã nguồn mở cho người dùng tùy chỉnh.','Có sẵn trên mọi nền tảng và hệ điều hành.'],answer:1,explain:'Phần mềm thương mại thường đi kèm dịch vụ hỗ trợ kỹ thuật chuyên nghiệp.'},
     {type:'tf',text:'Phần mềm chạy trên Internet có những đặc điểm nào dưới đây?',items:[['a) Không cần cài đặt vào máy tính, chỉ cần truy cập qua trình duyệt.','T'],['b) Chỉ có thể sử dụng khi máy tính kết nối với Internet.','T'],['c) Tất cả các phần mềm chạy trên Internet đều miễn phí.','F'],['d) Không thể thực hiện các chức năng phức tạp như phần mềm cài đặt truyền thống.','F']]},
-    {type:'short',text:'Phần mềm nguồn mở có thể thay thế hoàn toàn cho phần mềm thương mại được không? Tại sao?',keywords:['không','nhu cầu','nguồn mở','thương mại','đặt hàng','hỗ trợ kỹ thuật','chi phí','minh bạch'],explain:'Cần kết luận không hoàn toàn và giải thích hai loại phần mềm phục vụ nhu cầu khác nhau; phần mềm thương mại có thể đáp ứng yêu cầu riêng và hỗ trợ chuyên nghiệp.'}
+    {type:'short',text:'Phần mềm nguồn mở có thể thay thế hoàn toàn cho phần mềm thương mại được không? Tại sao?',keywords:['không','nhu cầu','nguồn mở','thương mại','đặt hàng','hỗ trợ kỹ thuật','chi phí','minh bạch'],explain:'Không. Phần mềm nguồn mở không thể thay thế hoàn toàn cho phần mềm thương mại vì chúng phục vụ các nhu cầu khác nhau. Phần mềm nguồn mở chủ yếu cung cấp các giải pháp dùng chung, chi phí thấp và minh bạch, nhưng lại không đáp ứng tốt các nhu cầu riêng lẻ hay đòi hỏi cao về hỗ trợ kỹ thuật. Trong khi đó, phần mềm thương mại (đặc biệt là phần mềm "đặt hàng") có thể được thiết kế riêng theo yêu cầu cụ thể của người dùng, đồng thời kèm theo các dịch vụ bảo hành và hỗ trợ kỹ thuật chuyên nghiệp.'}
   ]},
   4:{q:[
     {type:'mc',text:'Bộ xử lý đa lõi (multi-core) có ưu điểm gì so với bộ xử lý đơn lõi (single-core)?',options:['Tăng dung lượng bộ nhớ','Thực hiện song song nhiều công việc','Tiết kiệm điện năng','Giảm kích thước bộ nhớ đệm'],answer:1,explain:'Nhiều lõi cho phép xử lý nhiều nhiệm vụ đồng thời hiệu quả hơn.'},
     {type:'mc',text:'Bộ nhớ ngoài nào sau đây có tốc độ truy cập nhanh hơn?',options:['Đĩa cứng (HDD)','Đĩa quang','SSD','Đĩa mềm'],answer:2,explain:'SSD có tốc độ truy cập nhanh hơn HDD, đĩa quang và đĩa mềm.'},
     {type:'mc',text:'Phép toán nhị phân nào sau đây sẽ sinh ra số nhớ khi cả hai bit đều bằng 1?',options:['Phép cộng','Phép nhân','Phép XOR','Phép NOT'],answer:0,explain:'Trong phép cộng nhị phân 1 + 1 tạo ra 0 và nhớ 1 sang hàng bên trái.'},
     {type:'tf',text:'Phát biểu nào sau đây về CPU là đúng?',items:[['a) CPU chỉ có một đơn vị xử lý','F'],['b) CPU có thể thực hiện song song nhiều công việc nhờ có nhiều lõi xử lý','T'],['c) CPU không thể đồng bộ các hoạt động trong máy tính','F'],['d) CPU chỉ thực hiện các phép toán lôgic mà không thực hiện phép toán số học','F']]},
-    {type:'short',text:'Sự khác biệt giữa RAM và ROM là gì?',keywords:['RAM','tạm thời','mất','tắt máy','ROM','chỉ đọc','lâu dài','chương trình'],explain:'Cần phân biệt RAM lưu trữ tạm thời khi máy hoạt động và ROM lưu trữ chương trình/dữ liệu cố định lâu dài hơn.'}
+    {type:'short',text:'Sự khác biệt giữa RAM và ROM là gì?',keywords:['RAM','tạm thời','mất','tắt máy','ROM','chỉ đọc','lâu dài','chương trình'],explain:'RAM là bộ nhớ có thể ghi và lưu trữ tạm thời dữ liệu trong quá trình chạy chương trình, còn ROM là bộ nhớ chỉ đọc, dùng để lưu trữ các chương trình cố định và không thể thay đổi.'}
   ]},
   5:{q:[
     {type:'mc',text:'Cổng HDMI có chức năng chính là gì?',options:['Chỉ truyền tín hiệu âm thanh','Truyền tín hiệu video và âm thanh','Chỉ truyền tín hiệu video','Truyền dữ liệu qua mạng'],answer:1,explain:'HDMI truyền tín hiệu hình ảnh và âm thanh kỹ thuật số.'},
     {type:'mc',text:'Cổng VGA được dùng để làm gì?',options:['Truyền tín hiệu âm thanh','Truyền tín hiệu hình ảnh số','Truyền tín hiệu hình ảnh tương tự','Truyền dữ liệu giữa các thiết bị qua mạng'],answer:2,explain:'VGA truyền tín hiệu hình ảnh tương tự.'},
     {type:'mc',text:'Tần số quét của màn hình là gì?',options:['Số điểm ảnh trên màn hình','Số lần hình ảnh được tái hiện trên màn hình trong một giây','Độ sáng của màn hình','Kích thước của màn hình'],answer:1,explain:'Tần số quét cho biết số lần màn hình làm mới hình ảnh trong một giây, tính bằng Hz.'},
     {type:'tf',text:'Thiết bị nào sau đây là thiết bị vào thông dụng nhất khi kết nối với máy tính?',items:[['a) Màn hình','F'],['b) Máy in','F'],['c) Bàn phím','T'],['d) Máy chiếu','F']]},
-    {type:'short',text:'Làm thế nào để kết nối máy tính với máy ảnh số qua cáp USB?',keywords:['cắm','USB','máy ảnh','máy tính','USB mode','Mass Storage','thẻ nhớ','truy cập'],explain:'Nêu việc cắm cáp USB vào máy ảnh và máy tính, chọn chế độ phù hợp để máy tính nhận máy ảnh/khối lưu trữ và truy cập dữ liệu.'}
+    {type:'short',text:'Làm thế nào để kết nối máy tính với máy ảnh số qua cáp USB?',keywords:['cắm','USB','máy ảnh','máy tính','USB mode','Mass Storage','thẻ nhớ','truy cập'],explain:'Để kết nối máy tính với máy ảnh số qua cáp USB, người dùng chỉ cần cắm cáp USB vào cổng kết nối trên máy ảnh và máy tính. Khi kết nối thành công, máy ảnh sẽ hiển thị chế độ "USB mode, Mass Storage", cho phép truy cập vào thẻ nhớ của máy ảnh như một thiết bị lưu trữ ngoại vi.'}
   ]},
   6:{q:[
     {type:'mc',text:'Một trong các tính năng chính của dịch vụ lưu trữ trực tuyến là gì?',options:['Chỉ cho phép xem tài liệu','Chia sẻ tài liệu với nhiều người','Không thể tạo thư mục','Giới hạn dung lượng tải lên'],answer:1,explain:'Chia sẻ tài liệu là một tính năng quan trọng giúp cộng tác và làm việc nhóm.'},
     {type:'mc',text:'Một lợi ích của việc lưu trữ dữ liệu trên đám mây là gì?',options:['Tăng dung lượng ổ cứng máy tính','Tiết kiệm thời gian truy cập dữ liệu','Dữ liệu luôn được lưu trữ cục bộ','Dữ liệu dễ dàng truy cập từ bất kỳ đâu'],answer:3,explain:'Dữ liệu có thể được truy cập từ nhiều thiết bị, miễn là có kết nối phù hợp.'},
     {type:'mc',text:'Tính năng nào không có trong dịch vụ lưu trữ và chia sẻ tập tin trực tuyến?',options:['Tạo thư mục mới','Chia sẻ tệp tin với người khác','Chỉnh sửa tài liệu trực tiếp','Cài đặt phần mềm trên máy tính'],answer:3,explain:'Dịch vụ lưu trữ trực tuyến không đồng nghĩa với việc phải cài đặt phần mềm trên máy tính để sử dụng qua trình duyệt.'},
     {type:'tf',text:'Một trong những ưu điểm của việc lưu trữ tệp tin trực tuyến là gì?',items:[['a) Dữ liệu chỉ có thể được truy cập từ một thiết bị duy nhất.','F'],['b) Có thể chia sẻ tệp tin với nhiều người dùng và thiết lập quyền truy cập khác nhau.','T'],['c) Không cần kết nối Internet để truy cập dữ liệu.','F'],['d) Không thể quản lý và tổ chức dữ liệu hiệu quả.','F']]},
-    {type:'short',text:'Những tính năng cơ bản nào mà dịch vụ lưu trữ đám mây cung cấp cho người dùng?',keywords:['tải tệp','tạo','thư mục','quản lý','chia sẻ','quyền truy cập','chỉnh sửa'],explain:'Nêu các chức năng cốt lõi như tải tệp, tạo/quản lý thư mục và chia sẻ; có thể bổ sung mở/chỉnh sửa trực tuyến tùy dịch vụ.'}
+    {type:'short',text:'Những tính năng cơ bản nào mà dịch vụ lưu trữ đám mây cung cấp cho người dùng?',keywords:['tải tệp','tạo','thư mục','quản lý','chia sẻ','quyền truy cập','chỉnh sửa'],explain:'Dịch vụ lưu trữ đám mây cung cấp các tính năng như tải tệp lên, tạo mới và quản lý thư mục, và chia sẻ tệp với người khác.'}
   ]}
 };
 
