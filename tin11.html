@@ -25,15 +25,12 @@
 
   .eyebrow{ font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600; color:var(--teal); letter-spacing:.12em; text-transform:uppercase;}
   h1{ font-size:2rem; font-weight:800; color:var(--ink); margin-top:8px;}
-  .page-cover{ text-align:center; margin:0; width:100%; background:var(--ink);}
-  .page-cover .cover-link{ display:block; width:100%; height:640px; overflow:hidden;}
-  .page-cover img{ width:100%; height:100%; object-fit:cover; object-position:center;
-    display:block; margin:0 auto; transition:opacity .2s ease;}
+  .page-cover{ text-align:center; margin:0; width:100%;}
+  .page-cover .cover-link{ display:block; width:100%; overflow:hidden;}
+  .page-cover img{ width:100%; height:auto; display:block; margin:0 auto; transition:opacity .2s ease;}
   .page-cover .cover-link:hover img{ opacity:.92;}
-  .page-cover .page-clock{ max-width:1120px; margin:0 auto; padding:10px 24px 0; text-align:left;
-    font-size:.95rem; font-weight:700; color:#003B8F;}
-  @media(max-width:900px){ .page-cover .cover-link{ height:420px;} }
-  @media(max-width:640px){ .page-cover .cover-link{ height:260px;} }
+  .page-cover .page-clock{ max-width:1120px; margin:0 auto; padding:10px 24px 14px; text-align:left;
+    font-size:.95rem; font-weight:700; color:#003B8F; background:var(--paper);}
   .grade-hero{ text-align:center; margin:8px 0 32px;}
   .grade-hero h1{ font-size:clamp(2.6rem, 6vw, 4.2rem); font-weight:800; color:#0047AB;
                   letter-spacing:.01em; margin:0; text-align:center; line-height:1.05; text-transform:none;}
@@ -138,8 +135,8 @@
   .detail-text details.answer-box summary::before{ content:"▸ "; }
   .detail-text details.answer-box[open] summary::before{ content:"▾ "; }
   .detail-text details.answer-box .answer-content{ margin-top:8px; color:#3D4C63; font-size:.88rem;}
-  .lesson-figure img{ width:100%; max-height:520px; object-fit:contain; background:#FFFFFF;
-    border-radius:12px; border:1px solid var(--line); margin-bottom:18px; display:block;}
+  .lesson-figure img{ width:100%; height:auto; background:#FFFFFF;
+    border-radius:12px; border:1px solid var(--line); margin:0 auto 18px; display:block;}
   .cover-figure{ text-align:center; }
   .cover-figure img{ width:100%; max-width:100%; height:auto; max-height:680px; object-fit:contain; object-position:center; background:#FFFFFF;
     border-radius:14px; border:1px solid var(--line); margin:0 auto 18px; display:block;}
