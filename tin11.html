@@ -36,11 +36,11 @@
   /* ---------- Khối 1: Slideshow ---------- */
   .slideshow{ position:relative; border-radius:var(--radius); overflow:hidden; background:var(--ink);
               box-shadow:0 10px 28px rgba(15,28,46,.12);}
-  .slides-track{ display:flex; transition:transform .45s ease;}
-  .slide{ min-width:100%; position:relative; cursor:pointer;}
+  .slides-track{ display:flex; transition:transform .45s ease, height .35s ease; height:380px;}
+  .slide{ min-width:100%; height:100%; position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center;}
   .slide{ overflow:hidden;}
-  .slide img{ width:100%; height:380px; object-fit:cover; display:block; transition:transform .3s ease;}
-  .slide:hover img{ transform:scale(1.05);}
+  .slide img{ width:100%; height:100%; object-fit:contain; object-position:center; display:block; background:var(--ink); transition:transform .3s ease;}
+  .slide:hover img{ transform:scale(1.03);}
   .slide .caption{ position:absolute; left:0; bottom:0; right:0;
                     background:linear-gradient(0deg, rgba(15,28,46,.85), transparent);
                     color:#fff; padding:16px 20px; font-size:.9rem;}
@@ -131,6 +131,9 @@
   .detail-text details.answer-box .answer-content{ margin-top:8px; color:#3D4C63; font-size:.88rem;}
   .lesson-figure img{ width:100%; max-height:520px; object-fit:contain; background:#FFFFFF;
     border-radius:12px; border:1px solid var(--line); margin-bottom:18px; display:block;}
+  .cover-figure{ text-align:center; }
+  .cover-figure img{ width:100%; max-width:100%; height:auto; max-height:680px; object-fit:contain; object-position:center; background:#FFFFFF;
+    border-radius:14px; border:1px solid var(--line); margin:0 auto 18px; display:block;}
   .two-col{ display:flex; gap:20px; align-items:flex-start; margin:16px 0; flex-wrap:wrap;}
   .two-col img{ width:58%; max-width:100%; object-fit:contain; background:#FFFFFF;
     border-radius:10px; border:1px solid var(--line); flex-shrink:0;}
@@ -284,7 +287,7 @@
   .review-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.review-btn{border:0;border-radius:10px;padding:11px 16px;font:700 .9rem 'Be Vietnam Pro',sans-serif;cursor:pointer;background:#2752D6;color:#fff}.review-btn.secondary{background:#eef4ff;color:#17429b}.review-btn:hover{transform:translateY(-1px)}
   .quiz-result{display:none;margin-top:18px;padding:16px;border-radius:12px;background:#eef8f4;border:1px solid #bfe7d7}.quiz-result.show{display:block}.score-big{font-size:1.5rem;font-weight:800;color:#006b4f}.score-detail{margin-top:7px;color:#3d4c63;font-size:.9rem;line-height:1.6}.ai-grade-note{margin-top:10px;padding:11px 12px;border-left:3px solid #7c4dff;background:#f5f0ff;color:#51416e;border-radius:0 8px 8px 0;font-size:.84rem}.quiz-feedback{display:none;margin-top:8px;font-size:.83rem}.quiz-feedback.show{display:block}.correct{color:#087f5b}.wrong{color:#c62828}
 
-  .lesson-summary{margin:8px 0 24px;padding:20px;border:1px solid rgba(39,82,214,.16);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(15,28,46,.05)}.summary-title{display:flex;gap:12px;align-items:center;margin-bottom:16px}.summary-title>span{font-size:1.7rem}.summary-title h3{margin:0;color:#003B8F;font-size:1.18rem}.summary-title p{margin:4px 0 0;color:#748198;font-size:.82rem}.summary-layout{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(260px,.65fr);gap:18px;align-items:stretch}.summary-map{display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:12px;padding:10px;min-height:220px}.summary-map img{width:100%;max-height:500px;object-fit:contain;border-radius:10px;border:1px solid var(--line)}.summary-points{display:grid;gap:10px;align-content:start}.summary-point{display:flex;gap:10px;padding:11px 12px;background:#f7f9ff;border:1px solid #e1e8f7;border-radius:10px;font-size:.87rem;line-height:1.55;color:#3d4c63}.summary-point b{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2752D6;color:#fff;flex:none;font-size:.78rem}.caption-small{text-align:center;margin-top:6px}
+  .lesson-summary{margin:8px 0 24px;padding:20px;border:1px solid rgba(39,82,214,.16);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(15,28,46,.05)}.summary-title{display:flex;gap:12px;align-items:center;margin-bottom:16px}.summary-title>span{font-size:1.7rem}.summary-title h3{margin:0;color:#003B8F;font-size:1.18rem}.summary-title p{margin:4px 0 0;color:#748198;font-size:.82rem}.summary-layout{display:flex;flex-direction:column;gap:22px}.summary-map{display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:12px;padding:14px;width:100%}.summary-map img{width:100%;max-height:640px;object-fit:contain;border-radius:10px;border:1px solid var(--line)}.summary-points{display:grid;gap:16px;align-content:start;padding-left:24px;border-left:3px solid #dbe5ff}.summary-point{display:flex;gap:10px;padding:13px 14px;background:#f7f9ff;border:1px solid #e1e8f7;border-radius:10px;font-size:.9rem;line-height:1.9;color:#3d4c63}.summary-point b{width:25px;height:25px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#2752D6;color:#fff;flex:none;font-size:.78rem}.caption-small{text-align:center;margin-top:6px}
 
   @media(max-width:760px){.platform-hero .hero-grid,.lesson-goals{grid-template-columns:1fr;grid-template-rows:none}.learning-panel{grid-template-columns:repeat(2,1fr)}.progress-checklist{grid-template-columns:1fr}.skill-row .skill-name{width:135px}.two-col img{width:100%!important}.two-col .two-col-text{max-width:100%!important}}
 @media(max-width:480px){.learning-panel{grid-template-columns:1fr}.platform-hero{padding:20px}.hero-progress{margin-top:4px}}
@@ -1294,6 +1297,8 @@ function renderReviewQuiz(id){
   const el=document.getElementById('lesson-review'), quiz=REVIEW_QUIZZES[id];
   if(!el)return;
   if(!quiz){el.innerHTML=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>Nội dung ôn tập của bài này đang được cập nhật.</p></div></div></section>`;return;}
+  // Chạm tới phần ôn tập được tính là đã dùng 1 lượt làm bài (chỉ tính 1 lần đầu tiên cho mỗi bài)
+  if(getQuizAttempt(id)===0) setQuizAttempt(id,1);
   const attempt=getQuizAttempt(id), locked=attempt>=3;
   let html=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>5 câu • 10 điểm • Được làm tối đa <strong>3 lần</strong>.</p></div></div><div class="review-rule"><div class="rule-chip"><strong>Câu 1–3</strong><br>Mỗi câu đúng: 2 điểm</div><div class="rule-chip"><strong>Câu 4</strong><br>4 ý Đúng/Sai × 0,5 điểm = 2 điểm</div><div class="rule-chip"><strong>Câu 5</strong><br>Trả lời ngắn: 2 điểm</div></div><div class="attempt-status"><span class="attempt-badge">📊 Số lần làm: ${Math.min(attempt,3)}/3</span>${locked?'<span class="attempt-locked">— Đã hết lượt làm.</span>':'<span>— Còn lại: '+(3-attempt)+' lần</span>'}</div>${locked?'':'<div class="attempt-tip">💪 Cố gắng làm bài 3 lần sẽ hiển thị đáp án đúng 5 câu nhé!</div>'}<form id="quiz-form-${id}" onsubmit="submitReviewQuiz(event,${id})">`;
   quiz.q.forEach((q,qi)=>{
@@ -1344,7 +1349,7 @@ function submitReviewQuiz(event,id){
   });
   let reveal='';if(attempt>=3)reveal=`<div class="quiz-answer-reveal"><h4>🔓 ĐÁP ÁN SAU LẦN 3</h4><div class="answer-grid">${answers.map(a=>`<div class="answer-key">${a}</div>`).join('')}</div><p style="margin-top:10px;font-size:.82rem">Em đã dùng hết 3 lần. Hãy đối chiếu đáp án với tài liệu học tập.</p></div>`;
   const tableHtml=`<table class="score-table"><thead><tr><th>Câu</th><th>Đáp án chọn</th><th>Điểm</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td class="sc-dapan">${r[1]}</td><td class="sc-diem">${r[2]}</td></tr>`).join('')}</tbody></table>`;
-  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính</div>${tableHtml}<div class="score-total">Tổng điểm: ${score.toFixed(1)}/10</div><div class="score-detail">Câu 1–4 được chấm tự động; Câu 5 được chấm sơ bộ theo từ khóa.</div>${reveal}`;result.classList.add('show');
+  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính</div>${tableHtml}<div class="score-total">Tổng điểm: ${score.toFixed(1)}/10</div>${reveal}`;result.classList.add('show');
   if(attempt>=3)form.querySelectorAll('input,textarea,button').forEach(x=>x.disabled=true);
   result.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -1459,7 +1464,7 @@ function showLesson(id) {
   document.getElementById('d-text').innerHTML = content.text;
 
   document.getElementById('d-image').innerHTML = content.img
-    ? `<figure class="lesson-figure"><img class="zoomable-image" src="${content.img}" alt="${bai.ten}"><figcaption class="caption-small">Ảnh bìa bài học</figcaption></figure>` : '';
+    ? `<figure class="lesson-figure cover-figure"><img class="zoomable-image" src="${content.img}" alt="${bai.ten}"><figcaption class="caption-small">Ảnh bìa bài học</figcaption></figure>` : '';
 
   renderLessonSummary(id);
   renderReviewQuiz(id);
@@ -1473,8 +1478,12 @@ function showLesson(id) {
     ? `<p class="caption-small">Tài liệu minh hoạ (Google Drive):</p>
        <iframe class="drive-frame" src="https://drive.google.com/file/d/${content.doc}/preview" allow="autoplay"></iframe>` : '';
 
-  // Related posts: 3 cột, ảnh lớn trên + tiêu đề dưới, cùng chủ đề, loại trừ bài hiện tại, tối đa 3
-  const related = LESSONS.filter(b => b.chude === bai.chude && b.id !== id).slice(0, 3);
+  // Related posts: không giới hạn cùng chủ đề — ưu tiên các bài tiếp theo (id lớn hơn) đã có nội dung,
+  // sau đó bổ sung các bài trước đó đã có nội dung nếu còn thiếu, loại trừ bài hiện tại
+  const lessonsWithContent = LESSONS.filter(b => LESSON_CONTENT[b.id] && b.id !== id);
+  const nextLessons = lessonsWithContent.filter(b => b.id > id).sort((a, b) => a.id - b.id);
+  const prevLessons = lessonsWithContent.filter(b => b.id < id).sort((a, b) => a.id - b.id);
+  const related = [...nextLessons, ...prevLessons];
   document.getElementById('d-related').innerHTML = related.map(b => {
     const rc = LESSON_CONTENT[b.id];
     const thumb = rc && rc.img
@@ -1772,11 +1781,27 @@ if (slideCount === 0) {
     d.onclick = (e) => { e.stopPropagation(); sIndex = i; renderSlide(); };
     dotsWrap.appendChild(d);
   }
+  fitSlideHeight();
 }
 function renderSlide() {
   track.style.transform = `translateX(-${sIndex * 100}%)`;
   [...dotsWrap.children].forEach((d, i) => d.classList.toggle('active', i === sIndex));
+  fitSlideHeight();
 }
+function fitSlideHeight(){
+  if(!slideCount || !track.children[sIndex]) return;
+  const img = track.children[sIndex].querySelector('img');
+  if(!img) return;
+  const apply = () => {
+    if(!img.naturalWidth || !img.naturalHeight) return;
+    const w = track.clientWidth || track.parentElement.clientWidth || 800;
+    let h = Math.round(w * (img.naturalHeight / img.naturalWidth));
+    h = Math.max(200, Math.min(560, h));
+    track.style.height = h + 'px';
+  };
+  if (img.complete) apply(); else img.addEventListener('load', apply, { once: true });
+}
+window.addEventListener('resize', () => { if (slideCount) fitSlideHeight(); });
 function moveSlide(dir) { if(!slideCount) return; sIndex = (sIndex + dir + slideCount) % slideCount; renderSlide(); }
 if (slideCount > 1) setInterval(() => moveSlide(1), 5000);
 
