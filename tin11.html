@@ -144,7 +144,7 @@
   .coffee-box .coffee-text p{ margin:0; font-size:.92rem; color:#DCE4EE;}
   .coffee-box .coffee-text strong{ color:var(--amber); font-size:1rem; display:block; margin-bottom:4px;}
   .coffee-box .coffee-qr{ background:#fff; padding:8px; border-radius:10px; flex-shrink:0;}
-  .coffee-box .coffee-qr img{ width:110px; height:110px; display:block; border-radius:4px;}
+  .coffee-box .coffee-qr img{ width:130px; height:130px; object-fit:contain; display:block; border-radius:4px;}
   .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
   .drive-frame{ width:100%; height:440px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px;}
@@ -562,20 +562,21 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
    ====================================================== */
 /* ======================================================
    QR ỦNG HỘ TÁC GIẢ
-   - QR được tạo tự động, không cần thêm file ảnh vào GitHub Pages.
-   - Hãy thay DONATION_QR_DATA bằng nội dung chuyển khoản/VietQR
-     của bạn nếu muốn QR mở đúng thông tin tài khoản.
+   - Dùng ảnh QR tĩnh do bạn tải lên: assets/qrdonate.jpg
+   - Nếu ảnh không tải được (sai đường dẫn/chưa upload), tự động
+     chuyển sang QR tạo online từ DONATION_QR_DATA để có phương án dự phòng.
    ====================================================== */
+const DONATION_QR_IMAGE = "assets/qrdonate.jpg";
 const DONATION_QR_DATA = "WEBH2T - Ung ho tac gia";
 const DONATION_QR_API = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=";
 
 function setupCoffeeQR(){
   const qr = document.getElementById('coffee-qr-img');
   if(!qr) return;
-  qr.src = DONATION_QR_API + encodeURIComponent(DONATION_QR_DATA);
+  qr.src = DONATION_QR_IMAGE;
   qr.onerror = () => {
-    qr.alt = "QR ủng hộ tác giả chưa tải được";
-    qr.title = "Kiểm tra kết nối Internet hoặc cấu hình DONATION_QR_DATA";
+    qr.onerror = () => { qr.alt = "QR ủng hộ tác giả chưa tải được"; qr.title = "Kiểm tra assets/qrdonate.jpg hoặc kết nối Internet."; };
+    qr.src = DONATION_QR_API + encodeURIComponent(DONATION_QR_DATA);
   };
 }
 setupCoffeeQR();
