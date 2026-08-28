@@ -289,6 +289,12 @@
   @media(max-width:760px){.platform-hero .hero-grid,.lesson-goals{grid-template-columns:1fr;grid-template-rows:none}.learning-panel{grid-template-columns:repeat(2,1fr)}.progress-checklist{grid-template-columns:1fr}.skill-row .skill-name{width:135px}.two-col img{width:100%!important}.two-col .two-col-text{max-width:100%!important}}
 @media(max-width:480px){.learning-panel{grid-template-columns:1fr}.platform-hero{padding:20px}.hero-progress{margin-top:4px}}
 
+
+/* ===== Lesson reading + review quiz enhancements ===== */
+.detail-text{line-height:1.82}.detail-text>p,.detail-text>ul,.detail-text>ol,.detail-text>table,.detail-text>figure,.detail-text>.activity-box,.detail-text>details,.detail-text>.two-col{margin-top:18px;margin-bottom:18px}.detail-text .activity-box p+p,.detail-text .two-col-text p+p{margin-top:14px}
+.tf-grid{display:grid;gap:10px}.tf-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;background:#f8fafc;border:1px solid #e6ebf2;border-radius:10px}.tf-row>span{line-height:1.55}.tf-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end}.tf-choice{width:42px;height:42px;border-radius:50%;border:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;font:800 .72rem 'Be Vietnam Pro',sans-serif;cursor:pointer;transition:.18s ease}.tf-choice.true{background:#e9f8ef;color:#16865B;border-color:#9dd8b8}.tf-choice.false{background:#ffeded;color:#C62828;border-color:#f1aaaa}.tf-choice:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,28,46,.10)}.tf-choice.selected.true{background:#16865B;color:#fff;border-color:#16865B;box-shadow:0 0 0 3px rgba(22,134,91,.15)}.tf-choice.selected.false{background:#C62828;color:#fff;border-color:#C62828;box-shadow:0 0 0 3px rgba(198,40,40,.14)}.tf-choice:disabled{cursor:not-allowed;opacity:.72}
+.attempt-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border-radius:10px;background:#eef4ff;border:1px solid #d8e4fb;color:#294a78;font-size:.84rem}.attempt-badge{font-weight:800;color:#003B8F}.attempt-locked{color:#C62828;font-weight:800}.quiz-answer-reveal{margin-top:16px;padding:15px 16px;border-radius:12px;background:#f0fdf4;border:1px solid #b7e4c7;color:#244b36}.quiz-answer-reveal h4{margin:0 0 9px;color:#16865B}.answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.answer-key{padding:9px 11px;background:#fff;border:1px solid #dceee2;border-radius:9px;font-size:.84rem;line-height:1.5}.answer-key strong{color:#003B8F}
+@media(max-width:640px){.tf-row{grid-template-columns:1fr}.tf-actions{justify-content:flex-start}.answer-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -1265,43 +1271,53 @@ function renderLessonSummary(id){
   attachZoomableImages();
 }
 
+function getQuizAttemptKey(id){return `tin11-review-attempt-${id}`;}
+function getQuizAttempt(id){return Number(localStorage.getItem(getQuizAttemptKey(id))||0);}
+function setQuizAttempt(id,n){localStorage.setItem(getQuizAttemptKey(id),String(n));}
+
 function renderReviewQuiz(id){
   const el=document.getElementById('lesson-review'), quiz=REVIEW_QUIZZES[id];
-  if(!el) return;
-  if(!quiz){el.innerHTML=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>Bộ khung trắc nghiệm 5 câu đã sẵn sàng; nội dung câu hỏi của bài này sẽ được cập nhật theo tài liệu học.</p></div></div></section>`;return;}
-  let html=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>5 câu • 10 điểm • Làm bài trước, sau đó nhấn <strong>Chấm bài</strong>.</p></div></div><div class="review-rule"><div class="rule-chip"><strong>Câu 1–3</strong><br>Mỗi câu đúng: 2 điểm</div><div class="rule-chip"><strong>Câu 4</strong><br>4 ý T/F × 0,5 điểm = 2 điểm</div><div class="rule-chip"><strong>Câu 5</strong><br>Trả lời ngắn: 2 điểm</div></div><form id="quiz-form-${id}" onsubmit="submitReviewQuiz(event,${id})">`;
+  if(!el)return;
+  if(!quiz){el.innerHTML=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>Nội dung ôn tập của bài này đang được cập nhật.</p></div></div></section>`;return;}
+  const attempt=getQuizAttempt(id), locked=attempt>=3;
+  let html=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>5 câu • 10 điểm • Được làm tối đa <strong>3 lần</strong>.</p></div></div><div class="review-rule"><div class="rule-chip"><strong>Câu 1–3</strong><br>Mỗi câu đúng: 2 điểm</div><div class="rule-chip"><strong>Câu 4</strong><br>4 ý Đúng/Sai × 0,5 điểm = 2 điểm</div><div class="rule-chip"><strong>Câu 5</strong><br>Trả lời ngắn: 2 điểm</div></div><div class="attempt-status"><span class="attempt-badge">🔄 Lần làm: ${Math.min(attempt,3)}/3</span>${locked?'<span class="attempt-locked">Đã hết 3 lần làm bài.</span>':'<span>Còn lại: '+(3-attempt)+' lần.</span>'}</div><form id="quiz-form-${id}" onsubmit="submitReviewQuiz(event,${id})">`;
   quiz.q.forEach((q,qi)=>{
     html+=`<div class="quiz-question" id="q-${id}-${qi}"><div class="q-title">Câu ${qi+1}. ${q.text}</div>`;
-    if(q.type==='mc'){html+='<div class="quiz-options">'+q.options.map((o,oi)=>`<label class="quiz-option"><input type="radio" name="q${id}_${qi}" value="${oi}"> <span>${String.fromCharCode(65+oi)}. ${o}</span></label>`).join('')+'</div>';}
-    if(q.type==='tf'){html+='<div class="tf-grid">'+q.items.map((it,ii)=>`<div class="tf-row"><span>${it[0]}</span><select name="q${id}_${qi}_${ii}"><option value="">-- Chọn --</option><option value="T">Đúng (T)</option><option value="F">Sai (F)</option></select></div>`).join('')+'</div>';}
-    if(q.type==='short'){html+=`<textarea class="short-answer" name="q${id}_${qi}" placeholder="Nhập câu trả lời ngắn của em..."></textarea><div class="ai-grade-note">🤖 <strong>Câu 5:</strong> hệ thống tự chấm sơ bộ theo rubric từ khóa; nút <strong>Chấm bằng AI</strong> sẽ tạo phiếu chấm theo đúng thang 2 điểm để đưa vào ChatGPT/Gemini/Copilot.</div>`;}
-    html+='<div class="quiz-feedback" id="feedback-${id}-${qi}"></div></div>';
+    if(q.type==='mc')html+='<div class="quiz-options">'+q.options.map((o,oi)=>`<label class="quiz-option"><input type="radio" name="q${id}_${qi}" value="${oi}" ${locked?'disabled':''}> <span>${String.fromCharCode(65+oi)}. ${o}</span></label>`).join('')+'</div>';
+    if(q.type==='tf')html+='<div class="tf-grid">'+q.items.map((it,ii)=>`<div class="tf-row"><span>${it[0]}</span><div class="tf-actions" role="group" aria-label="Chọn Đúng hoặc Sai"><button type="button" class="tf-choice true" onclick="chooseTF(this,'T')" ${locked?'disabled':''}>Đúng</button><button type="button" class="tf-choice false" onclick="chooseTF(this,'F')" ${locked?'disabled':''}>Sai</button><input type="hidden" name="q${id}_${qi}_${ii}" value=""></div></div>`).join('')+'</div>';
+    if(q.type==='short')html+=`<textarea class="short-answer" name="q${id}_${qi}" placeholder="Nhập câu trả lời ngắn của em..." ${locked?'disabled':''}></textarea>`;
+    html+='<div class="quiz-feedback" id="feedback-'+id+'-'+qi+'"></div></div>';
   });
-  html+=`<div class="review-actions"><button class="review-btn" type="submit">✅ Chấm bài</button><button class="review-btn secondary" type="button" onclick="resetReviewQuiz(${id})">↻ Làm lại</button></div></form><div class="quiz-result" id="quiz-result-${id}"></div></section>`;
+  html+=`<div class="review-actions"><button class="review-btn" type="submit" ${locked?'disabled':''}>${locked?'Đã hết lượt làm':'📝 Nộp bài & chấm điểm'}</button></div><div class="quiz-result" id="quiz-result-${id}"></div></form></section>`;
   el.innerHTML=html;
 }
+function chooseTF(btn,value){const group=btn.closest('.tf-actions');if(!group)return;group.querySelector('input[type="hidden"]').value=value;group.querySelectorAll('.tf-choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');}
 
-function normalizeText(t){return (t||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d');}
-function shortRubricScore(answer,q){
-  const a=normalizeText(answer), keys=q.keywords||[]; if(!a.trim()) return 0;
-  const hits=[...new Set(keys.filter(k=>a.includes(normalizeText(k))))].length;
-  if(hits>=Math.max(4,Math.ceil(keys.length*.55))) return 2;
-  if(hits>=Math.max(3,Math.ceil(keys.length*.4))) return 1.5;
-  if(hits>=2) return 1;
-  if(hits===1) return .5; return 0;
-}
-function submitReviewQuiz(ev,id){
-  ev.preventDefault(); const quiz=REVIEW_QUIZZES[id], form=ev.target; let score=0, detail=[];
-  quiz.q.forEach((q,qi)=>{const fb=document.getElementById(`feedback-${id}-${qi}`); let pts=0, msg='';
-    if(q.type==='mc'){const v=form.querySelector(`[name="q${id}_${qi}"]:checked`)?.value; pts=(Number(v)===q.answer)?2:0; msg=v==null?'Chưa trả lời.':(pts?'✅ Đúng. ':'❌ Chưa đúng. ')+q.explain;}
-    if(q.type==='tf'){let ok=0;q.items.forEach((it,ii)=>{const v=form.querySelector(`[name="q${id}_${qi}_${ii}"]`)?.value;if(v===it[1])ok++});pts=ok*.5;msg=`${ok}/4 ý đúng → ${pts.toFixed(1)} điểm.`;}
-    if(q.type==='short'){const v=form.querySelector(`[name="q${id}_${qi}"]`)?.value||'';pts=shortRubricScore(v,q);msg=`Chấm sơ bộ theo rubric: ${pts}/2 điểm. ${q.explain}`;}
-    score+=pts; detail.push(`Câu ${qi+1}: ${pts} điểm`); if(fb){fb.innerHTML=msg;fb.className='quiz-feedback show '+(pts>0?'correct':'wrong');}
+function submitReviewQuiz(event,id){
+  event.preventDefault();
+  const quiz=REVIEW_QUIZZES[id],form=document.getElementById(`quiz-form-${id}`);if(!quiz||!form)return;
+  const previous=getQuizAttempt(id);if(previous>=3){renderReviewQuiz(id);return;}
+  const attempt=previous+1;setQuizAttempt(id,attempt);
+  let score=0,detail=[],answers=[];
+  quiz.q.forEach((q,qi)=>{
+    const fb=document.getElementById(`feedback-${id}-${qi}`);if(fb)fb.className='quiz-feedback show';
+    if(q.type==='mc'){
+      const selected=form.querySelector(`input[name="q${id}_${qi}"]:checked`),ok=selected&&Number(selected.value)===q.answer;if(ok)score+=2;detail.push(`C${qi+1}: ${ok?'2':'0'}`);answers.push(`<strong>Câu ${qi+1}:</strong> ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`);if(fb)fb.innerHTML=ok?'<span class="correct">✓ Chính xác</span>':'<span class="wrong">✗ Chưa đúng</span>';
+    }
+    if(q.type==='tf'){
+      let s=0;q.items.forEach((it,ii)=>{const v=form.querySelector(`input[name="q${id}_${qi}_${ii}"]`)?.value;if(v===it[1])s+=.5;});score+=s;detail.push(`C4: ${s.toFixed(1)}`);answers.push(`<strong>Câu 4:</strong> ${q.items.map((it,i)=>String.fromCharCode(97+i)+') '+(it[1]==='T'?'Đúng':'Sai')).join(' • ')}`);if(fb)fb.innerHTML=`<span class="${s===2?'correct':'wrong'}">${s===2?'✓ Đúng cả 4 ý':'Đã ghi nhận lựa chọn'}</span>`;
+    }
+    if(q.type==='short'){
+      const ans=form.querySelector(`textarea[name="q${id}_${qi}"]`)?.value.trim()||'',lower=ans.toLowerCase(),hits=(q.keywords||[]).filter(k=>lower.includes(k.toLowerCase())).length,provisional=Math.min(2,Math.round((hits/(q.keywords?.length||1))*4)/2);score+=provisional;detail.push(`C5: ${provisional.toFixed(1)}`);answers.push(`<strong>Câu 5:</strong> ${q.explain||'Đối chiếu các ý chính trong tài liệu bài học.'}`);if(fb)fb.innerHTML=`<span class="${provisional>=1?'correct':'wrong'}">Chấm sơ bộ: ${provisional.toFixed(1)}/2</span>`;
+    }
   });
-  const result=document.getElementById(`quiz-result-${id}`);
-  result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính: ${score.toFixed(1)}/10</div><div class="score-detail">${detail.join(' • ')}<br>Q1–Q3 và Q4 được chấm tự động. Q5 đang là <strong>chấm sơ bộ theo rubric</strong>.</div><div class="review-actions"><button class="review-btn" type="button" onclick="openAIReviewGrader(${id})">🤖 Chấm câu 5 bằng AI</button></div><div class="ai-grade-note">🔐 Vì GitHub Pages là website tĩnh, không nên nhúng API key AI trực tiếp vào mã nguồn. Nút trên tạo phiếu chấm an toàn để AI bên ngoài chấm câu 5 theo đúng thang 2 điểm.</div>`;
-  result.classList.add('show'); result.scrollIntoView({behavior:'smooth',block:'nearest'});
+  let reveal='';if(attempt>=3)reveal=`<div class="quiz-answer-reveal"><h4>🔓 ĐÁP ÁN SAU LẦN 3</h4><div class="answer-grid">${answers.map(a=>`<div class="answer-key">${a}</div>`).join('')}</div><p style="margin-top:10px;font-size:.82rem">Em đã dùng hết 3 lần. Hãy đối chiếu đáp án với tài liệu học tập.</p></div>`;
+  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính: ${score.toFixed(1)}/10</div><div class="score-detail">${detail.join(' • ')}<br>Câu 1–4 được chấm tự động; Câu 5 được chấm sơ bộ theo từ khóa.</div>${reveal}`;result.classList.add('show');
+  if(attempt>=3)form.querySelectorAll('input,textarea,button').forEach(x=>x.disabled=true);
+  result.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
+function resetReviewQuiz(id){if(getQuizAttempt(id)>=3){alert('Bài này đã hết 3 lần làm. Đáp án đúng đã được hiển thị.');return;}renderReviewQuiz(id);document.getElementById('lesson-review')?.scrollIntoView({behavior:'smooth',block:'start'});}
+
 function openAIReviewGrader(id){
   const quiz=REVIEW_QUIZZES[id], form=document.getElementById(`quiz-form-${id}`); if(!quiz||!form)return; const q=quiz.q[4], ans=form.querySelector(`[name="q${id}_4"]`)?.value||'(chưa trả lời)';
   const b=LESSONS.find(x=>x.id===id); const prompt=`Bạn là giáo viên Tin học 11. Hãy chấm Câu 5 của Bài ${id} – ${b?.ten||''}.\n\nCâu hỏi: ${q.text}\n\nCâu trả lời của học sinh: ${ans}\n\nThang điểm: 2 điểm. Hãy cho điểm theo mức 0; 0,5; 1; 1,5; 2 dựa trên mức độ đúng ý. Không chấm theo độ dài. Nêu 1-2 ý giải thích ngắn, chỉ ra ý đúng/thiếu/sai và đề xuất cách cải thiện. Không cho điểm vượt 2. Trả kết quả theo mẫu: ĐIỂM: x/2\nNHẬN XÉT: ...`;
