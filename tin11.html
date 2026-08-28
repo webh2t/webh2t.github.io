@@ -295,9 +295,24 @@
 .tf-grid{display:grid;gap:10px}.tf-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;background:#f8fafc;border:1px solid #e6ebf2;border-radius:10px}.tf-row>span{line-height:1.55}.tf-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end}.tf-choice{width:42px;height:42px;border-radius:50%;border:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;font:800 .72rem 'Be Vietnam Pro',sans-serif;cursor:pointer;transition:.18s ease}.tf-choice.true{background:#e9f8ef;color:#16865B;border-color:#9dd8b8}.tf-choice.false{background:#ffeded;color:#C62828;border-color:#f1aaaa}.tf-choice:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,28,46,.10)}.tf-choice.selected.true{background:#16865B;color:#fff;border-color:#16865B;box-shadow:0 0 0 3px rgba(22,134,91,.15)}.tf-choice.selected.false{background:#C62828;color:#fff;border-color:#C62828;box-shadow:0 0 0 3px rgba(198,40,40,.14)}.tf-choice:disabled{cursor:not-allowed;opacity:.72}
 .attempt-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border-radius:10px;background:#eef4ff;border:1px solid #d8e4fb;color:#294a78;font-size:.84rem}.attempt-badge{font-weight:800;color:#003B8F}.attempt-locked{color:#C62828;font-weight:800}.quiz-answer-reveal{margin-top:16px;padding:15px 16px;border-radius:12px;background:#f0fdf4;border:1px solid #b7e4c7;color:#244b36}.quiz-answer-reveal h4{margin:0 0 9px;color:#16865B}.answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.answer-key{padding:9px 11px;background:#fff;border:1px solid #dceee2;border-radius:9px;font-size:.84rem;line-height:1.5}.answer-key strong{color:#003B8F}
 @media(max-width:640px){.tf-row{grid-template-columns:1fr}.tf-actions{justify-content:flex-start}.answer-grid{grid-template-columns:1fr}}
+.attempt-tip{margin:-4px 0 14px;padding:9px 12px;border-radius:10px;background:#fff8e6;border:1px dashed #f0c14b;color:#7a5b00;font-size:.83rem;font-weight:600}
+.score-table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:.86rem}
+.score-table th,.score-table td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.score-table th{background:#eef4ff;color:#003B8F;font-weight:700}
+.score-table td.sc-diem{text-align:center;font-weight:800;white-space:nowrap}
+.score-table td.sc-dapan{color:#3d4c63}
+.score-total{margin-top:6px;font-size:1.05rem;font-weight:800;color:#006b4f}
+
+/* ===== Chống copy / chụp màn hình / DevTools ===== */
+body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text;}
+img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;user-drag:none;}
+.protect-screenshot-veil{position:fixed;inset:0;background:#0F1C2E;color:#fff;display:none;align-items:center;justify-content:center;z-index:99999;font-family:'Be Vietnam Pro',sans-serif;font-size:1rem;text-align:center;padding:24px}
+.protect-screenshot-veil.show{display:flex}
 </style>
 </head>
 <body>
+<div class="protect-screenshot-veil" id="protect-veil">🔒 Nội dung được bảo vệ — vui lòng không sao chép/chụp màn hình.</div>
 
 <header>
   <div class="wrap">
@@ -1280,7 +1295,7 @@ function renderReviewQuiz(id){
   if(!el)return;
   if(!quiz){el.innerHTML=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>Nội dung ôn tập của bài này đang được cập nhật.</p></div></div></section>`;return;}
   const attempt=getQuizAttempt(id), locked=attempt>=3;
-  let html=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>5 câu • 10 điểm • Được làm tối đa <strong>3 lần</strong>.</p></div></div><div class="review-rule"><div class="rule-chip"><strong>Câu 1–3</strong><br>Mỗi câu đúng: 2 điểm</div><div class="rule-chip"><strong>Câu 4</strong><br>4 ý Đúng/Sai × 0,5 điểm = 2 điểm</div><div class="rule-chip"><strong>Câu 5</strong><br>Trả lời ngắn: 2 điểm</div></div><div class="attempt-status"><span class="attempt-badge">🔄 Lần làm: ${Math.min(attempt,3)}/3</span>${locked?'<span class="attempt-locked">Đã hết 3 lần làm bài.</span>':'<span>Còn lại: '+(3-attempt)+' lần.</span>'}</div><form id="quiz-form-${id}" onsubmit="submitReviewQuiz(event,${id})">`;
+  let html=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>5 câu • 10 điểm • Được làm tối đa <strong>3 lần</strong>.</p></div></div><div class="review-rule"><div class="rule-chip"><strong>Câu 1–3</strong><br>Mỗi câu đúng: 2 điểm</div><div class="rule-chip"><strong>Câu 4</strong><br>4 ý Đúng/Sai × 0,5 điểm = 2 điểm</div><div class="rule-chip"><strong>Câu 5</strong><br>Trả lời ngắn: 2 điểm</div></div><div class="attempt-status"><span class="attempt-badge">📊 Số lần làm: ${Math.min(attempt,3)}/3</span>${locked?'<span class="attempt-locked">— Đã hết lượt làm.</span>':'<span>— Còn lại: '+(3-attempt)+' lần</span>'}</div>${locked?'':'<div class="attempt-tip">💪 Cố gắng làm bài 3 lần sẽ hiển thị đáp án đúng 5 câu nhé!</div>'}<form id="quiz-form-${id}" onsubmit="submitReviewQuiz(event,${id})">`;
   quiz.q.forEach((q,qi)=>{
     html+=`<div class="quiz-question" id="q-${id}-${qi}"><div class="q-title">Câu ${qi+1}. ${q.text}</div>`;
     if(q.type==='mc')html+='<div class="quiz-options">'+q.options.map((o,oi)=>`<label class="quiz-option"><input type="radio" name="q${id}_${qi}" value="${oi}" ${locked?'disabled':''}> <span>${String.fromCharCode(65+oi)}. ${o}</span></label>`).join('')+'</div>';
@@ -1298,21 +1313,38 @@ function submitReviewQuiz(event,id){
   const quiz=REVIEW_QUIZZES[id],form=document.getElementById(`quiz-form-${id}`);if(!quiz||!form)return;
   const previous=getQuizAttempt(id);if(previous>=3){renderReviewQuiz(id);return;}
   const attempt=previous+1;setQuizAttempt(id,attempt);
-  let score=0,detail=[],answers=[];
+  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let score=0,answers=[],rows=[];
   quiz.q.forEach((q,qi)=>{
     const fb=document.getElementById(`feedback-${id}-${qi}`);if(fb)fb.className='quiz-feedback show';
     if(q.type==='mc'){
-      const selected=form.querySelector(`input[name="q${id}_${qi}"]:checked`),ok=selected&&Number(selected.value)===q.answer;if(ok)score+=2;detail.push(`C${qi+1}: ${ok?'2':'0'}`);answers.push(`<strong>Câu ${qi+1}:</strong> ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`);if(fb)fb.innerHTML=ok?'<span class="correct">✓ Chính xác</span>':'<span class="wrong">✗ Chưa đúng</span>';
+      const selected=form.querySelector(`input[name="q${id}_${qi}"]:checked`),ok=selected&&Number(selected.value)===q.answer;
+      const chosenText=selected?`${String.fromCharCode(65+Number(selected.value))}. ${esc(q.options[Number(selected.value)])}`:'(chưa chọn)';
+      if(ok)score+=2;
+      rows.push([`Câu ${qi+1}`,chosenText,ok?'2/2':'0/2']);
+      answers.push(`<strong>Câu ${qi+1}:</strong> ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`);
+      if(fb)fb.innerHTML=ok?'<span class="correct">✓ Chính xác</span>':'<span class="wrong">✗ Chưa đúng</span>';
     }
     if(q.type==='tf'){
-      let s=0;q.items.forEach((it,ii)=>{const v=form.querySelector(`input[name="q${id}_${qi}_${ii}"]`)?.value;if(v===it[1])s+=.5;});score+=s;detail.push(`C4: ${s.toFixed(1)}`);answers.push(`<strong>Câu 4:</strong> ${q.items.map((it,i)=>String.fromCharCode(97+i)+') '+(it[1]==='T'?'Đúng':'Sai')).join(' • ')}`);if(fb)fb.innerHTML=`<span class="${s===2?'correct':'wrong'}">${s===2?'✓ Đúng cả 4 ý':'Đã ghi nhận lựa chọn'}</span>`;
+      let s=0,chosenParts=[],answered=0;
+      q.items.forEach((it,ii)=>{const v=form.querySelector(`input[name="q${id}_${qi}_${ii}"]`)?.value;if(v){answered++;chosenParts.push(String.fromCharCode(97+ii)+') '+(v==='T'?'Đúng':'Sai'));}else{chosenParts.push(String.fromCharCode(97+ii)+') —');}if(v===it[1])s+=.5;});
+      score+=s;
+      rows.push([`Câu 4`,answered?chosenParts.join(', '):'(chưa chọn)',s.toFixed(1)+'/2']);
+      answers.push(`<strong>Câu 4:</strong> ${q.items.map((it,i)=>String.fromCharCode(97+i)+') '+(it[1]==='T'?'Đúng':'Sai')).join(' • ')}`);
+      if(fb)fb.innerHTML=`<span class="${s===2?'correct':'wrong'}">${s===2?'✓ Đúng cả 4 ý':'Đã ghi nhận lựa chọn'}</span>`;
     }
     if(q.type==='short'){
-      const ans=form.querySelector(`textarea[name="q${id}_${qi}"]`)?.value.trim()||'',lower=ans.toLowerCase(),hits=(q.keywords||[]).filter(k=>lower.includes(k.toLowerCase())).length,provisional=Math.min(2,Math.round((hits/(q.keywords?.length||1))*4)/2);score+=provisional;detail.push(`C5: ${provisional.toFixed(1)}`);answers.push(`<strong>Câu 5:</strong> ${q.explain||'Đối chiếu các ý chính trong tài liệu bài học.'}`);if(fb)fb.innerHTML=`<span class="${provisional>=1?'correct':'wrong'}">Chấm sơ bộ: ${provisional.toFixed(1)}/2</span>`;
+      const ans=form.querySelector(`textarea[name="q${id}_${qi}"]`)?.value.trim()||'',lower=ans.toLowerCase(),hits=(q.keywords||[]).filter(k=>lower.includes(k.toLowerCase())).length,provisional=Math.min(2,Math.round((hits/(q.keywords?.length||1))*4)/2);
+      score+=provisional;
+      const chosenShort=ans?(esc(ans.length>60?ans.slice(0,60)+'…':ans)):'(chưa trả lời)';
+      rows.push([`Câu 5`,chosenShort,provisional.toFixed(1)+'/2']);
+      answers.push(`<strong>Câu 5:</strong> ${q.explain||'Đối chiếu các ý chính trong tài liệu bài học.'}`);
+      if(fb)fb.innerHTML=`<span class="${provisional>=1?'correct':'wrong'}">Chấm sơ bộ: ${provisional.toFixed(1)}/2</span>`;
     }
   });
   let reveal='';if(attempt>=3)reveal=`<div class="quiz-answer-reveal"><h4>🔓 ĐÁP ÁN SAU LẦN 3</h4><div class="answer-grid">${answers.map(a=>`<div class="answer-key">${a}</div>`).join('')}</div><p style="margin-top:10px;font-size:.82rem">Em đã dùng hết 3 lần. Hãy đối chiếu đáp án với tài liệu học tập.</p></div>`;
-  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính: ${score.toFixed(1)}/10</div><div class="score-detail">${detail.join(' • ')}<br>Câu 1–4 được chấm tự động; Câu 5 được chấm sơ bộ theo từ khóa.</div>${reveal}`;result.classList.add('show');
+  const tableHtml=`<table class="score-table"><thead><tr><th>Câu</th><th>Đáp án chọn</th><th>Điểm</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td class="sc-dapan">${r[1]}</td><td class="sc-diem">${r[2]}</td></tr>`).join('')}</tbody></table>`;
+  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính</div>${tableHtml}<div class="score-total">Tổng điểm: ${score.toFixed(1)}/10</div><div class="score-detail">Câu 1–4 được chấm tự động; Câu 5 được chấm sơ bộ theo từ khóa.</div>${reveal}`;result.classList.add('show');
   if(attempt>=3)form.querySelectorAll('input,textarea,button').forEach(x=>x.disabled=true);
   result.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
@@ -1756,6 +1788,71 @@ const backToTopBtn = document.getElementById('back-to-top');
 window.addEventListener('scroll', () => {
   backToTopBtn.classList.toggle('show', window.scrollY > 400);
 });
+
+/* ======================================================
+   BẢO VỆ NỘI DUNG — chống copy, paste, chuột phải, kéo/thả,
+   phím tắt sao chép, F12/DevTools, PrintScreen
+   ====================================================== */
+(function(){
+  const veil = document.getElementById('protect-veil');
+  function flashVeil(ms){
+    if(!veil) return;
+    veil.classList.add('show');
+    setTimeout(()=>veil.classList.remove('show'), ms||900);
+  }
+  function isEditable(el){
+    return el && (el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.isContentEditable);
+  }
+
+  document.addEventListener('contextmenu', e=>{ e.preventDefault(); });
+  document.addEventListener('copy', e=>{ if(!isEditable(e.target)) e.preventDefault(); });
+  document.addEventListener('cut', e=>{ if(!isEditable(e.target)) e.preventDefault(); });
+  document.addEventListener('paste', e=>{ e.preventDefault(); });
+  document.addEventListener('selectstart', e=>{ if(!isEditable(e.target)) e.preventDefault(); });
+  document.addEventListener('dragstart', e=>{ e.preventDefault(); });
+  document.addEventListener('drop', e=>{ e.preventDefault(); });
+
+  document.addEventListener('keydown', function(e){
+    const key = (e.key||'').toLowerCase();
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+    // Ctrl/Cmd + C, V, X, A, S, P, U
+    if(ctrlOrCmd && ['c','v','x','a','s','p','u'].includes(key)){
+      if(key==='v' || !isEditable(e.target)){
+        e.preventDefault(); e.stopPropagation();
+      }
+    }
+    // F12
+    if(e.key==='F12'){ e.preventDefault(); e.stopPropagation(); }
+    // Ctrl/Cmd+Shift+I / J / C (DevTools)
+    if(ctrlOrCmd && e.shiftKey && ['i','j','c'].includes(key)){
+      e.preventDefault(); e.stopPropagation();
+    }
+    // Ctrl/Cmd + Alt/Option + I / J (DevTools trên một số trình duyệt/Mac)
+    if(ctrlOrCmd && e.altKey && ['i','j'].includes(key)){
+      e.preventDefault(); e.stopPropagation();
+    }
+    // PrintScreen
+    if(e.key==='PrintScreen' || e.keyCode===44){
+      flashVeil(1200);
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText('').catch(()=>{});
+      }
+      e.preventDefault();
+    }
+  }, true);
+
+  document.addEventListener('keyup', function(e){
+    if(e.key==='PrintScreen' || e.keyCode===44){
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText('').catch(()=>{});
+      }
+    }
+  }, true);
+
+  // Dự phòng: có thể mở rộng xử lý khi cửa sổ mất focus (best-effort, trình duyệt không cho chặn 100% việc chụp màn hình)
+  window.addEventListener('blur', ()=>{});
+})();
 </script>
   
 
