@@ -151,6 +151,14 @@
   .coffee-box .coffee-text strong{ color:var(--amber); font-size:1rem; display:block; margin-bottom:4px;}
   .coffee-box .coffee-qr{ background:#fff; padding:8px; border-radius:10px; flex-shrink:0;}
   .coffee-box .coffee-qr img{ width:130px; height:130px; object-fit:contain; display:block; border-radius:4px;}
+  .contact-box .contact-email{ color:var(--amber); font-weight:700; text-decoration:underline; }
+  .contact-links{ display:flex; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+  .contact-btn{ display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:10px;
+    font:700 .88rem 'Be Vietnam Pro',sans-serif; text-decoration:none; white-space:nowrap; transition:transform .15s ease; }
+  .contact-btn:hover{ transform:translateY(-1px); }
+  .contact-youtube{ background:#FF0000; color:#fff; }
+  .contact-facebook{ background:#1877F2; color:#fff; }
+  @media(max-width:640px){ .contact-box{ flex-direction:column; align-items:stretch;} .contact-links{ justify-content:flex-start;} }
   .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
   .drive-frame{ width:100%; height:440px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px;}
@@ -480,13 +488,14 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
           <div class="ai-actions"><button class="ai-btn alt" onclick="openAILab('Hãy đóng vai chuyên gia sư phạm Tin học 11. Dựa trên bài học hiện tại, đề xuất mục tiêu, hoạt động khởi động, hoạt động khám phá, luyện tập, vận dụng, câu hỏi đánh giá và một hoạt động AI có kiểm soát.')">🤖 AI soạn kế hoạch</button><button class="ai-btn alt" onclick="openAILab('Hãy tạo rubric 4 mức để đánh giá sản phẩm học tập của học sinh trong bài hiện tại, chú trọng kiến thức, thực hành, năng lực số và việc sử dụng AI có trách nhiệm.')">📊 AI tạo rubric</button></div>
         </div>
 
-        <div class="coffee-box">
+        <div class="coffee-box contact-box">
           <div class="coffee-text">
-            <strong>☕ Mời tác giả một ly cà phê</strong>
-            <p>Nếu bài viết hữu ích cho việc dạy và học, bạn có thể ủng hộ nhỏ để mình duy trì và cập nhật nội dung mới mỗi tuần.</p>
+            <strong>📩 Mọi thắc mắc bài học, mời bạn liên hệ tác giả</strong>
+            <p>Email: <a class="contact-email" href="mailto:websiteh2t@gmail.com">websiteh2t@gmail.com</a></p>
           </div>
-          <div class="coffee-qr">
-            <img id="coffee-qr-img" src="" alt="QR code ủng hộ tác giả" loading="lazy">
+          <div class="contact-links">
+            <a class="contact-btn contact-youtube" href="https://www.youtube.com/@WEBH2T" target="_blank" rel="noopener" aria-label="Kênh YouTube WEBH2T">▶️ YouTube</a>
+            <a class="contact-btn contact-facebook" href="https://www.facebook.com/share/g/1BmLZhpvbZ/" target="_blank" rel="noopener" aria-label="Nhóm Facebook WEBH2T">📘 Facebook</a>
           </div>
         </div>
 
@@ -620,25 +629,6 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
    (Firebase Console → Project settings → General → Your apps)
    ====================================================== */
 /* ======================================================
-   QR ỦNG HỘ TÁC GIẢ
-   - Dùng ảnh QR tĩnh do bạn tải lên: assets/qrdonate.jpg
-   - Nếu ảnh không tải được (sai đường dẫn/chưa upload), tự động
-     chuyển sang QR tạo online từ DONATION_QR_DATA để có phương án dự phòng.
-   ====================================================== */
-const DONATION_QR_IMAGE = "assets/qrdonate.jpg";
-const DONATION_QR_DATA = "WEBH2T - Ung ho tac gia";
-const DONATION_QR_API = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=";
-
-function setupCoffeeQR(){
-  const qr = document.getElementById('coffee-qr-img');
-  if(!qr) return;
-  qr.src = DONATION_QR_IMAGE;
-  qr.onerror = () => {
-    qr.onerror = () => { qr.alt = "QR ủng hộ tác giả chưa tải được"; qr.title = "Kiểm tra assets/qrdonate.jpg hoặc kết nối Internet."; };
-    qr.src = DONATION_QR_API + encodeURIComponent(DONATION_QR_DATA);
-  };
-}
-/* ======================================================
    ĐỒNG HỒ THỜI GIAN THỰC dưới ảnh bìa đầu trang
    ====================================================== */
 function updatePageClock(){
@@ -652,8 +642,6 @@ function updatePageClock(){
 }
 updatePageClock();
 setInterval(updatePageClock, 1000);
-
-setupCoffeeQR();
 
 const firebaseConfig = {
   apiKey: "AIzaSyDOqMkioHhQ9YuFY9mCpx_kRLOLL_tf9jU",
@@ -1308,6 +1296,79 @@ const LESSON_CONTENT = {
     img: "assets/tin11/60.jpg",
     video: "",
     doc: ""
+  },
+
+  7: {
+    ngay: "28/08/2026",
+    en: "Lesson 7: Practising Information Search on the Internet",
+    text: `<div class="activity-box"><p><strong>KHỞI ĐỘNG</strong></p><p>Có ý kiến cho rằng "Ngày nay, tất cả mọi thông tin đều có thể tìm thấy trên Internet". Em có đồng ý với ý kiến đó không? Theo em, tại sao khi cùng tìm thông tin về một vấn đề, nhưng có người sẽ tìm được rất nhanh và chính xác, có người thì không?</p></div><details class="answer-box"><summary>Xem đáp án Khởi động</summary><div class="answer-content"><p><strong>Đáp án:</strong> Đồng ý. Vì cách họ tìm kiếm tài liệu không đúng hoặc từ khóa tìm kiếm chưa đầy đủ.</p></div></details>
+<p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p><div class="activity-box"><p>Thực hiện lại các nhiệm vụ ở phần thực hành bằng thiết bị số thông minh.</p></div><details class="answer-box"><summary>Xem đáp án Luyện tập</summary><div class="answer-content">
+<p><strong>Nhiệm vụ 1. Tìm kiếm thông tin trên Internet bằng máy tìm kiếm:</strong></p>
+<p>Bước 1: Khởi động công cụ tìm kiếm.<br>Bước 2: Tìm kiếm bằng từ khóa nhập từ bàn phím.<br>Bước 3: Đọc kết quả tìm kiếm.</p>
+<p><strong>Nhiệm vụ 2. Khám phá cách thực hiện tìm kiếm bằng tiếng nói:</strong></p>
+<p>Bước 1: Khởi động công cụ tìm kiếm.<br>Bước 2: Tìm kiếm bằng từ khóa nhập bằng tiếng nói.<br>Bước 3: Kiểm tra từ khóa được tự động điền sau khi đọc.<br>Bước 4: Đọc kết quả tìm kiếm.</p>
+<p><strong>Nhiệm vụ 3. Xác lập các lựa chọn theo tiêu chí tìm kiếm để nâng cao hiệu quả tìm kiếm thông tin:</strong></p>
+<p>Bước 1: Khởi động công cụ tìm kiếm.<br>Bước 2: Nhập từ khóa cần tìm và bổ sung cụm từ "filetype:pdf".<br>Bước 3: Đọc kết quả tìm kiếm.</p>
+</div></details>
+<p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p><div class="activity-box"><p>Sử dụng máy tìm kiếm để tìm hiểu thông tin về nghề nghiệp mà em mơ ước được làm trong tương lai dưới các dạng văn bản, hình ảnh và video.</p></div><details class="answer-box"><summary>Xem đáp án Vận dụng</summary><div class="answer-content"><p><strong>Ví dụ — Lập trình viên:</strong> Là người sử dụng các ngôn ngữ lập trình để viết, sửa lỗi và cho chạy các đoạn mã nhằm tạo ra các phần mềm, ứng dụng.</p><p><strong>Vị trí công việc:</strong> Kỹ sư phần mềm, nhà phát triển phần mềm, lập trình viên máy tính, lập trình viên phần mềm.</p><p>Lập trình viên cần phải biết kiến thức chuyên môn và các ngôn ngữ lập trình như C++, Java (J2EE), XML, Python,…</p></div></details>`,
+    img: "assets/tin11/70.jpg",
+    video: "",
+    doc: ""
+  },
+
+  8: {
+    ngay: "28/08/2026",
+    en: "Lesson 8: Advanced Practice with Email and Social Networks",
+    text: `<div class="activity-box"><p><strong>KHỞI ĐỘNG</strong></p><p>Thư điện tử trong hộp thư (Inbox) thường được hiển thị theo trình tự thời gian thư được gửi tới. Em hãy trao đổi với các bạn trong nhóm về những cách giúp em tìm đọc lại được những thư em đã nhận trước đây.</p></div><details class="answer-box"><summary>Xem đáp án Khởi động</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Tra cứu trên internet, sách, báo,… kết hợp kiến thức thực tế của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong></p><p>Bước 1: Tại ứng dụng Messenger trên điện thoại, vào tài khoản người bạn muốn tìm kiếm tin nhắn, bấm vào biểu tượng ảnh cá nhân góc trên bên trái.<br>Bước 2: Chọn Tìm kiếm trong cuộc trò chuyện, nhập từ khóa liên quan đến tin nhắn cần tìm, bấm Tìm.<br>Bước 3: Tất cả những tin nhắn có chứa từ khóa đã nhập sẽ hiện ra.</p></div></details>
+
+<p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
+<div class="activity-box"><p><strong>Luyện tập 1:</strong> Tạo mới một vài nhãn trong hộp thư của em để phân loại các thư liên quan đến học tập và giải trí. Gắn nhãn phù hợp cho các thư và tìm kiếm chúng theo nhãn. Thực hiện việc chỉnh sửa và xóa nhãn.</p></div>
+<details class="answer-box"><summary>Xem đáp án Luyện tập 1</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức mục 1 trang 39 SGK kết hợp kiến thức của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong></p><p>Bước 1: Trên điện thoại hoặc máy tính bảng Android, mở ứng dụng Gmail.<br>Bước 2: Mở thư.<br>Bước 3: Ở trên cùng bên phải, nhấn vào biểu tượng Thêm.<br>Bước 4: Nhấn vào Thay đổi nhãn.<br>Bước 5: Thêm hoặc xóa nhãn.<br>Bước 6: Nhấn vào OK.</p></div></details>
+<div class="activity-box"><p><strong>Luyện tập 2:</strong> Kiểm tra việc cài đặt quyền riêng tư hiện tại trong tài khoản Facebook của em. Thực hiện các cài đặt phù hợp để tăng tính bảo mật cho tài khoản.</p></div>
+<details class="answer-box"><summary>Xem đáp án Luyện tập 2</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức mục 2 trang 41 SGK kết hợp kiến thức của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong></p><p>Bước 1: Đăng nhập vào tài khoản Facebook trên trang web hoặc ứng dụng Facebook trên điện thoại.<br>Bước 2: Nhấp vào biểu tượng mũi tên xuống ở góc trên bên phải màn hình.<br>Bước 3: Chọn "Cài đặt và quyền riêng tư".<br>Bước 4: Trên trang Cài đặt và quyền riêng tư, xem và thay đổi cài đặt cho các mục như Quyền riêng tư và Bảo mật, Quản lý bài đăng và Truyền thông và Phương tiện xã hội.<br>Bước 5: Thay đổi cài đặt riêng tư cho mỗi mục bằng cách nhấp vào nút "Chỉnh sửa" bên cạnh mục đó.<br>Bước 6: Sau khi chỉnh sửa cài đặt, nhấp vào nút "Lưu thay đổi" để áp dụng cài đặt mới.</p></div></details>
+
+<p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p>
+<div class="activity-box"><p><strong>Vận dụng 1:</strong> Khám phá phân loại thư bằng dấu sao. Nhận xét, so sánh ưu, nhược điểm với cách phân loại thư bằng dấu quan trọng.</p></div>
+<details class="answer-box"><summary>Xem đáp án Vận dụng 1</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Tra cứu trên internet, sách, báo,… kết hợp kiến thức của các nhiệm vụ trong bài để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> Đăng nhập vào Gmail, nhấn chuột vào biểu tượng bánh răng ở góc trên bên phải, từ menu xổ xuống chọn Settings. Khi màn hình cài đặt mở ra, tab General sẽ hiển thị mặc định — tìm phần Stars (ở trên đầu) để chọn sao màu mặc định của Google hoặc chọn nhiều màu theo ý thích. Ngoài ra có thể kéo-và-thả mỗi ngôi sao/biểu tượng đến phần "In use: category" từ mục "Not in use" để chọn số lượng sao màu như ý muốn cho việc sử dụng sau này.</p></div></details>
+<div class="activity-box"><p><strong>Vận dụng 2:</strong> Khám phá và sử dụng các tính năng liên quan tới cài đặt riêng tư cho tài khoản người dùng mạng xã hội Facebook: (a) Xoá lịch sử hoạt động Facebook để ngăn Facebook phát tán quảng cáo đến người dùng. (b) Bật, tắt dịch vụ vị trí của người dùng.</p></div>
+<details class="answer-box"><summary>Xem đáp án Vận dụng 2</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Tra cứu trên internet, sách, báo,… kết hợp kiến thức mục 2 trang 41 SGK để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong></p><p>(a) Mở Facebook trên máy tính, chọn biểu tượng hình tam giác ngược ở góc trên bên phải màn hình → Chọn nhật ký hoạt động → Chọn bộ lọc → Chọn mục nhật ký hoạt động muốn xóa → Chọn biểu tượng chỉnh sửa hình bút chì → Chọn bỏ hoạt động tương ứng.</p><p>(b) Bước 1: Vào cài đặt trên điện thoại.<br>Bước 2: Chọn quyền riêng tư.<br>Bước 3: Chọn dịch vụ định vị.<br>Bước 4: Tại đây có thể bấm tắt dịch vụ định vị.</p></div></details>`,
+    img: "assets/tin11/80.jpg",
+    video: "",
+    doc: ""
+  },
+
+  9: {
+    ngay: "28/08/2026",
+    en: "Lesson 9: Safe Communication on the Internet",
+    text: `<div class="activity-box"><p><strong>KHỞI ĐỘNG</strong></p><p>Mạng internet mang lại nhiều lợi ích, tuy nhiên, việc sử dụng không đúng cách sẽ ảnh hưởng xấu tới sức khỏe và tinh thần cùng nhiều rủi ro: mất thông tin cá nhân, bị lừa đảo, quấy rối, đối mặt với các thông tin sai lệch, bị lôi kéo tham gia những thử thách nguy hại… Do vậy, khi tham gia mạng xã hội nói riêng, không gian số nói chung, mỗi người cần trang bị cho mình một số kĩ năng cơ bản như: kĩ năng giao tiếp; kĩ năng đối phó với dư luận và vượt qua khủng hoảng; kĩ năng nhận biết và phòng tránh lừa đảo… Hãy nêu vài ví dụ cho thấy sự cần thiết phải có các kĩ năng đó.</p></div>
+<details class="answer-box"><summary>Xem đáp án Khởi động</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Tra cứu trên internet, sách, báo,… kết hợp kiến thức thực tế của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong></p><p>1. Kĩ năng giao tiếp: Khi tham gia mạng xã hội, cần biết cách giao tiếp hiệu quả để tránh gây hiểu nhầm hoặc xảy ra các tranh cãi không đáng có. Ví dụ: Tránh sử dụng ngôn từ khiếm nhã, hùng hồn hay quá khích khi thảo luận với người khác trên mạng xã hội.</p><p>2. Kĩ năng đối phó với dư luận và vượt qua khủng hoảng: Trên mạng xã hội, thông tin lan truyền rất nhanh chóng và dễ dàng gây ra những tác động tiêu cực đến sự nghi ngờ, đồn đoán và tin đồn. Ví dụ: Không lên tiếng và tránh phản ứng quá khích khi gặp phải những bình luận tiêu cực, đồn đoán hay tin đồn.</p><p>3. Kĩ năng nhận biết và phòng tránh lừa đảo: Trên mạng xã hội có rất nhiều thông tin sai lệch và các hoạt động lừa đảo. Ví dụ: Không tin vào các thông tin quảng cáo quá lời, tránh đưa thông tin cá nhân cho những người không xác định được danh tính và kiểm tra kỹ trước khi trao đổi thông tin tài chính trên mạng.</p></div></details>
+
+<p><strong>1. NHẬN BIẾT VÀ PHÒNG TRÁNH MỘT SỐ DẠNG LỪA ĐẢO TRÊN KHÔNG GIAN SỐ</strong></p>
+<div class="activity-box"><p><strong>Hoạt động 1:</strong> Em hoặc người quen đã có khi nào gặp những tình huống tương tự như sau chưa? (1) Nhận tin nhắn (qua thư điện tử, điện thoại, mạng xã hội Facebook, Zalo, TikTok,…) yêu cầu chuyển tiền ngay vào một số tài khoản nếu không muốn gặp rắc rối liên quan tới bản thân hay cơ quan pháp luật. (2) Nhận được thư điện tử từ địa chỉ lạ yêu cầu mở một tài liệu hoặc một đường link đính kèm và thực hiện theo hướng dẫn. Trong những tình huống ấy, em hoặc người quen đã xử lí như thế nào?</p></div>
+<details class="answer-box"><summary>Xem đáp án Hoạt động 1</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức thực tế của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong></p><p>1. Không nên chuyển tiền hoặc cung cấp thông tin cá nhân nếu không có đầy đủ thông tin về người gửi hoặc không có cơ sở để tin tưởng vào yêu cầu đó.</p><p>2. Nếu nhận được thư điện tử hoặc đường link đính kèm từ địa chỉ lạ, nên kiểm tra kỹ để đảm bảo rằng nó không phải là một đường link độc hại hoặc phần mềm độc hại. Nếu không chắc chắn, hãy không mở hoặc thực hiện theo hướng dẫn.</p><p>3. Nếu tin rằng đó là một yêu cầu hợp lý, hãy liên hệ trực tiếp với người gửi để xác nhận thông tin và yêu cầu — không dùng thông tin liên lạc được cung cấp trong thư điện tử hoặc tin nhắn để xác nhận, vì chúng có thể bị giả mạo.</p><p>4. Nếu đã chuyển tiền hoặc cung cấp thông tin cá nhân và nghi ngờ đó là chiêu trò lừa đảo, hãy liên hệ với ngân hàng hoặc cơ quan chức năng để báo cáo và được hướng dẫn xử lý.</p></div></details>
+<div class="activity-box"><p><strong>Câu hỏi:</strong> Với các tình huống nêu trong Hoạt động 1, những cách nào sau đây là ứng xử cần thiết để phòng tránh những rủi ro? (A) Thực hiện các yêu cầu để đề phòng câu chuyện trở nên phức tạp. (B) Hãy dành thời gian và đặt câu hỏi để tránh bị dồn vào tình huống xấu. (C) Trao đổi với thầy cô giáo, người thân, bạn bè,... để được nghe ý kiến tư vấn. (D) Tìm cách liên hệ trực tiếp với người gửi để làm rõ.</p></div>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức mục 1 trang 44,45,46 SGK và kiến thức thực tế của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> B, C, D. Cần dành thời gian đặt câu hỏi thay vì hành động vội vàng, nên trao đổi với người thân/thầy cô để có thêm ý kiến tư vấn, và nên tìm cách liên hệ trực tiếp với người gửi (qua kênh đáng tin cậy) để xác minh. Không nên thực hiện ngay yêu cầu của người lạ (phương án A) vì đây chính là điều kẻ lừa đảo mong muốn.</p></div></details>
+
+<p><strong>2. GIAO TIẾP VÀ ỨNG XỬ TRONG MÔI TRƯỜNG SỐ</strong></p>
+<div class="activity-box"><p><strong>Hoạt động 2:</strong> Khi bắt đầu sử dụng mạng internet là em bắt đầu trở thành một công dân số, được tiếp cận với cả những lợi ích và rủi ro trên mạng. Hãy cùng trao đổi để chỉ ra một vài quy tắc ứng xử chung trong môi trường số.</p></div>
+<details class="answer-box"><summary>Xem đáp án Hoạt động 2</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức mục 2 trang 47 SGK và kiến thức thực tế của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> Quy tắc tôn trọng, tuân thủ pháp luật; Quy tắc lành mạnh; Quy tắc an toàn, bảo mật thông tin; Quy tắc trách nhiệm.</p></div></details>
+<div class="activity-box"><p><strong>Câu hỏi 1:</strong> Những việc nào sau đây cần được khuyến khích khi tham gia môi trường số? (A) Tìm hiểu và tuân thủ các điều khoản hướng dẫn sử dụng của nhà cung cấp dịch vụ mạng xã hội trước khi đăng kí tham gia mạng xã hội. (B) Chia sẻ thông tin từ mọi nguồn khác nhau. (C) Mạng xã hội là môi trường ảo, do vậy không cần quá câu nệ về câu chữ. (D) Cần được sự đồng ý khi chia sẻ hình ảnh và chuyện riêng tư của bạn bè.</p></div>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi 1</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức sơ đồ tư duy mục 2 trang 47 SGK để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> A, D. Cần tìm hiểu và tuân thủ điều khoản sử dụng của nhà cung cấp dịch vụ trước khi tham gia, đồng thời cần có sự đồng ý của bạn bè trước khi chia sẻ hình ảnh/chuyện riêng tư của họ.</p></div></details>
+<div class="activity-box"><p><strong>Câu hỏi 2:</strong> Những quan niệm nào sau đây là không đúng? (A) Mọi tin nhắn, hình ảnh và video đăng tải lên mạng đều có thể thu hồi. (B) Cần nhanh chóng thông báo tới các cơ quan chức năng, nhà cung cấp dịch vụ khi tài khoản của tổ chức, cá nhân bị mất quyền kiểm soát, bị giả mạo. (C) Cần phê phán các từ ngữ không mang tính phổ thông, nặng bản sắc vùng miền. (D) Trong ứng xử trên mạng xã hội được phép làm mọi điều pháp luật không cấm.</p></div>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi 2</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức sơ đồ tư duy mục 2 trang 48 SGK để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> D. Quan niệm "được phép làm mọi điều pháp luật không cấm" là không đúng — trong môi trường số, ứng xử còn cần tuân theo các chuẩn mực đạo đức, văn hoá và quy tắc ứng xử chung, không chỉ dựa vào việc pháp luật có cấm hay không. <em>Lưu ý thêm:</em> không cho mượn, cho thuê giấy tờ cá nhân hoặc thẻ ngân hàng; không bán, cho mượn tài khoản; không nhận chuyển khoản hay nhận tiền hộ người không quen biết.</p></div></details>
+
+<p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
+<div class="activity-box"><p><strong>Luyện tập 1:</strong> Em nhận được tin nhắn trên Facebook từ tài khoản mang tên bạn em với nội dung bạn cần tiền gấp và yêu cầu em chuyển tiền ngay cho một số điện thoại lạ hoặc một số tài khoản ngân hàng mang tên bạn em. Có thể vận dụng ba nguyên tắc phòng chống lừa đảo trong trường hợp này như thế nào?</p></div>
+<details class="answer-box"><summary>Xem đáp án Luyện tập 1</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức và hiểu biết thực tế của bản thân kết hợp kiến thức mục 1 trang 44-46 SGK để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> Cần xác nhận số điện thoại lạ hoặc số tài khoản ngân hàng đó là của ai; cần xác minh người yêu cầu chuyển tiền thực sự là ai (liên hệ trực tiếp với bạn qua kênh khác đáng tin cậy) trước khi quyết định có chuyển tiền hay không.</p></div></details>
+<div class="activity-box"><p><strong>Luyện tập 2:</strong> Ngoài những điều nên làm và không nên làm khi tham gia mạng xã hội, em có thể bổ sung thêm một vài điều khác nữa hay không?</p></div>
+<details class="answer-box"><summary>Xem đáp án Luyện tập 2</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Tra cứu trên internet, sách, báo,… kết hợp kiến thức mục 2 trang 47, 48 SGK để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> Những điều không nên làm: đăng tải những hình ảnh phản cảm, không phù hợp thuần phong mỹ tục; tham gia các cuộc trò chuyện cổ suý sử dụng chất kích thích; nói xấu bạn bè, đồng nghiệp, người thân trên mạng xã hội.</p></div></details>
+
+<p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p>
+<div class="activity-box"><p>Các hình thức lừa đảo trên không gian số rất đa dạng. Hãy sử dụng các từ khoá thích hợp để tìm hiểu thêm các tình huống lừa đảo trong thực tế và áp dụng ba nguyên tắc phòng tránh đã được nêu trong bài học.</p></div>
+<details class="answer-box"><summary>Xem đáp án Vận dụng</summary><div class="answer-content"><p><strong>Phương pháp giải:</strong> Vận dụng kiến thức và hiểu biết thực tế của bản thân để trả lời câu hỏi.</p><p><strong>Lời giải chi tiết:</strong> Sử dụng các từ khóa thích hợp (ví dụ: "chiêu trò lừa đảo qua mạng", "lừa đảo kết bạn trên mạng xã hội"...) để tìm hiểu thêm các tình huống thực tế.</p><p><strong>Gợi ý:</strong> Làm quen, kết bạn qua mạng để trộm cắp thông tin hoặc lừa chiếm đoạt tài sản → Không nên vội vàng trò chuyện, chia sẻ thông tin cá nhân với người lạ trên mạng để bảo mật thông tin của bản thân.</p></div></details>`,
+    img: "assets/tin11/90.jpg",
+    video: "",
+    doc: ""
   }
 
 };
@@ -1317,7 +1378,10 @@ const LESSON_SUMMARIES = {
   3:{img:"assets/tin11/31.jpg",items:["Trình bày được một số khái niệm và nắm được sự khác nhau giữa phần mềm nguồn mở với phần mềm thương mại.","Hiểu được vai trò của phần mềm nguồn mở và phần mềm thương mại đối với sự phát triển của công nghệ thông tin.","Biết được phần mềm chạy trên Internet và lợi ích của chúng."]},
   4:{img:"assets/tin11/41.jpg",items:["Nhận diện được một số thiết bị trong thân máy, nắm được chức năng và các thông số do hiệu năng của chúng.","Nhận biết được sơ đồ của các mạch logic AND, OR, NOT và giải thích được vai trò của các mạch logic đó trong thực hiện các tính toán nhị phân."]},
   5:{img:"assets/tin11/51.jpg",items:["Biết một số thông số cơ bản của thiết bị vào - ra thông dụng.","Biết cách kết nối với máy tính cũng như tùy chỉnh được một số chức năng cơ bản để nâng cao hiệu quả và đáp ứng nhu cầu sử dụng.","Đọc hiểu và giải thích được một số thông số cơ bản của các thiết bị số thông dụng trong các tài liệu để kết nối chúng với máy tính."]},
-  6:{img:"assets/tin11/61.jpg",items:["Lưu trữ đám mây giúp khắc phục hạn chế về dung lượng của thiết bị lưu trữ vật lý.","Người dùng cần đăng ký tài khoản với nhà cung cấp dịch vụ để bắt đầu sử dụng ổ đĩa trực tuyến.","Quản lý tệp trên ổ đĩa trực tuyến tương tự như quản lý tệp trên hệ điều hành máy tính: tạo, xóa, đổi tên và di chuyển.","Chia sẻ tệp thông qua địa chỉ thư điện tử giúp nhóm làm việc cộng tác hiệu quả trong thời gian thực.","Chế độ chia sẻ cần được thiết lập cẩn thận để đảm bảo tính bảo mật và đúng đối tượng truy cập."]}
+  6:{img:"assets/tin11/61.jpg",items:["Lưu trữ đám mây giúp khắc phục hạn chế về dung lượng của thiết bị lưu trữ vật lý.","Người dùng cần đăng ký tài khoản với nhà cung cấp dịch vụ để bắt đầu sử dụng ổ đĩa trực tuyến.","Quản lý tệp trên ổ đĩa trực tuyến tương tự như quản lý tệp trên hệ điều hành máy tính: tạo, xóa, đổi tên và di chuyển.","Chia sẻ tệp thông qua địa chỉ thư điện tử giúp nhóm làm việc cộng tác hiệu quả trong thời gian thực.","Chế độ chia sẻ cần được thiết lập cẩn thận để đảm bảo tính bảo mật và đúng đối tượng truy cập."]},
+  7:{img:"assets/tin11/71.jpg",items:["Nắm được kiến thức chung về <strong class=\"text-blue\">tìm kiếm thông tin trên Internet</strong>. Nếu kết quả tìm kiếm chưa như ý, quay lại với từ khóa khác để tìm kiếm hiệu quả hơn.","Sử dụng được máy tìm kiếm bằng cách gõ từ khóa hoặc <strong class=\"text-blue\">tìm kiếm bằng từ khóa nhập bằng tiếng nói</strong> (nháy vào biểu tượng micro cạnh ô nhập từ khóa).","Có nhiều <strong class=\"text-blue\">tiêu chí nâng cao hiệu quả tìm kiếm</strong>: lọc theo dạng hình ảnh, tin tức, video, hoặc quy định dạng tệp cần tìm (ví dụ: filetype:pdf)."]},
+  8:{img:"assets/tin11/81.jpg",items:["Đánh dấu, <strong class=\"text-blue\">phân loại thư điện tử</strong> giúp sắp xếp hộp thư hợp lí, thuận tiện hơn khi sử dụng và tìm kiếm. Gmail tự động đánh dấu thư quan trọng dựa vào người gửi, tần suất, thao tác mở/trả lời,...","Khai thác được một số <strong class=\"text-blue\">chức năng nâng cao của mạng xã hội</strong>: Fanpage là trang giúp tổ chức, doanh nghiệp quảng bá hình ảnh, thương hiệu, sản phẩm — có thể tạo Fanpage cho lớp học."]},
+  9:{img:"assets/tin11/91.jpg",items:["<strong class=\"text-blue\">Nhận diện các hình thức lừa đảo qua mạng</strong> như giả mạo tin nhắn ngân hàng, chiếm quyền tài khoản mạng xã hội, dụ dỗ chuyển tiền — cần bình tĩnh xác định tình huống trước khi hành động.","Không đưa thông tin cá nhân hay tiết lộ bí mật khi không rõ nguồn gốc; thận trọng trước khi đầu tư hay chi tiêu cho bất kỳ dự án nào.","Áp dụng <strong class=\"text-blue\">ba nguyên tắc phòng chống lừa đảo</strong>: Chậm lại! → Kiểm tra ngay! → Dừng lại, không gửi!","Nguyên tắc an toàn: không chuyển tiền, không cung cấp mật khẩu hoặc thông tin cá nhân cho người lạ trên không gian mạng.","<strong class=\"text-blue\">Văn hóa giao tiếp</strong>: ứng xử lịch sự, tôn trọng người khác, tuân thủ pháp luật; bốn quy tắc chính: tôn trọng, lành mạnh, an toàn, trách nhiệm."]}
 };
 
 const REVIEW_QUIZZES = {
@@ -1325,43 +1389,64 @@ const REVIEW_QUIZZES = {
     {type:'mc',text:'Điều gì mô tả đúng nhất về giao diện đồ họa của hệ điều hành?',options:['Người dùng phải gõ các lệnh dòng lệnh','Giao diện đồ họa hiển thị các đối tượng bằng hình ảnh','Không hỗ trợ điều khiển bằng chuột','Chỉ sử dụng trong hệ điều hành UNIX'],answer:1,explain:'Giao diện đồ họa sử dụng hình ảnh và biểu tượng để người dùng tương tác trực quan.'},
     {type:'mc',text:'Phiên bản Windows nào là phiên bản đầu tiên có giao diện đồ họa?',options:['Windows XP','Windows 95','Windows 1.0','Windows 3.11'],answer:2,explain:'Windows 1.0 là phiên bản đầu tiên giới thiệu giao diện đồ họa.'},
     {type:'mc',text:'UNIX là hệ điều hành có đặc điểm gì?',options:['Chỉ dành cho máy tính cá nhân','Đa nhiệm và đa người dùng','Không hỗ trợ mạng','Độc quyền và không chia sẻ mã nguồn'],answer:1,explain:'UNIX nổi bật với khả năng đa nhiệm và đa người dùng.'},
-    {type:'tf',text:'Hệ điều hành có vai trò quan trọng nào sau đây?',items:[['a) Quản lý phần cứng, bộ nhớ và thiết bị ngoại vi.','T'],['b) Chỉ cung cấp giao diện đồ họa cho người dùng.','F'],['c) Tổ chức và điều phối việc thực hiện các chương trình.','T'],['d) Được tích hợp với mọi ứng dụng phần mềm trên máy tính.','F']]},
+    {type:'tf',text:'Hệ điều hành có vai trò quan trọng nào sau đây?',items:[['a) Quản lý phần cứng, bộ nhớ và thiết bị ngoại vi.','T','Đúng. Hệ điều hành thực hiện việc quản lý tài nguyên của hệ thống như CPU, bộ nhớ và các thiết bị ngoại vi để đảm bảo mọi hoạt động diễn ra một cách hiệu quả.'],['b) Chỉ cung cấp giao diện đồ họa cho người dùng.','F','Sai. Hệ điều hành không chỉ cung cấp giao diện đồ họa, mà còn quản lý các tài nguyên hệ thống và hỗ trợ các chức năng khác như quản lý tệp tin, xử lý chương trình.'],['c) Tổ chức và điều phối việc thực hiện các chương trình.','T','Đúng. Hệ điều hành điều phối các tiến trình xử lý và đảm bảo các chương trình được thực hiện đồng thời mà không xung đột tài nguyên.'],['d) Được tích hợp với mọi ứng dụng phần mềm trên máy tính.','F','Sai. Hệ điều hành không được tích hợp với mọi ứng dụng, nhưng nó cung cấp môi trường để các ứng dụng có thể chạy một cách hiệu quả.']]},
     {type:'short',text:'Giao diện đồ họa giúp ích gì trong việc sử dụng hệ điều hành trên máy tính cá nhân?',keywords:['giao diện đồ họa','hình ảnh','biểu tượng','cửa sổ','tương tác','thân thiện','dễ dàng'],explain:'Giao diện đồ họa giúp người dùng dễ dàng tương tác với hệ điều hành thông qua các hình ảnh trực quan, biểu tượng, và cửa sổ thay vì phải gõ lệnh.'}
   ]},
   2:{q:[
     {type:'mc',text:'Khi sử dụng File Explorer trong Windows, để xem nội dung của một thư mục, bạn cần thực hiện thao tác nào?',options:['Nhấn nút Start','Nháy chuột phải vào biểu tượng thư mục','Nháy đúp chuột vào biểu tượng thư mục','Kéo và thả biểu tượng thư mục'],answer:2,explain:'Nháy đúp chuột vào biểu tượng thư mục để mở và xem nội dung bên trong.'},
     {type:'mc',text:'Tiện ích “Disk Cleanup” trên hệ điều hành có chức năng chính là gì?',options:['Tối ưu hóa đĩa cứng','Xóa các tập tin không cần thiết và giải phóng dung lượng','Sao lưu toàn bộ hệ điều hành','Chống phân mảnh dữ liệu'],answer:1,explain:'Disk Cleanup giúp loại bỏ các tệp rác/tạm thời để giải phóng dung lượng.'},
     {type:'mc',text:'Chức năng quản lý nhóm trong danh bạ điện thoại có tác dụng gì?',options:['Quản lý số lượng tệp tin','Sắp xếp danh bạ theo từng nhóm liên hệ','Xóa toàn bộ danh bạ','Tạo bản sao danh bạ'],answer:1,explain:'Tính năng nhóm giúp tổ chức các liên hệ để dễ tìm kiếm và quản lý.'},
-    {type:'tf',text:'Tiện ích nào sau đây không có sẵn khi cài đặt hệ điều hành và cần được cài đặt thêm sau này?',items:[['a) Bộ gõ tiếng Việt Unikey','T'],['b) Kiểm tra đĩa (Check disk)','F'],['c) Tối ưu hóa đĩa (Defragment)','F'],['d) Quản lý tệp và thư mục','F']]},
+    {type:'tf',text:'Tiện ích nào sau đây không có sẵn khi cài đặt hệ điều hành và cần được cài đặt thêm sau này?',items:[['a) Bộ gõ tiếng Việt Unikey','T','Đúng. Đây là một tiện ích không có sẵn khi cài đặt hệ điều hành và cần được cài đặt riêng.'],['b) Kiểm tra đĩa (Check disk)','F','Sai. Đây là tiện ích có sẵn trong hệ điều hành, giúp kiểm tra và sửa lỗi trên đĩa cứng.'],['c) Tối ưu hóa đĩa (Defragment)','F','Sai. Đây là một tiện ích có sẵn trong hệ điều hành giúp giảm phân mảnh và tối ưu hóa đĩa cứng.'],['d) Quản lý tệp và thư mục','F','Sai. Đây là chức năng cơ bản của hệ điều hành và có sẵn ngay sau khi cài đặt.']]},
     {type:'short',text:'Tiện ích hợp mảnh đĩa (Defragment) hoạt động như thế nào và tại sao nó quan trọng?',keywords:['tổ chức lại','dữ liệu','liền kề','phân mảnh','hiệu suất','đọc','ghi','HDD'],explain:'Tiện ích hợp mảnh đĩa giúp tổ chức lại dữ liệu trên đĩa cứng sao cho các tệp được sắp xếp liền kề nhau, giảm thiểu việc phân mảnh. Điều này giúp cải thiện hiệu suất đọc/ghi dữ liệu trên đĩa cứng, đặc biệt là với các đĩa cứng cơ học (HDD).'}
   ]},
   3:{q:[
     {type:'mc',text:'Ưu điểm chính của phần mềm nguồn mở là gì?',options:['Được hỗ trợ kỹ thuật toàn diện từ nhà phát triển.','Miễn phí hoặc chi phí thấp và minh bạch.','Có tính hoàn chỉnh cao và dễ sử dụng cho mọi đối tượng.','Không cần cài đặt vào máy tính.'],answer:1,explain:'Phần mềm nguồn mở thường có chi phí thấp và mã nguồn minh bạch, cho phép kiểm tra/sửa đổi theo giấy phép.'},
     {type:'mc',text:'Giấy phép GNU GPL (General Public License) cho phép điều gì?',options:['Sửa đổi và phân phối phần mềm mà không cần công bố mã nguồn.','Sao chép và phân phối phần mềm kèm bản quyền gốc, miễn trừ trách nhiệm bảo hành.','Chỉ sử dụng phần mềm cho mục đích phi lợi nhuận.','Cấm người dùng chỉnh sửa phần mềm.'],answer:1,explain:'GPL cho phép sao chép, sửa đổi và phân phối theo các điều kiện của giấy phép, trong đó có yêu cầu về mã nguồn đối với các tác phẩm phái sinh thuộc phạm vi GPL.'},
     {type:'mc',text:'Phần mềm thương mại có ưu điểm gì so với phần mềm nguồn mở?',options:['Miễn phí hoàn toàn.','Cung cấp dịch vụ hỗ trợ kỹ thuật tốt hơn.','Mã nguồn mở cho người dùng tùy chỉnh.','Có sẵn trên mọi nền tảng và hệ điều hành.'],answer:1,explain:'Phần mềm thương mại thường đi kèm dịch vụ hỗ trợ kỹ thuật chuyên nghiệp.'},
-    {type:'tf',text:'Phần mềm chạy trên Internet có những đặc điểm nào dưới đây?',items:[['a) Không cần cài đặt vào máy tính, chỉ cần truy cập qua trình duyệt.','T'],['b) Chỉ có thể sử dụng khi máy tính kết nối với Internet.','T'],['c) Tất cả các phần mềm chạy trên Internet đều miễn phí.','F'],['d) Không thể thực hiện các chức năng phức tạp như phần mềm cài đặt truyền thống.','F']]},
+    {type:'tf',text:'Phần mềm chạy trên Internet có những đặc điểm nào dưới đây?',items:[['a) Không cần cài đặt vào máy tính, chỉ cần truy cập qua trình duyệt.','T','Đúng. Một ưu điểm lớn của phần mềm chạy trên Internet là không cần cài đặt vào máy tính mà có thể sử dụng trực tiếp qua trình duyệt web.'],['b) Chỉ có thể sử dụng khi máy tính kết nối với Internet.','T','Đúng. Phần mềm chạy trên Internet yêu cầu kết nối mạng để hoạt động, vì tất cả chức năng và dữ liệu của nó được xử lý trên máy chủ từ xa.'],['c) Tất cả các phần mềm chạy trên Internet đều miễn phí.','F','Sai. Không phải tất cả các phần mềm chạy trên Internet đều miễn phí. Nhiều phần mềm cung cấp tính năng miễn phí nhưng có các tính năng nâng cao yêu cầu trả phí (ví dụ: Google Docs, nhưng có Google Workspace trả phí).'],['d) Không thể thực hiện các chức năng phức tạp như phần mềm cài đặt truyền thống.','F','Sai. Phần mềm chạy trên Internet có thể thực hiện các chức năng phức tạp tương tự như phần mềm cài đặt truyền thống, chẳng hạn như Google Docs, Google Sheets hay các phần mềm xử lý hình ảnh trực tuyến.']]},
     {type:'short',text:'Phần mềm nguồn mở có thể thay thế hoàn toàn cho phần mềm thương mại được không? Tại sao?',keywords:['không','nhu cầu','nguồn mở','thương mại','đặt hàng','hỗ trợ kỹ thuật','chi phí','minh bạch'],explain:'Không. Phần mềm nguồn mở không thể thay thế hoàn toàn cho phần mềm thương mại vì chúng phục vụ các nhu cầu khác nhau. Phần mềm nguồn mở chủ yếu cung cấp các giải pháp dùng chung, chi phí thấp và minh bạch, nhưng lại không đáp ứng tốt các nhu cầu riêng lẻ hay đòi hỏi cao về hỗ trợ kỹ thuật. Trong khi đó, phần mềm thương mại (đặc biệt là phần mềm "đặt hàng") có thể được thiết kế riêng theo yêu cầu cụ thể của người dùng, đồng thời kèm theo các dịch vụ bảo hành và hỗ trợ kỹ thuật chuyên nghiệp.'}
   ]},
   4:{q:[
     {type:'mc',text:'Bộ xử lý đa lõi (multi-core) có ưu điểm gì so với bộ xử lý đơn lõi (single-core)?',options:['Tăng dung lượng bộ nhớ','Thực hiện song song nhiều công việc','Tiết kiệm điện năng','Giảm kích thước bộ nhớ đệm'],answer:1,explain:'Nhiều lõi cho phép xử lý nhiều nhiệm vụ đồng thời hiệu quả hơn.'},
     {type:'mc',text:'Bộ nhớ ngoài nào sau đây có tốc độ truy cập nhanh hơn?',options:['Đĩa cứng (HDD)','Đĩa quang','SSD','Đĩa mềm'],answer:2,explain:'SSD có tốc độ truy cập nhanh hơn HDD, đĩa quang và đĩa mềm.'},
     {type:'mc',text:'Phép toán nhị phân nào sau đây sẽ sinh ra số nhớ khi cả hai bit đều bằng 1?',options:['Phép cộng','Phép nhân','Phép XOR','Phép NOT'],answer:0,explain:'Trong phép cộng nhị phân 1 + 1 tạo ra 0 và nhớ 1 sang hàng bên trái.'},
-    {type:'tf',text:'Phát biểu nào sau đây về CPU là đúng?',items:[['a) CPU chỉ có một đơn vị xử lý','F'],['b) CPU có thể thực hiện song song nhiều công việc nhờ có nhiều lõi xử lý','T'],['c) CPU không thể đồng bộ các hoạt động trong máy tính','F'],['d) CPU chỉ thực hiện các phép toán lôgic mà không thực hiện phép toán số học','F']]},
+    {type:'tf',text:'Phát biểu nào sau đây về CPU là đúng?',items:[['a) CPU chỉ có một đơn vị xử lý','F','Sai. Hiện nay, CPU đa lõi đã phổ biến, mỗi lõi xử lý có khả năng thực hiện song song nhiều nhiệm vụ.'],['b) CPU có thể thực hiện song song nhiều công việc nhờ có nhiều lõi xử lý','T','Đúng. CPU đa lõi giúp máy tính thực hiện nhanh hơn bằng cách chia nhỏ và xử lý nhiều tác vụ đồng thời.'],['c) CPU không thể đồng bộ các hoạt động trong máy tính','F','Sai. CPU có bộ điều khiển và đồng hồ xung để đồng bộ các hoạt động trong máy tính.'],['d) CPU chỉ thực hiện các phép toán lôgic mà không thực hiện phép toán số học','F','Sai. CPU có bộ số học và lôgic (ALU) để thực hiện cả các phép toán số học và lôgic.']]},
     {type:'short',text:'Sự khác biệt giữa RAM và ROM là gì?',keywords:['RAM','tạm thời','mất','tắt máy','ROM','chỉ đọc','lâu dài','chương trình'],explain:'RAM là bộ nhớ có thể ghi và lưu trữ tạm thời dữ liệu trong quá trình chạy chương trình, còn ROM là bộ nhớ chỉ đọc, dùng để lưu trữ các chương trình cố định và không thể thay đổi.'}
   ]},
   5:{q:[
     {type:'mc',text:'Cổng HDMI có chức năng chính là gì?',options:['Chỉ truyền tín hiệu âm thanh','Truyền tín hiệu video và âm thanh','Chỉ truyền tín hiệu video','Truyền dữ liệu qua mạng'],answer:1,explain:'HDMI truyền tín hiệu hình ảnh và âm thanh kỹ thuật số.'},
     {type:'mc',text:'Cổng VGA được dùng để làm gì?',options:['Truyền tín hiệu âm thanh','Truyền tín hiệu hình ảnh số','Truyền tín hiệu hình ảnh tương tự','Truyền dữ liệu giữa các thiết bị qua mạng'],answer:2,explain:'VGA truyền tín hiệu hình ảnh tương tự.'},
     {type:'mc',text:'Tần số quét của màn hình là gì?',options:['Số điểm ảnh trên màn hình','Số lần hình ảnh được tái hiện trên màn hình trong một giây','Độ sáng của màn hình','Kích thước của màn hình'],answer:1,explain:'Tần số quét cho biết số lần màn hình làm mới hình ảnh trong một giây, tính bằng Hz.'},
-    {type:'tf',text:'Thiết bị nào sau đây là thiết bị vào thông dụng nhất khi kết nối với máy tính?',items:[['a) Màn hình','F'],['b) Máy in','F'],['c) Bàn phím','T'],['d) Máy chiếu','F']]},
+    {type:'tf',text:'Thiết bị nào sau đây là thiết bị vào thông dụng nhất khi kết nối với máy tính?',items:[['a) Màn hình','F','Sai. Màn hình là thiết bị ra, không phải là thiết bị vào.'],['b) Máy in','F','Sai. Máy in cũng là thiết bị ra, dùng để in ấn tài liệu từ máy tính.'],['c) Bàn phím','T','Đúng. Bàn phím là thiết bị vào phổ biến nhất, cho phép người dùng nhập dữ liệu vào máy tính.'],['d) Máy chiếu','F','Sai. Máy chiếu là thiết bị ra, dùng để trình chiếu hình ảnh từ máy tính ra màn hình lớn.']]},
     {type:'short',text:'Làm thế nào để kết nối máy tính với máy ảnh số qua cáp USB?',keywords:['cắm','USB','máy ảnh','máy tính','USB mode','Mass Storage','thẻ nhớ','truy cập'],explain:'Để kết nối máy tính với máy ảnh số qua cáp USB, người dùng chỉ cần cắm cáp USB vào cổng kết nối trên máy ảnh và máy tính. Khi kết nối thành công, máy ảnh sẽ hiển thị chế độ "USB mode, Mass Storage", cho phép truy cập vào thẻ nhớ của máy ảnh như một thiết bị lưu trữ ngoại vi.'}
   ]},
   6:{q:[
     {type:'mc',text:'Một trong các tính năng chính của dịch vụ lưu trữ trực tuyến là gì?',options:['Chỉ cho phép xem tài liệu','Chia sẻ tài liệu với nhiều người','Không thể tạo thư mục','Giới hạn dung lượng tải lên'],answer:1,explain:'Chia sẻ tài liệu là một tính năng quan trọng giúp cộng tác và làm việc nhóm.'},
     {type:'mc',text:'Một lợi ích của việc lưu trữ dữ liệu trên đám mây là gì?',options:['Tăng dung lượng ổ cứng máy tính','Tiết kiệm thời gian truy cập dữ liệu','Dữ liệu luôn được lưu trữ cục bộ','Dữ liệu dễ dàng truy cập từ bất kỳ đâu'],answer:3,explain:'Dữ liệu có thể được truy cập từ nhiều thiết bị, miễn là có kết nối phù hợp.'},
     {type:'mc',text:'Tính năng nào không có trong dịch vụ lưu trữ và chia sẻ tập tin trực tuyến?',options:['Tạo thư mục mới','Chia sẻ tệp tin với người khác','Chỉnh sửa tài liệu trực tiếp','Cài đặt phần mềm trên máy tính'],answer:3,explain:'Dịch vụ lưu trữ trực tuyến không đồng nghĩa với việc phải cài đặt phần mềm trên máy tính để sử dụng qua trình duyệt.'},
-    {type:'tf',text:'Một trong những ưu điểm của việc lưu trữ tệp tin trực tuyến là gì?',items:[['a) Dữ liệu chỉ có thể được truy cập từ một thiết bị duy nhất.','F'],['b) Có thể chia sẻ tệp tin với nhiều người dùng và thiết lập quyền truy cập khác nhau.','T'],['c) Không cần kết nối Internet để truy cập dữ liệu.','F'],['d) Không thể quản lý và tổ chức dữ liệu hiệu quả.','F']]},
+    {type:'tf',text:'Một trong những ưu điểm của việc lưu trữ tệp tin trực tuyến là gì?',items:[['a) Dữ liệu chỉ có thể được truy cập từ một thiết bị duy nhất.','F','Sai. Dữ liệu lưu trữ trên đám mây có thể truy cập từ nhiều thiết bị khác nhau, miễn là có kết nối Internet.'],['b) Có thể chia sẻ tệp tin với nhiều người dùng và thiết lập quyền truy cập khác nhau.','T','Đúng. Đây là một trong những ưu điểm lớn nhất của dịch vụ lưu trữ đám mây, cho phép người dùng chia sẻ dữ liệu với các thành viên khác trong nhóm và quản lý quyền truy cập.'],['c) Không cần kết nối Internet để truy cập dữ liệu.','F','Sai. Để truy cập dữ liệu trên dịch vụ lưu trữ đám mây, người dùng cần có kết nối Internet.'],['d) Không thể quản lý và tổ chức dữ liệu hiệu quả.','F','Sai. Dịch vụ lưu trữ đám mây thường cung cấp các công cụ để tổ chức, quản lý và tìm kiếm dữ liệu dễ dàng hơn.']]},
     {type:'short',text:'Những tính năng cơ bản nào mà dịch vụ lưu trữ đám mây cung cấp cho người dùng?',keywords:['tải tệp','tạo','thư mục','quản lý','chia sẻ','quyền truy cập','chỉnh sửa'],explain:'Dịch vụ lưu trữ đám mây cung cấp các tính năng như tải tệp lên, tạo mới và quản lý thư mục, và chia sẻ tệp với người khác.'}
+  ]},
+  7:{q:[
+    {type:'mc',text:'Khi tìm kiếm thông tin bằng từ khóa, nếu kết quả không như ý, bạn nên làm gì?',options:['Ngừng tìm kiếm','Thay đổi từ khóa và tìm lại','Tìm kiếm bằng tiếng nói','Chia sẻ kết quả với bạn bè'],answer:1,explain:'Nếu kết quả tìm kiếm không hài lòng, bạn nên quay lại và thử nhập từ khóa khác để cải thiện kết quả tìm kiếm.'},
+    {type:'mc',text:'Để tìm kiếm thông tin dưới dạng tệp PDF, bạn cần thêm cụm từ gì vào từ khóa?',options:['type','filetype:pdf','type:pdf','pdf'],answer:1,explain:'Cụm từ "filetype" được sử dụng để yêu cầu máy tìm kiếm trả về các tài liệu có định dạng PDF.'},
+    {type:'mc',text:'Nếu bạn muốn tìm thông tin bằng tiếng nói, bạn cần làm gì trước?',options:['Nhấn phím Enter','Nhấp chuột vào biểu tượng micro','Nhập từ khóa vào ô tìm kiếm','Đọc kết quả tìm kiếm'],answer:1,explain:'Để tìm kiếm bằng tiếng nói, bạn cần nhấp chuột vào biểu tượng micro để bắt đầu ghi âm từ khóa.'},
+    {type:'tf',text:'Một trong những ưu điểm của việc lưu trữ tệp tin trực tuyến là gì?',items:[['a) Dữ liệu chỉ có thể được truy cập từ một thiết bị duy nhất.','F','Sai. Dữ liệu lưu trữ trên đám mây có thể truy cập từ nhiều thiết bị khác nhau, miễn là có kết nối Internet.'],['b) Có thể chia sẻ tệp tin với nhiều người dùng và thiết lập quyền truy cập khác nhau.','T','Đúng. Đây là một trong những ưu điểm lớn nhất của dịch vụ lưu trữ đám mây, cho phép người dùng chia sẻ dữ liệu với các thành viên khác trong nhóm và quản lý quyền truy cập.'],['c) Không cần kết nối Internet để truy cập dữ liệu.','F','Sai. Để truy cập dữ liệu trên dịch vụ lưu trữ đám mây, người dùng cần có kết nối Internet.'],['d) Không thể quản lý và tổ chức dữ liệu hiệu quả.','F','Sai. Dịch vụ lưu trữ đám mây thường cung cấp các công cụ để tổ chức, quản lý và tìm kiếm dữ liệu dễ dàng hơn.']]},
+    {type:'short',text:'Lợi ích của việc chia sẻ tệp tin trên dịch vụ lưu trữ đám mây là gì?',keywords:['chia sẻ','hợp tác','tiết kiệm thời gian','quyền truy cập'],explain:'Chia sẻ tệp tin trên dịch vụ lưu trữ đám mây giúp tăng cường hợp tác giữa các thành viên trong nhóm và tiết kiệm thời gian. Khi chia sẻ tệp tin, người dùng có thể chọn chế độ quyền truy cập khác nhau (chỉ xem, nhận xét, chỉnh sửa) cho người nhận. So với việc gửi tệp qua email, chia sẻ trực tuyến nhanh chóng và an toàn hơn, đồng thời giảm nguy cơ mất mát dữ liệu.'}
+  ]},
+  8:{q:[
+    {type:'mc',text:'Lệnh "is" trong Gmail có chức năng gì?',options:['Tìm kiếm tất cả các email quan trọng.','Tìm kiếm tất cả các email có đính kèm tệp.','Hiển thị tất cả các email đã được lưu trữ.','Xóa tất cả các email quan trọng.'],answer:0,explain:'Lệnh "is:" giúp tìm kiếm và hiển thị tất cả các email đã được đánh dấu là quan trọng trong hộp thư Gmail.'},
+    {type:'mc',text:'Khi tạo nhãn trong Gmail, điều gì sẽ xảy ra nếu bạn xóa nhãn đã gán cho một email?',options:['Email sẽ bị xóa khỏi hộp thư.','Email sẽ vẫn tồn tại trong hộp thư chính nhưng mất nhãn đã gán.','Email sẽ bị di chuyển vào thùng rác.','Email sẽ được chuyển sang thư mục Spam.'],answer:1,explain:'Khi nhãn bị xóa, email vẫn tồn tại trong hộp thư chính nhưng sẽ không còn nhãn gán kèm theo.'},
+    {type:'mc',text:'Lợi ích của việc xóa lịch sử hoạt động trên Facebook là gì?',options:['Tăng tốc độ tải trang.','Ngăn Facebook thu thập thông tin để hiển thị quảng cáo dựa trên hoạt động của người dùng.','Bảo vệ tài khoản khỏi hacker.','Tạo tài khoản Facebook mới.'],answer:1,explain:'Xóa lịch sử hoạt động giúp giảm việc Facebook sử dụng thông tin hoạt động để hiển thị quảng cáo cá nhân hóa.'},
+    {type:'tf',text:'Khi sử dụng Gmail, làm thế nào để phân loại thư điện tử bằng cách sử dụng Nhãn?',items:[['a) Tạo một thư mục mới cho từng loại thư và di chuyển thư vào đó.','F','Sai. Gmail không sử dụng thư mục như cách truyền thống, mà sử dụng nhãn để phân loại thư.'],['b) Sử dụng tính năng Gắn dấu sao cho từng thư để phân loại.','F','Sai. Gắn dấu sao chỉ giúp đánh dấu thư quan trọng, nhưng không phải là cách phân loại thư toàn diện.'],['c) Tạo nhãn mới và gán nhãn đó cho các thư muốn phân loại.','T','Đúng. Nhãn trong Gmail giúp phân loại thư, và một thư có thể gắn nhiều nhãn khác nhau để tiện cho việc quản lý và tìm kiếm.'],['d) Xóa các thư không cần thiết để giữ lại thư quan trọng.','F','Sai. Xóa thư không phải là cách phân loại, mà chỉ là thao tác để giảm số lượng thư trong hộp thư.']]},
+    {type:'short',text:'Tại sao nên thiết lập quyền riêng tư cho các bài viết trên Facebook?',keywords:['kiểm soát','xem','bảo vệ','thông tin cá nhân','không mong muốn'],explain:'Thiết lập quyền riêng tư giúp bạn kiểm soát ai có thể xem bài viết, bảo vệ thông tin cá nhân và tránh chia sẻ thông tin không mong muốn. Việc kiểm soát quyền riêng tư giúp giới hạn đối tượng tiếp cận bài viết, từ đó bảo vệ sự riêng tư và tránh việc thông tin cá nhân bị lộ hoặc tiếp cận bởi những người không mong muốn, tăng cường bảo mật trên mạng xã hội.'}
+  ]},
+  9:{q:[
+    {type:'mc',text:'Khi nhận được email từ một địa chỉ lạ yêu cầu mở tệp đính kèm, bạn nên làm gì?',options:['Mở ngay để xem nội dung quan trọng.','Chuyển tiếp email cho bạn bè để kiểm tra.','Tra cứu thông tin người gửi và chỉ mở nếu thấy đáng tin cậy.','Xóa email ngay lập tức để tránh rủi ro.'],answer:2,explain:'Trước khi mở tệp đính kèm, bạn nên kiểm tra và xác minh thông tin của người gửi để tránh nguy cơ bị nhiễm virus hoặc bị lừa đảo.'},
+    {type:'mc',text:'Tại sao bạn không nên chia sẻ mật khẩu với người khác?',options:['Vì người khác có thể giúp bạn quản lý tài khoản tốt hơn.','Mật khẩu là thông tin cá nhân cần được bảo vệ để tránh bị xâm phạm tài khoản.','Chia sẻ mật khẩu giúp tăng tính bảo mật.','Người khác có thể xử lý tốt các vấn đề tài khoản khi cần.'],answer:1,explain:'Mật khẩu là thông tin quan trọng để bảo vệ tài khoản cá nhân, việc chia sẻ mật khẩu có thể khiến bạn gặp rủi ro về an ninh mạng.'},
+    {type:'mc',text:'Khi phát hiện tài khoản mạng xã hội bị xâm nhập, bạn nên làm gì?',options:['Phớt lờ vì có thể chỉ là lỗi hệ thống.','Thay đổi mật khẩu ngay lập tức và thông báo với nhà cung cấp dịch vụ.','Chia sẻ thông tin đăng nhập để nhờ bạn bè giúp đỡ.','Đăng nhập lại nhiều lần cho đến khi thành công.'],answer:1,explain:'Khi phát hiện tài khoản bị xâm nhập, việc đầu tiên cần làm là thay đổi mật khẩu và thông báo với nhà cung cấp dịch vụ để đảm bảo tài khoản không bị lạm dụng.'},
+    {type:'tf',text:'Đâu là những việc cần làm để nhận biết và phòng tránh lừa đảo trên không gian số?',items:[['a) Chuyển tiền ngay khi nhận được thông báo yêu cầu từ một người lạ để tránh rắc rối.','F','Sai. Không nên chuyển tiền ngay khi nhận yêu cầu từ người lạ, đặc biệt khi chưa xác minh tính xác thực của thông tin.'],['b) Kiểm tra kỹ thông tin, xác minh nguồn tin trước khi thực hiện giao dịch tài chính.','T','Đúng. Cần kiểm tra thông tin từ nhiều nguồn và xác minh tính chính xác của người gửi trước khi thực hiện giao dịch tài chính để tránh bị lừa đảo.'],['c) Không chia sẻ mã OTP (One-Time Password) của các giao dịch ngân hàng qua tin nhắn với bất kỳ ai.','T','Đúng. Mã OTP là thông tin bảo mật quan trọng, không được chia sẻ với bất kỳ ai, kể cả người tự nhận là nhân viên ngân hàng.'],['d) Mở tất cả các tệp đính kèm từ email lạ để kiểm tra nội dung.','F','Sai. Mở tệp đính kèm từ email lạ có thể khiến máy tính nhiễm virus hoặc phần mềm độc hại.']]},
+    {type:'short',text:'Làm thế nào để xử lý tình huống nhận được tin nhắn yêu cầu chuyển tiền ngay lập tức từ một tài khoản bạn bè trên mạng xã hội?',keywords:['chậm lại','kiểm tra','xác minh','dừng lại','không gửi'],explain:'Đầu tiên, bạn cần "Chậm lại" để tránh cảm giác cấp bách mà kẻ lừa đảo tạo ra. Sau đó, hãy "Kiểm tra ngay" bằng cách liên hệ trực tiếp với người bạn đó qua số điện thoại hoặc phương thức khác mà bạn tin tưởng để xác minh. Cuối cùng, nếu phát hiện đó là lừa đảo, hãy "Dừng lại, không gửi" tiền hoặc bất kỳ thông tin cá nhân nào. Kẻ lừa đảo thường tạo ra cảm giác khẩn cấp để nạn nhân không có đủ thời gian suy nghĩ sáng suốt; bằng cách dừng lại và kiểm tra thông tin, bạn có thể tránh rơi vào bẫy.'}
   ]}
 };
 
@@ -1425,6 +1510,15 @@ function renderReviewQuiz(id){
   el.innerHTML=html;
 }
 function chooseTF(btn,value){const group=btn.closest('.tf-actions');if(!group)return;group.querySelector('input[type="hidden"]').value=value;group.querySelectorAll('.tf-choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');}
+function resetReviewQuiz(id){
+  const form=document.getElementById(`quiz-form-${id}`);if(!form)return;
+  form.reset();
+  form.querySelectorAll('.tf-choice').forEach(b=>b.classList.remove('selected'));
+  form.querySelectorAll('.tf-actions input[type="hidden"]').forEach(i=>i.value='');
+  form.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.innerHTML='';});
+  const result=document.getElementById(`quiz-result-${id}`);if(result){result.classList.remove('show');result.innerHTML='';}
+  form.scrollIntoView({behavior:'smooth',block:'start'});
+}
 
 function submitReviewQuiz(event,id){
   event.preventDefault();
@@ -1440,7 +1534,7 @@ function submitReviewQuiz(event,id){
       const chosenText=selected?`${String.fromCharCode(65+Number(selected.value))}. ${esc(q.options[Number(selected.value)])}`:'(chưa chọn)';
       if(ok)score+=2;
       rows.push([`Câu ${qi+1}`,chosenText,ok?'2/2':'0/2']);
-      answers.push(`<strong>Câu ${qi+1}:</strong> ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}`);
+      answers.push(`<strong>Câu ${qi+1}:</strong> ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}${q.explain?`<br><em>Giải thích: ${q.explain}</em>`:''}`);
       if(fb)fb.innerHTML=ok?'<span class="correct">✓ Chính xác</span>':'<span class="wrong">✗ Chưa đúng</span>';
     }
     if(q.type==='tf'){
@@ -1448,7 +1542,7 @@ function submitReviewQuiz(event,id){
       q.items.forEach((it,ii)=>{const v=form.querySelector(`input[name="q${id}_${qi}_${ii}"]`)?.value;if(v){answered++;chosenParts.push(String.fromCharCode(97+ii)+') '+(v==='T'?'Đúng':'Sai'));}else{chosenParts.push(String.fromCharCode(97+ii)+') —');}if(v===it[1])s+=.5;});
       score+=s;
       rows.push([`Câu 4`,answered?chosenParts.join(', '):'(chưa chọn)',s.toFixed(1)+'/2']);
-      answers.push(`<strong>Câu 4:</strong> ${q.items.map((it,i)=>String.fromCharCode(97+i)+') '+(it[1]==='T'?'Đúng':'Sai')).join(' • ')}`);
+      answers.push(`<strong>Câu 4:</strong><br>${q.items.map((it,i)=>`${String.fromCharCode(97+i)}) ${it[1]==='T'?'Đúng':'Sai'}${it[2]?` — ${it[2]}`:''}`).join('<br>')}`);
       if(fb)fb.innerHTML=`<span class="${s===2?'correct':'wrong'}">${s===2?'✓ Đúng cả 4 ý':'Đã ghi nhận lựa chọn'}</span>`;
     }
     if(q.type==='short'){
@@ -1462,7 +1556,8 @@ function submitReviewQuiz(event,id){
   });
   let reveal='';if(attempt>=3)reveal=`<div class="quiz-answer-reveal"><h4>🔓 ĐÁP ÁN SAU LẦN 3</h4><div class="answer-grid">${answers.map(a=>`<div class="answer-key">${a}</div>`).join('')}</div><p style="margin-top:10px;font-size:.82rem">Em đã dùng hết 3 lần. Hãy đối chiếu đáp án với tài liệu học tập.</p></div>`;
   const tableHtml=`<table class="score-table"><thead><tr><th>Câu</th><th>Đáp án chọn</th><th>Điểm</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td class="sc-dapan">${r[1]}</td><td class="sc-diem">${r[2]}</td></tr>`).join('')}</tbody></table>`;
-  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính</div>${tableHtml}<div class="score-total">Tổng điểm: ${score.toFixed(1)}/10</div>${reveal}`;result.classList.add('show');
+  const retryBtn=attempt<3?`<div class="review-actions" style="margin-top:14px;"><button type="button" class="review-btn secondary" onclick="resetReviewQuiz(${id})">🔁 Làm lại (còn ${3-attempt} lần)</button></div>`:'';
+  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính</div>${tableHtml}<div class="score-total">Tổng điểm: ${score.toFixed(1)}/10</div>${reveal}${retryBtn}`;result.classList.add('show');
   if(attempt>=3)form.querySelectorAll('input,textarea,button').forEach(x=>x.disabled=true);
   result.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
