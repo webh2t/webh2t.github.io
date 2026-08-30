@@ -9,7 +9,7 @@
 <style>
   :root{
     --ink:#0F1C2E; --ink-soft:#16233A; --paper:#EFF3F1; --paper-card:#FFFFFF;
-    --amber:#FFC845; --teal:#2EC4B6; --line: rgba(15,28,46,0.12); --radius:14px;
+    --amber:#FFC845; --teal:#2EC4B6; --brilliant-blue:#7C3AED; --line: rgba(15,28,46,0.12); --radius:14px;
   }
   *{box-sizing:border-box; margin:0; padding:0;}
   body{ font-family:'Be Vietnam Pro',sans-serif; background:var(--paper); color:var(--ink-soft);}
@@ -25,19 +25,28 @@
 
   .eyebrow{ font-family:'Space Grotesk',monospace; font-size:.75rem; font-weight:600; color:var(--teal); letter-spacing:.12em; text-transform:uppercase;}
   h1{ font-size:2rem; font-weight:800; color:var(--ink); margin-top:8px;}
+  .page-cover{ text-align:center; margin:0; width:100%;}
+  .page-cover .cover-link{ display:block; width:100%; overflow:hidden;}
+  .page-cover img{ width:100%; height:auto; display:block; margin:0 auto; transition:opacity .2s ease;}
+  .page-cover .cover-link:hover img{ opacity:.92;}
+  .page-cover .page-clock{ max-width:1120px; margin:0 auto; padding:10px 24px 14px; text-align:left;
+    font-size:.95rem; font-weight:700; color:#003B8F; background:var(--paper);}
   .grade-hero{ text-align:center; margin:8px 0 32px;}
-  .grade-hero h1{ font-size:clamp(2.2rem, 5vw, 3.4rem); font-weight:800; color:var(--teal);
-                  letter-spacing:.01em; margin:0; text-transform:none;}
+  .grade-hero h1{ font-size:clamp(2.6rem, 6vw, 4.2rem); font-weight:800; color:#0047AB;
+                  letter-spacing:.01em; margin:0; text-align:center; line-height:1.05; text-transform:none;}
+  .grade-hero h1 span{display:block;}
   p.sub{ margin-top:10px; color:#5B6B82; max-width:640px;}
   section.block{ margin-top:56px;}
-  .block-title{ font-size:1.35rem; font-weight:700; color:var(--teal); margin:6px 0 20px;}
+  .block-title{ font-size:1.35rem; font-weight:700; color:var(--brilliant-blue); margin:6px 0 20px;}
 
   /* ---------- Khối 1: Slideshow ---------- */
   .slideshow{ position:relative; border-radius:var(--radius); overflow:hidden; background:var(--ink);
               box-shadow:0 10px 28px rgba(15,28,46,.12);}
-  .slides-track{ display:flex; transition:transform .45s ease;}
-  .slide{ min-width:100%; position:relative; cursor:pointer;}
-  .slide img{ width:100%; height:380px; object-fit:cover; display:block;}
+  .slides-track{ display:flex; transition:transform .45s ease, height .35s ease; height:380px;}
+  .slide{ min-width:100%; height:100%; position:relative; cursor:pointer; display:flex; align-items:center; justify-content:center;}
+  .slide{ overflow:hidden;}
+  .slide img{ width:100%; height:100%; object-fit:contain; object-position:center; display:block; background:var(--ink); transition:transform .3s ease;}
+  .slide:hover img{ transform:scale(1.03);}
   .slide .caption{ position:absolute; left:0; bottom:0; right:0;
                     background:linear-gradient(0deg, rgba(15,28,46,.85), transparent);
                     color:#fff; padding:16px 20px; font-size:.9rem;}
@@ -87,31 +96,104 @@
   .detail-meta .chude-tag{ font-family:'Space Grotesk',monospace; font-size:.72rem; font-weight:600;
                             background:rgba(46,196,182,.12); color:var(--teal); padding:3px 9px; border-radius:6px;}
   .detail-meta .views, .detail-meta .date{ font-size:.78rem; color:#7C8AA0; font-family:'Space Grotesk',monospace;}
-  .detail-title{ font-size:1.25rem; font-weight:700; color:var(--ink); margin:8px 0 16px;}
+  .detail-title{font-size:clamp(2rem,4vw,3.15rem);font-weight:800;line-height:1.15;color:#1957D6;text-align:center;margin:10px 0 22px;letter-spacing:-.02em}
+  .detail-title .title-vi,.detail-title .title-en{display:block}
+  .detail-title .title-en{margin-top:7px;font-size:.56em;font-weight:600;color:#0057B8;font-style:italic;letter-spacing:0}
   .detail-text{ color:#3D4C63; font-size:.95rem; margin-bottom:18px;}
   .detail-text p{ margin-bottom:10px;}
   .detail-text ul, .detail-text ol{ margin:10px 0 10px 22px;}
   .detail-text strong{ color:var(--ink);}
+  .detail-text > p > strong,
+  .detail-text .activity-box > p > strong:first-child{ color:#0066CC;}
+  .detail-text > p > strong:first-child{ font-weight:800;}
   .detail-text table{ width:100%; border-collapse:collapse; margin:14px 0; font-size:.88rem;}
   .detail-text table td, .detail-text table th{ border:1px solid var(--line); padding:8px 10px; text-align:left;}
   .detail-text table th{ background:var(--paper); font-weight:700; color:var(--ink);}
-  .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0;}
+  .detail-text img{ max-width:100%; border-radius:8px; margin:10px 0; transition:transform .25s ease, box-shadow .25s ease; transform-origin:center center; position:relative; z-index:1;}
+  .detail-text img:hover{ transform:none; box-shadow:none; z-index:1;}
+  /* Lens / Magnifier Zoom */
+  .lens-wrap{position:relative;display:inline-block;max-width:100%;line-height:0;overflow:visible;}
+  .lens-wrap > img{display:block;max-width:100%;height:auto;margin:10px 0;transition:filter .18s ease;}
+  .lens-wrap:hover > img{filter:brightness(.96);}
+  .zoom-lens{position:absolute;width:170px;height:170px;border-radius:50%;border:3px solid #fff;box-shadow:0 8px 28px rgba(15,28,46,.30),0 0 0 2px rgba(0,71,171,.55);pointer-events:none;display:none;background-repeat:no-repeat;background-color:#fff;z-index:30;}
+  .lens-wrap.is-active .zoom-lens{display:block;}
+  .summary-map .lens-wrap{display:block;width:100%;}
+  .summary-map .lens-wrap > img{width:100%;}
+
+  .lesson-figure img:hover, .two-col img:hover{ transform:scale(1.06);}
+  .zoomable-image{cursor:crosshair}
+  .zoom-lens{position:fixed;width:190px;height:190px;border-radius:50%;border:4px solid #fff;box-shadow:0 10px 30px rgba(0,0,0,.30),0 0 0 1px rgba(0,0,0,.18);pointer-events:none;z-index:99999;display:none;overflow:hidden;background-repeat:no-repeat;background-color:#fff;will-change:left,top,background-position}
   .detail-text a{ color:var(--teal); text-decoration:underline;}
-  .lesson-figure img{ width:100%; max-height:380px; object-fit:cover; border-radius:12px; border:1px solid var(--line); margin-bottom:18px;}
+  .detail-text .lesson-en{ color:#7C8AA0; font-style:italic; font-size:.85rem;}
+  .detail-text .activity-box{ background:rgba(46,196,182,.07); border-left:3px solid var(--teal);
+    padding:12px 16px; border-radius:0 8px 8px 0; margin:14px 0;}
+  .detail-text details.answer-box{ background:rgba(255,200,69,.08); border:1px solid rgba(255,200,69,.35);
+    border-radius:10px; padding:10px 16px; margin:10px 0;}
+  .detail-text details.answer-box summary{ cursor:pointer; font-weight:700; color:#B4830A; font-size:.85rem;
+    list-style:none;}
+  .detail-text details.answer-box summary::-webkit-details-marker{ display:none;}
+  .detail-text details.answer-box summary::before{ content:"▸ "; }
+  .detail-text details.answer-box[open] summary::before{ content:"▾ "; }
+  .detail-text details.answer-box .answer-content{ margin-top:8px; color:#3D4C63; font-size:.88rem;}
+  .lesson-figure img{ width:100%; height:auto; background:#FFFFFF;
+    border-radius:12px; border:1px solid var(--line); margin:0 auto 18px; display:block;}
+  .cover-figure{ text-align:center; }
+  .cover-figure img{ width:100%; max-width:100%; height:auto; max-height:680px; object-fit:contain; object-position:center; background:#FFFFFF;
+    border-radius:14px; border:1px solid var(--line); margin:0 auto 18px; display:block;}
+  .two-col{ display:flex; gap:20px; align-items:flex-start; margin:16px 0; flex-wrap:wrap;}
+  .two-col img{ width:58%; max-width:100%; object-fit:contain; background:#FFFFFF;
+    border-radius:10px; border:1px solid var(--line); flex-shrink:0;}
+  .two-col .two-col-text{ flex:1 1 260px; min-width:220px; max-width:calc(42% - 22px);}
+  .coffee-box{ margin:26px 0 6px; padding:20px 24px; background:linear-gradient(135deg, var(--ink), #1C3252);
+    border-radius:14px; display:flex; align-items:center; gap:20px; flex-wrap:wrap; color:#fff;}
+  .coffee-box .coffee-text{ flex:1 1 220px;}
+  .coffee-box .coffee-text p{ margin:0; font-size:.92rem; color:#DCE4EE;}
+  .coffee-box .coffee-text strong{ color:var(--amber); font-size:1rem; display:block; margin-bottom:4px;}
+  .coffee-box .coffee-qr{ background:#fff; padding:8px; border-radius:10px; flex-shrink:0;}
+  .coffee-box .coffee-qr img{ width:130px; height:130px; object-fit:contain; display:block; border-radius:4px;}
+  .contact-box .contact-email{ color:var(--amber); font-weight:700; text-decoration:underline; }
+  .contact-links{ display:flex; gap:10px; flex-wrap:wrap; flex-shrink:0; }
+  .contact-btn{ display:inline-flex; align-items:center; gap:6px; padding:10px 16px; border-radius:10px;
+    font:700 .88rem 'Be Vietnam Pro',sans-serif; text-decoration:none; white-space:nowrap; transition:transform .15s ease; }
+  .contact-btn:hover{ transform:translateY(-1px); }
+  .contact-youtube{ background:#FF0000; color:#fff; }
+  .contact-facebook{ background:#1877F2; color:#fff; }
+  @media(max-width:640px){ .contact-box{ flex-direction:column; align-items:stretch;} .contact-links{ justify-content:flex-start;} }
   .video-wrap{ position:relative; width:100%; padding-top:56.25%; border-radius:12px; overflow:hidden; background:#000; margin-bottom:18px;}
   .video-wrap iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0;}
   .drive-frame{ width:100%; height:440px; border:1px solid var(--line); border-radius:12px; margin-bottom:8px;}
   .caption-small{ font-size:.8rem; color:#7C8AA0; margin-bottom:18px;}
 
+  /* ======================================================
+     LỚP TIỆN ÍCH ĐỊNH DẠNG NHANH — dùng khi soạn nội dung bài học
+     trong LESSON_CONTENT (chỉ cần thêm class="..." vào thẻ HTML,
+     không cần nhớ CSS). Xem hướng dẫn dùng chi tiết trong tài liệu
+     "Hướng dẫn biên soạn tin12.html".
+     ====================================================== */
+  .text-center{ text-align:center; }
+  .text-right{ text-align:right; }
+  .text-red{ color:#D32F2F; }
+  .text-blue{ color:#1957D6; }
+  .text-green{ color:#16865B; }
+  .text-amber{ color:#B8860B; }
+  .highlight-box{ background:#FFF8E1; border-left:4px solid #F0C14B; padding:14px 16px;
+                   border-radius:8px; margin:16px 0; }
+  .shadow-box{ box-shadow:0 6px 18px rgba(15,28,46,.14); border-radius:12px; padding:16px;
+                background:#fff; margin:16px 0; border:1px solid var(--line); }
+  .img-full{ width:100%; display:block; border-radius:8px; margin:14px 0; }
+  .img-center{ display:block; margin:14px auto; max-width:70%; border-radius:8px; }
+  @media(max-width:640px){ .img-center{ max-width:100%; } }
+
   /* ---------- Related posts: lưới ảnh 3 cột ---------- */
   .related-box{ margin-top:28px; padding-top:22px; border-top:1px dashed var(--line);}
-  .related-box h4{ font-size:.85rem; font-weight:700; color:var(--teal); text-transform:uppercase;
+  .related-box h4{ font-size:.85rem; font-weight:700; color:var(--brilliant-blue); text-transform:uppercase;
                     letter-spacing:.06em; margin-bottom:14px;}
   .related-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:16px;}
   .related-card{ text-decoration:none; color:inherit; display:block; border-radius:12px; overflow:hidden;
                  border:1px solid var(--line); background:var(--paper); transition:transform .15s, box-shadow .15s;}
   .related-card:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(15,28,46,.1);}
-  .related-card .thumb{ width:100%; height:120px; object-fit:cover; display:block; background:var(--ink);}
+  .related-card .thumb{ width:100%; height:120px; object-fit:cover; display:block; background:var(--ink); transition:transform .3s ease;}
+  .related-card:hover .thumb{ transform:scale(1.06);}
   .related-card .thumb-placeholder{ width:100%; height:120px; display:flex; align-items:center; justify-content:center;
     background:linear-gradient(135deg, var(--ink), #1C3252); color:var(--amber);
     font-family:'Space Grotesk',monospace; font-weight:700; font-size:1.3rem;}
@@ -206,10 +288,68 @@
 .site-nav .lessons{background:#7c3aed;color:#fff}.site-nav .lessons:hover{background:#6d28d9;color:#fff}
 .site-nav .lesson-link{background:#166534;color:#fff}.site-nav .lesson-link:hover{background:#14532d;color:#fff}
 .site-nav .exam{background:#0d6efd;color:#fff}.site-nav .exam:hover{background:#0b5ed7;color:#fff}
-@media(max-width:640px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}}
+@media(max-width:640px){.site-nav .nav-inner{justify-content:flex-start;padding:7px 16px}.site-nav a{font-size:.72rem;padding:8px 9px}.grade-hero h1{font-size:clamp(2.2rem,10vw,3rem)}}
+
+/* =========================================================
+   DIGITAL LEARNING PLATFORM — giao diện năng lực số + AI
+   ========================================================= */
+:root{
+  --blue-deep:#1957D6; --blue:#0066CC; --green:#16865B; --orange:#D97706; --purple:#7C3AED;
+  --red:#C62828; --shadow:0 12px 32px rgba(15,28,46,.09);
+}
+.platform-hero{margin:22px 0 28px;padding:28px;border-radius:20px;background:linear-gradient(135deg,#052b67,#0b5bb5);color:#fff;box-shadow:var(--shadow)}
+.platform-hero .hero-grid{display:grid;grid-template-columns:1.4fr .8fr;gap:22px;align-items:center}
+.platform-kicker{font-size:.72rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#bfe3ff}
+.platform-hero h2{font-size:clamp(1.5rem,3vw,2.25rem);margin:6px 0 8px;line-height:1.15}.platform-hero p{color:#e4f1ff;max-width:720px;font-size:.92rem}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}.hero-btn,.ai-btn{border:0;border-radius:10px;padding:10px 14px;font:700 .82rem inherit;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:7px}.hero-btn{background:#fff;color:var(--blue-deep)}.hero-btn.secondary{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.2)}
+.hero-progress{background:rgba(255,255,255,.1);padding:18px;border:1px solid rgba(255,255,255,.16);border-radius:16px}.hero-progress strong{font-size:1.8rem}.hero-progress .progress-track{height:9px;background:rgba(255,255,255,.18);border-radius:8px;overflow:hidden;margin:10px 0 6px}.hero-progress .progress-fill{height:100%;background:#FFC845;width:0;transition:width .4s}.hero-progress small{color:#d7e8ff}
+.learning-panel{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:0 0 26px}.learning-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 5px 16px rgba(15,28,46,.04)}.learning-card .icon{font-size:1.35rem}.learning-card strong{display:block;color:var(--ink);font-size:.88rem;margin:5px 0}.learning-card span{font-size:.77rem;color:#68788f}.badge{display:inline-flex;align-items:center;border-radius:999px;padding:4px 9px;font-size:.68rem;font-weight:800;margin:3px 3px 0 0}.badge-blue{background:#e7f1ff;color:#0057B8}.badge-green{background:#e7f7ef;color:#14764f}.badge-orange{background:#fff2df;color:#a65f00}.badge-purple{background:#f0e9ff;color:#6d28d9}.badge-red{background:#ffebeb;color:#b42323}
+.lesson-tools{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 18px;padding:12px 14px;background:#f7faff;border:1px solid #dbe8f7;border-radius:12px}.lesson-tools button{border:1px solid #cbd9ea;background:#fff;color:#174a86;border-radius:9px;padding:8px 11px;font:700 .76rem inherit;cursor:pointer}.lesson-tools button:hover{background:#eaf3ff}
+.lesson-goals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(2,minmax(0,1fr));gap:14px;margin:18px 0 26px;align-items:stretch}.goal-card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fff;min-height:0;height:100%;display:flex;flex-direction:column;box-shadow:0 5px 16px rgba(15,28,46,.06)}.goal-card:before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px}.goal-card.blue:before{background:#0066CC}.goal-card.green:before{background:#16865B}.goal-card.purple:before{background:#7C3AED}.goal-card.orange:before{background:#D97706}.goal-card h4{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:9px}.goal-card p{font-size:.82rem;color:#52647b;line-height:1.62}.goal-card.blue h4{color:#0066CC}.goal-card.green h4{color:#16865B}.goal-card.purple h4{color:#7C3AED}.goal-card.orange h4{color:#D97706}.goal-card:hover{transform:translateY(-2px);box-shadow:0 8px 22px rgba(15,28,46,.08);transition:.25s ease}
+.ai-lab{margin:24px 0;padding:18px;border-radius:16px;background:linear-gradient(135deg,#faf7ff,#f4efff);border:1px solid #e4d8ff}.ai-lab h3{color:#6d28d9;font-size:1rem;margin-bottom:5px}.ai-lab p{font-size:.8rem;color:#62557a}.ai-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.ai-btn{background:#7c3aed;color:#fff}.ai-btn.alt{background:#fff;color:#6d28d9;border:1px solid #d8c8ff}.ai-note{font-size:.72rem!important;margin-top:9px;color:#75658d!important}
+.digital-section{margin-top:28px;padding:22px;border-radius:16px;background:#fff;border:1px solid var(--line);box-shadow:0 5px 18px rgba(15,28,46,.04)}.digital-section h3{color:var(--blue-deep);font-size:1rem;margin-bottom:14px}.skill-row{display:flex;gap:10px;align-items:center;margin:10px 0}.skill-row .skill-name{width:185px;font-size:.78rem;font-weight:700;color:#42536b}.skill-meter{height:8px;flex:1;background:#e8edf3;border-radius:8px;overflow:hidden}.skill-meter i{display:block;height:100%;background:#16865B;border-radius:8px}.skill-row b{font-size:.7rem;color:#64748b;width:34px;text-align:right}
+.progress-checklist{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}.progress-check{display:flex;align-items:center;gap:8px;padding:9px 10px;background:#f8fafc;border-radius:9px;font-size:.78rem;color:#52647b}.progress-check input{accent-color:#16865B}
+.ai-modal{position:fixed;inset:0;background:rgba(5,20,42,.58);z-index:10000;display:none;align-items:center;justify-content:center;padding:18px}.ai-modal.show{display:flex}.ai-dialog{width:min(680px,100%);background:#fff;border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.3);overflow:hidden}.ai-dialog-head{padding:16px 18px;background:#6d28d9;color:#fff;display:flex;justify-content:space-between;align-items:center}.ai-dialog-head button{background:transparent;color:#fff;border:0;font-size:1.4rem;cursor:pointer}.ai-dialog-body{padding:18px}.ai-dialog textarea{width:100%;min-height:125px;border:1px solid #d7ddea;border-radius:10px;padding:12px;font:inherit;font-size:.86rem;resize:vertical}.ai-presets{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0}.ai-presets button{border:1px solid #ddd1f7;background:#faf8ff;color:#6d28d9;border-radius:8px;padding:7px 9px;font-size:.72rem;font-weight:700;cursor:pointer}.ai-output{margin-top:12px;padding:12px;background:#f8fafc;border-radius:10px;font-size:.8rem;color:#52647b;display:none}.ai-output.show{display:block}
+.search-panel{display:flex;gap:10px;margin:0 0 18px}.search-panel input{flex:1;border:1px solid var(--line);border-radius:10px;padding:11px 13px;font:inherit;font-size:.86rem}.search-panel button{border:0;background:var(--blue-deep);color:#fff;border-radius:10px;padding:0 15px;font-weight:700;cursor:pointer}
+.filtered-out{display:none!important}
+
+  /* ---------- ÔN TẬP CUỐI BÀI ---------- */
+  .lesson-review{margin:34px 0 26px;padding:24px;border:1px solid rgba(39,82,214,.18);border-radius:16px;background:linear-gradient(180deg,#fff,#f7f9ff);box-shadow:0 8px 24px rgba(15,28,46,.07)}
+  .review-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}.review-head h3{margin:0;color:#1957D6;font-size:1.35rem}.review-head p{margin:6px 0 0;color:#66758b;font-size:.88rem}
+  .review-rule{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0 20px}.rule-chip{padding:10px 12px;border-radius:10px;background:#eef4ff;border:1px solid #d9e4ff;font-size:.82rem;color:#24436d}.rule-chip strong{color:#1957D6}
+  .quiz-question{background:#fff;border:1px solid var(--line);border-radius:12px;padding:16px 16px 14px;margin:12px 0}.quiz-question .q-title{font-weight:700;color:#16233A;margin-bottom:12px;line-height:1.5}.quiz-options{display:grid;gap:8px}.quiz-option{display:flex;align-items:flex-start;gap:9px;padding:9px 10px;border:1px solid transparent;border-radius:8px;cursor:pointer}.quiz-option:hover{background:#f5f8ff;border-color:#dbe5ff}.quiz-option input{margin-top:4px;accent-color:#2752D6}.tf-grid{display:grid;gap:8px}.tf-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:9px 10px;background:#f8fafc;border-radius:8px}.tf-row select{border:1px solid #ccd6e5;border-radius:7px;padding:7px 10px;background:#fff;font:inherit}.short-answer{width:100%;min-height:120px;resize:vertical;border:1px solid #ccd6e5;border-radius:10px;padding:12px;font:inherit;color:#26364e;outline:none}.short-answer:focus{border-color:#2752D6;box-shadow:0 0 0 3px rgba(39,82,214,.1)}
+  .review-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.review-btn{border:0;border-radius:10px;padding:11px 16px;font:700 .9rem 'Be Vietnam Pro',sans-serif;cursor:pointer;background:#2752D6;color:#fff}.review-btn.secondary{background:#eef4ff;color:#17429b}.review-btn:hover{transform:translateY(-1px)}
+  .quiz-result{display:none;margin-top:18px;padding:16px;border-radius:12px;background:#eef8f4;border:1px solid #bfe7d7}.quiz-result.show{display:block}.score-big{font-size:1.5rem;font-weight:800;color:#006b4f}.score-detail{margin-top:7px;color:#3d4c63;font-size:.9rem;line-height:1.6}.ai-grade-note{margin-top:10px;padding:11px 12px;border-left:3px solid #7c4dff;background:#f5f0ff;color:#51416e;border-radius:0 8px 8px 0;font-size:.84rem}.quiz-feedback{display:none;margin-top:8px;font-size:.83rem}.quiz-feedback.show{display:block}.correct{color:#087f5b}.wrong{color:#c62828}
+
+  .lesson-summary{margin:8px 0 24px;padding:20px;border:1px solid rgba(39,82,214,.16);border-radius:16px;background:#fff;box-shadow:0 6px 20px rgba(15,28,46,.05)}.summary-title{display:flex;gap:12px;align-items:center;margin-bottom:16px}.summary-title>span{font-size:1.7rem}.summary-title h3{margin:0;color:#1957D6;font-size:1.18rem}.summary-title p{margin:4px 0 0;color:#748198;font-size:.82rem}.summary-layout{display:flex;flex-direction:column;gap:22px}.summary-map{display:flex;align-items:center;justify-content:center;background:#f8fafc;border-radius:12px;padding:14px;width:100%}.summary-map img{width:100%;max-height:640px;object-fit:contain;border-radius:10px;border:1px solid var(--line)}.summary-points{display:grid;gap:18px;align-content:start;padding-left:24px;border-left:3px solid #dbe5ff}.summary-point{display:flex;gap:16px;padding:18px 20px;background:#f7f9ff;border:1px solid #e1e8f7;border-radius:12px;font-size:1.05rem;line-height:1.9;color:#26344c;box-shadow:0 2px 10px rgba(15,28,46,.05)}.summary-point strong{color:#1957D6}.summary-point b{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#7C3AED;color:#fff;flex:none;font-size:.98rem;font-weight:800}.caption-small{text-align:center;margin-top:6px}
+
+  @media(max-width:760px){.platform-hero .hero-grid,.lesson-goals{grid-template-columns:1fr;grid-template-rows:none}.learning-panel{grid-template-columns:repeat(2,1fr)}.progress-checklist{grid-template-columns:1fr}.skill-row .skill-name{width:135px}.two-col img{width:100%!important}.two-col .two-col-text{max-width:100%!important}}
+@media(max-width:480px){.learning-panel{grid-template-columns:1fr}.platform-hero{padding:20px}.hero-progress{margin-top:4px}}
+
+
+/* ===== Lesson reading + review quiz enhancements ===== */
+.detail-text{line-height:1.82}.detail-text>p,.detail-text>ul,.detail-text>ol,.detail-text>table,.detail-text>figure,.detail-text>.activity-box,.detail-text>details,.detail-text>.two-col{margin-top:18px;margin-bottom:18px}.detail-text .activity-box p+p,.detail-text .two-col-text p+p{margin-top:14px}
+.tf-grid{display:grid;gap:10px}.tf-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 12px;background:#f8fafc;border:1px solid #e6ebf2;border-radius:10px}.tf-row>span{line-height:1.55}.tf-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end}.tf-choice{width:42px;height:42px;border-radius:50%;border:2px solid transparent;display:inline-flex;align-items:center;justify-content:center;font:800 .72rem 'Be Vietnam Pro',sans-serif;cursor:pointer;transition:.18s ease}.tf-choice.true{background:#e9f8ef;color:#16865B;border-color:#9dd8b8}.tf-choice.false{background:#ffeded;color:#C62828;border-color:#f1aaaa}.tf-choice:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 10px rgba(15,28,46,.10)}.tf-choice.selected.true{background:#16865B;color:#fff;border-color:#16865B;box-shadow:0 0 0 3px rgba(22,134,91,.15)}.tf-choice.selected.false{background:#C62828;color:#fff;border-color:#C62828;box-shadow:0 0 0 3px rgba(198,40,40,.14)}.tf-choice:disabled{cursor:not-allowed;opacity:.72}
+.attempt-status{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border-radius:10px;background:#eef4ff;border:1px solid #d8e4fb;color:#294a78;font-size:.84rem}.attempt-badge{font-weight:800;color:#1957D6}.attempt-locked{color:#C62828;font-weight:800}.quiz-answer-reveal{margin-top:16px;padding:15px 16px;border-radius:12px;background:#f0fdf4;border:1px solid #b7e4c7;color:#244b36}.quiz-answer-reveal h4{margin:0 0 9px;color:#16865B}.answer-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.answer-key{padding:9px 11px;background:#fff;border:1px solid #dceee2;border-radius:9px;font-size:.84rem;line-height:1.5}.answer-key strong{color:#1957D6}
+@media(max-width:640px){.tf-row{grid-template-columns:1fr}.tf-actions{justify-content:flex-start}.answer-grid{grid-template-columns:1fr}}
+.attempt-tip{margin:-4px 0 14px;padding:9px 12px;border-radius:10px;background:#fff8e6;border:1px dashed #f0c14b;color:#7a5b00;font-size:.83rem;font-weight:600}
+.score-table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:.86rem}
+.score-table th,.score-table td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+.score-table th{background:#eef4ff;color:#1957D6;font-weight:700}
+.score-table td.sc-diem{text-align:center;font-weight:800;white-space:nowrap}
+.score-table td.sc-dapan{color:#3d4c63}
+.score-total{margin-top:6px;font-size:1.05rem;font-weight:800;color:#006b4f}
+
+/* ===== Chống copy / chụp màn hình / DevTools ===== */
+body{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
+input,textarea{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text;}
+img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-drag:none;user-drag:none;}
+.protect-screenshot-veil{position:fixed;inset:0;background:#0F1C2E;color:#fff;display:none;align-items:center;justify-content:center;z-index:99999;font-family:'Be Vietnam Pro',sans-serif;font-size:1rem;text-align:center;padding:24px}
+.protect-screenshot-veil.show{display:flex}
 </style>
 </head>
 <body>
+<div class="protect-screenshot-veil" id="protect-veil">🔒 Nội dung được bảo vệ — vui lòng không sao chép/chụp màn hình.</div>
 
 <header>
   <div class="wrap">
@@ -223,7 +363,7 @@
     <a href="index.html#timetable">TIMETABLE</a>
     <a class="lessons" href="index.html#lessons">LESSONS</a>
     <a class="lesson-link" href="tin10.html">TIN 10</a>
-    <a class="lesson-link" href="tin11.html">TIN 11</a>
+    <a class="lesson-link" href="tin12.html">TIN 11</a>
     <a class="lesson-link" href="tin12.html">TIN 12</a>
     <a class="exam" href="exam.html">EXAMS</a>
     <a href="index.html#knowledge">KNOWLEDGE</a>
@@ -231,10 +371,48 @@
   </div>
 </nav>
 
+<div class="page-cover">
+  <a href="https://webh2t.github.io/" class="cover-link" aria-label="Về trang chủ WEBH2T+" title="Về trang chủ WEBH2T+">
+    <img src="assets/TIN12bia.jpg" alt="Ảnh bìa Tin học 12">
+  </a>
+  <div class="page-clock" id="page-clock">Khánh Hòa, ngày --/--/---- – --:--:--</div>
+</div>
+
 <main>
   <div class="grade-hero">
-    <h1>Grade 12 Informatics</h1>
+    <h1><span>Grade 12</span><span>Informatics</span></h1>
   </div>
+
+  <section class="platform-hero" aria-label="TIN HỌC 11 Digital Learning Platform">
+    <div class="hero-grid">
+      <div>
+        <div class="platform-kicker">Digital Learning Platform • AI Era</div>
+        <h2>💻 TIN HỌC 11 – HỌC TẬP SỐ • NĂNG LỰC SỐ • AI</h2>
+        <p>Không chỉ học kiến thức: học sinh đọc hiểu, thực hành, giải quyết vấn đề, sử dụng công cụ số có trách nhiệm và biết hợp tác với AI.</p>
+        <div class="hero-actions">
+          <button class="hero-btn" onclick="openAILab()">🤖 Mở AI Tutor</button>
+          <button class="hero-btn secondary" onclick="document.getElementById('digital-dashboard').scrollIntoView({behavior:'smooth'})">📊 Năng lực số</button>
+        </div>
+      </div>
+      <div class="hero-progress">
+        <div><strong id="global-progress">0%</strong></div>
+        <div class="progress-track"><div class="progress-fill" id="global-progress-bar"></div></div>
+        <small>Tiến độ bài học đã đánh dấu hoàn thành trên thiết bị này.</small>
+      </div>
+    </div>
+  </section>
+
+  <div class="search-panel">
+    <input id="lesson-search" type="search" placeholder="🔎 Tìm bài học, chủ đề, từ khóa..." oninput="filterLessons(this.value)">
+    <button onclick="document.getElementById('lesson-search').value='';filterLessons('')">Xóa</button>
+  </div>
+
+  <section class="learning-panel" id="digital-dashboard">
+    <div class="learning-card"><div class="icon">📚</div><strong>Kiến thức</strong><span>Nắm khái niệm và nội dung cốt lõi.</span></div>
+    <div class="learning-card"><div class="icon">💻</div><strong>Năng lực số</strong><span>Thực hành, quản lý dữ liệu và an toàn số.</span></div>
+    <div class="learning-card"><div class="icon">🤖</div><strong>Năng lực AI</strong><span>Biết hỏi, kiểm chứng và dùng AI có trách nhiệm.</span></div>
+    <div class="learning-card"><div class="icon">🚀</div><strong>Vận dụng</strong><span>Giải quyết tình huống và tạo sản phẩm số.</span></div>
+  </section>
   
 <!-- ============ Bài giảng mới ============ -->
   <section class="block">
@@ -261,11 +439,65 @@
           <span class="date" id="d-date">📅 —</span>
           <span class="views" id="d-views">👁 0 lượt xem</span>
         </div>
-        <h3 class="detail-title" id="d-title"></h3>
-        <div class="detail-text" id="d-text"></div>
+        <h1 class="detail-title" id="d-title"></h1>
         <div id="d-image"></div>
+        <div id="lesson-summary"></div>
+        <div class="lesson-goals" id="lesson-goals"></div>
+        <div class="lesson-tools">
+          <button onclick="toggleLessonComplete()" id="complete-btn">☐ Đánh dấu hoàn thành</button>
+          <button onclick="openAILab('Giải thích bài học này theo cách dễ hiểu cho học sinh lớp 11, không làm bài hộ.')">🤖 AI Gia sư</button>
+          <button onclick="openAILab('Tạo 5 câu hỏi kiểm tra nhanh dựa trên bài học hiện tại. Sau mỗi câu hãy chờ học sinh trả lời.')">🧪 AI Kiểm tra</button>
+          <button onclick="openAILab('Đưa ra một tình huống thực tế để học sinh vận dụng kiến thức bài này. Chỉ gợi ý, không đưa đáp án ngay.')">🚀 AI Thử thách</button>
+          <button onclick="copyLessonPrompt()">📋 Copy prompt</button>
+          <button onclick="toggleTeacherMode()">👨‍🏫 Chế độ giáo viên</button>
+        </div>
+        <div class="detail-text" id="d-text"></div>
+        <!-- 🔓/🔒 Video và Tài liệu tự ẩn khi không có: chỉ cần để
+             video:"" hoặc doc:"" trong LESSON_CONTENT của bài đó (xem
+             hướng dẫn phía trên object LESSON_CONTENT) — KHÔNG cần
+             xoá/khoá gì trong 2 dòng <div> dưới đây. -->
         <div id="d-video"></div>
         <div id="d-doc"></div>
+        <div id="lesson-review"></div>
+
+        <div class="ai-lab">
+          <h3>🤖 AI LEARNING LAB</h3>
+          <p>AI là <strong>trợ lý học tập</strong>: gợi ý, đặt câu hỏi, giải thích và phản biện. Học sinh cần tự suy nghĩ và kiểm chứng thông tin.</p>
+          <div class="ai-actions">
+            <button class="ai-btn" onclick="openAILab()">Mở AI Tutor</button>
+            <button class="ai-btn alt" onclick="openAILab('Hãy gợi ý từng bước để em tự giải bài này. Không đưa đáp án cuối cùng.')">💡 Gợi ý từng bước</button>
+            <button class="ai-btn alt" onclick="openAILab('Hãy đóng vai giáo viên và đặt câu hỏi Socratic để kiểm tra xem em thực sự hiểu bài này chưa.')">🧠 Hỏi ngược Socratic</button>
+          </div>
+          <p class="ai-note">🟡 Quy tắc AI: dùng để học và kiểm chứng; không sao chép nguyên câu trả lời để nộp như sản phẩm cá nhân.</p>
+        </div>
+
+        <div class="digital-section">
+          <h3>📊 NĂNG LỰC SỐ & TIẾN ĐỘ CÁ NHÂN</h3>
+          <div id="skill-dashboard"></div>
+          <div class="progress-checklist" id="lesson-checklist"></div>
+        </div>
+
+        <div class="digital-section teacher-mode" id="teacher-mode" style="display:none">
+          <h3>👨‍🏫 TEACHER MODE — GỢI Ý TỔ CHỨC DẠY HỌC</h3>
+          <div class="progress-checklist">
+            <div class="progress-check">🎯 Xác định mục tiêu và yêu cầu cần đạt</div>
+            <div class="progress-check">👥 Tổ chức cá nhân/nhóm theo nhiệm vụ</div>
+            <div class="progress-check">🤖 Quy định mức độ được phép dùng AI</div>
+            <div class="progress-check">📝 Đánh giá sản phẩm và quá trình</div>
+          </div>
+          <div class="ai-actions"><button class="ai-btn alt" onclick="openAILab('Hãy đóng vai chuyên gia sư phạm Tin học 12. Dựa trên bài học hiện tại, đề xuất mục tiêu, hoạt động khởi động, hoạt động khám phá, luyện tập, vận dụng, câu hỏi đánh giá và một hoạt động AI có kiểm soát.')">🤖 AI soạn kế hoạch</button><button class="ai-btn alt" onclick="openAILab('Hãy tạo rubric 4 mức để đánh giá sản phẩm học tập của học sinh trong bài hiện tại, chú trọng kiến thức, thực hành, năng lực số và việc sử dụng AI có trách nhiệm.')">📊 AI tạo rubric</button></div>
+        </div>
+
+        <div class="coffee-box contact-box">
+          <div class="coffee-text">
+            <strong>📩 Mọi thắc mắc bài học, mời bạn liên hệ tác giả</strong>
+            <p>Email: <a class="contact-email" href="mailto:websiteh2t@gmail.com">websiteh2t@gmail.com</a></p>
+          </div>
+          <div class="contact-links">
+            <a class="contact-btn contact-youtube" href="https://www.youtube.com/@WEBH2T" target="_blank" rel="noopener" aria-label="Kênh YouTube WEBH2T">▶️ YouTube</a>
+            <a class="contact-btn contact-facebook" href="https://www.facebook.com/share/g/1BmLZhpvbZ/" target="_blank" rel="noopener" aria-label="Nhóm Facebook WEBH2T">📘 Facebook</a>
+          </div>
+        </div>
 
         <div class="comments-section">
           <h4 id="comments-heading">Bình luận</h4>
@@ -282,6 +514,27 @@
   </section>
 
   <!-- ============ Bài tập thực hành ============ -->
+  <!-- 📌 KHOÁ/MỞ từng phiếu bài tập bên dưới:
+       - Mỗi chủ đề là 1 khối <div class="hw-card"> ... </div> độc lập.
+       - Chủ đề nào KHÔNG cần bài tập về nhà: bọc toàn bộ khối đó
+         (từ thẻ mở <div class="hw-card"> đến thẻ đóng </div> tương
+         ứng) trong một cặp comment HTML để "khoá" (ẩn) mà KHÔNG xoá
+         mất nội dung — cú pháp cặp comment: mở bằng dấu nhỏ-hơn, chấm
+         than, 2 gạch ngang; đóng bằng 2 gạch ngang rồi dấu lớn-hơn
+         (giống các dòng chú thích đang thấy quanh đây, ví dụ ngay
+         dòng phía trên "Bài tập thực hành").
+       - Muốn "mở" lại: xoá cặp mở/đóng comment đó đi, giữ nguyên
+         khối <div class="hw-card"> bên trong.
+       - Muốn thêm chủ đề mới: copy nguyên 1 khối <div class="hw-card">
+         đang có, dán vào trong .hw-grid, đổi hw-tag/hw-name/hw-desc
+         và link Google Form (href) cho đúng. -->
+  <!-- 📌 TOÀN BỘ khối "Practice Exercises" bên dưới đang được KHOÁ (ẩn)
+       vì hiện chưa có phiếu bài tập thật cho các chủ đề. Khi có bài
+       tập thật, MỞ lại bằng cách xoá cặp comment HTML bao quanh khối
+       section bên dưới (cặp mở/đóng giống các dòng chú thích đang
+       thấy quanh đây), rồi cập nhật lại href từng hw-card cho đúng
+       link thật. -->
+  <!--
   <section class="block">
     <h2 class="block-title">Practice Exercises</h2>
     <div class="homework-text">
@@ -296,21 +549,22 @@
       <div class="hw-card">
         <div>
           <span class="hw-tag">CHỦ ĐỀ 1</span>
-          <div class="hw-name">Phiếu bài tập — Trí tuệ nhân tạo</div>
+          <div class="hw-name">Phiếu bài tập — Hệ điều hành</div>
           <div class="hw-desc">10 câu trắc nghiệm + 2 câu tự luận</div>
         </div>
         <a href="https://forms.gle/FORM_ID_BAITAP_CD1" target="_blank" rel="noopener">Làm bài →</a>
       </div>
       <div class="hw-card">
         <div>
-          <span class="hw-tag">CHỦ ĐỀ 4</span>
-          <div class="hw-name">Phiếu bài tập — Thiết kế trang web HTML/CSS</div>
-          <div class="hw-desc">Nộp file trang web qua Drive</div>
+          <span class="hw-tag">CHỦ ĐỀ 6</span>
+          <div class="hw-name">Phiếu bài tập — Tạo và khai thác cơ sở dữ liệu</div>
+          <div class="hw-desc">Nộp file thực hành qua Drive</div>
         </div>
         <a href="https://drive.google.com/drive/folders/FOLDER_ID_NOPBAI" target="_blank" rel="noopener">Nộp bài →</a>
       </div>
     </div>
   </section>
+  -->
 
   
 
@@ -332,13 +586,34 @@
         <div class="progress-track"><div class="progress-fill" id="posted-ratio-bar" style="width:0%"></div></div>
       </div>
     </div>
-    <h4 style="font-size:.85rem; font-weight:700; color:var(--teal); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;">Most Viewed Posts</h4>
+    <h4 style="font-size:.85rem; font-weight:700; color:var(--brilliant-blue); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px;">Most Viewed Posts</h4>
     <div class="top-list" id="top-list">
       <div class="top-item"><span class="ttitle">Đang tải…</span></div>
     </div>
   </section>
 
 </main>
+
+<div class="ai-modal" id="ai-modal" onclick="if(event.target===this) closeAILab()">
+  <div class="ai-dialog" role="dialog" aria-modal="true" aria-labelledby="ai-dialog-title">
+    <div class="ai-dialog-head"><strong id="ai-dialog-title">🤖 AI Tutor – Tin học 12</strong><button onclick="closeAILab()" aria-label="Đóng">×</button></div>
+    <div class="ai-dialog-body">
+      <p style="font-size:.8rem;color:#64748b;margin-bottom:9px">Nhập yêu cầu cho AI. Website tạo prompt theo bài đang học; bạn có thể sao chép sang ChatGPT, Gemini, Copilot hoặc công cụ AI của trường.</p>
+      <div class="ai-presets">
+        <button onclick="setAIPrompt('Giải thích bài học hiện tại thật dễ hiểu, dùng ví dụ đời sống.')">Giải thích dễ hiểu</button>
+        <button onclick="setAIPrompt('Đặt câu hỏi Socratic để kiểm tra em hiểu bài, từng câu một.')">Socratic</button>
+        <button onclick="setAIPrompt('Tạo 5 câu trắc nghiệm từ dễ đến khó, chưa cho đáp án ngay.')">Kiểm tra</button>
+        <button onclick="setAIPrompt('Cho một nhiệm vụ thực tế để em vận dụng kiến thức bài này.')">Vận dụng</button>
+      </div>
+      <textarea id="ai-prompt" placeholder="Ví dụ: Hãy gợi ý cho em cách giải..."></textarea>
+      <div class="ai-actions">
+        <button class="ai-btn" onclick="copyAIPrompt()">📋 Sao chép prompt</button>
+        <button class="ai-btn alt" onclick="openChatGPTWithPrompt()">↗ Mở ChatGPT</button>
+      </div>
+      <div class="ai-output" id="ai-output">Đã tạo prompt. Hãy dán vào công cụ AI bạn đang sử dụng.</div>
+    </div>
+  </div>
+</div>
 
 <button id="back-to-top" aria-label="Về đầu trang" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
 
@@ -353,6 +628,21 @@
    CẤU HÌNH FIREBASE — thay bằng thông số dự án của bạn
    (Firebase Console → Project settings → General → Your apps)
    ====================================================== */
+/* ======================================================
+   ĐỒNG HỒ THỜI GIAN THỰC dưới ảnh bìa đầu trang
+   ====================================================== */
+function updatePageClock(){
+  const el = document.getElementById('page-clock');
+  if(!el) return;
+  const now = new Date();
+  const pad = n => String(n).padStart(2,'0');
+  const dd = pad(now.getDate()), mm = pad(now.getMonth()+1), yyyy = now.getFullYear();
+  const hh = pad(now.getHours()), mi = pad(now.getMinutes()), ss = pad(now.getSeconds());
+  el.textContent = `Khánh Hòa, ngày ${dd}/${mm}/${yyyy} – ${hh}:${mi}:${ss}`;
+}
+updatePageClock();
+setInterval(updatePageClock, 1000);
+
 const firebaseConfig = {
   apiKey: "AIzaSyDOqMkioHhQ9YuFY9mCpx_kRLOLL_tf9jU",
   authDomain: "webh2t-tin.firebaseapp.com",
@@ -366,7 +656,7 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 try { firebase.analytics(); } catch (e) { /* Analytics không bắt buộc cho bình luận, bỏ qua nếu lỗi mạng */ }
-const PAGE_PREFIX = 'tin12'; // định danh riêng cho trang này, tránh trùng bình luận với tin11/tin12
+const PAGE_PREFIX = 'tin12'; // định danh riêng cho trang này, tránh trùng bình luận với tin12/tin12
 
 function escapeHTML(str){
   const d = document.createElement('div');
@@ -388,15 +678,15 @@ const CHUDE_NAMES = {
 };
 
 const LESSONS = [
-  {id:1,  chude:1, ten:"Làm quen với Trí tuệ nhân tạo"},
-  {id:2,  chude:1, ten:"Trí tuệ nhân tạo trong khoa học và đời sống"},
-  {id:3,  chude:2, ten:"Một số thiết bị mạng thông dụng"},
-  {id:4,  chude:2, ten:"Giao thức mạng"},
-  {id:5,  chude:2, ten:"Thực hành chia sẻ tài nguyên trên mạng"},
-  {id:6,  chude:3, ten:"Giao tiếp và ứng xử trong không gian mạng"},
-  {id:7,  chude:4, ten:"HTML và cấu trúc trang web"},
-  {id:8,  chude:4, ten:"Định dạng văn bản"},
-  {id:9,  chude:4, ten:"Tạo danh sách, bảng"},
+  {id:1, chude:1, ten:"Làm quen với Trí tuệ nhân tạo"},
+  {id:2, chude:1, ten:"Trí tuệ nhân tạo trong khoa học và đời sống"},
+  {id:3, chude:2, ten:"Một số thiết bị mạng thông dụng"},
+  {id:4, chude:2, ten:"Giao thức mạng"},
+  {id:5, chude:2, ten:"Thực hành chia sẻ tài nguyên trên mạng"},
+  {id:6, chude:3, ten:"Giao tiếp và ứng xử trong không gian mạng"},
+  {id:7, chude:4, ten:"HTML và cấu trúc trang web"},
+  {id:8, chude:4, ten:"Định dạng văn bản"},
+  {id:9, chude:4, ten:"Tạo danh sách, bảng"},
   {id:10, chude:4, ten:"Tạo liên kết"},
   {id:11, chude:4, ten:"Chèn tệp tin đa phương tiện và khung nội tuyến vào trang web"},
   {id:12, chude:4, ten:"Tạo biểu mẫu"},
@@ -422,34 +712,222 @@ const LESSONS = [
    Thêm object mới vào đây theo id để bổ sung nội dung cho bài tương ứng.
    ngay: định dạng dd/mm/yyyy */
 /* ======================================================
-   📌 MẪU "NEW POST" — COPY khối bên dưới, đổi số ID cho đúng
-   bài học, dán vào bên trong object LESSON_CONTENT ở dưới,
-   rồi điền nội dung. Không cần sửa gì khác, trang tự cập nhật.
+   📌 HƯỚNG DẪN VIẾT BÀI MỚI — ĐỌC KỸ TRƯỚC KHI DÁN NỘI DUNG
+
+   BƯỚC 1 — Xác định ID bài học: đã có sẵn trong mảng LESSONS ở trên
+   (ví dụ Bài 7 có id:7). Không tự đặt id mới, không trùng id đã dùng.
+
+   BƯỚC 2 — Vị trí dán: kéo xuống cuối object LESSON_CONTENT (ngay
+   trước dấu `};` đóng object, sau bài có id lớn nhất hiện có), dán
+   khối mẫu bên dưới rồi đổi ID_BAI thành số bài tương ứng. Sau đó
+   điền nội dung — không cần sửa bất kỳ đoạn code nào khác, các phần
+   Practice/Video/Tài liệu/Mục lục sẽ tự cập nhật theo id bạn thêm.
 
    ID_BAI: {
      ngay: "dd/mm/yyyy",
      text: `<p>Nội dung bài học...</p>`,
-     img: "assets/tin12-baiX-minhhoa.jpg",   // để "" nếu không có ảnh
+     img: "assets/tin12/tin12-baiX-minhhoa.jpg",   // để "" nếu không có ảnh bìa
      video: "ID_VIDEO_YOUTUBE",               // để "" nếu không có video
      doc: "ID_FILE_GOOGLE_DRIVE"              // để "" nếu không có tài liệu
    },
+
+   BƯỚC 3 — Lưu ý khi dán ảnh để KHÔNG bị lỗi hình:
+   • Ảnh minh hoạ trong "text" luôn đặt trong khối:
+       <figure class="lesson-figure"><img src="assets/tin12/TÊN_ẢNH.jpg" alt="Mô tả ảnh"></figure>
+   • Đường dẫn ảnh phải khớp CHÍNH XÁC (phân biệt hoa/thường) với tên
+     file đã upload vào thư mục assets/tin12/ trên GitHub — sai 1 ký
+     tự là ảnh sẽ không hiển thị (vỡ ảnh).
+   • Ảnh bìa của bài (hiện ở đầu trang chi tiết + Latest Lessons) là
+     trường "img" riêng, không phải ảnh trong "text".
+   • KHÔNG dùng ảnh từ máy tính (C:\...) hay Word — phải upload lên
+     GitHub trước rồi mới dùng đường dẫn dạng "assets/tin12/...".
+
+   BƯỚC 4 — Lưu ý cú pháp khi dán nội dung (text dùng dấu backtick `):
+   • Nếu nội dung bài có chứa dấu backtick ` hoặc ${ } thật sự (hiếm
+     khi cần), phải thêm dấu \\ phía trước để không làm vỡ code.
+   • Luôn đóng đủ thẻ mở: mỗi <div>, <details>, <figure> mở ra đều
+     phải có thẻ đóng tương ứng, nếu không cả trang có thể trắng.
+   • Có thể COPY nguyên khối HTML mẫu từ bài đã có (ví dụ Bài 1) rồi
+     sửa lại nội dung — cấu trúc class (activity-box, answer-box,
+     answer-content, lesson-en) cần giữ nguyên để giữ đúng định dạng.
+
+   BƯỚC 5 — Các khối dữ liệu khác cần bổ sung cho bài mới (không bắt
+   buộc nhưng nên có để bài hiển thị đầy đủ như các bài mẫu):
+   • LESSON_SUMMARIES[ID_BAI] = {img:"assets/tin12/...jpg", items:["ý 1","ý 2",...]}
+     → hiển thị khối "Tóm tắt kiến thức" (sơ đồ tư duy + mục tiêu).
+   • LESSON_PEDAGOGY[ID_BAI] = {summary:"...", digital:"...", ai:"...", apply:"..."}
+     → hiển thị 4 thẻ mục tiêu/năng lực đầu bài.
+   • REVIEW_QUIZZES[ID_BAI] = {q:[...]} → phần "Ôn tập cuối bài" (xem
+     cấu trúc câu hỏi mc/tf/short ở các bài đã có làm mẫu).
+   Nếu bỏ trống một trong các khối trên, trang sẽ tự dùng nội dung
+   mặc định hợp lý (không lỗi), nhưng nên bổ sung đủ để đồng bộ.
    ====================================================== */
 const LESSON_CONTENT = {
   1: {
-    ngay: "25/08/2026",
-    text: `<p>Trí tuệ nhân tạo (Artificial Intelligence – AI) là lĩnh vực nghiên cứu giúp máy tính thực hiện các nhiệm vụ vốn cần trí thông minh của con người:</p>
-           <ul>
-             <li><strong>Nhận dạng</strong> — nhận diện hình ảnh, giọng nói, chữ viết</li>
-             <li><strong>Suy luận và ra quyết định</strong> — dựa trên dữ liệu và mô hình học được</li>
-             <li><strong>Học từ dữ liệu</strong> — cải thiện qua quá trình huấn luyện (Machine Learning)</li>
-             <li><strong>Xử lí ngôn ngữ tự nhiên</strong> — hiểu và tạo văn bản như con người</li>
-           </ul>
-           <p><em>(EN) Artificial Intelligence enables computers to perform tasks that normally require human intelligence, such as recognition, reasoning, and learning from data.</em></p>`,
-    img: "assets/tin12-bai1-minhhoa.jpg",
-    video: "YOUTUBE_VIDEO_ID_BAI1",
-    doc: "FILE_ID_BAI1"
+    ngay: "30/08/2026",
+    text: `<div class="activity-box"><p><strong>KHỞI ĐỘNG</strong></p><p>Em đã được nghe nói nhiều về Trí tuệ nhân tạo hay thông minh nhân tạo (AI – Artificial Intelligence). Hãy nêu một vài ví dụ về ứng dụng của AI mà em biết.</p></div>
+<details class="answer-box"><summary>Xem đáp án Khởi động</summary><div class="answer-content"><p>Tính đến thời điểm hiện tại, Trí tuệ nhân tạo (AI) đã được sử dụng rộng rãi trong nhiều lĩnh vực khác nhau, ví dụ:</p><p>1. <strong>Xử lý ngôn ngữ tự nhiên (NLP):</strong> xây dựng các hệ thống dịch máy, nhận dạng giọng nói, phân tích ý kiến trên mạng xã hội.</p><p>2. <strong>Xe tự hành:</strong> nhận diện và phản ứng với môi trường xung quanh, giúp xe tự lái di chuyển an toàn.</p><p>3. <strong>Chăm sóc sức khỏe:</strong> chẩn đoán bệnh, dự đoán tình trạng sức khỏe, phân tích hình ảnh y khoa.</p><p>4. <strong>Tư vấn tài chính:</strong> phân tích dữ liệu thị trường, dự báo xu hướng, đưa ra gợi ý đầu tư.</p><p>5. <strong>Trích xuất thông tin từ ảnh và video:</strong> nhận dạng đối tượng, phát hiện hoạt động bất thường trong video an ninh.</p><p>6. <strong>Dịch vụ khách hàng tự động:</strong> chatbot và hệ thống tự động trả lời câu hỏi.</p><p>7. <strong>Quảng cáo và tiếp thị:</strong> phân tích hành vi người dùng để cá nhân hóa chiến lược tiếp thị.</p><p>8. <strong>Robot hỗ trợ:</strong> tương tác với con người, dọn dẹp nhà cửa, giao hàng tự động, hướng dẫn du lịch.</p></div></details>
+
+<p><strong>1. KHÁI NIỆM TRÍ TUỆ NHÂN TẠO</strong></p>
+<div class="activity-box"><p><strong>Hoạt động 1:</strong> Khi nói tới AI người ta thường nói tới khả năng máy móc có thể thực hiện nhiều công việc một cách tự động. Tuy nhiên, không phải bất kỳ hệ thống tự động hóa nào cũng có thể được coi là AI. Trong các ví dụ dưới đây, những trường hợp nào không được coi là ứng dụng của AI? Tại sao? A. Ấm đun nước tự ngắt điện khi nước sôi. B. Tìm kiếm thông tin trên internet nhờ máy tìm kiếm. C. Cửa ra vào ở một số siêu thị, nhà hàng hay văn phòng tự động mở khi có người tới gần. D. Những guồng nước, bánh xe nước ở một số vùng quê, nhờ dòng chảy tự nhiên của khe suối hay kênh, ngòi, quay, chuyển nước lên các đường dẫn đi xa để phục vụ nhu cầu tưới tiêu hoặc sinh hoạt.</p></div>
+<details class="answer-box"><summary>Xem đáp án Hoạt động 1</summary><div class="answer-content"><p><strong>A, C, D</strong> không được coi là ứng dụng AI vì đây là các thiết bị/hệ thống tự động hoá đơn giản, chỉ phản ứng theo một quy tắc hoặc cảm biến vật lý cố định (nhiệt độ, chuyển động, dòng chảy), không có khả năng học hỏi, suy luận hay ra quyết định linh hoạt.</p><p><strong>B</strong> (máy tìm kiếm) được coi là ứng dụng AI vì máy tìm kiếm sử dụng các thuật toán xử lý ngôn ngữ tự nhiên và học máy để hiểu truy vấn, xếp hạng và trả về những kết quả phù hợp nhất với người dùng.</p></div></details>
+<div class="activity-box"><p><strong>Câu hỏi 1:</strong> Hãy nêu một số đặc trưng chính của AI.</p></div>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi 1</summary><div class="answer-content"><p>Một số đặc trưng chính của AI: khả năng học, khả năng suy luận, khả năng nhận thức, khả năng hiểu ngôn ngữ, khả năng giải quyết vấn đề.</p></div></details>
+<div class="activity-box"><p><strong>Câu hỏi 2:</strong> Các phần mềm dịch máy, kiểm tra lỗi chính tả có thể coi là các ứng dụng AI hay không? Tại sao?</p></div>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi 2</summary><div class="answer-content"><p>Có. Các phần mềm dịch máy và kiểm tra lỗi chính tả thường được coi là các ứng dụng Trí tuệ nhân tạo vì chúng sử dụng các thuật toán và kỹ thuật AI để thực hiện chức năng cụ thể:</p><p>- <strong>Dịch máy (Machine Translation):</strong> sử dụng các thuật toán và mô hình học máy để dịch văn bản từ ngôn ngữ này sang ngôn ngữ khác; học từ dữ liệu đầu vào để cải thiện chất lượng dịch theo thời gian.</p><p>- <strong>Kiểm tra lỗi chính tả (Spell Checking):</strong> sử dụng thuật toán AI để phát hiện và sửa lỗi chính tả, dựa trên từ điển, quy tắc ngữ pháp và học từ dữ liệu lớn để đưa ra gợi ý sửa lỗi chính xác.</p></div></details>
+
+<p><strong>2. MỘT SỐ ỨNG DỤNG CỦA TRÍ TUỆ NHÂN TẠO</strong></p>
+<div class="activity-box"><p><strong>Hoạt động 2:</strong> Hãy cùng trao đổi về một số ứng dụng của AI trong thực tế mà em biết.</p></div>
+<details class="answer-box"><summary>Xem đáp án Hoạt động 2</summary><div class="answer-content"><p>Một số ứng dụng của AI trong thực tế: xử lý ngôn ngữ tự nhiên, xe tự lái, dự đoán thị trường tài chính, chẩn đoán y tế, tối ưu hóa sản xuất, tư vấn cá nhân và quảng cáo, nhận dạng giọng nói và khuôn mặt.</p></div></details>
+<div class="activity-box"><p><strong>Câu hỏi:</strong> Hãy mô tả sơ bộ chức năng hoạt động của một số các ứng dụng AI được nêu ở trên.</p></div>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi</summary><div class="answer-content"><p><strong>Mycin:</strong> hỗ trợ bác sĩ chẩn đoán các bệnh nhiễm trùng huyết và đề xuất liệu pháp điều trị phù hợp, dựa trên các quy tắc lập trình sẵn cùng dữ liệu điều trị y tế.</p><p><strong>ASIMO:</strong> robot của Honda thực hiện các nhiệm vụ như đi lại, nhận biết và tương tác với con người; sử dụng cảm biến, camera và thuật toán AI để di chuyển, nhận dạng đối tượng.</p><p><strong>Google Dịch:</strong> dịch vụ dịch máy trực tuyến, sử dụng mô hình học máy để hiểu và dịch văn bản/giọng nói giữa nhiều ngôn ngữ.</p><p><strong>Trợ lí ảo:</strong> hỗ trợ và tương tác với người dùng qua giọng nói/văn bản bằng công nghệ xử lý ngôn ngữ tự nhiên (NLP): tra cứu thông tin, lập lịch, gửi tin nhắn, điều khiển thiết bị.</p><p><strong>Nhận diện khuôn mặt:</strong> dùng thuật toán học máy/học sâu để nhận dạng và xác định danh tính qua đặc điểm khuôn mặt trong ảnh/video.</p><p><strong>Nhận dạng chữ viết tay:</strong> dùng thuật toán máy học và xử lý hình ảnh để phân tích và chuyển đổi chữ viết tay thành văn bản máy tính.</p></div></details>
+
+<p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
+<div class="activity-box"><p>Những năng lực trí tuệ nào được thể hiện trong các ứng dụng dịch máy và trợ lí ảo?</p></div>
+<details class="answer-box"><summary>Xem đáp án Luyện tập</summary><div class="answer-content"><p>- <strong>Xử lý ngôn ngữ tự nhiên (NLP):</strong> giúp máy tính hiểu ý nghĩa câu và tạo câu trả lời để dịch hoặc tương tác tự nhiên với người dùng.</p><p>- <strong>Học máy (Machine Learning):</strong> hệ thống được huấn luyện với dữ liệu lớn để cải thiện khả năng dịch, hiểu ngôn ngữ và học từ kinh nghiệm tương tác.</p><p>- <strong>Phân tích ngữ cảnh (Contextual Analysis):</strong> giúp hiểu ý nghĩa của từng từ, câu, văn bản, tránh hiểu nhầm.</p><p>- <strong>Tính linh hoạt (Flexibility):</strong> đối phó với nhiều loại câu hỏi, yêu cầu hoặc tình huống khác nhau từ người dùng.</p><p>- <strong>Giao diện người-máy tương tác:</strong> hiểu và đáp ứng nhanh chóng, tự nhiên các yêu cầu của người dùng.</p></div></details>
+
+<p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p>
+<div class="activity-box"><p>Hãy truy cập Internet để tìm hiểu về khả năng của các trợ lí ảo Siri (Apple), Cortana (Microsoft), Alexa (Amazon),…</p></div>
+<details class="answer-box"><summary>Xem đáp án Vận dụng</summary><div class="answer-content"><p><strong>Siri (Apple):</strong> tích hợp sẵn trên các thiết bị Apple (iPhone, iPad, Mac, Apple Watch); trả lời câu hỏi, đặt lịch hẹn, gửi tin nhắn, gọi điện, tìm kiếm thông tin, điều khiển thiết bị thông minh; có khả năng học từ tương tác để cá nhân hóa phản hồi.</p><p><strong>Cortana (Microsoft):</strong> tích hợp trên Windows 10 và các dịch vụ Microsoft; tìm kiếm trên web, lên lịch, gửi email, gọi điện, cài đặt báo thức, nhắc nhở; tích hợp với Office 365, Outlook, Skype.</p><p><strong>Alexa (Amazon):</strong> tích hợp trong loa thông minh Amazon Echo; đọc tin tức, phát nhạc, đặt báo thức, điều khiển thiết bị thông minh, đặt mua hàng trên Amazon qua các kỹ thuật giao tiếp như API và Skills Kit.</p></div></details>`,
+    img: "assets/tin12/120.jpg",
+    video: "",
+    doc: ""
   }
 };
+const LESSON_SUMMARIES = {
+  1:{img:"assets/tin12/121.jpg",items:["Trí tuệ nhân tạo (AI) là lĩnh vực khoa học nghiên cứu và xây dựng các hệ thống, phần mềm giúp máy tính có năng lực trí tuệ tương tự con người: khả năng học, suy luận, nhận thức, hiểu ngôn ngữ và giải quyết vấn đề.","Không phải mọi hệ thống tự động hoá đều là AI — các thiết bị chỉ phản ứng theo quy tắc/cảm biến cố định (ấm đun nước, cửa tự động) không được coi là AI, khác với các hệ thống có khả năng học và suy luận."]}
+};
+
+const REVIEW_QUIZZES = {
+  1:{q:[
+    {type:'mc',text:'Mục đích chính của AI là gì?',options:['Xây dựng các phần mềm diệt virus','Xây dựng các phần mềm giúp máy tính có năng lực trí tuệ tương tự con người','Tạo ra các ứng dụng giải trí','Phát triển các trò chơi điện tử'],answer:1,explain:'Mục đích chính của AI là xây dựng phần mềm giúp máy tính có năng lực trí tuệ tương tự con người.'},
+    {type:'mc',text:'AI khác biệt so với tự động hóa như thế nào?',options:['AI yêu cầu sự kết hợp của nhiều đặc trưng trí tuệ để thực hiện các nhiệm vụ phức tạp','AI chỉ thực hiện được một nhiệm vụ duy nhất','Tự động hóa không yêu cầu sự can thiệp của con người','Tự động hóa chỉ áp dụng trong lĩnh vực công nghiệp'],answer:0,explain:'AI yêu cầu sự kết hợp của nhiều đặc trưng trí tuệ để thực hiện các nhiệm vụ phức tạp, trong khi tự động hóa thường không đòi hỏi khả năng trí tuệ phức tạp như AI.'},
+    {type:'mc',text:'Robot Asimo của Honda là ví dụ của ứng dụng AI trong lĩnh vực nào?',options:['Trò chơi điện tử','Dịch vụ khách hàng','Công nghiệp','Điều khiển robot'],answer:3,explain:'Robot Asimo của Honda là ví dụ về ứng dụng AI trong điều khiển robot, với khả năng tự động điều khiển, nhận dạng hình ảnh và tiếng nói.'},
+    {type:'tf',text:'Phát biểu dưới đây đúng hay sai khi nói về các loại và ứng dụng của AI:',items:[['a) Trí tuệ nhân tạo hẹp được thiết kế để thực hiện nhiều nhiệm vụ phức tạp giống con người.','F','Sai vì Trí tuệ nhân tạo hẹp được thiết kế để thực hiện một nhiệm vụ cụ thể như chơi cờ hay nhận dạng khuôn mặt, không phải nhiều nhiệm vụ phức tạp.'],['b) Trí tuệ nhân tạo tổng quát là mục tiêu dài hạn, có khả năng tự học và thực hiện nhiều công việc giống con người.','T','Đúng vì Trí tuệ nhân tạo tổng quát đang là mục tiêu dài hạn với khả năng tự học và thực hiện nhiều công việc giống con người.'],['c) Hệ chuyên gia MYCIN được sử dụng để dự báo thời tiết.','F','Sai vì Hệ chuyên gia MYCIN được sử dụng trong lĩnh vực y học để mô phỏng khả năng ra quyết định của các chuyên gia y tế.'],['d) Robot Asimo của Honda là một ví dụ về ứng dụng AI trong điều khiển robot.','T','Đúng vì Robot Asimo của Honda là một ví dụ điển hình về ứng dụng AI trong điều khiển robot, với khả năng tự động điều khiển và nhận dạng hình ảnh, tiếng nói.']]},
+    {type:'short',text:'Hệ chuyên gia MYCIN được sử dụng trong lĩnh vực nào và làm gì?',keywords:['y học','y tế','chẩn đoán','chuyên gia','quyết định','kháng sinh'],explain:'Hệ chuyên gia MYCIN được sử dụng trong lĩnh vực y học để mô phỏng khả năng ra quyết định của các chuyên gia y tế, đưa ra danh sách các vi khuẩn có thể gây nhiễm trùng máu và khuyến nghị sử dụng kháng sinh với liều lượng phù hợp.'}
+  ]}
+};
+
+function attachZoomableImages(){
+  const root=document.getElementById('detail-card');
+  if(!root) return;
+  root.querySelectorAll('img.zoomable-image, .detail-text img').forEach(img=>{
+    if(img.closest('.lens-wrap')) return;
+    const wrap=document.createElement('span');
+    wrap.className='lens-wrap';
+    img.parentNode.insertBefore(wrap,img);
+    wrap.appendChild(img);
+    const lens=document.createElement('span');
+    lens.className='zoom-lens';
+    wrap.appendChild(lens);
+    const update=(e)=>{
+      const r=img.getBoundingClientRect();
+      const x=Math.max(0,Math.min(r.width,e.clientX-r.left));
+      const y=Math.max(0,Math.min(r.height,e.clientY-r.top));
+      const zoom=2.35;
+      lens.style.left=(x-85)+'px';
+      lens.style.top=(y-85)+'px';
+      lens.style.backgroundImage=`url("${img.currentSrc || img.src}")`;
+      lens.style.backgroundSize=`${r.width*zoom}px ${r.height*zoom}px`;
+      lens.style.backgroundPosition=`${85-x*zoom}px ${85-y*zoom}px`;
+    };
+    wrap.addEventListener('mouseenter',e=>{wrap.classList.add('is-active');update(e)});
+    wrap.addEventListener('mousemove',update);
+    wrap.addEventListener('mouseleave',()=>wrap.classList.remove('is-active'));
+  });
+}
+
+function renderLessonSummary(id){
+  const c=LESSON_SUMMARIES[id], el=document.getElementById('lesson-summary');
+  if(!el) return;
+  if(!c){el.innerHTML='';return;}
+  el.innerHTML=`<section class="lesson-summary"><div class="summary-title"><span>🧠</span><div><h3>TÓM TẮT KIẾN THỨC</h3><p>Những ý chính cần nắm trước khi học sâu nội dung bài.</p></div></div><div class="summary-layout"><div class="summary-map"><img class="zoomable-image" src="${c.img}" alt="Sơ đồ tư duy Bài ${id}"></div><div class="summary-points">${c.items.map((x,i)=>`<div class="summary-point"><b>${i+1}</b><span>${x}</span></div>`).join('')}</div></div></section>`;
+  attachZoomableImages();
+}
+
+function getQuizAttemptKey(id){return `tin12-review-attempt-${id}`;}
+function getQuizAttempt(id){return Number(localStorage.getItem(getQuizAttemptKey(id))||0);}
+function setQuizAttempt(id,n){localStorage.setItem(getQuizAttemptKey(id),String(n));}
+
+function renderReviewQuiz(id){
+  const el=document.getElementById('lesson-review'), quiz=REVIEW_QUIZZES[id];
+  if(!el)return;
+  if(!quiz){el.innerHTML=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>Nội dung ôn tập của bài này đang được cập nhật.</p></div></div></section>`;return;}
+  // Chạm tới phần ôn tập được tính là đã dùng 1 lượt làm bài (chỉ tính 1 lần đầu tiên cho mỗi bài)
+  if(getQuizAttempt(id)===0) setQuizAttempt(id,1);
+  const attempt=getQuizAttempt(id), locked=attempt>=3;
+  let html=`<section class="lesson-review"><div class="review-head"><div><h3>📝 ÔN TẬP CUỐI BÀI</h3><p>5 câu • 10 điểm • Được làm tối đa <strong>3 lần</strong>.</p></div></div><div class="review-rule"><div class="rule-chip"><strong>Câu 1–3</strong><br>Mỗi câu đúng: 2 điểm</div><div class="rule-chip"><strong>Câu 4</strong><br>4 ý Đúng/Sai × 0,5 điểm = 2 điểm</div><div class="rule-chip"><strong>Câu 5</strong><br>Trả lời ngắn: 2 điểm</div></div><div class="attempt-status"><span class="attempt-badge">📊 Số lần làm: ${Math.min(attempt,3)}/3</span>${locked?'<span class="attempt-locked">— Đã hết lượt làm.</span>':'<span>— Còn lại: '+(3-attempt)+' lần</span>'}</div>${locked?'':'<div class="attempt-tip">💪 Cố gắng làm bài 3 lần sẽ hiển thị đáp án đúng 5 câu nhé!</div>'}<form id="quiz-form-${id}" onsubmit="submitReviewQuiz(event,${id})">`;
+  quiz.q.forEach((q,qi)=>{
+    html+=`<div class="quiz-question" id="q-${id}-${qi}"><div class="q-title">Câu ${qi+1}. ${q.text}</div>`;
+    if(q.type==='mc')html+='<div class="quiz-options">'+q.options.map((o,oi)=>`<label class="quiz-option"><input type="radio" name="q${id}_${qi}" value="${oi}" ${locked?'disabled':''}> <span>${String.fromCharCode(65+oi)}. ${o}</span></label>`).join('')+'</div>';
+    if(q.type==='tf')html+='<div class="tf-grid">'+q.items.map((it,ii)=>`<div class="tf-row"><span>${it[0]}</span><div class="tf-actions" role="group" aria-label="Chọn Đúng hoặc Sai"><button type="button" class="tf-choice true" onclick="chooseTF(this,'T')" ${locked?'disabled':''}>Đúng</button><button type="button" class="tf-choice false" onclick="chooseTF(this,'F')" ${locked?'disabled':''}>Sai</button><input type="hidden" name="q${id}_${qi}_${ii}" value=""></div></div>`).join('')+'</div>';
+    if(q.type==='short')html+=`<textarea class="short-answer" name="q${id}_${qi}" placeholder="Nhập câu trả lời ngắn của em..." ${locked?'disabled':''}></textarea>`;
+    html+='<div class="quiz-feedback" id="feedback-'+id+'-'+qi+'"></div></div>';
+  });
+  html+=`<div class="review-actions"><button class="review-btn" type="submit" ${locked?'disabled':''}>${locked?'Đã hết lượt làm':'📝 Nộp bài & chấm điểm'}</button></div><div class="quiz-result" id="quiz-result-${id}"></div></form></section>`;
+  el.innerHTML=html;
+}
+function chooseTF(btn,value){const group=btn.closest('.tf-actions');if(!group)return;group.querySelector('input[type="hidden"]').value=value;group.querySelectorAll('.tf-choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');}
+function resetReviewQuiz(id){
+  const form=document.getElementById(`quiz-form-${id}`);if(!form)return;
+  form.reset();
+  form.querySelectorAll('.tf-choice').forEach(b=>b.classList.remove('selected'));
+  form.querySelectorAll('.tf-actions input[type="hidden"]').forEach(i=>i.value='');
+  form.querySelectorAll('.quiz-feedback').forEach(f=>{f.className='quiz-feedback';f.innerHTML='';});
+  const result=document.getElementById(`quiz-result-${id}`);if(result){result.classList.remove('show');result.innerHTML='';}
+  form.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function submitReviewQuiz(event,id){
+  event.preventDefault();
+  const quiz=REVIEW_QUIZZES[id],form=document.getElementById(`quiz-form-${id}`);if(!quiz||!form)return;
+  const previous=getQuizAttempt(id);if(previous>=3){renderReviewQuiz(id);return;}
+  const attempt=previous+1;setQuizAttempt(id,attempt);
+  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+  let score=0,answers=[],rows=[];
+  quiz.q.forEach((q,qi)=>{
+    const fb=document.getElementById(`feedback-${id}-${qi}`);if(fb)fb.className='quiz-feedback show';
+    if(q.type==='mc'){
+      const selected=form.querySelector(`input[name="q${id}_${qi}"]:checked`),ok=selected&&Number(selected.value)===q.answer;
+      const chosenText=selected?`${String.fromCharCode(65+Number(selected.value))}. ${esc(q.options[Number(selected.value)])}`:'(chưa chọn)';
+      if(ok)score+=2;
+      rows.push([`Câu ${qi+1}`,chosenText,ok?'2/2':'0/2']);
+      answers.push(`<strong>Câu ${qi+1}:</strong> ${String.fromCharCode(65+q.answer)}. ${q.options[q.answer]}${q.explain?`<br><em>Giải thích: ${q.explain}</em>`:''}`);
+      if(fb)fb.innerHTML=ok?'<span class="correct">✓ Chính xác</span>':'<span class="wrong">✗ Chưa đúng</span>';
+    }
+    if(q.type==='tf'){
+      let s=0,chosenParts=[],answered=0;
+      q.items.forEach((it,ii)=>{const v=form.querySelector(`input[name="q${id}_${qi}_${ii}"]`)?.value;if(v){answered++;chosenParts.push(String.fromCharCode(97+ii)+') '+(v==='T'?'Đúng':'Sai'));}else{chosenParts.push(String.fromCharCode(97+ii)+') —');}if(v===it[1])s+=.5;});
+      score+=s;
+      rows.push([`Câu 4`,answered?chosenParts.join(', '):'(chưa chọn)',s.toFixed(1)+'/2']);
+      answers.push(`<strong>Câu 4:</strong><br>${q.items.map((it,i)=>`${String.fromCharCode(97+i)}) ${it[1]==='T'?'Đúng':'Sai'}${it[2]?` — ${it[2]}`:''}`).join('<br>')}`);
+      if(fb)fb.innerHTML=`<span class="${s===2?'correct':'wrong'}">${s===2?'✓ Đúng cả 4 ý':'Đã ghi nhận lựa chọn'}</span>`;
+    }
+    if(q.type==='short'){
+      const ans=form.querySelector(`textarea[name="q${id}_${qi}"]`)?.value.trim()||'',lower=ans.toLowerCase(),hits=(q.keywords||[]).filter(k=>lower.includes(k.toLowerCase())).length,provisional=Math.min(2,Math.round((hits/(q.keywords?.length||1))*4)/2);
+      score+=provisional;
+      const chosenShort=ans?(esc(ans.length>60?ans.slice(0,60)+'…':ans)):'(chưa trả lời)';
+      rows.push([`Câu 5`,chosenShort,provisional.toFixed(1)+'/2']);
+      answers.push(`<strong>Câu 5:</strong> ${q.explain||'Đối chiếu các ý chính trong tài liệu bài học.'}`);
+      if(fb)fb.innerHTML=`<span class="${provisional>=1?'correct':'wrong'}">Chấm sơ bộ: ${provisional.toFixed(1)}/2</span>`;
+    }
+  });
+  let reveal='';if(attempt>=3)reveal=`<div class="quiz-answer-reveal"><h4>🔓 ĐÁP ÁN SAU LẦN 3</h4><div class="answer-grid">${answers.map(a=>`<div class="answer-key">${a}</div>`).join('')}</div><p style="margin-top:10px;font-size:.82rem">Em đã dùng hết 3 lần. Hãy đối chiếu đáp án với tài liệu học tập.</p></div>`;
+  const tableHtml=`<table class="score-table"><thead><tr><th>Câu</th><th>Đáp án chọn</th><th>Điểm</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r[0]}</td><td class="sc-dapan">${r[1]}</td><td class="sc-diem">${r[2]}</td></tr>`).join('')}</tbody></table>`;
+  const retryBtn=attempt<3?`<div class="review-actions" style="margin-top:14px;"><button type="button" class="review-btn secondary" onclick="resetReviewQuiz(${id})">🔁 Làm lại (còn ${3-attempt} lần)</button></div>`:'';
+  const result=document.getElementById(`quiz-result-${id}`);result.innerHTML=`<div class="score-big">🎉 Điểm tạm tính</div>${tableHtml}<div class="score-total">Tổng điểm: ${score.toFixed(1)}/10</div>${reveal}${retryBtn}`;result.classList.add('show');
+  if(attempt>=3)form.querySelectorAll('input,textarea,button').forEach(x=>x.disabled=true);
+  result.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function resetReviewQuiz(id){if(getQuizAttempt(id)>=3){alert('Bài này đã hết 3 lần làm. Đáp án đúng đã được hiển thị.');return;}renderReviewQuiz(id);document.getElementById('lesson-review')?.scrollIntoView({behavior:'smooth',block:'start'});}
+
+function openAIReviewGrader(id){
+  const quiz=REVIEW_QUIZZES[id], form=document.getElementById(`quiz-form-${id}`); if(!quiz||!form)return; const q=quiz.q[4], ans=form.querySelector(`[name="q${id}_4"]`)?.value||'(chưa trả lời)';
+  const b=LESSONS.find(x=>x.id===id); const prompt=`Bạn là giáo viên Tin học 12. Hãy chấm Câu 5 của Bài ${id} – ${b?.ten||''}.\n\nCâu hỏi: ${q.text}\n\nCâu trả lời của học sinh: ${ans}\n\nThang điểm: 2 điểm. Hãy cho điểm theo mức 0; 0,5; 1; 1,5; 2 dựa trên mức độ đúng ý. Không chấm theo độ dài. Nêu 1-2 ý giải thích ngắn, chỉ ra ý đúng/thiếu/sai và đề xuất cách cải thiện. Không cho điểm vượt 2. Trả kết quả theo mẫu: ĐIỂM: x/2\nNHẬN XÉT: ...`;
+  window.open('https://chatgpt.com/?q='+encodeURIComponent(prompt),'_blank','noopener');
+}
+function resetReviewQuiz(id){renderReviewQuiz(id);document.getElementById('lesson-review')?.scrollIntoView({behavior:'smooth',block:'start'});}
+
 const DEFAULT_CONTENT = { ngay: "", text: "<p>Bài viết chưa cập nhật mới.</p>", img: "", video: "", doc: "" };
 
 /* ======================================================
@@ -474,16 +952,21 @@ Object.keys(CHUDE_NAMES).forEach((cd, idx) => {
 });
 
 /* ======================================================
-   ĐẾM LƯỢT XEM — CountAPI (miễn phí, không cần đăng ký)
+   ĐẾM LƯỢT XEM — countapi.xyz đã NGỪNG HOẠT ĐỘNG vĩnh viễn,
+   chuyển sang countapi.mileshilliard.com (miễn phí, không cần đăng ký,
+   thay thế tương thích). Namespace ghép sẵn vào key vì dịch vụ mới
+   không hỗ trợ namespace riêng.
    ====================================================== */
 const CA_NAMESPACE = 'webh2t-github-io';
+const CA_BASE = 'https://countapi.mileshilliard.com/api/v1';
 
 async function bumpAndShowViews(key, elId) {
   try {
-    const res = await fetch(`https://api.countapi.xyz/hit/${CA_NAMESPACE}/${key}`);
+    const res = await fetch(`${CA_BASE}/hit/${CA_NAMESPACE}_${key}`);
     const data = await res.json();
-    document.getElementById(elId).textContent = `👁 ${data.value.toLocaleString('vi-VN')} lượt xem`;
-    return data.value;
+    const value = parseInt(data.value, 10) || 0;
+    document.getElementById(elId).textContent = `👁 ${value.toLocaleString('vi-VN')} lượt xem`;
+    return value;
   } catch (e) {
     document.getElementById(elId).textContent = '👁 —';
     return 0;
@@ -491,9 +974,10 @@ async function bumpAndShowViews(key, elId) {
 }
 async function getViews(key) {
   try {
-    const res = await fetch(`https://api.countapi.xyz/get/${CA_NAMESPACE}/${key}`);
+    const res = await fetch(`${CA_BASE}/get/${CA_NAMESPACE}_${key}`);
+    if (!res.ok) return 0; // key chưa từng được "hit" → API trả 404, coi như 0 lượt xem
     const data = await res.json();
-    return data.value || 0;
+    return parseInt(data.value, 10) || 0;
   } catch (e) { return 0; }
 }
 bumpAndShowViews('tin12-page', 'page-views');
@@ -540,11 +1024,17 @@ function showLesson(id) {
 
   document.getElementById('d-chude').textContent = CHUDE_NAMES[bai.chude];
   document.getElementById('d-date').textContent = `📅 ${content.ngay || '—'}`;
-  document.getElementById('d-title').textContent = `Bài ${bai.id}. ${bai.ten}`;
+  document.getElementById('d-title').innerHTML = `<span class="title-vi">Bài ${bai.id}. ${bai.ten}</span>` + (content.en ? `<span class="title-en">${content.en}</span>` : '');
+  renderLessonLearning(id);
+  renderLessonGoals(id);
   document.getElementById('d-text').innerHTML = content.text;
 
   document.getElementById('d-image').innerHTML = content.img
-    ? `<figure class="lesson-figure"><img src="${content.img}" alt="${bai.ten}"></figure>` : '';
+    ? `<figure class="lesson-figure cover-figure"><img class="zoomable-image" src="${content.img}" alt="${bai.ten}"><figcaption class="caption-small">Ảnh bìa bài học</figcaption></figure>` : '';
+
+  renderLessonSummary(id);
+  renderReviewQuiz(id);
+  attachZoomableImages();
 
   document.getElementById('d-video').innerHTML = content.video
     ? `<div class="video-wrap"><iframe src="https://www.youtube.com/embed/${content.video}"
@@ -554,8 +1044,12 @@ function showLesson(id) {
     ? `<p class="caption-small">Tài liệu minh hoạ (Google Drive):</p>
        <iframe class="drive-frame" src="https://drive.google.com/file/d/${content.doc}/preview" allow="autoplay"></iframe>` : '';
 
-  // Related posts: 3 cột, ảnh lớn trên + tiêu đề dưới, cùng chủ đề, loại trừ bài hiện tại, tối đa 3
-  const related = LESSONS.filter(b => b.chude === bai.chude && b.id !== id).slice(0, 3);
+  // Related posts: không giới hạn cùng chủ đề — ưu tiên các bài tiếp theo (id lớn hơn) đã có nội dung,
+  // sau đó bổ sung các bài trước đó đã có nội dung nếu còn thiếu, loại trừ bài hiện tại
+  const lessonsWithContent = LESSONS.filter(b => LESSON_CONTENT[b.id] && b.id !== id);
+  const nextLessons = lessonsWithContent.filter(b => b.id > id).sort((a, b) => a.id - b.id);
+  const prevLessons = lessonsWithContent.filter(b => b.id < id).sort((a, b) => a.id - b.id);
+  const related = [...nextLessons, ...prevLessons];
   document.getElementById('d-related').innerHTML = related.map(b => {
     const rc = LESSON_CONTENT[b.id];
     const thumb = rc && rc.img
@@ -659,6 +1153,134 @@ function loadComments(lessonId){
 }
 
 /* ======================================================
+   ZOOM SOI CHI TIẾT (LENS / MAGNIFIER)
+   ====================================================== */
+let zoomLens=null, zoomImg=null;
+function removeZoomLens(){ if(zoomLens){ zoomLens.remove(); zoomLens=null; zoomImg=null; } }
+function moveZoomLens(e){
+  if(!zoomLens || !zoomImg) return;
+  const r=zoomImg.getBoundingClientRect(), size=190, zoom=2.35;
+  const x=Math.max(0,Math.min(r.width,e.clientX-r.left)), y=Math.max(0,Math.min(r.height,e.clientY-r.top));
+  zoomLens.style.left=(e.clientX-size/2)+'px'; zoomLens.style.top=(e.clientY-size/2)+'px';
+  zoomLens.style.backgroundImage=`url("${zoomImg.currentSrc || zoomImg.src}")`;
+  zoomLens.style.backgroundSize=`${r.width*zoom}px ${r.height*zoom}px`;
+  zoomLens.style.backgroundPosition=`${size/2-x*zoom}px ${size/2-y*zoom}px`;
+}
+document.addEventListener('mouseover',e=>{
+  const img=e.target.closest('img');
+  if(!img || img.closest('.coffee-qr') || img.classList.contains('comment-avatar') || img.closest('.auth-user')) return;
+  img.classList.add('zoomable-image');
+  if(zoomImg===img) return;
+  removeZoomLens(); zoomImg=img;
+  zoomLens=document.createElement('div'); zoomLens.className='zoom-lens';
+  document.body.appendChild(zoomLens); zoomLens.style.display='block'; moveZoomLens(e);
+});
+document.addEventListener('mousemove',e=>{ if(zoomImg && !zoomImg.matches(':hover')) removeZoomLens(); else moveZoomLens(e); });
+document.addEventListener('mouseout',e=>{ if(zoomImg && e.target===zoomImg && !e.relatedTarget?.closest?.('img')) removeZoomLens(); });
+
+
+/* ======================================================
+   DIGITAL LEARNING PLATFORM — AI + NĂNG LỰC SỐ
+   Không yêu cầu API key: tạo prompt an toàn và mở công cụ AI do người dùng chọn.
+   ====================================================== */
+const SKILL_PROFILES = {
+  1:{skills:[['Sử dụng thiết bị & hệ điều hành',80],['Quản lý dữ liệu',75],['An toàn số',65],['Giải quyết vấn đề',60]]},
+  2:{skills:[['Sử dụng thiết bị & phần mềm',85],['Quản lý dữ liệu',80],['An toàn số',70],['Thực hành số',90]]},
+  3:{skills:[['Khám phá công nghệ số',80],['Đánh giá phần mềm',75],['Tìm kiếm thông tin',70],['Tư duy phản biện',75]]},
+  4:{skills:[['Hiểu hệ thống số',85],['Thiết bị số',80],['Giải quyết vấn đề',75],['Tư duy hệ thống',70]]},
+  5:{skills:[['Kết nối thiết bị',85],['Thực hành số',85],['Xử lý sự cố',75],['An toàn thiết bị',70]]},
+  6:{skills:[['Lưu trữ đám mây',85],['Chia sẻ dữ liệu',80],['Quản lý dữ liệu',85],['An toàn thông tin',70]]},
+  7:{skills:[['Tìm kiếm thông tin',90],['Đánh giá nguồn tin',85],['Từ khóa & truy vấn',85],['Tư duy phản biện',80]]},
+  8:{skills:[['Giao tiếp số',85],['Cộng tác trực tuyến',80],['Quyền riêng tư',75],['Văn hóa số',80]]},
+  9:{skills:[['An toàn trực tuyến',90],['Bảo vệ dữ liệu',85],['Nhận diện rủi ro',85],['Ứng xử số',80]]},
+  10:{skills:[['Quản lý dữ liệu',85],['Khai thác thông tin',80],['Tư duy dữ liệu',75],['Giải quyết vấn đề',75]]}
+};
+/* ======================================================
+   🎯 HỒ SƠ HỌC TẬP THEO TỪNG BÀI
+   - MỤC TIÊU: ưu tiên lấy từ trường summary / TÓM TẮT KIẾN THỨC.
+   - NĂNG LỰC SỐ, NĂNG LỰC AI, VẬN DỤNG: chọn và diễn giải riêng
+     theo từng bài để tránh lặp nguyên văn giữa các bài.
+   ====================================================== */
+const LESSON_PEDAGOGY = {
+  1:{summary:"Giải thích được sơ lược về khái niệm Trí tuệ nhân tạo (AI); nêu được ví dụ minh hoạ cho một số ứng dụng điển hình của AI trong khoa học và đời sống.", digital:"Năng lực tự chủ, tự học: chủ động tìm hiểu và phân biệt hệ thống tự động hoá thông thường với ứng dụng AI thực sự.", ai:"Tư duy phản biện về AI: nhận diện đặc trưng của AI (khả năng học, suy luận, hiểu ngôn ngữ), phân biệt AI hẹp và AI tổng quát, đối chiếu ví dụ AI với thực tế.", apply:"Vận dụng khai thác Internet: tìm hiểu khả năng thực tế của các trợ lí ảo phổ biến (Siri, Cortana, Alexa) và mô tả được chức năng hoạt động của chúng."}
+};
+
+function extractKnowledgeSummary(html){
+  if(!html) return '';
+  const box=document.createElement('div'); box.innerHTML=html;
+  const nodes=[...box.querySelectorAll('p,h2,h3,h4,strong')];
+  const idx=nodes.findIndex(n=>/tóm\s*tắt\s*kiến\s*thức/i.test(n.textContent||''));
+  if(idx>=0){
+    const parts=[];
+    for(let i=idx+1;i<nodes.length && parts.length<3;i++){
+      const t=(nodes[i].textContent||'').trim();
+      if(t && !/^(KHỞI ĐỘNG|LUYỆN TẬP|VẬN DỤNG)$/i.test(t)) parts.push(t);
+    }
+    if(parts.length) return parts.join(' ');
+  }
+  return '';
+}
+
+function renderLessonGoals(id){
+  const b=LESSONS.find(x=>x.id===id), c=LESSON_CONTENT[id]||{}, p=LESSON_PEDAGOGY[id]||{};
+  const summary=extractKnowledgeSummary(c.text)||p.summary||`Khám phá kiến thức trọng tâm của Bài ${id}: ${b?.ten||''}.`;
+  const goals=[
+    ['blue','🎯 MỤC TIÊU',summary],
+    ['green','💻 NĂNG LỰC SỐ',p.digital||'Chủ động sử dụng công cụ số để học tập, hợp tác và giải quyết nhiệm vụ.'],
+    ['purple','🤖 NĂNG LỰC AI',p.ai||'Sử dụng AI có kiểm soát, biết kiểm chứng thông tin và chịu trách nhiệm với sản phẩm.'],
+    ['orange','🚀 VẬN DỤNG',p.apply||'Kết nối kiến thức với một nhiệm vụ thực tế và tạo sản phẩm học tập có bằng chứng.']
+  ];
+  const el=document.getElementById('lesson-goals');
+  if(el) el.innerHTML=goals.map(g=>`<article class="goal-card ${g[0]}"><h4>${g[1]}</h4><p>${g[2]}</p></article>`).join('');
+}
+function toggleTeacherMode(){const el=document.getElementById('teacher-mode');if(el)el.style.display=el.style.display==='none'?'block':'none'}
+
+function skillProfile(id){
+  if(SKILL_PROFILES[id]) return SKILL_PROFILES[id];
+  const b=LESSONS.find(x=>x.id===id)||{};
+  const generic={1:[['Kiến thức số',75],['Thực hành công cụ số',80],['Giải quyết vấn đề',75],['An toàn & trách nhiệm số',70]],2:[['Quản lý dữ liệu',80],['Khai thác thông tin',75],['Tư duy phản biện',75],['Cộng tác số',70]],3:[['Cơ sở dữ liệu',85],['Phân tích dữ liệu',80],['An toàn dữ liệu',75],['Giải quyết vấn đề',80]],4:[['Định hướng nghề nghiệp',80],['Giao tiếp số',75],['Tạo sản phẩm số',75],['Tự học số',80]],5:[['Quản trị dữ liệu',85],['Thực hành hệ thống',85],['An toàn dữ liệu',80],['Giải quyết vấn đề',80]],6:[['Sáng tạo nội dung số',85],['Chỉnh sửa ảnh/video',85],['Bản quyền số',75],['Sáng tạo',85]]};
+  return {skills:generic[b.chude||1]||generic[1]};
+}
+function lessonKey(id){return `tin12-complete-${id}`}
+function isLessonComplete(id){return localStorage.getItem(lessonKey(id))==='1'}
+function updateGlobalProgress(){
+  const done=LESSONS.filter(b=>isLessonComplete(b.id)).length, pct=LESSONS.length?Math.round(done/LESSONS.length*100):0;
+  const t=document.getElementById('global-progress'), bar=document.getElementById('global-progress-bar');
+  if(t)t.textContent=pct+'%'; if(bar)bar.style.width=pct+'%';
+}
+function toggleLessonComplete(){
+  if(currentLessonId==null)return;
+  const k=lessonKey(currentLessonId);
+  if(isLessonComplete(currentLessonId)) localStorage.removeItem(k); else localStorage.setItem(k,'1');
+  renderLessonLearning(currentLessonId); updateGlobalProgress();
+}
+function renderLessonLearning(id){
+  const profile=skillProfile(id), done=isLessonComplete(id);
+  const sd=document.getElementById('skill-dashboard');
+  if(sd) sd.innerHTML=profile.skills.map(x=>`<div class="skill-row"><span class="skill-name">${x[0]}</span><span class="skill-meter"><i style="width:${x[1]}%"></i></span><b>${x[1]}%</b></div>`).join('');
+  const list=[['📖 Đọc nội dung','Đọc và hiểu kiến thức cốt lõi'],['🎬 Xem/khám phá','Xem hình ảnh, video hoặc tài liệu'],['🛠 Thực hành','Hoàn thành hoạt động'],['📝 Luyện tập','Tự trả lời trước khi xem đáp án'],['🚀 Vận dụng','Tạo sản phẩm/giải quyết tình huống'],['🤖 AI phản biện','Dùng AI để gợi ý và kiểm chứng']];
+  const cl=document.getElementById('lesson-checklist');
+  if(cl)cl.innerHTML=list.map((x,i)=>{const checked=localStorage.getItem(`tin12-${id}-step-${i}`)==='1'; return `<label class="progress-check"><input type="checkbox" ${checked?'checked':''} onchange="saveSubProgress(${id},${i},this.checked)"> ${x[0]}</label>`}).join('');
+  const cb=document.getElementById('complete-btn'); if(cb)cb.textContent=done?'☑ Đã hoàn thành':'☐ Đánh dấu hoàn thành';
+}
+function saveSubProgress(id,i,val){localStorage.setItem(`tin12-${id}-step-${i}`,val?'1':'0');
+  const steps=[0,1,2,3,4,5].filter(i=>localStorage.getItem(`tin12-${id}-step-${i}`)==='1').length;
+  if(steps===6 && !isLessonComplete(id)){localStorage.setItem(lessonKey(id),'1');updateGlobalProgress();renderLessonLearning(id)}
+}
+function lessonPrompt(extra=''){
+  const b=LESSONS.find(x=>x.id===currentLessonId), c=LESSON_CONTENT[currentLessonId]||{};
+  return `Bạn là gia sư AI hỗ trợ môn Tin học 12.\nBài đang học: Bài ${b?.id||''}. ${b?.ten||''}\nTiêu đề tiếng Anh: ${c.en||''}\n\nNguyên tắc sư phạm: không làm bài hộ; ưu tiên gợi ý từng bước, đặt câu hỏi để học sinh tự suy luận, nhắc kiểm chứng thông tin và tôn trọng bản quyền.\n\nYêu cầu của học sinh: ${extra||'Hãy giúp em học bài này theo cách dễ hiểu và có ví dụ thực tế.'}`;
+}
+function openAILab(prefill=''){const m=document.getElementById('ai-modal'); if(!m)return; m.classList.add('show');setAIPrompt(prefill||'');setTimeout(()=>document.getElementById('ai-prompt')?.focus(),80)}
+function closeAILab(){document.getElementById('ai-modal')?.classList.remove('show')}
+function setAIPrompt(text){document.getElementById('ai-prompt').value=lessonPrompt(text)}
+function copyAIPrompt(){const v=document.getElementById('ai-prompt').value; navigator.clipboard?.writeText(v).then(()=>{const o=document.getElementById('ai-output');o.textContent='✅ Đã sao chép prompt. Bạn có thể dán vào ChatGPT, Gemini, Copilot hoặc AI của trường.';o.classList.add('show')}).catch(()=>alert('Hãy bôi đen prompt và sao chép thủ công.'))}
+function copyLessonPrompt(){openAILab();setAIPrompt('Hãy tạo một kế hoạch tự học 15 phút cho bài này, gồm mục tiêu, 3 câu hỏi tự kiểm tra và 1 nhiệm vụ vận dụng.')}
+function openChatGPTWithPrompt(){const v=document.getElementById('ai-prompt').value;window.open('https://chatgpt.com/?q='+encodeURIComponent(v),'_blank','noopener')}
+function filterLessons(q){q=(q||'').toLowerCase().trim();document.querySelectorAll('.bai-list li').forEach(li=>{li.classList.toggle('filtered-out',!!q&&!li.textContent.toLowerCase().includes(q))});document.querySelectorAll('details.chude').forEach(d=>{const has=[...d.querySelectorAll('.bai-list li')].some(li=>!li.classList.contains('filtered-out'));if(q&&has)d.open=true;if(q&&!has)d.classList.add('filtered-out');else d.classList.remove('filtered-out')})}
+updateGlobalProgress();
+
+/* ======================================================
    SLIDESHOW — tự lấy các bài đã có nội dung (LESSON_CONTENT),
    mới nhất theo ngày lên trước, bấm vào slide sẽ mở đúng bài
    ====================================================== */
@@ -683,7 +1305,7 @@ if (slideCount === 0) {
 } else {
   track.innerHTML = postsWithContent.map(b => {
     const c = LESSON_CONTENT[b.id];
-    const img = c.img || 'assets/tin12-sgk.jpg';
+    const img = c.img || 'assets/tin12/tin12-sgk.jpg';
     return `<div class="slide" onclick="showLesson(${b.id})">
       <img src="${img}" alt="${b.ten}">
       <div class="caption"><span class="tag">${c.ngay || ''}</span><br>Bài ${b.id}. ${b.ten}</div>
@@ -695,11 +1317,27 @@ if (slideCount === 0) {
     d.onclick = (e) => { e.stopPropagation(); sIndex = i; renderSlide(); };
     dotsWrap.appendChild(d);
   }
+  fitSlideHeight();
 }
 function renderSlide() {
   track.style.transform = `translateX(-${sIndex * 100}%)`;
   [...dotsWrap.children].forEach((d, i) => d.classList.toggle('active', i === sIndex));
+  fitSlideHeight();
 }
+function fitSlideHeight(){
+  if(!slideCount || !track.children[sIndex]) return;
+  const img = track.children[sIndex].querySelector('img');
+  if(!img) return;
+  const apply = () => {
+    if(!img.naturalWidth || !img.naturalHeight) return;
+    const w = track.clientWidth || track.parentElement.clientWidth || 800;
+    let h = Math.round(w * (img.naturalHeight / img.naturalWidth));
+    h = Math.max(200, Math.min(560, h));
+    track.style.height = h + 'px';
+  };
+  if (img.complete) apply(); else img.addEventListener('load', apply, { once: true });
+}
+window.addEventListener('resize', () => { if (slideCount) fitSlideHeight(); });
 function moveSlide(dir) { if(!slideCount) return; sIndex = (sIndex + dir + slideCount) % slideCount; renderSlide(); }
 if (slideCount > 1) setInterval(() => moveSlide(1), 5000);
 
@@ -711,6 +1349,71 @@ const backToTopBtn = document.getElementById('back-to-top');
 window.addEventListener('scroll', () => {
   backToTopBtn.classList.toggle('show', window.scrollY > 400);
 });
+
+/* ======================================================
+   BẢO VỆ NỘI DUNG — chống copy, paste, chuột phải, kéo/thả,
+   phím tắt sao chép, F12/DevTools, PrintScreen
+   ====================================================== */
+(function(){
+  const veil = document.getElementById('protect-veil');
+  function flashVeil(ms){
+    if(!veil) return;
+    veil.classList.add('show');
+    setTimeout(()=>veil.classList.remove('show'), ms||900);
+  }
+  function isEditable(el){
+    return el && (el.tagName==='INPUT' || el.tagName==='TEXTAREA' || el.isContentEditable);
+  }
+
+  document.addEventListener('contextmenu', e=>{ e.preventDefault(); });
+  document.addEventListener('copy', e=>{ if(!isEditable(e.target)) e.preventDefault(); });
+  document.addEventListener('cut', e=>{ if(!isEditable(e.target)) e.preventDefault(); });
+  document.addEventListener('paste', e=>{ e.preventDefault(); });
+  document.addEventListener('selectstart', e=>{ if(!isEditable(e.target)) e.preventDefault(); });
+  document.addEventListener('dragstart', e=>{ e.preventDefault(); });
+  document.addEventListener('drop', e=>{ e.preventDefault(); });
+
+  document.addEventListener('keydown', function(e){
+    const key = (e.key||'').toLowerCase();
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+    // Ctrl/Cmd + C, V, X, A, S, P, U
+    if(ctrlOrCmd && ['c','v','x','a','s','p','u'].includes(key)){
+      if(key==='v' || !isEditable(e.target)){
+        e.preventDefault(); e.stopPropagation();
+      }
+    }
+    // F12
+    if(e.key==='F12'){ e.preventDefault(); e.stopPropagation(); }
+    // Ctrl/Cmd+Shift+I / J / C (DevTools)
+    if(ctrlOrCmd && e.shiftKey && ['i','j','c'].includes(key)){
+      e.preventDefault(); e.stopPropagation();
+    }
+    // Ctrl/Cmd + Alt/Option + I / J (DevTools trên một số trình duyệt/Mac)
+    if(ctrlOrCmd && e.altKey && ['i','j'].includes(key)){
+      e.preventDefault(); e.stopPropagation();
+    }
+    // PrintScreen
+    if(e.key==='PrintScreen' || e.keyCode===44){
+      flashVeil(1200);
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText('').catch(()=>{});
+      }
+      e.preventDefault();
+    }
+  }, true);
+
+  document.addEventListener('keyup', function(e){
+    if(e.key==='PrintScreen' || e.keyCode===44){
+      if(navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText('').catch(()=>{});
+      }
+    }
+  }, true);
+
+  // Dự phòng: có thể mở rộng xử lý khi cửa sổ mất focus (best-effort, trình duyệt không cho chặn 100% việc chụp màn hình)
+  window.addEventListener('blur', ()=>{});
+})();
 </script>
   
 
