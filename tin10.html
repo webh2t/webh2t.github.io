@@ -183,6 +183,9 @@
   .img-full{ width:100%; display:block; border-radius:8px; margin:14px 0; }
   .img-center{ display:block; margin:14px auto; max-width:70%; border-radius:8px; }
   @media(max-width:640px){ .img-center{ max-width:100%; } }
+  .option-list{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+  .option-list li{ padding:9px 12px; background:#f7f9ff; border:1px solid #e1e8f7; border-radius:8px; font-size:.95rem; line-height:1.55; }
+  .option-list li strong{ color:inherit; margin-right:4px; }
 
   /* ---------- Related posts: lưới ảnh 3 cột ---------- */
   .related-box{ margin-top:28px; padding-top:22px; border-top:1px dashed var(--line);}
@@ -383,11 +386,11 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
     <h1><span>Grade 10</span><span>Informatics</span></h1>
   </div>
 
-  <section class="platform-hero" aria-label="TIN HỌC 11 Digital Learning Platform">
+  <section class="platform-hero" aria-label="TIN HỌC 10 Digital Learning Platform">
     <div class="hero-grid">
       <div>
         <div class="platform-kicker">Digital Learning Platform • AI Era</div>
-        <h2>💻 TIN HỌC 11 – HỌC TẬP SỐ • NĂNG LỰC SỐ • AI</h2>
+        <h2>💻 TIN HỌC 10 – HỌC LIỆU SỐ • NĂNG LỰC SỐ • AI</h2>
         <p>Không chỉ học kiến thức: học sinh đọc hiểu, thực hành, giải quyết vấn đề, sử dụng công cụ số có trách nhiệm và biết hợp tác với AI.</p>
         <div class="hero-actions">
           <button class="hero-btn" onclick="openAILab()">🤖 Mở AI Tutor</button>
@@ -782,7 +785,7 @@ const LESSON_CONTENT = {
 <details class="answer-box"><summary>Xem đáp án Câu hỏi 2</summary><div class="answer-content"><p>Dữ liệu "39°C" trong bộ dữ liệu về thời tiết mang thông tin "trời rất nóng", nhưng trong bộ dữ liệu bệnh án lại mang thông tin "sốt cao". Thông tin có tính toàn vẹn — nếu dữ liệu không đầy đủ thì không xác định được chính xác thông tin hoặc làm sai lệch thông tin.</p></div></details>
 
 <p><strong>2. ĐƠN VỊ LƯU TRỮ DỮ LIỆU</strong></p>
-<div class="activity-box"><p><strong>Câu hỏi 1:</strong> Định nghĩa nào về Byte là đúng? A. Là một kí tự. B. Là đơn vị dữ liệu 8 bit. C. Là đơn vị đo tốc độ của máy tính. D. Là một dãy 8 chữ số.</p></div>
+<div class="activity-box"><p><strong>Câu hỏi 1:</strong> Định nghĩa nào về Byte là đúng?</p><ul class="option-list"><li><strong>A.</strong> Là một kí tự.</li><li><strong>B.</strong> Là đơn vị dữ liệu 8 bit.</li><li><strong>C.</strong> Là đơn vị đo tốc độ của máy tính.</li><li><strong>D.</strong> Là một dãy 8 chữ số.</li></ul></div>
 <details class="answer-box"><summary>Xem đáp án Câu hỏi 1</summary><div class="answer-content"><p><strong>Đáp án: B.</strong> Nghĩa gốc của "byte" là một đơn vị dữ liệu dưới dạng một dãy các bit có độ dài nhỏ nhất có thể truy cập được (thông thường là 8 bit).</p></div></details>
 <div class="activity-box"><p><strong>Câu hỏi 2:</strong> Quy đổi các lượng tin sau ra KB: a. 3MB &nbsp; b. 2GB &nbsp; c. 2048B</p></div>
 <details class="answer-box"><summary>Xem đáp án Câu hỏi 2</summary><div class="answer-content"><p>a) 3MB = 3 × 1024 = 3072 KB</p><p>b) 2GB = 2 × 1024 × 1024 = 2 097 152 KB</p><p>c) 2048B = 2048/1024 = 2 KB</p></div></details>
@@ -791,23 +794,24 @@ const LESSON_CONTENT = {
 <div class="activity-box"><p><strong>Hoạt động 2:</strong> Hãy so sánh thiết bị không phụ thuộc loại số với thiết bị số tương ứng (ví dụ: quạt cơ và quạt thông minh điều khiển từ xa).</p></div>
 <details class="answer-box"><summary>Xem đáp án Hoạt động 2</summary><div class="answer-content"><p><strong>Giống nhau:</strong> đều thực hiện các chức năng cơ bản như báo giờ, tạo gió làm mát.</p><p><strong>Khác nhau:</strong> các thiết bị số có năng suất cao và ổn định hơn; thực hiện tự động, chính xác, chi phí thấp và tiện lợi hơn: kết nối bluetooth với điện thoại, lắp sim độc lập, hẹn giờ, gió mát tự nhiên, tạo ion làm sạch không khí, phun sương, điều khiển từ xa,…</p></div></details>
 <div class="activity-box"><p><strong>Câu hỏi 1:</strong> Em hãy so sánh việc gửi thư theo đường bưu điện và gửi thư điện tử theo các tiêu chí tốc độ, chi phí, khả năng lưu trữ.</p></div>
-<details class="answer-box"><summary>Xem đáp án Câu hỏi 1</summary><div class="answer-content"><p><strong>Giống nhau:</strong> đều nhằm chuyển thư tới người nhận.</p><p><strong>Khác nhau:</strong> Thư điện tử có tốc độ gửi/nhận gần như tức thời, trong khi thư bưu điện mất nhiều ngày; chi phí gửi thư điện tử rất thấp hoặc miễn phí, còn thư bưu điện tốn phí tem/vận chuyển; thư điện tử dễ lưu trữ, tìm kiếm và sao lưu với dung lượng lớn, trong khi thư giấy chiếm không gian vật lý và khó tìm kiếm lại.</p></div></details>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi 1</summary><div class="answer-content"><p><strong>Giống nhau:</strong> đều nhằm chuyển thư tới người nhận.</p><p><strong>Khác nhau:</strong></p><table><tr><th>Đặc điểm</th><th>Gửi thư theo đường bưu điện</th><th>Gửi thư điện tử</th></tr><tr><td>Thư</td><td>Viết tay, bằng giấy mực, bút</td><td>Gõ chữ từ bàn phím và biết dùng phần mềm thư điện tử</td></tr><tr><td>Tốc độ</td><td>Chậm hơn nhiều</td><td>Rất nhanh</td></tr><tr><td>Chi phí</td><td>Cao hơn, tuỳ vào khoảng cách</td><td>Rất nhỏ, chỉ vài giây tới vài phút tuỳ tốc độ mạng</td></tr><tr><td>Khối lượng gửi và nhận</td><td>Nhỏ hơn</td><td>Lớn hơn rất nhiều</td></tr></table></div></details>
 <div class="activity-box"><p><strong>Câu hỏi 2:</strong> Giả sử để số hóa một cuốn sách kể cả văn bản và hình ảnh cần khối lượng dữ liệu khoảng 50MB. Thư viện của một trường có khoảng 2000 cuốn sách. Nếu số hóa thì cần khoảng bao nhiêu GB để lưu trữ? Có thể chứa nội dung đó trong thẻ nhớ 256GB hay không?</p></div>
-<details class="answer-box"><summary>Xem đáp án Câu hỏi 2</summary><div class="answer-content"><p>Tổng dữ liệu cần: 50 × 2000 = 100 000 MB ≈ 97,7 GB &lt; 256 GB ⇒ Có thể chứa được.</p></div></details>
+<details class="answer-box"><summary>Xem đáp án Câu hỏi 2</summary><div class="answer-content"><p>Tổng dữ liệu cần: 50 × 2000 = 100 000 MB.</p><p>Đổi ra GB: 100 000 ÷ 1024 ≈ 97,7 GB &lt; 256 GB ⇒ Có thể chứa được.</p></div></details>
 
 <p><strong>LUYỆN TẬP</strong> <span class="lesson-en">— Practice</span></p>
 <div class="activity-box"><p><strong>Luyện tập 1:</strong> Từ dữ liệu các môn học của học sinh, có thể rút ra những thông tin gì? Mô tả sơ bộ xử lí để rút ra một thông tin trong số đó.</p></div>
 <details class="answer-box"><summary>Xem đáp án Luyện tập 1</summary><div class="answer-content"><p>Có thể rút ra thông tin: học lực, môn học tốt và chưa tốt của từng học sinh; chất lượng học tập của từng lớp.</p><p><strong>Mô tả:</strong> Từ điểm từng môn ⇒ Điểm trung bình chung của từng học sinh ⇒ Thông tin về học lực, môn học tốt và chưa tốt của từng em.</p></div></details>
 <div class="activity-box"><p><strong>Luyện tập 2:</strong> Từ danh sách các tệp ảnh lấy ra từ thẻ nhớ của một máy ảnh số (có độ lớn 438KB, 585KB, 418KB, 714KB), em hãy tính toán một thẻ nhớ 16GB có thể chứa được tối đa bao nhiêu ảnh tính theo độ lớn trung bình của ảnh?</p></div>
-<details class="answer-box"><summary>Xem đáp án Luyện tập 2</summary><div class="answer-content"><p>Độ lớn trung bình của ảnh là: (438+585+418+714)/4 = 545,5 KB.</p><p>Ta có: 16×1024/545,5 ≈ 30,03 ⇒ Có thể chứa tối đa 30 ảnh.</p></div></details>
-<div class="activity-box"><p><strong>Luyện tập thêm — Quy đổi dung lượng dữ liệu:</strong> a) 3 MB &nbsp; b) 2 GB &nbsp; c) 2048 B</p></div>
-<details class="answer-box"><summary>Xem đáp án Luyện tập thêm</summary><div class="answer-content"><p>a) 1 MB = 1024 KB ⇒ 3 MB = 3 × 1024 = 3072 KB</p><p>b) 2 GB = 2 × 1024 = 2048 MB ⇒ 2 GB = 2048 × 1024 = 2 097 152 KB</p><p>c) 1024 B = 1 KB ⇒ 2048 B = 2048/1024 = 2 KB</p></div></details>
-
+<details class="answer-box"><summary>Xem đáp án Luyện tập 2</summary><div class="answer-content"><p>Độ lớn trung bình của ảnh là: (438+585+418+714)/4 = 545,5 KB.</p><p>Đổi 16GB ra KB: 16 × 1024 × 1024 = 16 777 216 KB.</p><p>Ta có: 16 777 216 / 545,5 ≈ 30 755 ⇒ Có thể chứa tối đa 30 755 ảnh.</p></div></details>
 <p><strong>VẬN DỤNG</strong> <span class="lesson-en">— Application</span></p>
 <div class="activity-box"><p><strong>Vận dụng 1:</strong> Trong thẻ căn cước công dân có gắn chip có thông tin về số căn cước, họ tên, ngày sinh, giới tính, quê quán,… được in trên thẻ để đọc trực tiếp. Ngoài ra, các thông tin ấy còn được mã hóa trong QR code và ghi vào chip nhớ. Theo em điều đó có lợi gì?</p></div>
 <details class="answer-box"><summary>Xem đáp án Vận dụng 1</summary><div class="answer-content"><p>Có khá nhiều lợi ích, một số lợi ích tiêu biểu:</p><p>- Thẻ căn cước gắn chip không chỉ lưu trữ được nhiều trường thông tin hơn, có thể tích hợp thêm dữ liệu của chuyên ngành khác (bảo hiểm, ngân hàng, bằng lái xe), mà còn bảo mật tốt hơn và phòng tránh được tình trạng giả mạo giấy tờ tùy thân.</p><p>- Nhờ chip điện tử và mã QR in trên thẻ căn cước mới này, người dân khi đi giải quyết thủ tục hành chính sẽ không cần phải có thêm giấy xác nhận số chứng minh thư cũ.</p><p>- Mức độ bảo mật của chip điện tử rất cao nên thông tin định danh của công dân được lưu trên căn cước là không thể thay đổi, không thể giả mạo và việc đối sánh sinh trắc học có thể thực hiện được ngay.</p></div></details>
 <div class="activity-box"><p><strong>Vận dụng 2:</strong> Hãy tìm hiểu và mô tả vai trò của thiết bị số trong việc làm thay đổi cơ bản việc chụp ảnh.</p></div>
-<details class="answer-box"><summary>Xem đáp án Vận dụng 2</summary><div class="answer-content"><p><strong>Cơ chế hoạt động đơn giản:</strong> Cơ chế hoạt động của máy ảnh kỹ thuật số về cơ bản giống như máy ảnh cơ, chỉ khác là máy ảnh kỹ thuật số sử dụng thiết bị thu nhận hình ảnh (cảm biến) thay cho phim để tạo ra tín hiệu điện, cho ra những bức ảnh. Máy ảnh kỹ thuật số có nhiều chức năng điều chỉnh, phù hợp với từng trường hợp nhằm cho ra kết quả tốt nhất.</p><p><strong>Số lượng lưu trữ lớn:</strong> Nếu máy ảnh cơ chỉ lưu trữ tối đa khoảng 36 hình ảnh trên một cuộn phim thì máy ảnh kĩ thuật số nhờ thẻ nhớ có thể lưu tới hàng trăm, hàng nghìn ảnh tùy loại thẻ nhớ. Khi kết nối với máy tính, điện thoại, hình ảnh có thể hiện ngay để xem, chỉnh sửa, tiết kiệm công sức và hóa chất rửa ảnh gây hại môi trường.</p><p><strong>Độ nhạy sáng linh hoạt:</strong> Máy ảnh kĩ thuật số tự động điều chỉnh độ sáng dựa theo các thang ISO mà người chụp không cần tự chỉnh, phù hợp cho cả người mới bắt đầu chụp ảnh. Độ nhạy sáng của máy ảnh kĩ thuật số linh hoạt hơn nhiều so với máy ảnh cơ.</p></div></details>`,
+<details class="answer-box"><summary>Xem đáp án Vận dụng 2</summary><div class="answer-content"><p><strong>Cơ chế hoạt động đơn giản:</strong> Cơ chế hoạt động của máy ảnh kỹ thuật số về cơ bản giống như máy ảnh cơ, chỉ khác là máy ảnh kỹ thuật số sử dụng thiết bị thu nhận hình ảnh (cảm biến) thay cho phim để tạo ra tín hiệu điện, cho ra những bức ảnh. Máy ảnh kỹ thuật số có nhiều chức năng điều chỉnh, phù hợp với từng trường hợp nhằm cho ra kết quả tốt nhất.</p><p><strong>Số lượng lưu trữ lớn:</strong> Nếu máy ảnh cơ chỉ lưu trữ tối đa khoảng 36 hình ảnh trên một cuộn phim thì máy ảnh kĩ thuật số nhờ thẻ nhớ có thể lưu tới hàng trăm, hàng nghìn ảnh tùy loại thẻ nhớ. Khi kết nối với máy tính, điện thoại, hình ảnh có thể hiện ngay để xem, chỉnh sửa, tiết kiệm công sức và hóa chất rửa ảnh gây hại môi trường.</p><p><strong>Độ nhạy sáng linh hoạt:</strong> Máy ảnh kĩ thuật số tự động điều chỉnh độ sáng dựa theo các thang ISO mà người chụp không cần tự chỉnh, phù hợp cho cả người mới bắt đầu chụp ảnh. Độ nhạy sáng của máy ảnh kĩ thuật số linh hoạt hơn nhiều so với máy ảnh cơ.</p></div></details>
+
+<p><strong>PRACTICE EXERCISES</strong> <span class="lesson-en">— Bài tập bổ sung</span></p>
+<div class="activity-box"><p>Quy đổi dung lượng dữ liệu sau:</p><ul class="option-list"><li><strong>a)</strong> 3 MB</li><li><strong>b)</strong> 2 GB</li><li><strong>c)</strong> 2048 B</li></ul></div>
+<details class="answer-box"><summary>Xem hướng dẫn</summary><div class="answer-content"><p>a) 1 MB = 1024 KB ⇒ 3 MB = 3 × 1024 = 3072 KB</p><p>b) 2 GB = 2 × 1024 = 2048 MB ⇒ 2 GB = 2048 × 1024 = 2 097 152 KB</p><p>c) 1024 B = 1 KB ⇒ 2048 B = 2048 / 1024 = 2 KB</p></div></details>`,
     img: "assets/tin10/100.jpg",
     video: "",
     doc: ""

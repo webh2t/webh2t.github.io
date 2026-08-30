@@ -183,6 +183,9 @@
   .img-full{ width:100%; display:block; border-radius:8px; margin:14px 0; }
   .img-center{ display:block; margin:14px auto; max-width:70%; border-radius:8px; }
   @media(max-width:640px){ .img-center{ max-width:100%; } }
+  .option-list{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+  .option-list li{ padding:9px 12px; background:#f7f9ff; border:1px solid #e1e8f7; border-radius:8px; font-size:.95rem; line-height:1.55; }
+  .option-list li strong{ color:inherit; margin-right:4px; }
 
   /* ---------- Related posts: lưới ảnh 3 cột ---------- */
   .related-box{ margin-top:28px; padding-top:22px; border-top:1px dashed var(--line);}
@@ -383,11 +386,11 @@ img{-webkit-user-drag:none;-khtml-user-drag:none;-moz-user-drag:none;-o-user-dra
     <h1><span>Grade 12</span><span>Informatics</span></h1>
   </div>
 
-  <section class="platform-hero" aria-label="TIN HỌC 11 Digital Learning Platform">
+  <section class="platform-hero" aria-label="TIN HỌC 12 Digital Learning Platform">
     <div class="hero-grid">
       <div>
         <div class="platform-kicker">Digital Learning Platform • AI Era</div>
-        <h2>💻 TIN HỌC 11 – HỌC TẬP SỐ • NĂNG LỰC SỐ • AI</h2>
+        <h2>💻 TIN HỌC 12 – HỌC LIỆU SỐ • NĂNG LỰC SỐ • AI</h2>
         <p>Không chỉ học kiến thức: học sinh đọc hiểu, thực hành, giải quyết vấn đề, sử dụng công cụ số có trách nhiệm và biết hợp tác với AI.</p>
         <div class="hero-actions">
           <button class="hero-btn" onclick="openAILab()">🤖 Mở AI Tutor</button>
@@ -769,7 +772,7 @@ const LESSON_CONTENT = {
 <details class="answer-box"><summary>Xem đáp án Khởi động</summary><div class="answer-content"><p>Tính đến thời điểm hiện tại, Trí tuệ nhân tạo (AI) đã được sử dụng rộng rãi trong nhiều lĩnh vực khác nhau, ví dụ:</p><p>1. <strong>Xử lý ngôn ngữ tự nhiên (NLP):</strong> xây dựng các hệ thống dịch máy, nhận dạng giọng nói, phân tích ý kiến trên mạng xã hội.</p><p>2. <strong>Xe tự hành:</strong> nhận diện và phản ứng với môi trường xung quanh, giúp xe tự lái di chuyển an toàn.</p><p>3. <strong>Chăm sóc sức khỏe:</strong> chẩn đoán bệnh, dự đoán tình trạng sức khỏe, phân tích hình ảnh y khoa.</p><p>4. <strong>Tư vấn tài chính:</strong> phân tích dữ liệu thị trường, dự báo xu hướng, đưa ra gợi ý đầu tư.</p><p>5. <strong>Trích xuất thông tin từ ảnh và video:</strong> nhận dạng đối tượng, phát hiện hoạt động bất thường trong video an ninh.</p><p>6. <strong>Dịch vụ khách hàng tự động:</strong> chatbot và hệ thống tự động trả lời câu hỏi.</p><p>7. <strong>Quảng cáo và tiếp thị:</strong> phân tích hành vi người dùng để cá nhân hóa chiến lược tiếp thị.</p><p>8. <strong>Robot hỗ trợ:</strong> tương tác với con người, dọn dẹp nhà cửa, giao hàng tự động, hướng dẫn du lịch.</p></div></details>
 
 <p><strong>1. KHÁI NIỆM TRÍ TUỆ NHÂN TẠO</strong></p>
-<div class="activity-box"><p><strong>Hoạt động 1:</strong> Khi nói tới AI người ta thường nói tới khả năng máy móc có thể thực hiện nhiều công việc một cách tự động. Tuy nhiên, không phải bất kỳ hệ thống tự động hóa nào cũng có thể được coi là AI. Trong các ví dụ dưới đây, những trường hợp nào không được coi là ứng dụng của AI? Tại sao? A. Ấm đun nước tự ngắt điện khi nước sôi. B. Tìm kiếm thông tin trên internet nhờ máy tìm kiếm. C. Cửa ra vào ở một số siêu thị, nhà hàng hay văn phòng tự động mở khi có người tới gần. D. Những guồng nước, bánh xe nước ở một số vùng quê, nhờ dòng chảy tự nhiên của khe suối hay kênh, ngòi, quay, chuyển nước lên các đường dẫn đi xa để phục vụ nhu cầu tưới tiêu hoặc sinh hoạt.</p></div>
+<div class="activity-box"><p><strong>Hoạt động 1:</strong> Khi nói tới AI người ta thường nói tới khả năng máy móc có thể thực hiện nhiều công việc một cách tự động. Tuy nhiên, không phải bất kỳ hệ thống tự động hóa nào cũng có thể được coi là AI. Trong các ví dụ dưới đây, những trường hợp nào không được coi là ứng dụng của AI? Tại sao?</p><ul class="option-list"><li><strong>A.</strong> Ấm đun nước tự ngắt điện khi nước sôi.</li><li><strong>B.</strong> Tìm kiếm thông tin trên internet nhờ máy tìm kiếm.</li><li><strong>C.</strong> Cửa ra vào ở một số siêu thị, nhà hàng hay văn phòng tự động mở khi có người tới gần.</li><li><strong>D.</strong> Những guồng nước, bánh xe nước ở một số vùng quê, nhờ dòng chảy tự nhiên của khe suối hay kênh, ngòi, quay, chuyển nước lên các đường dẫn đi xa để phục vụ nhu cầu tưới tiêu hoặc sinh hoạt.</li></ul></div>
 <details class="answer-box"><summary>Xem đáp án Hoạt động 1</summary><div class="answer-content"><p><strong>A, C, D</strong> không được coi là ứng dụng AI vì đây là các thiết bị/hệ thống tự động hoá đơn giản, chỉ phản ứng theo một quy tắc hoặc cảm biến vật lý cố định (nhiệt độ, chuyển động, dòng chảy), không có khả năng học hỏi, suy luận hay ra quyết định linh hoạt.</p><p><strong>B</strong> (máy tìm kiếm) được coi là ứng dụng AI vì máy tìm kiếm sử dụng các thuật toán xử lý ngôn ngữ tự nhiên và học máy để hiểu truy vấn, xếp hạng và trả về những kết quả phù hợp nhất với người dùng.</p></div></details>
 <div class="activity-box"><p><strong>Câu hỏi 1:</strong> Hãy nêu một số đặc trưng chính của AI.</p></div>
 <details class="answer-box"><summary>Xem đáp án Câu hỏi 1</summary><div class="answer-content"><p>Một số đặc trưng chính của AI: khả năng học, khả năng suy luận, khả năng nhận thức, khả năng hiểu ngôn ngữ, khả năng giải quyết vấn đề.</p></div></details>
