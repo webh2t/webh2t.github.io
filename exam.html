@@ -21,8 +21,10 @@
 
   /* ================= HEADER / MEGA MENU ================= */
   header{ background:var(--ink); border-bottom:3px solid var(--amber); position:sticky; top:0; z-index:80;}
-  .header-top{ max-width:1200px; margin:0 auto; padding:14px 24px; display:flex; align-items:center;
-    justify-content:space-between; gap:16px; flex-wrap:wrap;}
+  .header-top{ max-width:1200px; margin:0 auto; padding:14px 24px; display:grid;
+    grid-template-columns:1fr auto 1fr; align-items:center; gap:16px;}
+  .header-top .brand{ justify-self:start;}
+  .header-top .home-round{ justify-self:end;}
   .brand{ color:#fff; font-weight:800; font-size:1.1rem; display:flex; align-items:center; gap:8px;}
   .brand .dot{ width:9px; height:9px; border-radius:50%; background:var(--amber);}
   .home-round{ width:44px; height:44px; border-radius:50%; background:var(--amber); color:var(--ink);
@@ -30,21 +32,24 @@
     box-shadow:0 4px 14px rgba(255,200,69,.4); transition:transform .15s, box-shadow .15s; flex-shrink:0;}
   .home-round:hover{ transform:scale(1.1) rotate(-6deg); box-shadow:0 6px 20px rgba(255,200,69,.55);}
 
-  nav.mega-menu{ background:var(--ink-soft); border-top:1px solid rgba(255,255,255,.08); padding:10px 0;}
+  nav.mega-menu{ background:linear-gradient(180deg,#122A55,#0D2044); border-top:1px solid rgba(255,255,255,.1);
+    border-bottom:2px solid rgba(255,255,255,.08); padding:12px 0;}
   .menu-row{ max-width:1200px; margin:0 auto; display:flex; flex-wrap:wrap; justify-content:center;
     gap:8px; padding:4px 16px;}
-  .mega-menu a{ display:flex; align-items:center; gap:7px; padding:10px 18px; font-size:.84rem;
-    font-weight:700; text-decoration:none; color:#F4F6F9; border-radius:9px; border:1.5px solid transparent;
+  .mega-menu a{ display:flex; align-items:center; gap:8px; padding:12px 22px; font-size:.95rem;
+    font-weight:800; text-decoration:none; color:#FFFFFF; background:rgba(255,255,255,.05);
+    border-radius:10px; border:1.5px solid rgba(255,255,255,.12);
     white-space:nowrap; position:relative; transition:background .15s, color .15s, box-shadow .15s, transform .12s;}
   .mega-menu a:hover{ background:rgba(255,255,255,.09); box-shadow:0 4px 12px rgba(0,0,0,.25); transform:translateY(-1px);}
   .mega-menu a:active{ transform:translateY(0); box-shadow:none;}
   .mega-menu a::after{ content:""; position:absolute; left:16px; right:16px; bottom:4px; height:2px;
     background:currentColor; transform:scaleX(0); transition:transform .18s;}
   .mega-menu a:hover::after{ transform:scaleX(1);}
-  .mega-menu a.m-home{ color:var(--m-home);} .mega-menu a.m-de10{ color:var(--m-de10);}
-  .mega-menu a.m-de11{ color:var(--m-de11);} .mega-menu a.m-de12{ color:var(--m-de12);}
-  .mega-menu a.m-tn{ color:var(--m-tn);} .mega-menu a.m-bank{ color:var(--m-bank);}
-  .mega-menu a.m-nop10{ color:var(--m-nop10);} .mega-menu a.m-nop11{ color:var(--m-nop11);} .mega-menu a.m-nop12{ color:var(--m-nop12);}
+  .mega-menu a.m-home{ color:#fff; border-color:var(--m-home);} .mega-menu a.m-de10{ color:#fff; border-color:var(--m-de10);}
+  .mega-menu a.m-de11{ color:#fff; border-color:var(--m-de11);} .mega-menu a.m-de12{ color:#fff; border-color:var(--m-de12);}
+  .mega-menu a.m-tn{ color:#fff; border-color:var(--m-tn);} .mega-menu a.m-bank{ color:#fff; border-color:var(--m-bank);}
+  .mega-menu a.m-nop10{ color:#fff; border-color:var(--m-nop10);} .mega-menu a.m-nop11{ color:#fff; border-color:var(--m-nop11);} .mega-menu a.m-nop12{ color:#fff; border-color:var(--m-nop12);}
+  .mega-menu a .ic{ font-size:1.1em;}
   .menu-toggle{ display:none; background:none; border:none; color:#fff; font-size:1.4rem; padding:8px;}
 
   main{ max-width:1200px; margin:0 auto; padding:0 24px 80px;}
@@ -65,9 +70,9 @@
     font-size:.85rem; color:#DCE4EE;}
 
   /* ================= CLOCK ================= */
-  .clock-bar{ margin-top:18px; background:var(--purple); color:#fff; text-align:center;
-    padding:12px 16px; border-radius:10px; font-family:'Space Grotesk',monospace; font-weight:600;
-    font-size:.95rem; letter-spacing:.02em;}
+  .clock-bar{ background:var(--purple); color:#fff; text-align:center;
+    padding:9px 20px; border-radius:999px; font-family:'Space Grotesk',monospace; font-weight:600;
+    font-size:.82rem; letter-spacing:.02em; white-space:nowrap;}
 
   /* ================= MEMBER PANEL ================= */
   .member-panel{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
@@ -156,6 +161,19 @@
   /* ================= EXAM TAKING ================= */
   .exam-run{ display:none;}
   .exam-run.show{ display:block;}
+  .exam-intro{ display:none;}
+  .exam-intro.show{ display:block;}
+  .intro-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:40px 30px; text-align:center; max-width:560px; margin:0 auto;}
+  .intro-icon{ font-size:2.6rem;}
+  .intro-card h2{ color:var(--ink); font-size:1.3rem; margin-top:8px;}
+  .intro-meta{ color:#7C8AA0; font-size:.88rem; margin-top:6px;}
+  .intro-student{ background:var(--paper); border-radius:10px; padding:16px 20px; margin:20px 0; text-align:left;}
+  .intro-student .row{ display:flex; justify-content:space-between; padding:5px 0; font-size:.88rem;}
+  .intro-student .row span:first-child{ color:#7C8AA0;}
+  .intro-student .row b{ color:var(--ink);}
+  .intro-rules{ background:rgba(255,200,69,.12); border-radius:8px; padding:12px 16px; margin-bottom:18px;}
+  .intro-rules p{ font-size:.82rem; color:#8A6D1D; margin:0;}
   .exam-header{ background:var(--ink); color:#fff; border-radius:var(--radius); padding:20px 24px;
     display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:14px; margin-bottom:24px;}
   .exam-header h2{ font-size:1.1rem;}
@@ -171,8 +189,13 @@
   .tf-row{ display:flex; align-items:center; justify-content:space-between; gap:12px; padding:8px 0;
     border-bottom:1px dashed var(--line); font-size:.88rem;}
   .tf-row:last-child{ border-bottom:none;}
-  .tf-choice{ display:flex; gap:14px; font-size:.82rem;}
-  .tf-choice label{ display:flex; align-items:center; gap:5px; cursor:pointer;}
+  .tf-choice{ display:flex; gap:10px;}
+  .tf-btn{ width:38px; height:38px; border-radius:50%; border:2px solid var(--line); background:#fff;
+    font-weight:800; font-size:.85rem; color:#9AA6B8; display:flex; align-items:center; justify-content:center;
+    transition:transform .12s, box-shadow .12s;}
+  .tf-btn:hover{ transform:scale(1.08);}
+  .tf-btn.true-btn.active{ background:#27AE60; border-color:#27AE60; color:#fff; box-shadow:0 4px 10px rgba(39,174,96,.4);}
+  .tf-btn.false-btn.active{ background:#E5342B; border-color:#E5342B; color:#fff; box-shadow:0 4px 10px rgba(229,52,43,.4);}
   .exam-submit{ text-align:center; margin-top:20px;}
   .exam-submit .btn{ padding:14px 32px; font-size:1rem;}
 
@@ -239,6 +262,7 @@
 <header>
   <div class="header-top">
     <div class="brand"><span class="dot"></span> WEBH2T · Ngân hàng đề thi</div>
+    <div class="clock-bar" id="clock-bar">🕐 Đang tải giờ Việt Nam…</div>
     <a class="home-round" href="index.html" title="Về trang chủ" aria-label="Về trang chủ">🏠</a>
   </div>
   <nav class="mega-menu" id="mega-menu">
@@ -269,9 +293,6 @@
       <span>📝 LUYỆN THI</span><span>💻 THỰC HÀNH</span><span>🤖 AI</span><span>🎯 ĐÁNH GIÁ</span>
     </div>
   </div>
-
-  <!-- ============ CLOCK ============ -->
-  <div class="clock-bar" id="clock-bar">🕐 Đang tải giờ Việt Nam…</div>
 
   <!-- ============ MEMBER PANEL ============ -->
   <div class="member-panel">
@@ -356,6 +377,23 @@
   <section class="block" id="submit-11"></section>
   <section class="block" id="submit-12"></section>
 
+  <!-- ============ EXAM INTRO (trước khi tính giờ) ============ -->
+  <section class="block exam-intro" id="exam-intro">
+    <div class="intro-card">
+      <div class="intro-icon">📝</div>
+      <h2 id="intro-title">Tên đề thi</h2>
+      <div class="intro-meta" id="intro-meta">Thời gian: 15 phút · Khối 10</div>
+
+      <div class="intro-student" id="intro-student"></div>
+
+      <div class="intro-rules">
+        <p>⚠️ Sau khi bấm "Bắt đầu thi", đồng hồ đếm ngược sẽ chạy và không thể tạm dừng. Hãy chắc chắn bạn đã sẵn sàng.</p>
+      </div>
+      <button class="btn btn-primary" style="padding:14px 40px; font-size:1rem;" onclick="beginExam()">🚀 BẮT ĐẦU THI</button>
+      <div><button class="btn btn-ghost" style="margin-top:10px;" onclick="backToBank()">← Quay lại</button></div>
+    </div>
+  </section>
+
   <!-- ============ EXAM TAKING ============ -->
   <section class="block exam-run" id="exam-run">
     <div class="exam-header">
@@ -420,6 +458,7 @@
       <div class="profile-card">
         <h4>📊 Thống kê học tập</h4>
         <div class="stat-mini"><span>Đã làm</span><b id="pf-count">0</b></div>
+        <div class="stat-mini"><span>Tổng điểm</span><b id="pf-total">0</b></div>
         <div class="stat-mini"><span>Điểm TB</span><b id="pf-avg">0</b></div>
         <div class="stat-mini"><span>Cao nhất</span><b id="pf-max">0</b></div>
         <div class="stat-mini"><span>Thời gian TB</span><b id="pf-time">0:00</b></div>
@@ -432,13 +471,9 @@
   <!-- ============ LEADERBOARD ============ -->
   <section class="block">
     <h2 class="block-title">🏆 Top học sinh trong tuần</h2>
-    <div class="lb-toggle">
-      <input type="checkbox" id="lb-anon" checked onchange="renderLeaderboard()">
-      <label for="lb-anon">Ẩn tên thật của học sinh khác (bảo vệ quyền riêng tư)</label>
-    </div>
     <table class="lb-table">
-      <tr><th>Hạng</th><th>Học sinh</th><th>Điểm</th></tr>
-      <tbody id="lb-body"><tr><td colspan="3" style="color:#9AA6B8;">Đang tải…</td></tr></tbody>
+      <tr><th>Hạng</th><th>Học sinh</th><th>Lớp</th><th>Tỉnh</th><th>Điểm</th></tr>
+      <tbody id="lb-body"><tr><td colspan="5" style="color:#9AA6B8;">Đang tải…</td></tr></tbody>
     </table>
   </section>
 
@@ -469,13 +504,13 @@
   <div class="modal-box">
     <button class="modal-close" onclick="closeModal('register-modal')">✕</button>
     <h3>📝 Đăng ký</h3>
-    <div class="field"><label>Họ và tên</label><input type="text" id="reg-name" placeholder="Nguyễn Văn A"></div>
-    <div class="field"><label>Lớp</label><input type="text" id="reg-class" placeholder="Ví dụ: 12A1"></div>
-    <div class="field"><label>Tỉnh/Thành phố</label><input type="text" id="reg-province" placeholder="Ví dụ: Khánh Hoà"></div>
-    <div class="field"><label>Email / Tên đăng nhập</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
-    <div class="field"><label>Mật khẩu</label><input type="password" id="reg-password"></div>
-    <div class="field"><label>Nhập lại mật khẩu</label><input type="password" id="reg-password2"></div>
-    <div class="field-check"><input type="checkbox" id="reg-agree"><span>Tôi đồng ý với quy định sử dụng hệ thống</span></div>
+    <div class="field"><label>Họ và tên <span style="color:#E5342B;">*</span></label><input type="text" id="reg-name" placeholder="Nguyễn Văn A" required></div>
+    <div class="field"><label>Lớp <span style="color:#E5342B;">*</span></label><input type="text" id="reg-class" placeholder="Ví dụ: 12A1" required></div>
+    <div class="field"><label>Tỉnh/Thành phố <span style="color:#E5342B;">*</span></label><input type="text" id="reg-province" placeholder="Ví dụ: Khánh Hoà" required></div>
+    <div class="field"><label>Email / Tên đăng nhập <span style="color:#E5342B;">*</span></label><input type="email" id="reg-email" placeholder="you@example.com" required></div>
+    <div class="field"><label>Mật khẩu <span style="color:#E5342B;">*</span></label><input type="password" id="reg-password" required></div>
+    <div class="field"><label>Nhập lại mật khẩu <span style="color:#E5342B;">*</span></label><input type="password" id="reg-password2" required></div>
+    <div class="field-check"><input type="checkbox" id="reg-agree"><span>Tôi đồng ý với quy định sử dụng hệ thống <span style="color:#E5342B;">*</span></span></div>
     <button class="modal-submit" onclick="registerWithEmail()">ĐĂNG KÝ</button>
     <div class="form-msg" id="register-msg"></div>
     <div class="modal-switch">Đã có tài khoản? <a onclick="switchModal('register-modal','login-modal')">Đăng nhập</a></div>
@@ -523,15 +558,19 @@ function escapeHTML(str){ const d=document.createElement('div'); d.textContent=s
 /* ============================================================
    ĐỒNG HỒ THỜI GIAN THỰC (giờ Việt Nam)
    ============================================================ */
+const THU_NAMES = ['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
 function updateClock(){
   const now = new Date();
   const fmt = new Intl.DateTimeFormat('vi-VN', {
     timeZone:'Asia/Ho_Chi_Minh', day:'2-digit', month:'2-digit', year:'numeric',
-    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false, weekday:'short'
   }).formatToParts(now);
   const p = {}; fmt.forEach(x => p[x.type]=x.value);
+  // Lấy đúng thứ theo giờ Việt Nam (không phụ thuộc múi giờ máy người dùng)
+  const vnNow = new Date(now.toLocaleString('en-US', {timeZone:'Asia/Ho_Chi_Minh'}));
+  const thu = THU_NAMES[vnNow.getDay()];
   document.getElementById('clock-bar').textContent =
-    `🕐 Hôm nay, ngày ${p.day}/${p.month}/${p.year}: ${p.hour}:${p.minute}:${p.second}`;
+    `🕐 Hôm nay: ${thu}, ngày ${p.day}/${p.month}/${p.year} – ${p.hour}:${p.minute}:${p.second}`;
 }
 updateClock();
 setInterval(updateClock, 1000);
@@ -554,14 +593,18 @@ function showMsg(id, text, ok){
    ============================================================ */
 function registerWithEmail(){
   const name = document.getElementById('reg-name').value.trim();
-  const klass = document.getElementById('reg-class').value;
-  const province = document.getElementById('reg-province').value;
+  const klass = document.getElementById('reg-class').value.trim();
+  const province = document.getElementById('reg-province').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const pw = document.getElementById('reg-password').value;
   const pw2 = document.getElementById('reg-password2').value;
   const agree = document.getElementById('reg-agree').checked;
 
-  if (!name || !email || !pw) return showMsg('register-msg', 'Vui lòng điền đầy đủ thông tin.', false);
+  if (!name) return showMsg('register-msg', 'Vui lòng nhập Họ và tên.', false);
+  if (!klass) return showMsg('register-msg', 'Vui lòng nhập Lớp.', false);
+  if (!province) return showMsg('register-msg', 'Vui lòng nhập Tỉnh/Thành phố.', false);
+  if (!email) return showMsg('register-msg', 'Vui lòng nhập Email.', false);
+  if (!pw || pw.length < 6) return showMsg('register-msg', 'Mật khẩu cần tối thiểu 6 ký tự.', false);
   if (pw !== pw2) return showMsg('register-msg', 'Mật khẩu nhập lại không khớp.', false);
   if (!agree) return showMsg('register-msg', 'Bạn cần đồng ý quy định sử dụng hệ thống.', false);
 
@@ -572,7 +615,12 @@ function registerWithEmail(){
   }).then(() => {
     showMsg('register-msg', '🎉 Chúc mừng! Bạn đã trở thành thành viên của WEBH2T.', true);
     setTimeout(()=>closeModal('register-modal'), 1200);
-  }).catch(err => showMsg('register-msg', 'Lỗi: ' + err.message, false));
+  }).catch(err => {
+    const msg = err.code === 'permission-denied'
+      ? 'Lỗi quyền truy cập cơ sở dữ liệu — quản trị viên cần cập nhật Firestore Rules cho collection "users".'
+      : 'Lỗi: ' + err.message;
+    showMsg('register-msg', msg, false);
+  });
 }
 
 function loginWithEmail(){
@@ -770,7 +818,7 @@ const EXAMS = {
     ]
   }  ,"12-1": {
     title: "Đề kiểm tra Bài 1 — Làm quen với Trí tuệ nhân tạo",
-    grade: 12, duration: 20, ngayDang: "29/08/2026", pointPerItem: 0.25,
+    grade: 12, duration: 20, ngayDang: "29/08/2026", point1: 0.5, point2: 0.25,
     part1: [
       {tag:"Công nghệ AI", text:"Công nghệ nào của AI cho phép máy tính chuyển đổi giọng nói của con người thành văn bản?", options:["Thị giác máy tính","Nhận dạng giọng nói","Điều khiển tự động","Nhận dạng chữ viết tay"], correct:1},
       {tag:"Đặc trưng học của AI", text:"Đặc trưng \"học\" của AI trong bối cảnh phân tích hình ảnh y tế có nghĩa là gì?", options:["Tự động tải về và cài đặt các phiên bản phần mềm phân tích ảnh mới nhất từ internet.","Lưu trữ lại toàn bộ giá trị pixel của hàng triệu ảnh để đối chiếu một cách chi tiết.","Đọc hiểu và ghi nhớ toàn bộ kiến thức từ sách chuyên ngành để trả lời câu hỏi của bác sĩ.","Trích rút thông tin từ dữ liệu ảnh để tích lũy tri thức phân biệt mẫu bệnh và khỏe mạnh."], correct:3},
@@ -905,6 +953,33 @@ function startExam(key){
   currentExamKey = key;
   currentExam = EXAMS[key];
   userAnswers = {p1:{}, p2:{}};
+
+  document.getElementById('intro-title').textContent = currentExam.title;
+  document.getElementById('intro-meta').textContent = `Thời gian làm bài: ${currentExam.duration} phút · Khối ${currentExam.grade}`;
+
+  const stuBox = document.getElementById('intro-student');
+  if (currentUser) {
+    db.collection('users').doc(currentUser.uid).get().then(doc => {
+      const d = doc.data() || {};
+      stuBox.innerHTML = `
+        <div class="row"><span>👤 Họ và tên</span><b>${escapeHTML(currentUser.displayName || d.name || 'Học sinh')}</b></div>
+        <div class="row"><span>🏫 Lớp</span><b>${escapeHTML(d.class || 'Chưa cập nhật')}</b></div>
+        <div class="row"><span>📍 Tỉnh/TP</span><b>${escapeHTML(d.province || 'Chưa cập nhật')}</b></div>
+        <div class="row"><span>✉️ Email</span><b>${escapeHTML(currentUser.email || '—')}</b></div>`;
+    });
+  } else {
+    stuBox.innerHTML = `<p style="font-size:.85rem; color:#8A6D1D; text-align:center;">
+      ⚠️ Bạn chưa đăng nhập — kết quả sẽ KHÔNG được lưu vào hồ sơ và bảng xếp hạng.<br>
+      <a style="color:var(--brilliant-blue); font-weight:700; cursor:pointer;" onclick="openModal('login-modal')">Đăng nhập ngay</a> để lưu kết quả.</p>`;
+  }
+
+  document.getElementById('exam-intro').classList.add('show');
+  document.getElementById('exam-run').classList.remove('show');
+  document.getElementById('result-box').classList.remove('show');
+  document.getElementById('exam-intro').scrollIntoView({behavior:'smooth'});
+}
+
+function beginExam(){
   document.getElementById('er-title').textContent = currentExam.title;
   document.getElementById('er-meta').textContent = `Thời gian: ${currentExam.duration} phút · Khối ${currentExam.grade}`;
 
@@ -925,12 +1000,13 @@ function startExam(key){
         <div class="tf-row">
           <span>${it.label}</span>
           <span class="tf-choice">
-            <label><input type="radio" name="p2-${i}-${ii}" value="true" onchange="setP2(${i},${ii},true)"> Đúng</label>
-            <label><input type="radio" name="p2-${i}-${ii}" value="false" onchange="setP2(${i},${ii},false)"> Sai</label>
+            <button type="button" class="tf-btn true-btn" id="tf-${i}-${ii}-true" onclick="setP2(${i},${ii},true)">Đ</button>
+            <button type="button" class="tf-btn false-btn" id="tf-${i}-${ii}-false" onclick="setP2(${i},${ii},false)">S</button>
           </span>
         </div>`).join('')}
     </div>`).join('');
 
+  document.getElementById('exam-intro').classList.remove('show');
   document.getElementById('exam-run').classList.add('show');
   document.getElementById('result-box').classList.remove('show');
   document.getElementById('exam-run').scrollIntoView({behavior:'smooth'});
@@ -951,6 +1027,7 @@ function setP2(qi, ii, val){
 }
 
 function backToBank(){
+  document.getElementById('exam-intro').classList.remove('show');
   document.getElementById('exam-run').classList.remove('show');
   document.getElementById('result-box').classList.remove('show');
   document.getElementById('top').scrollIntoView({behavior:'smooth'});
@@ -965,8 +1042,7 @@ function submitExam(){
   const timeSpent = Math.round((Date.now() - startTime)/1000);
 
   const p1Total = currentExam.part1.length;
-  const fixedPoint = currentExam.pointPerItem; // ví dụ 0.25 — nếu đề có khai báo điểm thật
-  const p1PointEach = fixedPoint || (p1Total ? 6 / p1Total : 0);
+  const p1PointEach = currentExam.point1 || (p1Total ? 6 / p1Total : 0);
   let correct = 0, wrong = 0, skip = 0, score = 0;
   const wrongTags = {};
 
@@ -977,7 +1053,7 @@ function submitExam(){
     else { wrong++; wrongTags[q.tag] = (wrongTags[q.tag]||0)+1; }
   });
 
-  const p2ItemPoint = fixedPoint || (4 / (currentExam.part2.length * 4));
+  const p2ItemPoint = currentExam.point2 || (4 / (currentExam.part2.length * 4));
   currentExam.part2.forEach((q,qi) => {
     q.items.forEach((it,ii) => {
       const ans = userAnswers.p2[qi] && userAnswers.p2[qi][ii];
@@ -988,8 +1064,8 @@ function submitExam(){
   });
 
   score = Math.round(score*100)/100;
-  const maxTotal = fixedPoint
-    ? Math.round((p1Total + currentExam.part2.length*4) * fixedPoint * 100)/100
+  const maxTotal = (currentExam.point1 || currentExam.point2)
+    ? Math.round((p1Total*p1PointEach + currentExam.part2.length*4*p2ItemPoint)*100)/100
     : 10;
   const scaledFor10 = score / maxTotal * 10; // chỉ dùng để xếp loại, không hiển thị
 
@@ -1068,20 +1144,27 @@ function toggleAnswerKey(){
    LƯU KẾT QUẢ / HỒ SƠ / BẢNG XẾP HẠNG (Firestore)
    ============================================================ */
 function saveAttempt(score, correct, wrong, skip, timeSpent){
-  db.collection('attempts').add({
-    uid: currentUser.uid,
-    name: currentUser.displayName || 'Học sinh',
-    examKey: currentExamKey,
-    grade: currentExam.grade,
-    score, correct, wrong, skip, timeSpent,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => loadProfileStats(currentUser.uid));
+  db.collection('users').doc(currentUser.uid).get().then(doc => {
+    const d = doc.data() || {};
+    return db.collection('attempts').add({
+      uid: currentUser.uid,
+      name: currentUser.displayName || d.name || 'Học sinh',
+      class: d.class || '',
+      province: d.province || '',
+      examKey: currentExamKey,
+      grade: currentExam.grade,
+      score, correct, wrong, skip, timeSpent,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }).then(() => loadProfileStats(currentUser.uid))
+    .catch(err => console.error('saveAttempt error:', err));
 }
 
 function loadProfileStats(uid){
   db.collection('attempts').where('uid','==',uid).get().then(snap => {
     if (snap.empty) {
       document.getElementById('pf-count').textContent = 0;
+      document.getElementById('pf-total').textContent = '0';
       document.getElementById('pf-avg').textContent = '0';
       document.getElementById('pf-max').textContent = '0';
       document.getElementById('pf-time').textContent = '0:00';
@@ -1090,10 +1173,12 @@ function loadProfileStats(uid){
     }
     const list = snap.docs.map(d => d.data());
     const count = list.length;
+    const total = list.reduce((s,a)=>s+a.score,0).toFixed(2);
     const avg = (list.reduce((s,a)=>s+a.score,0)/count).toFixed(2);
     const max = Math.max(...list.map(a=>a.score)).toFixed(2);
     const avgTime = Math.round(list.reduce((s,a)=>s+(a.timeSpent||0),0)/count);
     document.getElementById('pf-count').textContent = count;
+    document.getElementById('pf-total').textContent = total;
     document.getElementById('pf-avg').textContent = avg;
     document.getElementById('pf-max').textContent = max;
     document.getElementById('pf-time').textContent = `${Math.floor(avgTime/60)}:${String(avgTime%60).padStart(2,'0')}`;
@@ -1105,11 +1190,13 @@ function loadProfileStats(uid){
     const totalQ = list.reduce((s,a)=>s+a.correct+a.wrong,0);
     if (totalQ>0 && totalCorrect/totalQ >= 0.9) badges.push('🎯 90% câu hỏi đúng');
     document.getElementById('pf-badges').innerHTML = badges.length ? badges.map(b=>`<span class="badge-chip">${b}</span>`).join('') : '<span class="badge-chip">Làm đề đầu tiên để nhận huy hiệu!</span>';
+  }).catch(err => {
+    document.getElementById('pf-badges').innerHTML = `<span class="badge-chip" style="background:#8B1E1E;">⚠️ Không tải được dữ liệu: ${err.code||err.message}</span>`;
+    console.error('loadProfileStats error:', err);
   });
 }
 
 function renderLeaderboard(){
-  const anon = document.getElementById('lb-anon').checked;
   db.collection('attempts').orderBy('score','desc').limit(50).get().then(snap => {
     const seen = new Set(); const top = [];
     snap.docs.forEach(d => {
@@ -1118,13 +1205,16 @@ function renderLeaderboard(){
     });
     const top10 = top.slice(0,10);
     const medals = ['🥇','🥈','🥉'];
-    document.getElementById('lb-body').innerHTML = top10.length ? top10.map((a,i) => {
-      let name = a.name || 'Học sinh';
-      if (anon) { const parts = name.split(' '); name = parts[0] + ' ' + '*'.repeat(Math.max(3,(parts.slice(1).join('').length))); }
-      return `<tr><td>${medals[i]||(i+1)}</td><td>${escapeHTML(name)}</td><td>${a.score.toFixed(2)}</td></tr>`;
-    }).join('') : '<tr><td colspan="3" style="color:#9AA6B8;">Chưa có dữ liệu xếp hạng.</td></tr>';
-  }).catch(() => {
-    document.getElementById('lb-body').innerHTML = '<tr><td colspan="3" style="color:#9AA6B8;">Không tải được bảng xếp hạng.</td></tr>';
+    document.getElementById('lb-body').innerHTML = top10.length ? top10.map((a,i) => `
+      <tr>
+        <td>${medals[i]||(i+1)}</td>
+        <td>${escapeHTML(a.name || 'Học sinh')}</td>
+        <td>${escapeHTML(a.class || '—')}</td>
+        <td>${escapeHTML(a.province || '—')}</td>
+        <td>${a.score.toFixed(2)}</td>
+      </tr>`).join('') : '<tr><td colspan="5" style="color:#9AA6B8;">Chưa có dữ liệu xếp hạng.</td></tr>';
+  }).catch(err => {
+    document.getElementById('lb-body').innerHTML = `<tr><td colspan="5" style="color:#9AA6B8;">Không tải được bảng xếp hạng (${err.code||err.message}).</td></tr>`;
   });
 }
 
