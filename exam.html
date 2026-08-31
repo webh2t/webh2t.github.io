@@ -25,23 +25,27 @@
     justify-content:space-between; gap:16px; flex-wrap:wrap;}
   .brand{ color:#fff; font-weight:800; font-size:1.1rem; display:flex; align-items:center; gap:8px;}
   .brand .dot{ width:9px; height:9px; border-radius:50%; background:var(--amber);}
-  .back-home{ color:#B9C4D4; text-decoration:none; font-size:.85rem;}
-  .back-home:hover{ color:var(--amber);}
+  .home-round{ width:44px; height:44px; border-radius:50%; background:var(--amber); color:var(--ink);
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem; text-decoration:none;
+    box-shadow:0 4px 14px rgba(255,200,69,.4); transition:transform .15s, box-shadow .15s; flex-shrink:0;}
+  .home-round:hover{ transform:scale(1.1) rotate(-6deg); box-shadow:0 6px 20px rgba(255,200,69,.55);}
 
-  nav.mega-menu{ background:var(--ink-soft); border-top:1px solid rgba(255,255,255,.08);}
-  .mega-menu-wrap{ max-width:1200px; margin:0 auto; display:flex; flex-wrap:wrap; gap:0;}
-  .mega-menu a{ display:flex; align-items:center; gap:6px; padding:11px 16px; font-size:.82rem;
-    font-weight:700; text-decoration:none; color:#fff; border-bottom:3px solid transparent; white-space:nowrap;}
-  .mega-menu a:hover{ background:rgba(255,255,255,.06);}
-  .mega-menu a.m-home{ border-color:var(--m-home);} .mega-menu a.m-home span.ic{color:var(--m-home);}
-  .mega-menu a.m-de10{ border-color:var(--m-de10);} .mega-menu a.m-de10 span.ic{color:var(--m-de10);}
-  .mega-menu a.m-de11{ border-color:var(--m-de11);} .mega-menu a.m-de11 span.ic{color:var(--m-de11);}
-  .mega-menu a.m-de12{ border-color:var(--m-de12);} .mega-menu a.m-de12 span.ic{color:var(--m-de12);}
-  .mega-menu a.m-tn{ border-color:var(--m-tn);} .mega-menu a.m-tn span.ic{color:var(--m-tn);}
-  .mega-menu a.m-bank{ border-color:var(--m-bank);} .mega-menu a.m-bank span.ic{color:var(--m-bank);}
-  .mega-menu a.m-nop10{ border-color:var(--m-nop10);} .mega-menu a.m-nop10 span.ic{color:var(--m-nop10);}
-  .mega-menu a.m-nop11{ border-color:var(--m-nop11);} .mega-menu a.m-nop11 span.ic{color:var(--m-nop11);}
-  .mega-menu a.m-nop12{ border-color:var(--m-nop12);} .mega-menu a.m-nop12 span.ic{color:var(--m-nop12);}
+  nav.mega-menu{ background:var(--ink-soft); border-top:1px solid rgba(255,255,255,.08); padding:10px 0;}
+  .menu-row{ max-width:1200px; margin:0 auto; display:flex; flex-wrap:wrap; justify-content:center;
+    gap:8px; padding:4px 16px;}
+  .mega-menu a{ display:flex; align-items:center; gap:7px; padding:10px 18px; font-size:.84rem;
+    font-weight:700; text-decoration:none; color:#F4F6F9; border-radius:9px; border:1.5px solid transparent;
+    white-space:nowrap; position:relative; transition:background .15s, color .15s, box-shadow .15s, transform .12s;}
+  .mega-menu a:hover{ background:rgba(255,255,255,.09); box-shadow:0 4px 12px rgba(0,0,0,.25); transform:translateY(-1px);}
+  .mega-menu a:active{ transform:translateY(0); box-shadow:none;}
+  .mega-menu a::after{ content:""; position:absolute; left:16px; right:16px; bottom:4px; height:2px;
+    background:currentColor; transform:scaleX(0); transition:transform .18s;}
+  .mega-menu a:hover::after{ transform:scaleX(1);}
+  .mega-menu a.m-home{ color:var(--m-home);} .mega-menu a.m-de10{ color:var(--m-de10);}
+  .mega-menu a.m-de11{ color:var(--m-de11);} .mega-menu a.m-de12{ color:var(--m-de12);}
+  .mega-menu a.m-tn{ color:var(--m-tn);} .mega-menu a.m-bank{ color:var(--m-bank);}
+  .mega-menu a.m-nop10{ color:var(--m-nop10);} .mega-menu a.m-nop11{ color:var(--m-nop11);} .mega-menu a.m-nop12{ color:var(--m-nop12);}
+  .menu-toggle{ display:none; background:none; border:none; color:#fff; font-size:1.4rem; padding:8px;}
 
   main{ max-width:1200px; margin:0 auto; padding:0 24px 80px;}
   section.block{ margin-top:48px;}
@@ -110,7 +114,7 @@
 
   /* ================= TICKER ================= */
   .ticker-box{ background:var(--ink); border-radius:var(--radius); padding:14px 20px; overflow:hidden;
-    position:relative; height:180px;}
+    position:relative; height:260px;}
   .ticker-box .ticker-label{ font-family:'Space Grotesk',monospace; font-size:.72rem; color:var(--amber);
     letter-spacing:.1em; margin-bottom:8px;}
   .ticker-track{ display:flex; flex-direction:column; gap:8px; animation:tickerUp 14s linear infinite;}
@@ -223,7 +227,10 @@
 
   @media (max-width:760px){
     .profile-grid{ grid-template-columns:1fr;}
-    .mega-menu a{ padding:9px 11px; font-size:.75rem;}
+    .menu-toggle{ display:block; margin:0 auto;}
+    nav.mega-menu .menu-row{ display:none; flex-direction:column; align-items:stretch;}
+    nav.mega-menu.open .menu-row{ display:flex;}
+    .mega-menu a{ justify-content:flex-start; width:100%;}
   }
 </style>
 </head>
@@ -232,16 +239,19 @@
 <header>
   <div class="header-top">
     <div class="brand"><span class="dot"></span> WEBH2T · Ngân hàng đề thi</div>
-    <a class="back-home" href="index.html">← Về trang chủ / Back to Home</a>
+    <a class="home-round" href="index.html" title="Về trang chủ" aria-label="Về trang chủ">🏠</a>
   </div>
-  <nav class="mega-menu">
-    <div class="mega-menu-wrap">
+  <nav class="mega-menu" id="mega-menu">
+    <button class="menu-toggle" onclick="document.getElementById('mega-menu').classList.toggle('open')" aria-label="Mở menu">☰</button>
+    <div class="menu-row">
       <a class="m-home" href="#top"><span class="ic">🏠</span> HOME</a>
-      <a class="m-de10" href="#bank-10"><span class="ic">📝</span> GRADE 10 EXAMS</a>
-      <a class="m-de11" href="#bank-11"><span class="ic">📝</span> GRADE 11 EXAMS</a>
-      <a class="m-de12" href="#bank-12"><span class="ic">📝</span> GRADE 12 EXAMS</a>
+      <a class="m-de10" href="#bank-10"><span class="ic">📝</span> GRADE 10</a>
+      <a class="m-de11" href="#bank-11"><span class="ic">📝</span> GRADE 11</a>
+      <a class="m-de12" href="#bank-12"><span class="ic">📝</span> GRADE 12</a>
       <a class="m-tn" href="#bank-tn"><span class="ic">🎓</span> GRADUATION EXAM</a>
       <a class="m-bank" href="#question-bank"><span class="ic">📚</span> QUESTION BANK</a>
+    </div>
+    <div class="menu-row">
       <a class="m-nop10" href="#submit-10"><span class="ic">📤</span> SUBMIT 10</a>
       <a class="m-nop11" href="#submit-11"><span class="ic">📤</span> SUBMIT 11</a>
       <a class="m-nop12" href="#submit-12"><span class="ic">📤</span> SUBMIT 12</a>
@@ -294,23 +304,23 @@
     <h2 class="block-title center">📚 Chọn khối lớp</h2>
     <div class="grade-grid">
       <div class="grade-card" onclick="showBank(10)">
-        <div class="gicon">💻</div><h3>TIN 10</h3>
-        <div class="gcount">34 BÀI</div>
+        <div class="gicon">🐍</div><h3>MÔN TIN 10</h3>
+        <div class="gcount" id="gcount-10">34 Bài · … Đề thi đã có</div>
         <div class="btn btn-primary">Xem đề thi</div>
       </div>
       <div class="grade-card" onclick="showBank(11)">
-        <div class="gicon">💻</div><h3>TIN 11</h3>
-        <div class="gcount">31 BÀI</div>
+        <div class="gicon">💽</div><h3>MÔN TIN 11</h3>
+        <div class="gcount" id="gcount-11">31 Bài · … Đề thi đã có</div>
         <div class="btn btn-primary">Xem đề thi</div>
       </div>
       <div class="grade-card" onclick="showBank(12)">
-        <div class="gicon">💻</div><h3>TIN 12</h3>
-        <div class="gcount">28 BÀI</div>
+        <div class="gicon">🌐</div><h3>MÔN TIN 12</h3>
+        <div class="gcount" id="gcount-12">28 Bài · … Đề thi đã có</div>
         <div class="btn btn-primary">Xem đề thi</div>
       </div>
       <div class="grade-card" onclick="showBank('bank')" style="border-top-color:var(--m-bank);">
-        <div class="gicon">📕</div><h3>NGÂN HÀNG ĐỀ</h3>
-        <div class="gcount">TỔNG HỢP</div>
+        <div class="gicon">🏦</div><h3>NGÂN HÀNG ĐỀ</h3>
+        <div class="gcount" id="gcount-bank">Tổng hợp · … Đề thi</div>
         <div class="btn btn-primary">Xem đề thi</div>
       </div>
     </div>
@@ -460,17 +470,8 @@
     <button class="modal-close" onclick="closeModal('register-modal')">✕</button>
     <h3>📝 Đăng ký</h3>
     <div class="field"><label>Họ và tên</label><input type="text" id="reg-name" placeholder="Nguyễn Văn A"></div>
-    <div class="field"><label>Lớp</label>
-      <select id="reg-class">
-        <option>10A1</option><option>10A2</option><option>11A1</option><option>11A2</option>
-        <option>12A1</option><option>12A2</option><option>Khác</option>
-      </select>
-    </div>
-    <div class="field"><label>Tỉnh/Thành phố</label>
-      <select id="reg-province">
-        <option>Khánh Hoà</option><option>Hà Nội</option><option>TP. Hồ Chí Minh</option><option>Khác</option>
-      </select>
-    </div>
+    <div class="field"><label>Lớp</label><input type="text" id="reg-class" placeholder="Ví dụ: 12A1"></div>
+    <div class="field"><label>Tỉnh/Thành phố</label><input type="text" id="reg-province" placeholder="Ví dụ: Khánh Hoà"></div>
     <div class="field"><label>Email / Tên đăng nhập</label><input type="email" id="reg-email" placeholder="you@example.com"></div>
     <div class="field"><label>Mật khẩu</label><input type="password" id="reg-password"></div>
     <div class="field"><label>Nhập lại mật khẩu</label><input type="password" id="reg-password2"></div>
@@ -608,15 +609,29 @@ auth.onAuthStateChanged(user => {
   const profileSection = document.getElementById('profile-section');
   if (user) {
     out.style.display = 'none'; inn.style.display = 'flex'; profileSection.style.display = 'block';
-    document.getElementById('user-avatar').src = user.photoURL || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(user.displayName || 'HS');
-    document.getElementById('user-name').textContent = user.displayName || 'Học sinh';
-    db.collection('users').doc(user.uid).get().then(doc => {
-      const data = doc.exists ? doc.data() : {};
-      document.getElementById('user-class').textContent = data.class ? `Lớp ${data.class}` : '—';
+    document.getElementById('user-avatar').src = user.photoURL || 'https://api.dicebear.com/7.x/initials/svg?seed=' + encodeURIComponent(user.displayName || user.email || 'HS');
+    document.getElementById('user-name').textContent = user.displayName || user.email || 'Học sinh';
+
+    const userRef = db.collection('users').doc(user.uid);
+    userRef.get().then(doc => {
+      if (!doc.exists) {
+        // Đăng nhập lần đầu qua Google/Facebook — tự tạo hồ sơ cơ bản, Lớp/Tỉnh để trống chờ cập nhật
+        return userRef.set({
+          name: user.displayName || user.email || 'Học sinh',
+          email: user.email || '',
+          class: '', province: '',
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).then(() => userRef.get());
+      }
+      return doc;
+    }).then(doc => {
+      const data = doc.data() || {};
+      document.getElementById('user-class').textContent = data.class ? `Lớp ${data.class}` : (user.email || '—');
       document.getElementById('profile-basic').innerHTML = `
-        <div class="stat-mini"><span>Họ tên</span><b>${escapeHTML(user.displayName||'—')}</b></div>
-        <div class="stat-mini"><span>Lớp</span><b>${escapeHTML(data.class||'—')}</b></div>
-        <div class="stat-mini"><span>Tỉnh/TP</span><b>${escapeHTML(data.province||'—')}</b></div>`;
+        <div class="stat-mini"><span>Họ tên</span><b>${escapeHTML(user.displayName || data.name || '—')}</b></div>
+        <div class="stat-mini"><span>Email</span><b>${escapeHTML(user.email || '—')}</b></div>
+        <div class="stat-mini"><span>Lớp</span><b>${escapeHTML(data.class || 'Chưa cập nhật')}</b></div>
+        <div class="stat-mini"><span>Tỉnh/TP</span><b>${escapeHTML(data.province || 'Chưa cập nhật')}</b></div>`;
     });
     loadProfileStats(user.uid);
   } else {
@@ -708,7 +723,7 @@ const CURRICULUM = {
 const EXAMS = {
   "10-1": {
     title: "Đề kiểm tra Bài 1 — Thông tin và xử lí thông tin",
-    grade: 10, duration: 10,
+    grade: 10, duration: 10, ngayDang: "25/08/2026",
     part1: [
       {tag:"Khái niệm", text:"Thông tin là gì?", options:["Dữ liệu thô chưa qua xử lí","Những gì đem lại hiểu biết cho con người","Chỉ là các con số","Chỉ tồn tại trong máy tính"], correct:1},
       {tag:"Khái niệm", text:"Dữ liệu trong máy tính được biểu diễn dưới dạng nào?", options:["Chữ viết tay","Âm thanh","Dãy bit nhị phân (0 và 1)","Hình ảnh màu"], correct:2},
@@ -732,7 +747,7 @@ const EXAMS = {
   },
   "11-1": {
     title: "Đề kiểm tra Bài 1 — Hệ điều hành",
-    grade: 11, duration: 10,
+    grade: 11, duration: 10, ngayDang: "26/08/2026",
     part1: [
       {tag:"Chức năng HĐH", text:"Hệ điều hành KHÔNG có chức năng nào sau đây?", options:["Quản lí thiết bị","Quản lí lưu trữ dữ liệu","Thiết kế mạch điện tử","Tổ chức thực hiện chương trình"], correct:2},
       {tag:"Chức năng HĐH", text:"Chức năng nào thể hiện rõ nhất đặc thù của hệ điều hành máy tính cá nhân?", options:["Quản lí thiết bị","Tính bảo mật cao","Không cần giao diện","Chạy được nhiều hệ điều hành cùng lúc"], correct:0},
@@ -751,6 +766,49 @@ const EXAMS = {
         {label:"b) Hệ điều hành di động không hỗ trợ kết nối mạng không dây.", correct:false},
         {label:"c) Hệ điều hành di động thường có giao diện thân thiện hơn máy tính.", correct:true},
         {label:"d) Hệ điều hành di động không thể cài thêm ứng dụng.", correct:false}
+      ]}
+    ]
+  }  ,"12-1": {
+    title: "Đề kiểm tra Bài 1 — Làm quen với Trí tuệ nhân tạo",
+    grade: 12, duration: 20, ngayDang: "29/08/2026", pointPerItem: 0.25,
+    part1: [
+      {tag:"Công nghệ AI", text:"Công nghệ nào của AI cho phép máy tính chuyển đổi giọng nói của con người thành văn bản?", options:["Thị giác máy tính","Nhận dạng giọng nói","Điều khiển tự động","Nhận dạng chữ viết tay"], correct:1},
+      {tag:"Đặc trưng học của AI", text:"Đặc trưng \"học\" của AI trong bối cảnh phân tích hình ảnh y tế có nghĩa là gì?", options:["Tự động tải về và cài đặt các phiên bản phần mềm phân tích ảnh mới nhất từ internet.","Lưu trữ lại toàn bộ giá trị pixel của hàng triệu ảnh để đối chiếu một cách chi tiết.","Đọc hiểu và ghi nhớ toàn bộ kiến thức từ sách chuyên ngành để trả lời câu hỏi của bác sĩ.","Trích rút thông tin từ dữ liệu ảnh để tích lũy tri thức phân biệt mẫu bệnh và khỏe mạnh."], correct:3},
+      {tag:"Công nghệ AI", text:"Điều gì cho thấy công nghệ nhận dạng giọng nói \"rút ngắn khoảng cách giao tiếp\" giữa người và máy?", options:["Cho phép con người ra lệnh, truy vấn thông tin một cách tự nhiên và dễ dàng bằng lời nói.","Giúp máy tính có khả năng tự động chuyển đổi văn bản thành giọng nói một cách chính xác.","Yêu cầu con người phải học và ra lệnh cho máy tính theo một cú pháp nghiêm ngặt.","Giúp máy tính tối ưu hóa phần cứng để tăng tốc độ xử lí các thuật toán phức tạp hơn."], correct:0},
+      {tag:"Ứng dụng AI", text:"Trợ lí ảo Siri và Google Assistant là những ứng dụng nổi bật của AI trong lĩnh vực nào?", options:["Phân tích tài chính","Điều khiển robot công nghiệp","Nhận dạng và hiểu giọng nói","Chẩn đoán bệnh qua ảnh"], correct:2},
+      {tag:"Phân loại AI", text:"Đâu là sự khác biệt cơ bản nhất giữa AI hẹp (ANI) và AI tổng quát (AGI)?", options:["ANI là công nghệ của tương lai, trong khi AGI đã được ứng dụng phổ biến trong đời sống.","ANI chỉ có thể xử lí dữ liệu văn bản, còn AGI có thể xử lí được cả hình ảnh và âm thanh.","ANI luôn yêu cầu sức mạnh xử lí thấp, trong khi AGI luôn cần đến các hệ thống siêu máy tính.","ANI thực hiện nhiệm vụ cụ thể, AGI có thể tự học và áp dụng tri thức sang nhiều lĩnh vực."], correct:3},
+      {tag:"Lịch sử AI", text:"Theo tài liệu, thuật ngữ \"Trí tuệ nhân tạo\" (Artificial Intelligence) được ai đưa ra lần đầu tiên?", options:["Một nhóm tại MIT","Shane Legg","Mark Gubrud","John McCarthy"], correct:3},
+      {tag:"Ứng dụng AI", text:"Theo tài liệu, ứng dụng AI có tên Sybil được tạo ra với mục đích chính là gì?", options:["Phát hiện dấu hiệu ung thư phổi","Quản lí chuỗi cung ứng","Hỗ trợ phẫu thuật chính xác","Dạy ngôn ngữ cho người học"], correct:0},
+      {tag:"Ứng dụng AI", text:"Một ứng dụng ngân hàng dùng khuôn mặt của bạn để xác thực giao dịch. Đây là ứng dụng của công nghệ AI nào được mô tả trong bài?", options:["Nhận dạng khuôn mặt","Nhận dạng giọng nói","Chẩn đoán bệnh từ xa","Trợ lí ảo thông minh"], correct:0},
+      {tag:"Ứng dụng AI", text:"Tại sao AI lại có thể hỗ trợ chẩn đoán bệnh qua hình ảnh y khoa hiệu quả?", options:["Vì AI nhận dạng được các thay đổi nhỏ, đặc điểm tinh vi trên ảnh với tốc độ và độ chính xác cao.","Vì AI có thể tự động lên lịch hẹn và quản lý thông tin hồ sơ bệnh án của tất cả bệnh nhân.","Vì AI có khả năng thay thế hoàn toàn bác sĩ trong việc thực hiện các ca phẫu thuật phức tạp.","Vì AI giúp giảm đáng kể chi phí mua sắm các thiết bị chẩn đoán hình ảnh hiện đại, đắt tiền."], correct:0},
+      {tag:"Phân loại AI", text:"Dựa theo khả năng mô phỏng trí tuệ con người, AI được chia thành hai loại chính nào?", options:["AI hẹp (ANI) và AI tổng quát (AGI)","AI yếu và AI mạnh","AI phần mềm và AI phần cứng","AI logic và AI sáng tạo"], correct:0},
+      {tag:"Phân loại AI", text:"Một hệ thống AI được thiết kế chỉ để chơi cờ vua và đã đánh bại nhiều đại kiện tướng. Dựa vào phân loại trong tài liệu, hệ thống này thuộc loại AI nào?", options:["AI có khả năng nhận thức","AI hẹp (ANI)","AI có khả năng suy luận","AI tổng quát (AGI)"], correct:1},
+      {tag:"Ứng dụng AI", text:"Một robot nông nghiệp có thể tự động tưới nước cho cây. Để làm được điều này, robot cần kết hợp những khả năng nào của AI theo mô tả trong bài?", options:["Ghi nhớ và thực thi một lịch trình tưới nước cố định do con người lập trình sẵn.","Nhận dạng chữ viết tay trên các nhãn cây để phân loại các loại cây trồng khác nhau.","Xử lí ngôn ngữ tự nhiên để giao tiếp và trả lời các câu hỏi của người nông dân.","Nhận thức môi trường (độ ẩm) và suy luận để quyết định lượng nước."], correct:3}
+    ],
+    part2: [
+      {tag:"Ứng dụng AI", text:"Một nhà báo sử dụng phần mềm AI để chuyển các file ghi âm phỏng vấn thành văn bản. Phần mềm này có thể nhận diện được giọng nói trong môi trường có nhiều tiếng ồn và chuyển đổi chính xác sang dạng text, giúp nhà báo tiết kiệm rất nhiều thời gian so với việc gõ lại thủ công.", items:[
+        {label:"a) Chức năng chính của phần mềm này là chuyển từ giọng nói sang văn bản, một ứng dụng được đề cập trong tài liệu.", correct:true},
+        {label:"b) Khả năng của phần mềm có được là nhờ các mô hình AI trong lĩnh vực xử lí ngôn ngữ tự nhiên.", correct:true},
+        {label:"c) Đặc trưng \"học\" của AI trong trường hợp này có nghĩa là phần mềm chỉ ghi nhớ chính xác giọng nói của một người duy nhất.", correct:false},
+        {label:"d) Nếu người dùng yêu cầu phần mềm tóm tắt nội dung bài phỏng vấn, nó đang vận dụng khả năng hiểu ngôn ngữ để giải quyết vấn đề.", correct:true}
+      ]},
+      {tag:"Ứng dụng AI", text:"Một trường học triển khai hệ thống điểm danh tự động bằng AI. Khi học sinh đi qua cổng, một camera sẽ ghi lại hình ảnh, và hệ thống AI sẽ phân tích để nhận diện khuôn mặt từng học sinh, sau đó tự động cập nhật sĩ số vào bảng dữ liệu của lớp học một cách nhanh chóng.", items:[
+        {label:"a) Công nghệ cốt lõi được sử dụng trong hệ thống điểm danh này là nhận dạng khuôn mặt.", correct:true},
+        {label:"b) Theo tài liệu, công nghệ nhận dạng khuôn mặt là nền tảng chính của các trợ lí ảo như Siri.", correct:false},
+        {label:"c) Hệ thống có thể nhận diện đúng học sinh dù góc mặt hay ánh sáng thay đổi là nhờ AI đã \"học\" các đặc trưng từ nhiều hình ảnh.", correct:true},
+        {label:"d) Vì hệ thống này thuộc loại AI tổng quát (AGI), nó có thể dễ dàng được nâng cấp để chẩn đoán bệnh qua hình ảnh y tế.", correct:false}
+      ]},
+      {tag:"Phân loại AI", text:"Một công ty logistics phát triển hệ thống AI để tối ưu hóa việc giao hàng. Hệ thống này sử dụng robot tự hành trong kho để sắp xếp các gói hàng. Các robot có khả năng nhận dạng gói hàng qua camera và tự tìm đường đi ngắn nhất, được xem là một ví dụ điển hình của AI hẹp (ANI).", items:[
+        {label:"a) Việc robot nhận dạng và sắp xếp gói hàng là một ứng dụng của AI trong quản lí chuỗi cung ứng.", correct:true},
+        {label:"b) Khả năng robot nhận dạng được gói hàng thông qua camera thuộc lĩnh vực thị giác máy tính trong AI.", correct:true},
+        {label:"c) Hệ thống này được gọi là AI hẹp (ANI) vì nó được xây dựng chuyên biệt cho nhiệm vụ logistics và không thể áp dụng sang lĩnh vực khác như chẩn đoán y tế.", correct:true},
+        {label:"d) Hệ thống robot này, với khả năng tự học để tối ưu đường đi, đã được coi là một dạng AI tổng quát (AGI).", correct:false}
+      ]},
+      {tag:"Công nghệ AI", text:"Một ứng dụng học ngoại ngữ sử dụng công nghệ AI để cải thiện kỹ năng phát âm cho người dùng. Khi người dùng nói một câu, ứng dụng sẽ ghi âm, phân tích và so sánh với cách phát âm của người bản xứ, sau đó đưa ra phản hồi chi tiết về những lỗi sai để người dùng sửa chữa.", items:[
+        {label:"a) Việc ứng dụng phân tích giọng nói của người học là một ví dụ về công nghệ nhận dạng giọng nói.", correct:true},
+        {label:"b) Khả năng phân tích lỗi sai trong phát âm của ứng dụng chủ yếu dựa trên công nghệ thị giác máy tính.", correct:false},
+        {label:"c) Công nghệ này giúp \"rút ngắn khoảng cách\" trong việc học ngôn ngữ bằng cách cung cấp phản hồi tức thì, giúp người học dễ dàng sửa lỗi hơn.", correct:true},
+        {label:"d) Ứng dụng này là một hệ thống AI hẹp (ANI) và nó sẽ không thể sử dụng dữ liệu phát âm để dự đoán tình hình thời tiết.", correct:true}
       ]}
     ]
   }
@@ -782,6 +840,17 @@ function renderExamBank(grade){
 }
 [10,11,12].forEach(renderExamBank);
 
+function renderGradeCounts(){
+  [10,11,12].forEach(g => {
+    const n = Object.values(EXAMS).filter(e => e.grade === g).length;
+    const total = CURRICULUM[g].lessons.length;
+    document.getElementById(`gcount-${g}`).textContent = `${total} Bài · ${n} Đề thi đã có`;
+  });
+  const totalAll = Object.keys(EXAMS).length;
+  document.getElementById('gcount-bank').textContent = `Tổng hợp · ${totalAll} Đề thi`;
+}
+renderGradeCounts();
+
 function showBank(grade){
   document.querySelectorAll('.exam-bank').forEach(e => e.classList.remove('show'));
   if (grade === 'bank') { document.getElementById('question-bank').scrollIntoView({behavior:'smooth'}); return; }
@@ -795,13 +864,34 @@ function showBank(grade){
    ============================================================ */
 function renderTicker(){
   const track = document.getElementById('ticker-track');
-  const items = Object.entries(EXAMS).map(([key, ex]) => {
-    const colorMap = {10:'var(--m-de10)',11:'var(--m-de11)',12:'var(--m-de12)'};
-    return `<div class="ticker-item" onclick="startExam('${key}')" style="cursor:pointer;">
-      <span>${ex.title}</span><span class="tg" style="background:${colorMap[ex.grade]}">TIN ${ex.grade}</span>
-    </div>`;
-  }).join('');
+  const colorMap = {10:'var(--m-de10)',11:'var(--m-de11)',12:'var(--m-de12)'};
+
+  const realItems = Object.entries(EXAMS)
+    .sort((a,b) => parseVNDate(b[1].ngayDang) - parseVNDate(a[1].ngayDang))
+    .map(([key, ex]) => `
+      <div class="ticker-item" onclick="startExam('${key}')" style="cursor:pointer;">
+        <span>${ex.title}<br><span style="color:#7C8AA0; font-size:.72rem;">📅 ${ex.ngayDang||'—'}</span></span>
+        <span class="tg" style="background:${colorMap[ex.grade]}">TIN ${ex.grade}</span>
+      </div>`);
+
+  const placeholders = [
+    {label:"Đề tốt nghiệp THPT — đang biên soạn", tag:"TỐT NGHIỆP", color:"var(--m-tn)"},
+    {label:"Ngân hàng đề tổng hợp — đang cập nhật", tag:"NGÂN HÀNG", color:"var(--m-bank)"}
+  ].map(p => `
+    <div class="ticker-item" style="opacity:.6;">
+      <span>${p.label}<br><span style="color:#7C8AA0; font-size:.72rem;">📅 Sắp có</span></span>
+      <span class="tg" style="background:${p.color}">${p.tag}</span>
+    </div>`);
+
+  let all = [...realItems, ...placeholders];
+  while (all.length < 6) all = all.concat(all); // đảm bảo hiện tối thiểu 6 mục
+  const items = all.slice(0,6).join('');
   track.innerHTML = items + items; // nhân đôi để cuộn liên tục mượt
+}
+function parseVNDate(d){
+  if(!d) return 0;
+  const [dd,mm,yyyy] = d.split('/').map(Number);
+  return new Date(yyyy,mm-1,dd).getTime();
 }
 renderTicker();
 
@@ -875,7 +965,8 @@ function submitExam(){
   const timeSpent = Math.round((Date.now() - startTime)/1000);
 
   const p1Total = currentExam.part1.length;
-  const p1PointEach = p1Total ? 6 / p1Total : 0;
+  const fixedPoint = currentExam.pointPerItem; // ví dụ 0.25 — nếu đề có khai báo điểm thật
+  const p1PointEach = fixedPoint || (p1Total ? 6 / p1Total : 0);
   let correct = 0, wrong = 0, skip = 0, score = 0;
   const wrongTags = {};
 
@@ -886,7 +977,7 @@ function submitExam(){
     else { wrong++; wrongTags[q.tag] = (wrongTags[q.tag]||0)+1; }
   });
 
-  const p2ItemPoint = 4 / (currentExam.part2.length * 4);
+  const p2ItemPoint = fixedPoint || (4 / (currentExam.part2.length * 4));
   currentExam.part2.forEach((q,qi) => {
     q.items.forEach((it,ii) => {
       const ans = userAnswers.p2[qi] && userAnswers.p2[qi][ii];
@@ -897,21 +988,24 @@ function submitExam(){
   });
 
   score = Math.round(score*100)/100;
-  const maxTotal = currentExam.part1.length + currentExam.part2.length*4;
+  const maxTotal = fixedPoint
+    ? Math.round((p1Total + currentExam.part2.length*4) * fixedPoint * 100)/100
+    : 10;
+  const scaledFor10 = score / maxTotal * 10; // chỉ dùng để xếp loại, không hiển thị
 
-  document.getElementById('res-score').textContent = `${score}/10`;
-  document.getElementById('res-bar').style.width = (score/10*100)+'%';
+  document.getElementById('res-score').textContent = `${score}/${maxTotal}`;
+  document.getElementById('res-bar').style.width = (score/maxTotal*100)+'%';
   document.getElementById('res-correct').textContent = correct;
   document.getElementById('res-wrong').textContent = wrong;
   document.getElementById('res-skip').textContent = skip;
   document.getElementById('res-time').textContent = `${Math.floor(timeSpent/60)}:${String(timeSpent%60).padStart(2,'0')}`;
 
   let rating = '🔄 Cần ôn tập';
-  if (score>=9) rating='🏆 Xuất sắc'; else if(score>=8) rating='🌟 Tốt';
-  else if(score>=6.5) rating='👍 Khá'; else if(score>=5) rating='📖 Đạt';
+  if (scaledFor10>=9) rating='🏆 Xuất sắc'; else if(scaledFor10>=8) rating='🌟 Tốt';
+  else if(scaledFor10>=6.5) rating='👍 Khá'; else if(scaledFor10>=5) rating='📖 Đạt';
   document.getElementById('res-rating').textContent = rating;
 
-  runAIAnalysis(wrongTags, currentExam, score);
+  runAIAnalysis(wrongTags, currentExam, scaledFor10);
   renderAnswerKey();
 
   document.getElementById('exam-run').classList.remove('show');
