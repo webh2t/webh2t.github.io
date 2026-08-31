@@ -160,7 +160,8 @@
 
   /* ================= EXAM TAKING ================= */
   .exam-run{ display:none;}
-  .exam-run.show{ display:block;}
+  .exam-run.show{ display:block; user-select:none; -webkit-user-select:none; -moz-user-select:none;}
+  .exam-run.show *{ -webkit-touch-callout:none;}
   .exam-intro{ display:none;}
   .exam-intro.show{ display:block;}
   .intro-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius);
@@ -248,6 +249,11 @@
     z-index:60; opacity:0; visibility:hidden; transform:translateY(12px); transition:.2s;}
   #back-to-top.show{ opacity:1; visibility:visible; transform:translateY(0);}
 
+  #cheat-warning{ position:fixed; top:80px; left:50%; transform:translateX(-50%) translateY(-20px);
+    background:#8B1E1E; color:#fff; padding:12px 22px; border-radius:10px; font-size:.85rem; font-weight:600;
+    box-shadow:0 10px 24px rgba(0,0,0,.3); z-index:300; opacity:0; visibility:hidden; transition:.25s;}
+  #cheat-warning.show{ opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);}
+
   @media (max-width:760px){
     .profile-grid{ grid-template-columns:1fr;}
     .menu-toggle{ display:block; margin:0 auto;}
@@ -314,6 +320,7 @@
   <!-- ============ TICKER ============ -->
   <section class="block">
     <h2 class="block-title">Đề thi mới nhất</h2>
+    <div id="ticker-total" style="font-family:'Space Grotesk',monospace; font-size:.85rem; color:var(--brilliant-blue); font-weight:700; margin-bottom:12px;">🔥 Đang tải số lượt thi…</div>
     <div class="ticker-box">
       <div class="ticker-label">🚀 CẬP NHẬT LIÊN TỤC — rê chuột để dừng</div>
       <div class="ticker-track" id="ticker-track"></div>
@@ -383,13 +390,14 @@
       <div class="intro-icon">📝</div>
       <h2 id="intro-title">Tên đề thi</h2>
       <div class="intro-meta" id="intro-meta">Thời gian: 15 phút · Khối 10</div>
+      <div class="intro-meta" id="intro-attempt-info" style="color:var(--brilliant-blue); font-weight:600; margin-top:4px;"></div>
 
       <div class="intro-student" id="intro-student"></div>
 
       <div class="intro-rules">
         <p>⚠️ Sau khi bấm "Bắt đầu thi", đồng hồ đếm ngược sẽ chạy và không thể tạm dừng. Hãy chắc chắn bạn đã sẵn sàng.</p>
       </div>
-      <button class="btn btn-primary" style="padding:14px 40px; font-size:1rem;" onclick="beginExam()">🚀 BẮT ĐẦU THI</button>
+      <button class="btn btn-primary" id="btn-begin-exam" style="padding:14px 40px; font-size:1rem;" onclick="beginExam()">🚀 BẮT ĐẦU THI</button>
       <div><button class="btn btn-ghost" style="margin-top:10px;" onclick="backToBank()">← Quay lại</button></div>
     </div>
   </section>
@@ -480,6 +488,7 @@
 </main>
 
 <button id="back-to-top" aria-label="Về đầu trang" onclick="window.scrollTo({top:0, behavior:'smooth'})">↑</button>
+<div id="cheat-warning"></div>
 
 <!-- ============ MODALS ============ -->
 <div class="modal-overlay" id="login-modal">
@@ -686,6 +695,7 @@ auth.onAuthStateChanged(user => {
     out.style.display = 'flex'; inn.style.display = 'none'; profileSection.style.display = 'none';
   }
   renderLeaderboard();
+  if (typeof loadAttemptCounts === 'function') loadAttemptCounts();
 });
 
 /* ============================================================
@@ -878,7 +888,10 @@ function renderExamBank(grade){
           const has = EXAMS[key];
           return `<li>
             <span><span class="bt">Bài ${b.id}</span> ${b.ten}</span>
-            ${has ? `<a class="status-ready" href="#" onclick="startExam('${key}'); return false;">Xem đề thi →</a>`
+            ${has ? `<span style="display:flex; align-items:center; gap:10px;">
+                <span class="attempt-count" id="ac-${key}" style="font-size:.72rem; color:#7C8AA0;">…</span>
+                <a class="status-ready" href="#" onclick="startExam('${key}'); return false;">Xem đề thi →</a>
+              </span>`
                   : `<span class="status-pending">Chưa có đề</span>`}
           </li>`;
         }).join('')}
@@ -944,6 +957,47 @@ function parseVNDate(d){
 renderTicker();
 
 /* ============================================================
+   SỐ LƯỢT LÀM BÀI — tổng cộng + theo từng đề + theo cá nhân
+   ============================================================ */
+let examAttemptCounts = {};   // { examKey: tổng số lượt của tất cả thí sinh }
+let myAttemptCounts = {};     // { examKey: số lượt của riêng người đang đăng nhập }
+
+function loadAttemptCounts(){
+  db.collection('attempts').get().then(snap => {
+    examAttemptCounts = {}; myAttemptCounts = {};
+    snap.forEach(doc => {
+      const a = doc.data();
+      examAttemptCounts[a.examKey] = (examAttemptCounts[a.examKey]||0) + 1;
+      if (currentUser && a.uid === currentUser.uid) {
+        myAttemptCounts[a.examKey] = (myAttemptCounts[a.examKey]||0) + 1;
+      }
+    });
+    // Cập nhật badge số lượt trong từng danh sách đề
+    Object.keys(EXAMS).forEach(key => {
+      const el = document.getElementById(`ac-${key}`);
+      if (!el) return;
+      const total = examAttemptCounts[key] || 0;
+      const mine = myAttemptCounts[key] || 0;
+      el.textContent = currentUser ? `👥 ${total} lượt · 👤 Bạn: ${mine} lần` : `👥 ${total} lượt`;
+    });
+    // Cập nhật tổng số lượt thi trên toàn hệ thống (hiện ở khu vực slider)
+    const grandTotal = snap.size;
+    const tt = document.getElementById('ticker-total');
+    if (tt) tt.textContent = `🔥 Tổng cộng ${grandTotal.toLocaleString('vi-VN')} lượt thi đã thực hiện`;
+  }).catch(err => console.error('loadAttemptCounts error:', err));
+}
+loadAttemptCounts();
+
+/* Hiển thị số lượt làm của riêng thí sinh ngay trong màn hình "Bắt đầu thi" */
+function loadExamAttemptInfo(key){
+  const mine = myAttemptCounts[key] || 0;
+  const total = examAttemptCounts[key] || 0;
+  const infoEl = document.getElementById('intro-attempt-info');
+  if (infoEl) infoEl.textContent = `📊 Đề này đã có ${total} lượt thi · Bạn đã làm ${mine} lần`;
+}
+
+
+/* ============================================================
    LÀM BÀI THI
    ============================================================ */
 let currentExamKey = null, currentExam = null, timerInterval = null, timeLeftSec = 0, startTime = null;
@@ -958,7 +1012,11 @@ function startExam(key){
   document.getElementById('intro-meta').textContent = `Thời gian làm bài: ${currentExam.duration} phút · Khối ${currentExam.grade}`;
 
   const stuBox = document.getElementById('intro-student');
+  const beginBtn = document.getElementById('btn-begin-exam');
   if (currentUser) {
+    beginBtn.disabled = false;
+    beginBtn.style.opacity = '1';
+    beginBtn.style.display = 'inline-block';
     db.collection('users').doc(currentUser.uid).get().then(doc => {
       const d = doc.data() || {};
       stuBox.innerHTML = `
@@ -967,10 +1025,16 @@ function startExam(key){
         <div class="row"><span>📍 Tỉnh/TP</span><b>${escapeHTML(d.province || 'Chưa cập nhật')}</b></div>
         <div class="row"><span>✉️ Email</span><b>${escapeHTML(currentUser.email || '—')}</b></div>`;
     });
+    loadExamAttemptInfo(key);
   } else {
-    stuBox.innerHTML = `<p style="font-size:.85rem; color:#8A6D1D; text-align:center;">
-      ⚠️ Bạn chưa đăng nhập — kết quả sẽ KHÔNG được lưu vào hồ sơ và bảng xếp hạng.<br>
-      <a style="color:var(--brilliant-blue); font-weight:700; cursor:pointer;" onclick="openModal('login-modal')">Đăng nhập ngay</a> để lưu kết quả.</p>`;
+    beginBtn.style.display = 'none';
+    stuBox.innerHTML = `<p style="font-size:.9rem; color:#8A6D1D; text-align:center; font-weight:600;">
+      🔒 Bạn cần đăng nhập hoặc đăng ký để làm bài thi.<br>
+      <span style="font-weight:400; font-size:.82rem;">Hệ thống cần biết bạn là ai để lưu điểm và xếp hạng chính xác.</span></p>
+      <div style="display:flex; gap:10px; justify-content:center; margin-top:14px; flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="openModal('login-modal')">🔐 Đăng nhập</button>
+        <button class="btn btn-outline" onclick="openModal('register-modal')">📝 Đăng ký</button>
+      </div>`;
   }
 
   document.getElementById('exam-intro').classList.add('show');
@@ -980,6 +1044,8 @@ function startExam(key){
 }
 
 function beginExam(){
+  if (!currentUser) { alert('Bạn cần đăng nhập trước khi làm bài thi.'); openModal('login-modal'); return; }
+  enableAntiCheat();
   document.getElementById('er-title').textContent = currentExam.title;
   document.getElementById('er-meta').textContent = `Thời gian: ${currentExam.duration} phút · Khối ${currentExam.grade}`;
 
@@ -1024,9 +1090,16 @@ function beginExam(){
 function setP2(qi, ii, val){
   if (!userAnswers.p2[qi]) userAnswers.p2[qi] = {};
   userAnswers.p2[qi][ii] = val;
+  const trueBtn = document.getElementById(`tf-${qi}-${ii}-true`);
+  const falseBtn = document.getElementById(`tf-${qi}-${ii}-false`);
+  if (trueBtn && falseBtn) {
+    trueBtn.classList.toggle('active', val === true);
+    falseBtn.classList.toggle('active', val === false);
+  }
 }
 
 function backToBank(){
+  disableAntiCheat();
   document.getElementById('exam-intro').classList.remove('show');
   document.getElementById('exam-run').classList.remove('show');
   document.getElementById('result-box').classList.remove('show');
@@ -1038,6 +1111,7 @@ function backToBank(){
    Phần II: 0.25đ/ý đúng ×4 ý ×2 câu = tối đa 4đ ⇒ tổng thang 10)
    ============================================================ */
 function submitExam(){
+  disableAntiCheat();
   clearInterval(timerInterval);
   const timeSpent = Math.round((Date.now() - startTime)/1000);
 
@@ -1156,8 +1230,11 @@ function saveAttempt(score, correct, wrong, skip, timeSpent){
       score, correct, wrong, skip, timeSpent,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
-  }).then(() => loadProfileStats(currentUser.uid))
-    .catch(err => console.error('saveAttempt error:', err));
+  }).then(() => {
+    loadProfileStats(currentUser.uid);
+    loadAttemptCounts();
+    renderLeaderboard();
+  }).catch(err => console.error('saveAttempt error:', err));
 }
 
 function loadProfileStats(uid){
@@ -1216,6 +1293,55 @@ function renderLeaderboard(){
   }).catch(err => {
     document.getElementById('lb-body').innerHTML = `<tr><td colspan="5" style="color:#9AA6B8;">Không tải được bảng xếp hạng (${err.code||err.message}).</td></tr>`;
   });
+}
+
+/* ============================================================
+   CHỐNG GIAN LẬN TRONG LÚC LÀM BÀI
+   Lưu ý minh bạch: các biện pháp dưới đây chặn được sao chép/dán,
+   in trang, menu chuột phải, và một số phím tắt DevTools ngay trên
+   trình duyệt. KHÔNG THỂ chặn tuyệt đối việc chụp màn hình bằng
+   phím Print Screen hoặc công cụ chụp ảnh của hệ điều hành/điện
+   thoại — đây là giới hạn kỹ thuật chung của mọi trang web, không
+   riêng gì hệ thống này.
+   ============================================================ */
+function blockContextMenu(e){ e.preventDefault(); }
+function blockCopyPaste(e){ e.preventDefault(); }
+function blockKeys(e){
+  const k = e.key ? e.key.toLowerCase() : '';
+  // Chặn Ctrl/Cmd + C, X, V, P, S, U  và F12 / Ctrl+Shift+I (DevTools)
+  if ((e.ctrlKey || e.metaKey) && ['c','x','v','p','s','u'].includes(k)) { e.preventDefault(); }
+  if (e.key === 'F12') { e.preventDefault(); }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && ['i','j','c'].includes(k)) { e.preventDefault(); }
+  if (e.key === 'PrintScreen') {
+    showCheatWarning('Hệ thống đã ghi nhận thao tác chụp màn hình (Print Screen). Hành vi này có thể bị coi là gian lận.');
+  }
+}
+function handleVisibilityChange(){
+  if (document.hidden) {
+    showCheatWarning('Bạn vừa rời khỏi tab làm bài — hệ thống đã ghi nhận thời điểm này.');
+  }
+}
+function showCheatWarning(msg){
+  console.warn('[Chống gian lận]', msg);
+  const box = document.getElementById('cheat-warning');
+  if (box) { box.textContent = '⚠️ ' + msg; box.classList.add('show'); setTimeout(()=>box.classList.remove('show'), 4000); }
+}
+
+function enableAntiCheat(){
+  document.addEventListener('contextmenu', blockContextMenu);
+  document.addEventListener('copy', blockCopyPaste);
+  document.addEventListener('cut', blockCopyPaste);
+  document.addEventListener('paste', blockCopyPaste);
+  document.addEventListener('keydown', blockKeys);
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+}
+function disableAntiCheat(){
+  document.removeEventListener('contextmenu', blockContextMenu);
+  document.removeEventListener('copy', blockCopyPaste);
+  document.removeEventListener('cut', blockCopyPaste);
+  document.removeEventListener('paste', blockCopyPaste);
+  document.removeEventListener('keydown', blockKeys);
+  document.removeEventListener('visibilitychange', handleVisibilityChange);
 }
 
 /* ============================================================
