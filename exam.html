@@ -221,6 +221,12 @@
   .ai-plan .step-n{ font-family:'Space Grotesk',monospace; color:var(--amber); font-weight:700;}
   .ai-disclaimer{ font-size:.72rem; color:#7C8AA0; margin-top:14px; font-style:italic;}
 
+  /* ================= PRO ACCOUNT ================= */
+  .pro-status{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:rgba(124,58,237,.1);color:var(--purple);font-size:.74rem;font-weight:800;}
+  .pro-status.free{background:var(--paper);color:#7C8AA0;}
+  .pro-unlock{color:#B4830A!important;font-weight:800!important;}
+  .pro-note{margin-top:12px;padding:10px 12px;border-radius:9px;background:rgba(124,58,237,.08);color:#5B4A8A;font-size:.78rem;}
+
   /* ================= PROFILE ================= */
   .profile-grid{ display:grid; grid-template-columns:1fr 2fr; gap:20px;}
   .profile-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); padding:22px;}
@@ -328,6 +334,7 @@
       <div>
         <div class="uname" id="user-name">—</div>
         <div class="uclass" id="user-class">—</div>
+        <div id="member-pro-status" class="pro-status free">Tài khoản thường</div>
       </div>
       <button class="btn btn-ghost" onclick="signOutUser()">Đăng xuất</button>
     </div>
@@ -573,7 +580,8 @@
       <li>Gửi ảnh đó qua Telegram theo link bên dưới, kèm <strong>Họ tên + Lớp</strong>.</li>
       <li>Giáo viên xác nhận và mở khoá tài khoản trong vòng 24 giờ.</li>
     </ol>
-    <a id="pro-telegram-link" href="https://t.me/YOUR_TELEGRAM_USERNAME" target="_blank" rel="noopener"
+    <div class="pro-note">⭐ <strong>PRO theo từng môn:</strong> Bài 1 miễn phí; từ Bài 2 trở đi cần PRO. Giá <strong>50.000đ/môn</strong>, thanh toán một lần.</div>
+    <a id="pro-telegram-link" href="https://t.me/webh2t" target="_blank" rel="noopener"
        class="btn btn-primary" style="display:block; text-align:center; text-decoration:none; margin-bottom:10px;">
       📩 Gửi ảnh chuyển khoản qua Telegram
     </a>
@@ -610,6 +618,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 let currentUser = null;
 let currentUserPro = {};      // { 10: true/false, 11: ..., 12: ... }
+let unsubscribeUserDoc = null;
 let examAttemptCounts = {};   // { examKey: tổng số lượt của tất cả thí sinh }
 let myAttemptCounts = {};     // { examKey: số lượt của riêng người đang đăng nhập }
 
@@ -670,7 +679,11 @@ function registerWithEmail(){
 
   auth.createUserWithEmailAndPassword(email, pw).then(cred => {
     return cred.user.updateProfile({displayName:name}).then(() =>
-      db.collection('users').doc(cred.user.uid).set({name, class:klass, province, email, createdAt:firebase.firestore.FieldValue.serverTimestamp()})
+      db.collection('users').doc(cred.user.uid).set({
+        name, class:klass, province, email,
+        pro: {10:false, 11:false, 12:false},
+        createdAt:firebase.firestore.FieldValue.serverTimestamp()
+      }, {merge:true})
     );
   }).then(() => {
     showMsg('register-msg', '🎉 Chúc mừng! Bạn đã trở thành thành viên của WEBH2T.', true);
@@ -721,34 +734,44 @@ auth.onAuthStateChanged(user => {
     document.getElementById('user-name').textContent = user.displayName || user.email || 'Học sinh';
 
     const userRef = db.collection('users').doc(user.uid);
-    userRef.get().then(doc => {
+    if (unsubscribeUserDoc) { unsubscribeUserDoc(); unsubscribeUserDoc = null; }
+    unsubscribeUserDoc = userRef.onSnapshot(doc => {
       if (!doc.exists) {
-        // Đăng nhập lần đầu qua Google/Facebook — tự tạo hồ sơ cơ bản, Lớp/Tỉnh để trống chờ cập nhật
         return userRef.set({
           name: user.displayName || user.email || 'Học sinh',
           email: user.email || '',
           class: '', province: '',
+          pro: {10:false, 11:false, 12:false},
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        }).then(() => userRef.get());
+        });
       }
-      return doc;
-    }).then(doc => {
       const data = doc.data() || {};
       currentUserPro = data.pro || {};
-      const proBadges = [10,11,12].filter(g => currentUserPro[g]).map(g => `<span class="badge-chip" style="background:var(--brilliant-blue); color:#fff;">⭐ PRO Tin ${g}</span>`).join('');
+      const proGrades = [10,11,12].filter(g => currentUserPro[g]);
+      const proBadges = proGrades.map(g => `<span class="badge-chip" style="background:var(--brilliant-blue); color:#fff;">⭐ PRO Tin ${g}</span>`).join('');
+      const proStatus = document.getElementById('member-pro-status');
+      if (proStatus) {
+        proStatus.className = 'pro-status ' + (proGrades.length ? '' : 'free');
+        proStatus.textContent = proGrades.length ? `⭐ PRO: ${proGrades.map(g=>'Tin '+g).join(' · ')}` : 'Tài khoản thường';
+      }
       document.getElementById('user-class').textContent = data.class ? `Lớp ${data.class}` : (user.email || '—');
       document.getElementById('profile-basic').innerHTML = `
         <div class="stat-mini"><span>Họ tên</span><b>${escapeHTML(user.displayName || data.name || '—')}</b></div>
         <div class="stat-mini"><span>Email</span><b>${escapeHTML(user.email || '—')}</b></div>
         <div class="stat-mini"><span>Lớp</span><b>${escapeHTML(data.class || 'Chưa cập nhật')}</b></div>
         <div class="stat-mini"><span>Tỉnh/TP</span><b>${escapeHTML(data.province || 'Chưa cập nhật')}</b></div>
-        <div style="margin-top:10px;">${proBadges || '<span class="badge-chip">Tài khoản thường</span>'}</div>`;
-      [10,11,12].forEach(renderExamBank); // vẽ lại để mở khoá đúng đề nếu đã là PRO
-    });
+        <div class="stat-mini"><span>Quyền truy cập</span><b>${proGrades.length ? proGrades.map(g=>'PRO Tin '+g).join(', ') : 'Tài khoản thường'}</b></div>
+        <div style="margin-top:10px;">${proBadges || '<span class="badge-chip">Bài 1 mỗi môn miễn phí</span>'}</div>`;
+      [10,11,12].forEach(renderExamBank);
+      refreshProRequestBadges();
+    }, err => console.error('user profile listener error:', err));
     loadProfileStats(user.uid);
   } else {
+    if (unsubscribeUserDoc) { unsubscribeUserDoc(); unsubscribeUserDoc = null; }
     out.style.display = 'flex'; inn.style.display = 'none'; profileSection.style.display = 'none';
     currentUserPro = {};
+    const proStatus = document.getElementById('member-pro-status');
+    if (proStatus) { proStatus.className = 'pro-status free'; proStatus.textContent = 'Tài khoản thường'; }
     [10,11,12].forEach(renderExamBank);
   }
   renderLeaderboard();
@@ -1009,8 +1032,7 @@ const EXAMS = {
 function renderExamBank(grade){
   const data = CURRICULUM[grade];
   const el = document.getElementById(`exam-bank-${grade}`);
-  const gradeExamIds = data.lessons.filter(b => EXAMS[`${grade}-${b.id}`]).map(b => b.id);
-  const freeBaiId = gradeExamIds.length ? Math.min(...gradeExamIds) : null;
+  const freeBaiId = 1; // Bài 1 của mỗi môn luôn miễn phí
   const isPro = !!(currentUserPro && currentUserPro[grade]);
 
   el.innerHTML = Object.keys(data.chude).map(cd => {
@@ -1283,8 +1305,7 @@ let userAnswers = {p1:{}, p2:{}};
 function startExam(key){
   const ex = EXAMS[key];
   const grade = ex.grade;
-  const gradeExamIds = CURRICULUM[grade].lessons.filter(b => EXAMS[`${grade}-${b.id}`]).map(b => b.id);
-  const freeBaiId = Math.min(...gradeExamIds);
+  const freeBaiId = 1; // Bài 1 của mỗi môn luôn miễn phí
   const thisBaiId = parseInt(key.split('-')[1], 10);
   const isPro = !!(currentUserPro && currentUserPro[grade]);
   if (thisBaiId !== freeBaiId && !isPro) {
@@ -1399,28 +1420,75 @@ function openProModal(grade){
     openModal('login-modal');
     return;
   }
+  grade = Number(grade);
+  if (currentUserPro && currentUserPro[grade]) {
+    alert(`Tài khoản của bạn đã có PRO Tin ${grade}.`);
+    return;
+  }
   proModalGrade = grade;
   const totalBai = CURRICULUM[grade] ? CURRICULUM[grade].lessons.length : '';
   document.getElementById('pro-grade-label').textContent = `Tin học ${grade}`;
   document.getElementById('pro-grade-count').textContent = `toàn bộ ${totalBai} bài trong môn này`;
   document.getElementById('pro-msg').className = 'form-msg';
+  document.getElementById('pro-msg').textContent = '';
+  checkExistingProRequest(grade);
   openModal('pro-modal');
 }
 
+function checkExistingProRequest(grade){
+  if (!currentUser) return;
+  db.collection('pro_requests')
+    .where('uid','==',currentUser.uid)
+    .where('grade','==',Number(grade))
+    .where('status','==','pending')
+    .limit(1).get()
+    .then(snap => {
+      if (!snap.empty) {
+        showMsg('pro-msg',`⏳ Bạn đã gửi yêu cầu PRO Tin ${grade}. Giáo viên đang kiểm tra giao dịch.`,false);
+      }
+    }).catch(err => console.warn('checkExistingProRequest:', err));
+}
+
+function refreshProRequestBadges(){
+  if (proModalGrade && currentUser && currentUserPro[proModalGrade]) {
+    showMsg('pro-msg',`🎉 PRO Tin ${proModalGrade} đã được mở khóa!`,true);
+    setTimeout(()=>closeModal('pro-modal'),700);
+  }
+}
+
 function requestPro(){
-  if (!currentUser || !proModalGrade) return;
-  db.collection('pro_requests').add({
-    uid: currentUser.uid,
-    name: currentUser.displayName || currentUser.email || 'Học sinh',
-    email: currentUser.email || '',
-    grade: proModalGrade,
-    status: 'pending',
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(() => {
-    showMsg('pro-msg', '✅ Đã gửi yêu cầu! Đừng quên gửi ảnh chuyển khoản qua Telegram để giáo viên xác nhận nhanh hơn.', true);
-  }).catch(err => {
-    showMsg('pro-msg', 'Lỗi gửi yêu cầu: ' + err.message, false);
-  });
+  if (!currentUser || !proModalGrade) {
+    showMsg('pro-msg','Vui lòng đăng nhập trước khi gửi yêu cầu.',false);
+    return;
+  }
+  const grade = Number(proModalGrade);
+  if (currentUserPro && currentUserPro[grade]) {
+    showMsg('pro-msg',`🎉 Tài khoản đã có PRO Tin ${grade}.`,true);
+    return;
+  }
+  const btn = document.querySelector('#pro-modal .modal-submit');
+  if (btn) { btn.disabled=true; btn.style.opacity='.65'; btn.textContent='⏳ Đang gửi yêu cầu…'; }
+  db.collection('pro_requests')
+    .where('uid','==',currentUser.uid)
+    .where('grade','==',grade)
+    .where('status','==','pending')
+    .limit(1).get()
+    .then(snap => {
+      if (!snap.empty) throw new Error('Bạn đã có một yêu cầu đang chờ xác nhận cho môn này.');
+      return db.collection('pro_requests').add({
+        uid: currentUser.uid,
+        name: currentUser.displayName || currentUser.email || 'Học sinh',
+        email: currentUser.email || '',
+        grade,
+        price: 50000,
+        currency: 'VND',
+        status: 'pending',
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    })
+    .then(()=>showMsg('pro-msg',`✅ Đã ghi nhận yêu cầu PRO Tin ${grade}. Hãy gửi ảnh chuyển khoản qua Telegram để giáo viên đối chiếu nhanh hơn.`,true))
+    .catch(err=>showMsg('pro-msg',err.message.includes('đã có một yêu cầu')?err.message:'Lỗi gửi yêu cầu: '+err.message,false))
+    .finally(()=>{ if(btn){btn.disabled=false;btn.style.opacity='1';btn.textContent='✅ Tôi đã chuyển khoản — Gửi yêu cầu xác nhận';} });
 }
 
 function backToBank(){
