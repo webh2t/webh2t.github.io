@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Hub | WEBH2T — Informatics Subject</title>
+<meta name="description" content="Knowledge Hub của WEBH2T: kiến thức Tin học THPT theo hệ điều hành, dòng lệnh, thiết kế, phần mềm và mẹo vặt — gắn với 5 năng lực số.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy-900:#0A1330;
+    --navy-800:#111d45;
+    --navy-700:#182a63;
+    --yellow:#FFD400;
+    --yellow-dim:#e6bf00;
+    --paper:#F5F6FA;
+    --card:#FFFFFF;
+    --ink:#12152B;
+    --muted:#616A82;
+    --line:#E5E7F2;
+    --os:#7C3AED;    --os-tint:#F2EBFF;
+    --cmd:#0891B2;   --cmd-tint:#E4F7FA;
+    --design:#F97316;--design-tint:#FFEFE2;
+    --soft:#2563EB;  --soft-tint:#E7EFFF;
+    --tips:#16A34A;  --tips-tint:#E7F8EE;
+    --footer:#0B6E60;
+    --footer-2:#0a5b50;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(16,20,45,.06), 0 8px 24px -12px rgba(16,20,45,.18);
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Be Vietnam Pro',system-ui,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit; text-decoration:none;}
+  img,svg{display:block; max-width:100%;}
+  .wrap{max-width:1220px; margin:0 auto; padding:0 20px;}
+  h1,h2,h3{margin:0; font-family:'Be Vietnam Pro',sans-serif; font-weight:800; line-height:1.25;}
+  .display{font-family:'Oswald',sans-serif; letter-spacing:.02em;}
+
+  /* ===== Skip link ===== */
+  .skip-link{position:absolute; left:-999px; top:0; background:var(--yellow); color:var(--navy-900); padding:10px 16px; z-index:200; font-weight:700;}
+  .skip-link:focus{left:10px; top:10px;}
+
+  /* ===== TOP UTILITY BAR ===== */
+  .topbar{background:var(--navy-900); color:#c9cee8; font-size:.85rem; border-bottom:1px solid rgba(255,255,255,.08);}
+  .topbar .wrap{display:flex; align-items:center; justify-content:space-between; gap:16px; padding:8px 20px; flex-wrap:wrap;}
+  .clock{display:flex; align-items:center; gap:8px; white-space:nowrap;}
+  .clock .dot{width:6px; height:6px; border-radius:50%; background:var(--yellow); box-shadow:0 0 0 3px rgba(255,212,0,.18);}
+  .topbar-mid{flex:1; min-width:200px; max-width:420px; margin:0 auto;}
+  .search-form{display:flex; align-items:center; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.14); border-radius:999px; padding:4px 6px 4px 14px;}
+  .search-form input{flex:1; background:none; border:0; outline:0; color:#fff; font-size:.85rem; padding:4px 0;}
+  .search-form input::placeholder{color:#9aa2c2;}
+  .search-form button{background:var(--yellow); color:var(--navy-900); border:0; border-radius:999px; width:28px; height:28px; display:grid; place-items:center; cursor:pointer; font-size:.85rem;}
+  .socials{display:flex; gap:8px;}
+  .socials a{width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.08); display:grid; place-items:center; border:1px solid rgba(255,255,255,.14); transition:background .15s, transform .15s;}
+  .socials a:hover{background:var(--yellow); color:var(--navy-900); transform:translateY(-2px);}
+  .socials svg{width:14px; height:14px;}
+
+  /* ===== HEADER / MASTHEAD ===== */
+  .masthead{background:linear-gradient(180deg,var(--navy-900),var(--navy-800)); color:#fff; padding:22px 0 18px;}
+  .masthead .wrap{display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap;}
+  .brand{display:flex; align-items:center; gap:12px;}
+  .badge{width:52px; height:52px; border-radius:12px; background:var(--yellow); display:grid; place-items:center; box-shadow:0 6px 18px -6px rgba(255,212,0,.6); flex:none;}
+  .badge span{font-family:'Oswald',sans-serif; font-weight:700; color:var(--navy-900); font-size:1.05rem; letter-spacing:.01em;}
+  .brand-text .line1{font-family:'Oswald',sans-serif; font-weight:600; font-size:.78rem; letter-spacing:.12em; color:#9aa2c2;}
+  .brand-text .line2{font-family:'Oswald',sans-serif; font-weight:600; font-size:1.05rem; color:#fff;}
+  .hub-title{text-align:center; flex:1; min-width:220px;}
+  .hub-title h1{font-family:'Oswald',sans-serif; font-weight:700; font-size:2.6rem; color:var(--yellow); letter-spacing:.02em; text-shadow:0 2px 0 rgba(0,0,0,.25);}
+  .hub-title span{color:#fff;}
+  .hub-title p{margin:4px 0 0; color:#aab1cf; font-size:.9rem;}
+  .home-btn{display:flex; align-items:center; gap:8px; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.16); padding:10px 16px; border-radius:999px; font-weight:600; font-size:.9rem; transition:background .15s;}
+  .home-btn:hover{background:var(--yellow); color:var(--navy-900);}
+
+  /* ===== MENU ===== */
+  .menu{background:var(--navy-700); position:sticky; top:0; z-index:50; box-shadow:0 2px 10px rgba(0,0,0,.15);}
+  .menu .wrap{display:flex; align-items:center; gap:2px; overflow-x:auto; scrollbar-width:none;}
+  .menu .wrap::-webkit-scrollbar{display:none;}
+  .menu a{padding:14px 18px; font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:.03em; font-size:.95rem; color:#dfe2f2; white-space:nowrap; border-bottom:3px solid transparent; transition:.15s;}
+  .menu a.home-link{color:#fff;}
+  .menu a:hover{background:rgba(255,255,255,.06);}
+  .menu a.c-os{color:#c9a6ff;} .menu a.c-os:hover{border-color:var(--os); color:#fff;}
+  .menu a.c-cmd{color:#8fe0ee;} .menu a.c-cmd:hover{border-color:var(--cmd); color:#fff;}
+  .menu a.c-design{color:#ffc394;} .menu a.c-design:hover{border-color:var(--design); color:#fff;}
+  .menu a.c-soft{color:#a9c3ff;} .menu a.c-soft:hover{border-color:var(--soft); color:#fff;}
+  .menu a.c-tips{color:#9fe6bd;} .menu a.c-tips:hover{border-color:var(--tips); color:#fff;}
+
+  /* ===== SECTION LABEL ===== */
+  .section-label{display:inline-flex; align-items:center; gap:8px; background:var(--navy-900); color:#fff; font-family:'Oswald',sans-serif; font-weight:600; letter-spacing:.06em; font-size:.85rem; padding:8px 16px; border-radius:6px 6px 0 0;}
+  .section-head{display:flex; align-items:flex-end; justify-content:space-between; gap:12px; margin:44px 0 0; flex-wrap:wrap;}
+  .section-head h2{font-size:1.5rem;}
+  .section-sub{color:var(--muted); font-size:.92rem; margin-top:4px;}
+
+  /* ===== BADGES (category pill + competency tag) ===== */
+  .tag{display:inline-block; font-family:'Oswald',sans-serif; font-weight:600; font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; padding:4px 10px; border-radius:4px; color:#fff;}
+  .tag-os{background:var(--os);} .tag-cmd{background:var(--cmd);} .tag-design{background:var(--design);}
+  .tag-soft{background:var(--soft);} .tag-tips{background:var(--tips);}
+  .comp{display:inline-flex; align-items:center; gap:5px; font-size:.7rem; font-weight:600; padding:4px 9px 4px 7px; border-radius:999px; white-space:nowrap;}
+  .comp-data{background:#E0F2FE; color:#0369A1;}
+  .comp-comm{background:#FCE7F3; color:#BE185D;}
+  .comp-content{background:#FEF3C7; color:#B45309;}
+  .comp-safety{background:#FEE2E2; color:#B91C1C;}
+  .comp-solve{background:#D1FAE5; color:#047857;}
+  .comp .dot{width:6px; height:6px; border-radius:50%; background:currentColor; flex:none;}
+
+  /* ===== LATEST KNOWLEDGE — full-width slider ===== */
+  .slider-wrap{position:relative; margin-top:14px; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); background:var(--navy-900);}
+  .slider{position:relative; height:min(52vw,460px); min-height:280px;}
+  .slide{position:absolute; inset:0; opacity:0; visibility:hidden; transition:opacity .6s ease;}
+  .slide.active{opacity:1; visibility:visible;}
+  .slide .cover{position:absolute; inset:0;}
+  .slide .cover svg{width:100%; height:100%;}
+  .slide::after{content:""; position:absolute; inset:0; background:linear-gradient(0deg, rgba(6,10,26,.92) 0%, rgba(6,10,26,.35) 55%, rgba(6,10,26,0) 100%);}
+  .slide-text{position:absolute; left:0; right:0; bottom:0; padding:34px 40px; z-index:2; max-width:760px;}
+  .slide-text .tags{display:flex; gap:8px; margin-bottom:12px;}
+  .slide-text h3{color:#fff; font-size:clamp(1.3rem,2.6vw,2.1rem); margin-bottom:10px;}
+  .slide-text p{color:#cfd3ea; font-size:.95rem; margin:0 0 12px; max-width:600px;}
+  .slide-meta{color:#aab1cf; font-size:.82rem;}
+  .slider-nav{position:absolute; z-index:3; top:50%; transform:translateY(-50%); width:38px; height:38px; border-radius:50%; background:rgba(6,10,26,.5); border:1px solid rgba(255,255,255,.25); color:#fff; display:grid; place-items:center; cursor:pointer; font-size:1.1rem;}
+  .slider-nav.prev{left:16px;} .slider-nav.next{right:16px;}
+  .slider-dots{position:absolute; z-index:3; right:20px; bottom:18px; display:flex; gap:6px;}
+  .slider-dots button{width:8px; height:8px; border-radius:50%; border:0; background:rgba(255,255,255,.4); cursor:pointer;}
+  .slider-dots button.active{background:var(--yellow); width:22px; border-radius:5px;}
+
+  /* ===== LATEST GRID: hero card + 4 thumbs ===== */
+  .latest-grid{display:grid; grid-template-columns:1.5fr 1fr; gap:22px; margin-top:22px;}
+  .hero-card{background:var(--card); border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); display:flex; flex-direction:column;}
+  .hero-card .cover{aspect-ratio:16/9; position:relative;}
+  .hero-card .cover svg{width:100%; height:100%;}
+  .hero-body{padding:20px 22px 24px;}
+  .hero-body .tags{display:flex; gap:8px; margin-bottom:12px;}
+  .hero-body h3{font-size:1.4rem; margin-bottom:8px;}
+  .hero-body p{color:var(--muted); font-size:.94rem; line-height:1.6; margin:0 0 14px;}
+  .meta-row{display:flex; align-items:center; gap:14px; color:var(--muted); font-size:.82rem; flex-wrap:wrap;}
+  .meta-row .sep{opacity:.5;}
+  .read-more{color:var(--os); font-weight:700; font-size:.88rem; margin-top:12px; display:inline-block;}
+
+  .side-list{display:flex; flex-direction:column; gap:14px;}
+  .side-item{display:flex; gap:12px; background:var(--card); border-radius:var(--radius); padding:10px; box-shadow:var(--shadow); align-items:center;}
+  .side-item .cover{width:88px; height:66px; border-radius:6px; overflow:hidden; flex:none;}
+  .side-item .cover svg{width:100%; height:100%;}
+  .side-item .tag{margin-bottom:5px;}
+  .side-item h4{font-size:.9rem; font-weight:700; line-height:1.35; margin:0;}
+  .side-item .soon{font-size:.72rem; color:var(--muted); margin-top:4px; display:block;}
+
+  /* ===== CATEGORIES ===== */
+  .cat-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:16px;}
+  .cat-card{background:var(--card); border-radius:var(--radius); padding:20px 16px; text-align:center; box-shadow:var(--shadow); border-top:4px solid var(--c); transition:transform .15s;}
+  .cat-card:hover{transform:translateY(-3px);}
+  .cat-card .icon{width:44px; height:44px; margin:0 auto 12px; border-radius:12px; display:grid; place-items:center; background:var(--tint); color:var(--c);}
+  .cat-card .icon svg{width:22px; height:22px;}
+  .cat-card h4{font-family:'Oswald',sans-serif; font-weight:700; letter-spacing:.04em; font-size:1rem; color:var(--c);}
+  .cat-card p{margin:4px 0 0; font-size:.78rem; color:var(--muted);}
+
+  /* ===== ARTICLE LIST ===== */
+  .list{display:flex; flex-direction:column; margin-top:8px;}
+  .list-item{display:grid; grid-template-columns:220px 1fr; gap:20px; padding:22px 0; border-bottom:1px solid var(--line);}
+  .list-item:first-child{padding-top:22px;}
+  .list-item .cover{border-radius:var(--radius); overflow:hidden; aspect-ratio:4/3;}
+  .list-item .cover svg{width:100%; height:100%;}
+  .list-item .tags{display:flex; gap:8px; margin-bottom:9px; flex-wrap:wrap;}
+  .list-item h3{font-size:1.15rem; margin-bottom:8px;}
+  .list-item h3 a:hover{color:var(--os);}
+  .list-item p{color:var(--muted); font-size:.92rem; line-height:1.6; margin:0 0 10px;}
+
+  /* ===== FEATURED KNOWLEDGE ===== */
+  .featured-grid{display:grid; grid-template-columns:repeat(5,1fr); gap:16px; margin-top:18px;}
+  .feat-card{background:var(--navy-900); border-radius:var(--radius); overflow:hidden; position:relative; box-shadow:var(--shadow);}
+  .feat-card .cover{aspect-ratio:3/4; position:relative;}
+  .feat-card .cover svg{width:100%; height:100%;}
+  .feat-card::after{content:""; position:absolute; inset:0; background:linear-gradient(0deg, rgba(6,10,26,.95), rgba(6,10,26,.15) 60%);}
+  .feat-num{position:absolute; top:10px; left:10px; z-index:2; color:var(--yellow); font-family:'Oswald',sans-serif; font-weight:700; font-size:1.4rem; text-shadow:0 2px 6px rgba(0,0,0,.5);}
+  .feat-text{position:absolute; left:0; right:0; bottom:0; padding:14px; z-index:2;}
+  .feat-text .tag{margin-bottom:8px;}
+  .feat-text h4{color:#fff; font-size:.92rem; line-height:1.35; font-weight:700;}
+
+  /* ===== FOOTER ===== */
+  footer{margin-top:60px; background:linear-gradient(135deg,var(--footer),var(--footer-2)); color:#eafff9;}
+  .footer-top{padding:44px 0 30px; display:grid; grid-template-columns:1.3fr 1fr 1fr; gap:32px;}
+  .footer-top h5{font-family:'Oswald',sans-serif; letter-spacing:.06em; font-size:.85rem; color:var(--yellow); margin-bottom:14px;}
+  .footer-top p{color:#cdeee6; font-size:.88rem; line-height:1.6; margin:0;}
+  .footer-top ul{list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:9px;}
+  .footer-top ul a{color:#cdeee6; font-size:.88rem;}
+  .footer-top ul a:hover{color:var(--yellow);}
+  .footer-bottom{border-top:1px solid rgba(255,255,255,.15); padding:16px 0; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:.82rem; color:#bfe6de;}
+
+  /* ===== RESPONSIVE ===== */
+  @media (max-width:980px){
+    .latest-grid{grid-template-columns:1fr;}
+    .cat-grid{grid-template-columns:repeat(3,1fr);}
+    .featured-grid{grid-template-columns:repeat(3,1fr);}
+    .footer-top{grid-template-columns:1fr 1fr;}
+  }
+  @media (max-width:640px){
+    .hub-title h1{font-size:1.9rem;}
+    .list-item{grid-template-columns:1fr;}
+    .list-item .cover{aspect-ratio:16/9;}
+    .cat-grid{grid-template-columns:repeat(2,1fr);}
+    .featured-grid{grid-template-columns:repeat(2,1fr);}
+    .footer-top{grid-template-columns:1fr;}
+    .topbar-mid{order:3; max-width:100%;}
+  }
+
+  /* Reduced motion */
+  @media (prefers-reduced-motion: reduce){
+    html{scroll-behavior:auto;}
+    .slide{transition:none;}
+  }
+  :focus-visible{outline:3px solid var(--yellow); outline-offset:2px;}
+</style>
+</head>
+<body>
+<a href="#main" class="skip-link">Chuyển tới nội dung chính</a>
+
+<!-- TOP UTILITY BAR -->
+<div class="topbar">
+  <div class="wrap">
+    <div class="clock"><span class="dot"></span><span id="clockText">Đang tải giờ…</span></div>
+    <div class="topbar-mid">
+      <form class="search-form" role="search" onsubmit="return false;">
+        <input id="searchInput" type="text" placeholder="Tìm kiếm kiến thức..." aria-label="Tìm kiếm kiến thức">
+        <button type="submit" aria-label="Tìm kiếm">🔍</button>
+      </form>
+    </div>
+    <div class="socials">
+      <a href="#" aria-label="Facebook"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M22 12.06C22 6.51 17.52 2 12 2S2 6.51 2 12.06c0 5 3.66 9.15 8.44 9.94v-7.03H7.9v-2.91h2.54V9.85c0-2.5 1.49-3.89 3.78-3.89 1.1 0 2.24.2 2.24.2v2.46h-1.26c-1.24 0-1.63.77-1.63 1.56v1.88h2.78l-.44 2.91h-2.34V22c4.78-.79 8.44-4.94 8.44-9.94Z"/></svg></a>
+      <a href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.2c2.72 0 3.05.01 4.12.06 1.06.05 1.79.22 2.43.47.65.25 1.2.6 1.75 1.15.55.55.9 1.1 1.15 1.75.25.64.42 1.37.47 2.43.05 1.07.06 1.4.06 4.12s-.01 3.05-.06 4.12c-.05 1.06-.22 1.79-.47 2.43a4.9 4.9 0 0 1-1.15 1.75 4.9 4.9 0 0 1-1.75 1.15c-.64.25-1.37.42-2.43.47-1.07.05-1.4.06-4.12.06s-3.05-.01-4.12-.06c-1.06-.05-1.79-.22-2.43-.47a4.9 4.9 0 0 1-1.75-1.15 4.9 4.9 0 0 1-1.15-1.75c-.25-.64-.42-1.37-.47-2.43C2.21 15.05 2.2 14.72 2.2 12s.01-3.05.06-4.12c.05-1.06.22-1.79.47-2.43.25-.65.6-1.2 1.15-1.75.55-.55 1.1-.9 1.75-1.15.64-.25 1.37-.42 2.43-.47C8.95 2.21 9.28 2.2 12 2.2Zm0 1.8c-2.67 0-2.99.01-4.04.06-.87.04-1.34.18-1.66.3-.42.16-.72.36-1.03.67-.31.31-.51.61-.67 1.03-.12.32-.26.79-.3 1.66C4.24 8.77 4.23 9.09 4.23 12s.01 3.23.06 4.28c.04.87.18 1.34.3 1.66.16.42.36.72.67 1.03.31.31.61.51 1.03.67.32.12.79.26 1.66.3 1.05.05 1.37.06 4.05.06s3-.01 4.05-.06c.87-.04 1.34-.18 1.66-.3.42-.16.72-.36 1.03-.67.31-.31.51-.61.67-1.03.12-.32.26-.79.3-1.66.05-1.05.06-1.37.06-4.28s-.01-3.23-.06-4.28c-.04-.87-.18-1.34-.3-1.66a2.77 2.77 0 0 0-.67-1.03 2.77 2.77 0 0 0-1.03-.67c-.32-.12-.79-.26-1.66-.3C15 4.01 14.68 4 12 4Zm0 3.05a4.95 4.95 0 1 1 0 9.9 4.95 4.95 0 0 1 0-9.9Zm0 1.8a3.15 3.15 0 1 0 0 6.3 3.15 3.15 0 0 0 0-6.3Zm5.15-2a1.16 1.16 0 1 1-2.32 0 1.16 1.16 0 0 1 2.32 0Z"/></svg></a>
+      <a href="#" aria-label="YouTube"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.6 7.2s-.21-1.5-.87-2.16c-.83-.87-1.76-.87-2.19-.92C15.44 4 12 4 12 4h-.01s-3.44 0-6.54.12c-.43.05-1.36.05-2.19.92C2.6 5.7 2.4 7.2 2.4 7.2S2.2 8.95 2.2 10.7v1.6c0 1.75.2 3.5.2 3.5s.21 1.5.87 2.16c.83.87 1.92.84 2.4.93 1.75.17 7.33.22 7.33.22s3.45-.01 6.55-.13c.43-.05 1.36-.05 2.19-.92.66-.66.87-2.16.87-2.16s.2-1.75.2-3.5v-1.6c0-1.75-.2-3.5-.2-3.5ZM9.9 14.4V8.6l5.6 2.9-5.6 2.9Z"/></svg></a>
+      <a href="#" aria-label="Zalo"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.03 2 11c0 2.83 1.44 5.36 3.7 7.03-.15.86-.5 2.36-.95 3.34 0 0 1.98-.5 3.5-1.44.87.24 1.8.37 2.75.37 5.52 0 10-4.03 10-9s-4.48-8.3-9-8.3Z"/></svg></a>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="masthead">
+  <div class="wrap">
+    <a class="brand" href="https://webh2t.github.io/">
+      <div class="badge"><span>W2T</span></div>
+      <div class="brand-text">
+        <div class="line1">WEBH2T</div>
+        <div class="line2">Informatics Subject</div>
+      </div>
+    </a>
+    <div class="hub-title">
+      <h1 class="display">Knowledge <span>Hub</span></h1>
+      <p>Kiến thức Tin học THPT · 5 năng lực số thời đại AI</p>
+    </div>
+    <a class="home-btn" href="https://webh2t.github.io/#home">🏠 Trang chủ</a>
+  </div>
+</header>
+
+<!-- MENU -->
+<nav class="menu" aria-label="Chuyên mục kiến thức">
+  <div class="wrap">
+    <a class="home-link" href="https://webh2t.github.io/#home">HOME</a>
+    <a class="c-os" href="#os">OS</a>
+    <a class="c-cmd" href="#cmd">CMD</a>
+    <a class="c-design" href="#design">DESIGN</a>
+    <a class="c-soft" href="#soft">SOFT</a>
+    <a class="c-tips" href="#tips">TIPS</a>
+  </div>
+</nav>
+
+<main id="main" class="wrap">
+
+  <!-- LATEST KNOWLEDGE — full width slider -->
+  <section aria-label="Kiến thức mới nhất">
+    <span class="section-label">⚡ Latest Knowledge</span>
+    <div class="slider-wrap">
+      <div class="slider" id="slider">
+
+        <div class="slide active">
+          <div class="cover">
+            <svg viewBox="0 0 800 460" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7C3AED"/><stop offset="1" stop-color="#1E0B57"/></linearGradient></defs>
+              <rect width="800" height="460" fill="url(#g1)"/>
+              <circle cx="640" cy="90" r="160" fill="#ffffff" opacity=".05"/>
+              <g transform="translate(300,150)" opacity=".9">
+                <rect x="0" y="0" width="200" height="140" rx="10" fill="#ffffff" opacity=".12"/>
+                <rect x="0" y="0" width="200" height="28" rx="10" fill="#ffffff" opacity=".22"/>
+                <circle cx="16" cy="14" r="4" fill="#fff"/><circle cx="30" cy="14" r="4" fill="#fff"/><circle cx="44" cy="14" r="4" fill="#fff"/>
+                <rect x="16" y="46" width="80" height="10" rx="3" fill="#fff" opacity=".5"/>
+                <rect x="16" y="66" width="140" height="10" rx="3" fill="#fff" opacity=".35"/>
+                <rect x="16" y="86" width="110" height="10" rx="3" fill="#fff" opacity=".35"/>
+              </g>
+            </svg>
+          </div>
+          <div class="slide-text">
+            <div class="tags"><span class="tag tag-os">OS</span><span class="comp comp-data"><span class="dot"></span>Thông tin &amp; dữ liệu</span></div>
+            <h3>Hệ điều hành Windows: hành trình 38 năm từ Windows 1.0 đến Windows 11</h3>
+            <p>Vì sao Windows vẫn giữ hơn 90% thị phần máy tính cá nhân toàn cầu suốt gần bốn thập kỷ? Cùng nhìn lại từng giai đoạn phát triển.</p>
+            <div class="slide-meta">📅 31/08/2026 · ✍️ WEBH2T</div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <div class="cover">
+            <svg viewBox="0 0 800 460" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="g2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0891B2"/><stop offset="1" stop-color="#062B33"/></linearGradient></defs>
+              <rect width="800" height="460" fill="url(#g2)"/>
+              <g transform="translate(280,160)" font-family="monospace" fill="#8ff0ff" opacity=".8" font-size="20">
+                <text x="0" y="0">C:\Users\hs&gt; ipconfig</text>
+                <text x="0" y="30">C:\Users\hs&gt; dir</text>
+                <text x="0" y="60">C:\Users\hs&gt; ping webh2t.github.io_</text>
+              </g>
+            </svg>
+          </div>
+          <div class="slide-text">
+            <div class="tags"><span class="tag tag-cmd">CMD</span><span class="comp comp-solve"><span class="dot"></span>Giải quyết vấn đề</span></div>
+            <h3>10 lệnh CMD học sinh THPT nên biết để xử lý sự cố máy tính</h3>
+            <p>Không cần cài thêm phần mềm, chỉ với Command Prompt bạn đã có thể tự chẩn đoán và khắc phục nhiều lỗi mạng, ổ đĩa cơ bản.</p>
+            <div class="slide-meta">📅 28/08/2026 · ✍️ WEBH2T</div>
+          </div>
+        </div>
+
+        <div class="slide">
+          <div class="cover">
+            <svg viewBox="0 0 800 460" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+              <defs><linearGradient id="g3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F97316"/><stop offset="1" stop-color="#4A1B03"/></linearGradient></defs>
+              <rect width="800" height="460" fill="url(#g3)"/>
+              <circle cx="560" cy="120" r="70" fill="#FFD400" opacity=".8"/>
+              <rect x="240" y="150" width="230" height="150" rx="14" fill="#ffffff" opacity=".14"/>
+              <circle cx="300" cy="200" r="18" fill="#fff" opacity=".7"/>
+              <path d="M260 280 L320 220 L360 250 L420 190 L460 280 Z" fill="#fff" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="slide-text">
+            <div class="tags"><span class="tag tag-design">DESIGN</span><span class="comp comp-content"><span class="dot"></span>Sáng tạo nội dung số</span></div>
+            <h3>Nguyên tắc thiết kế poster học tập ấn tượng bằng Canva</h3>
+            <p>Bố cục, màu sắc, typography — ba yếu tố quyết định một poster học tập vừa đẹp mắt vừa truyền tải đúng thông điệp.</p>
+            <div class="slide-meta">📅 25/08/2026 · ✍️ WEBH2T</div>
+          </div>
+        </div>
+
+      </div>
+      <button class="slider-nav prev" aria-label="Bài trước" onclick="moveSlide(-1)">‹</button>
+      <button class="slider-nav next" aria-label="Bài sau" onclick="moveSlide(1)">›</button>
+      <div class="slider-dots" id="sliderDots"></div>
+    </div>
+
+    <!-- hero card + 4 latest thumbnails -->
+    <div class="latest-grid">
+      <article class="hero-card">
+        <div class="cover">
+          <svg viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="gh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7C3AED"/><stop offset="1" stop-color="#1E0B57"/></linearGradient></defs>
+            <rect width="800" height="450" fill="url(#gh)"/>
+            <g transform="translate(320,150)" opacity=".9">
+              <rect x="0" y="0" width="180" height="130" rx="10" fill="#ffffff" opacity=".14"/>
+              <rect x="0" y="0" width="180" height="26" rx="10" fill="#ffffff" opacity=".24"/>
+              <circle cx="14" cy="13" r="4" fill="#fff"/><circle cx="27" cy="13" r="4" fill="#fff"/><circle cx="40" cy="13" r="4" fill="#fff"/>
+            </g>
+          </svg>
+        </div>
+        <div class="hero-body">
+          <div class="tags"><span class="tag tag-os">OS</span><span class="comp comp-data"><span class="dot"></span>Thông tin &amp; dữ liệu</span></div>
+          <h3>Hệ điều hành Windows: Lịch sử các phiên bản và năm phát hành</h3>
+          <p>Windows đã có 38 năm hình thành và phát triển, đến nay vẫn giữ vị trí vững vàng với hơn 90% người dùng. Cùng WEBH2T điểm lại 8 giai đoạn phát triển — từ Windows 1.0 (1985) đến Windows 11 — và cuộc so găng chưa hồi kết với macOS.</p>
+          <div class="meta-row"><span>📅 31/08/2026</span><span class="sep">•</span><span>✍️ WEBH2T</span><span class="sep">•</span><span>⏱ 8 phút đọc</span></div>
+          <a class="read-more" href="windows-os.html">Đọc toàn bộ bài viết →</a>
+        </div>
+      </article>
+
+      <div class="side-list">
+        <article class="side-item">
+          <div class="cover"><svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="150" fill="#0891B2"/><text x="20" y="80" font-family="monospace" font-size="26" fill="#bdf3fb">&gt;_</text></svg></div>
+          <div>
+            <span class="tag tag-cmd">CMD</span>
+            <h4>10 lệnh CMD học sinh THPT nên biết</h4>
+            <span class="soon">Nội dung đầy đủ đang cập nhật</span>
+          </div>
+        </article>
+        <article class="side-item">
+          <div class="cover"><svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="150" fill="#F97316"/><circle cx="150" cy="45" r="24" fill="#FFD400"/></svg></div>
+          <div>
+            <span class="tag tag-design">DESIGN</span>
+            <h4>Thiết kế poster học tập bằng Canva</h4>
+            <span class="soon">Nội dung đầy đủ đang cập nhật</span>
+          </div>
+        </article>
+        <article class="side-item">
+          <div class="cover"><svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="150" fill="#2563EB"/><rect x="40" y="40" width="120" height="70" rx="6" fill="#cfe0ff"/></svg></div>
+          <div>
+            <span class="tag tag-soft">SOFT</span>
+            <h4>Làm việc nhóm hiệu quả với Google Workspace</h4>
+            <span class="soon">Nội dung đầy đủ đang cập nhật</span>
+          </div>
+        </article>
+        <article class="side-item">
+          <div class="cover"><svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg"><rect width="200" height="150" fill="#16A34A"/><path d="M100 35 L120 75 L80 75 Z" fill="#d7ffe7"/></svg></div>
+          <div>
+            <span class="tag tag-tips">TIPS</span>
+            <h4>Bảo vệ tài khoản học tập trước lừa đảo trực tuyến</h4>
+            <span class="soon">Nội dung đầy đủ đang cập nhật</span>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- KNOWLEDGE CATEGORIES -->
+  <section id="categories" aria-label="Chuyên mục kiến thức">
+    <div class="section-head">
+      <h2>Knowledge Categories</h2>
+    </div>
+    <div class="cat-grid">
+      <a class="cat-card" href="#os" style="--c:var(--os); --tint:var(--os-tint);">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></div>
+        <h4>OS</h4><p>1 bài viết</p>
+      </a>
+      <a class="cat-card" href="#cmd" style="--c:var(--cmd); --tint:var(--cmd-tint);">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 9l3 3-3 3M13 15h4"/></svg></div>
+        <h4>CMD</h4><p>1 bài viết</p>
+      </a>
+      <a class="cat-card" href="#design" style="--c:var(--design); --tint:var(--design-tint);">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18c1.5 0 2-1 2-2s-.5-1.5-.5-2 1-1 2-1h1a4 4 0 0 0 0-8h-4"/></svg></div>
+        <h4>DESIGN</h4><p>1 bài viết</p>
+      </a>
+      <a class="cat-card" href="#soft" style="--c:var(--soft); --tint:var(--soft-tint);">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="16" height="11" rx="2"/><path d="M2 19h20M9 19l1-3h4l1 3"/></svg></div>
+        <h4>SOFT</h4><p>2 bài viết</p>
+      </a>
+      <a class="cat-card" href="#tips" style="--c:var(--tips); --tint:var(--tips-tint);">
+        <div class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a5 5 0 0 0-3 9c.6.5 1 1 1 2h4c0-1 .4-1.5 1-2a5 5 0 0 0-3-9Z"/><path d="M10 19h4M11 22h2"/></svg></div>
+        <h4>TIPS</h4><p>1 bài viết</p>
+      </a>
+    </div>
+  </section>
+
+  <!-- ARTICLE LIST -->
+  <section aria-label="Danh sách bài viết">
+    <div class="section-head">
+      <h2>Danh sách bài viết</h2>
+      <span class="section-sub">Cập nhật mới nhất từ các chuyên mục</span>
+    </div>
+    <div class="list">
+
+      <article class="list-item" id="os">
+        <div class="cover">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="l1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7C3AED"/><stop offset="1" stop-color="#2b0f6b"/></linearGradient></defs>
+            <rect width="400" height="300" fill="url(#l1)"/>
+            <rect x="120" y="95" width="160" height="110" rx="8" fill="#fff" opacity=".14"/>
+            <rect x="120" y="95" width="160" height="22" rx="8" fill="#fff" opacity=".24"/>
+          </svg>
+        </div>
+        <div>
+          <div class="tags"><span class="tag tag-os">OS</span><span class="comp comp-data"><span class="dot"></span>Thông tin &amp; dữ liệu</span></div>
+          <h3><a href="windows-os.html">Hệ điều hành Windows: Lịch sử các phiên bản và năm phát hành</a></h3>
+          <p>Từ Windows 1.0 (1985) chạy trên nền MS-DOS đến Windows 11 hỗ trợ chạy ứng dụng Android — bài viết hệ thống lại 8 giai đoạn phát triển, ưu — nhược điểm, và cuộc cạnh tranh Windows với macOS.</p>
+          <div class="meta-row"><span>📅 31/08/2026</span><span class="sep">•</span><span>✍️ WEBH2T</span></div>
+          <a class="read-more" href="windows-os.html">Đọc thêm →</a>
+        </div>
+      </article>
+
+      <article class="list-item" id="cmd">
+        <div class="cover">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="l2" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#0891B2"/><stop offset="1" stop-color="#053a42"/></linearGradient></defs>
+            <rect width="400" height="300" fill="url(#l2)"/>
+            <text x="140" y="165" font-family="monospace" font-size="40" fill="#bdf3fb">&gt;_</text>
+          </svg>
+        </div>
+        <div>
+          <div class="tags"><span class="tag tag-cmd">CMD</span><span class="comp comp-solve"><span class="dot"></span>Giải quyết vấn đề</span></div>
+          <h3>10 lệnh CMD học sinh THPT nên biết để xử lý sự cố máy tính</h3>
+          <p>Từ <code>ipconfig</code>, <code>ping</code> đến <code>chkdsk</code> — những lệnh Command Prompt cơ bản giúp bạn tự kiểm tra mạng, ổ đĩa và xử lý các lỗi thường gặp mà không cần cài thêm phần mềm.</p>
+          <div class="meta-row"><span>📅 28/08/2026</span><span class="sep">•</span><span>✍️ WEBH2T</span></div>
+          <span class="soon">Nội dung đầy đủ đang được biên soạn</span>
+        </div>
+      </article>
+
+      <article class="list-item" id="design">
+        <div class="cover">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="l3" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F97316"/><stop offset="1" stop-color="#4a1b03"/></linearGradient></defs>
+            <rect width="400" height="300" fill="url(#l3)"/>
+            <circle cx="280" cy="90" r="34" fill="#FFD400" opacity=".85"/>
+            <path d="M120 220 L170 150 L210 185 L260 110" stroke="#fff" stroke-width="6" fill="none" opacity=".6"/>
+          </svg>
+        </div>
+        <div>
+          <div class="tags"><span class="tag tag-design">DESIGN</span><span class="comp comp-content"><span class="dot"></span>Sáng tạo nội dung số</span></div>
+          <h3>Nguyên tắc thiết kế poster học tập ấn tượng bằng Canva</h3>
+          <p>Bố cục, bảng màu và cách chọn phông chữ phù hợp — hướng dẫn từng bước để học sinh tự tạo một poster học tập vừa đẹp mắt vừa đúng trọng tâm nội dung.</p>
+          <div class="meta-row"><span>📅 25/08/2026</span><span class="sep">•</span><span>✍️ WEBH2T</span></div>
+          <span class="soon">Nội dung đầy đủ đang được biên soạn</span>
+        </div>
+      </article>
+
+      <article class="list-item" id="soft">
+        <div class="cover">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="l4" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2563EB"/><stop offset="1" stop-color="#0a1b4a"/></linearGradient></defs>
+            <rect width="400" height="300" fill="url(#l4)"/>
+            <rect x="90" y="110" width="90" height="65" rx="6" fill="#cfe0ff"/>
+            <rect x="210" y="110" width="90" height="65" rx="6" fill="#cfe0ff" opacity=".7"/>
+          </svg>
+        </div>
+        <div>
+          <div class="tags"><span class="tag tag-soft">SOFT</span><span class="comp comp-comm"><span class="dot"></span>Giao tiếp &amp; hợp tác</span></div>
+          <h3>Làm việc nhóm hiệu quả với Google Workspace</h3>
+          <p>Google Docs, Sheets, Slides và Meet giúp cả nhóm cùng chỉnh sửa, phân công và trao đổi theo thời gian thực — kỹ năng cần thiết cho các dự án học tập hiện nay.</p>
+          <div class="meta-row"><span>📅 22/08/2026</span><span class="sep">•</span><span>✍️ WEBH2T</span></div>
+          <span class="soon">Nội dung đầy đủ đang được biên soạn</span>
+        </div>
+      </article>
+
+      <article class="list-item" id="tips">
+        <div class="cover">
+          <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
+            <defs><linearGradient id="l5" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16A34A"/><stop offset="1" stop-color="#063b1c"/></linearGradient></defs>
+            <rect width="400" height="300" fill="url(#l5)"/>
+            <path d="M200 90 L235 160 L165 160 Z" fill="#d7ffe7"/>
+            <circle cx="200" cy="190" r="8" fill="#d7ffe7"/>
+          </svg>
+        </div>
+        <div>
+          <div class="tags"><span class="tag tag-tips">TIPS</span><span class="comp comp-safety"><span class="dot"></span>An toàn số</span></div>
+          <h3>Bảo vệ tài khoản học tập trước lừa đảo trực tuyến</h3>
+          <p>Mật khẩu mạnh, xác thực hai bước và cách nhận diện email/tin nhắn giả mạo — những thói quen đơn giản giúp học sinh an toàn hơn trên môi trường số.</p>
+          <div class="meta-row"><span>📅 20/08/2026</span><span class="sep">•</span><span>✍️ WEBH2T</span></div>
+          <span class="soon">Nội dung đầy đủ đang được biên soạn</span>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- FEATURED KNOWLEDGE -->
+  <section aria-label="Bài viết nổi bật">
+    <div class="section-head">
+      <h2>Featured Knowledge</h2>
+      <span class="section-sub">5 bài viết đại diện cho 5 năng lực số</span>
+    </div>
+    <div class="featured-grid">
+      <a class="feat-card" href="windows-os.html">
+        <div class="cover"><svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="400" fill="#7C3AED"/><rect x="90" y="140" width="120" height="90" rx="8" fill="#fff" opacity=".18"/></svg></div>
+        <div class="feat-num">01</div>
+        <div class="feat-text"><span class="tag tag-os">OS</span><h4>Lịch sử các phiên bản Windows</h4></div>
+      </a>
+      <a class="feat-card" href="#cmd">
+        <div class="cover"><svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="400" fill="#0891B2"/><text x="90" y="220" font-family="monospace" font-size="34" fill="#bdf3fb">&gt;_</text></svg></div>
+        <div class="feat-num">02</div>
+        <div class="feat-text"><span class="tag tag-cmd">CMD</span><h4>10 lệnh CMD cần biết</h4></div>
+      </a>
+      <a class="feat-card" href="#design">
+        <div class="cover"><svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="400" fill="#F97316"/><circle cx="210" cy="120" r="30" fill="#FFD400"/></svg></div>
+        <div class="feat-num">03</div>
+        <div class="feat-text"><span class="tag tag-design">DESIGN</span><h4>Thiết kế poster bằng Canva</h4></div>
+      </a>
+      <a class="feat-card" href="#soft">
+        <div class="cover"><svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="400" fill="#2563EB"/><rect x="80" y="150" width="140" height="90" rx="8" fill="#cfe0ff"/></svg></div>
+        <div class="feat-num">04</div>
+        <div class="feat-text"><span class="tag tag-soft">SOFT</span><h4>Hợp tác với Google Workspace</h4></div>
+      </a>
+      <a class="feat-card" href="#tips">
+        <div class="cover"><svg viewBox="0 0 300 400" xmlns="http://www.w3.org/2000/svg"><rect width="300" height="400" fill="#16A34A"/><path d="M150 130 L185 200 L115 200 Z" fill="#d7ffe7"/></svg></div>
+        <div class="feat-num">05</div>
+        <div class="feat-text"><span class="tag tag-tips">TIPS</span><h4>Bảo vệ tài khoản học tập</h4></div>
+      </a>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer>
+  <div class="wrap footer-top">
+    <div>
+      <h5>WEBH2T</h5>
+      <p>Không gian học tập Tin học THPT: bài giảng theo khối, kiến thức năng lực số, thời khóa biểu và các bài viết mới. Knowledge Hub là nơi tổng hợp kiến thức thực hành theo 5 năng lực số.</p>
+    </div>
+    <div>
+      <h5>Chuyên mục</h5>
+      <ul>
+        <li><a href="#os">OS — Hệ điều hành</a></li>
+        <li><a href="#cmd">CMD — Dòng lệnh</a></li>
+        <li><a href="#design">DESIGN — Thiết kế</a></li>
+        <li><a href="#soft">SOFT — Phần mềm</a></li>
+        <li><a href="#tips">TIPS — Mẹo vặt</a></li>
+      </ul>
+    </div>
+    <div>
+      <h5>Liên hệ</h5>
+      <ul>
+        <li><a href="mailto:websiteh2t@gmail.com">✉ websiteh2t@gmail.com</a></li>
+        <li><a href="https://webh2t.github.io/">🌐 webh2t.github.io</a></li>
+        <li><a href="https://webh2t.github.io/#contact">☕ Ủng hộ WEBH2T</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="wrap footer-bottom">
+    <span>© 2026 WEBH2T · Tin học THPT</span>
+    <span>Liên hệ: websiteh2t@gmail.com</span>
+  </div>
+</footer>
+
+<script>
+  // Live clock — Vietnamese weekday/date/time
+  const weekdays = ['Chủ nhật','Thứ 2','Thứ 3','Thứ 4','Thứ 5','Thứ 6','Thứ 7'];
+  function pad(n){return n.toString().padStart(2,'0');}
+  function updateClock(){
+    const now = new Date();
+    const text = `${weekdays[now.getDay()]}, ngày ${pad(now.getDate())}/${pad(now.getMonth()+1)}/${now.getFullYear()} – ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const el = document.getElementById('clockText');
+    if(el) el.textContent = text;
+  }
+  updateClock();
+  setInterval(updateClock, 1000);
+
+  // Slider
+  const slides = document.querySelectorAll('.slide');
+  const dotsWrap = document.getElementById('sliderDots');
+  let current = 0, timer;
+  slides.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', 'Đến slide ' + (i+1));
+    if(i===0) b.classList.add('active');
+    b.addEventListener('click', () => goToSlide(i));
+    dotsWrap.appendChild(b);
+  });
+  function render(){
+    slides.forEach((s,i)=> s.classList.toggle('active', i===current));
+    dotsWrap.querySelectorAll('button').forEach((b,i)=> b.classList.toggle('active', i===current));
+  }
+  function goToSlide(i){ current = i; render(); restart(); }
+  function moveSlide(dir){ current = (current + dir + slides.length) % slides.length; render(); restart(); }
+  function restart(){
+    clearInterval(timer);
+    timer = setInterval(()=> moveSlide(1), 6000);
+  }
+  restart();
+
+  // Simple client-side search: filters article list + hero + side items by title text
+  const searchInput = document.getElementById('searchInput');
+  searchInput.addEventListener('input', () => {
+    const q = searchInput.value.trim().toLowerCase();
+    document.querySelectorAll('.list-item').forEach(item => {
+      const title = item.querySelector('h3').textContent.toLowerCase();
+      item.style.display = (!q || title.includes(q)) ? '' : 'none';
+    });
+  });
+</script>
+</body>
+</html>
