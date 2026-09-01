@@ -254,6 +254,22 @@
     box-shadow:0 10px 24px rgba(0,0,0,.3); z-index:300; opacity:0; visibility:hidden; transition:.25s;}
   #cheat-warning.show{ opacity:1; visibility:visible; transform:translateX(-50%) translateY(0);}
 
+  /* ---------- SUBMIT (nộp bài online) ---------- */
+  .submit-card{ background:var(--paper-card); border:1px solid var(--line); border-radius:var(--radius); padding:24px;}
+  .submit-card .field{ margin-bottom:14px;}
+  .submit-card select, .submit-card textarea, .submit-card input[type=text]{
+    width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px;
+    font-family:inherit; font-size:.9rem;}
+  .submit-card textarea{ min-height:90px; resize:vertical;}
+  .submit-history{ margin-top:24px;}
+  .submit-history h4{ font-size:.85rem; font-weight:700; color:var(--brilliant-blue);
+    text-transform:uppercase; letter-spacing:.05em; margin-bottom:12px;}
+  .submit-item{ background:var(--paper); border-radius:10px; padding:12px 16px; margin-bottom:8px; font-size:.86rem;}
+  .submit-item .si-top{ display:flex; justify-content:space-between; gap:10px; flex-wrap:wrap;}
+  .submit-item .si-bai{ font-weight:700; color:var(--ink);}
+  .submit-item .si-date{ color:#9AA6B8; font-size:.76rem;}
+  .submit-item .si-content{ color:#5B6B82; margin-top:4px; word-break:break-word;}
+
   @media (max-width:760px){
     .profile-grid{ grid-template-columns:1fr;}
     .menu-toggle{ display:block; margin:0 auto;}
@@ -275,11 +291,11 @@
     <button class="menu-toggle" onclick="document.getElementById('mega-menu').classList.toggle('open')" aria-label="Mở menu">☰</button>
     <div class="menu-row">
       <a class="m-home" href="#top"><span class="ic">🏠</span> HOME</a>
-      <a class="m-de10" href="#bank-10"><span class="ic">📝</span> GRADE 10</a>
-      <a class="m-de11" href="#bank-11"><span class="ic">📝</span> GRADE 11</a>
-      <a class="m-de12" href="#bank-12"><span class="ic">📝</span> GRADE 12</a>
-      <a class="m-tn" href="#bank-tn"><span class="ic">🎓</span> GRADUATION EXAM</a>
-      <a class="m-bank" href="#question-bank"><span class="ic">📚</span> QUESTION BANK</a>
+      <a class="m-de10" href="#bank-10" onclick="showBank(10); return false;"><span class="ic">📝</span> GRADE 10</a>
+      <a class="m-de11" href="#bank-11" onclick="showBank(11); return false;"><span class="ic">📝</span> GRADE 11</a>
+      <a class="m-de12" href="#bank-12" onclick="showBank(12); return false;"><span class="ic">📝</span> GRADE 12</a>
+      <a class="m-tn" href="#bank-tn" onclick="showBank('tn'); return false;"><span class="ic">🎓</span> GRADUATION EXAM</a>
+      <a class="m-bank" href="#question-bank" onclick="showBank('bank'); return false;"><span class="ic">📚</span> QUESTION BANK</a>
     </div>
     <div class="menu-row">
       <a class="m-nop10" href="#submit-10"><span class="ic">📤</span> SUBMIT 10</a>
@@ -377,12 +393,12 @@
 
   <section class="block" id="question-bank">
     <h2 class="block-title">📕 Ngân hàng đề tổng hợp</h2>
-    <p style="color:#7C8AA0; font-size:.9rem;">Chưa có đề tổng hợp — sẽ cập nhật khi có đề mẫu.</p>
+    <div id="question-bank-list"><p style="color:#7C8AA0; font-size:.9rem;">Đang tải danh sách đề…</p></div>
   </section>
 
-  <section class="block" id="submit-10"></section>
-  <section class="block" id="submit-11"></section>
-  <section class="block" id="submit-12"></section>
+  <section class="block" id="submit-10"><div id="submit-content-10"></div></section>
+  <section class="block" id="submit-11"><div id="submit-content-11"></div></section>
+  <section class="block" id="submit-12"><div id="submit-content-12"></div></section>
 
   <!-- ============ EXAM INTRO (trước khi tính giờ) ============ -->
   <section class="block exam-intro" id="exam-intro">
@@ -537,6 +553,38 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="pro-modal">
+  <div class="modal-box" style="max-width:460px;">
+    <button class="modal-close" onclick="closeModal('pro-modal')">✕</button>
+    <h3>⭐ Nâng cấp tài khoản PRO</h3>
+    <p style="font-size:.88rem; color:#5B6B82; margin-bottom:14px;">
+      Tài khoản thường chỉ xem được <strong>Bài 1</strong> của mỗi môn. Nâng cấp PRO
+      cho môn <strong id="pro-grade-label">Tin học 10</strong> để mở khoá
+      <strong id="pro-grade-count">toàn bộ đề thi</strong> trong môn này.
+    </p>
+    <div style="text-align:center; background:var(--paper); border-radius:12px; padding:18px; margin-bottom:14px;">
+      <div style="font-family:'Space Grotesk',monospace; font-size:1.6rem; font-weight:800; color:var(--brilliant-blue);">50.000đ</div>
+      <div style="font-size:.78rem; color:#7C8AA0; margin-bottom:12px;">/ môn học (thanh toán 1 lần)</div>
+      <img src="assets/qrdonate.jpg" alt="QR chuyển khoản" style="width:180px; height:180px; object-fit:contain; border-radius:10px; border:1px solid var(--line); background:#fff;">
+    </div>
+    <ol style="font-size:.84rem; color:#3D4C63; padding-left:20px; margin-bottom:14px;">
+      <li>Quét mã QR trên và chuyển khoản đúng số tiền.</li>
+      <li>Chụp lại màn hình xác nhận giao dịch thành công.</li>
+      <li>Gửi ảnh đó qua Telegram theo link bên dưới, kèm <strong>Họ tên + Lớp</strong>.</li>
+      <li>Giáo viên xác nhận và mở khoá tài khoản trong vòng 24 giờ.</li>
+    </ol>
+    <a id="pro-telegram-link" href="https://t.me/YOUR_TELEGRAM_USERNAME" target="_blank" rel="noopener"
+       class="btn btn-primary" style="display:block; text-align:center; text-decoration:none; margin-bottom:10px;">
+      📩 Gửi ảnh chuyển khoản qua Telegram
+    </a>
+    <button class="modal-submit" onclick="requestPro()">✅ Tôi đã chuyển khoản — Gửi yêu cầu xác nhận</button>
+    <div class="form-msg" id="pro-msg"></div>
+    <div style="font-size:.72rem; color:#9AA6B8; margin-top:12px; text-align:center;">
+      * Việc mở khoá được giáo viên xác nhận thủ công sau khi nhận được ảnh chuyển khoản, không phải tự động ngay lập tức.
+    </div>
+  </div>
+</div>
+
 <footer>© 2026 WEBH2T · Tin học THPT · Liên hệ: websiteh2t@gmail.com</footer>
 
 <!-- Firebase (dùng chung 1 dự án với tin10/11/12.html) -->
@@ -561,6 +609,9 @@ firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 let currentUser = null;
+let currentUserPro = {};      // { 10: true/false, 11: ..., 12: ... }
+let examAttemptCounts = {};   // { examKey: tổng số lượt của tất cả thí sinh }
+let myAttemptCounts = {};     // { examKey: số lượt của riêng người đang đăng nhập }
 
 function escapeHTML(str){ const d=document.createElement('div'); d.textContent=str; return d.innerHTML; }
 
@@ -683,19 +734,26 @@ auth.onAuthStateChanged(user => {
       return doc;
     }).then(doc => {
       const data = doc.data() || {};
+      currentUserPro = data.pro || {};
+      const proBadges = [10,11,12].filter(g => currentUserPro[g]).map(g => `<span class="badge-chip" style="background:var(--brilliant-blue); color:#fff;">⭐ PRO Tin ${g}</span>`).join('');
       document.getElementById('user-class').textContent = data.class ? `Lớp ${data.class}` : (user.email || '—');
       document.getElementById('profile-basic').innerHTML = `
         <div class="stat-mini"><span>Họ tên</span><b>${escapeHTML(user.displayName || data.name || '—')}</b></div>
         <div class="stat-mini"><span>Email</span><b>${escapeHTML(user.email || '—')}</b></div>
         <div class="stat-mini"><span>Lớp</span><b>${escapeHTML(data.class || 'Chưa cập nhật')}</b></div>
-        <div class="stat-mini"><span>Tỉnh/TP</span><b>${escapeHTML(data.province || 'Chưa cập nhật')}</b></div>`;
+        <div class="stat-mini"><span>Tỉnh/TP</span><b>${escapeHTML(data.province || 'Chưa cập nhật')}</b></div>
+        <div style="margin-top:10px;">${proBadges || '<span class="badge-chip">Tài khoản thường</span>'}</div>`;
+      [10,11,12].forEach(renderExamBank); // vẽ lại để mở khoá đúng đề nếu đã là PRO
     });
     loadProfileStats(user.uid);
   } else {
     out.style.display = 'flex'; inn.style.display = 'none'; profileSection.style.display = 'none';
+    currentUserPro = {};
+    [10,11,12].forEach(renderExamBank);
   }
   renderLeaderboard();
   if (typeof loadAttemptCounts === 'function') loadAttemptCounts();
+  if (typeof refreshSubmitAccess === 'function') refreshSubmitAccess();
 });
 
 /* ============================================================
@@ -780,53 +838,126 @@ const CURRICULUM = {
    ============================================================ */
 const EXAMS = {
   "10-1": {
-    title: "Đề kiểm tra Bài 1 — Thông tin và xử lí thông tin",
-    grade: 10, duration: 10, ngayDang: "25/08/2026",
+    title: "Đề kiểm tra Bài 1 — Máy tính và xã hội tri thức",
+    grade: 10, duration: 20, ngayDang: "25/08/2026", point1: 0.5, point2: 0.25,
     part1: [
-      {tag:"Khái niệm", text:"Thông tin là gì?", options:["Dữ liệu thô chưa qua xử lí","Những gì đem lại hiểu biết cho con người","Chỉ là các con số","Chỉ tồn tại trong máy tính"], correct:1},
-      {tag:"Khái niệm", text:"Dữ liệu trong máy tính được biểu diễn dưới dạng nào?", options:["Chữ viết tay","Âm thanh","Dãy bit nhị phân (0 và 1)","Hình ảnh màu"], correct:2},
-      {tag:"Xử lí TT", text:"Quá trình xử lí thông tin gồm mấy bước cơ bản?", options:["2","3","4","5"], correct:2},
-      {tag:"Xử lí TT", text:"Bước nào KHÔNG thuộc quá trình xử lí thông tin?", options:["Thu thập","Lưu trữ","In ấn màu","Truyền tải"], correct:2}
+      {tag:"Máy tính & xã hội tri thức", text:"Theo tài liệu, định nghĩa nào về Byte là đúng?", options:["Là một kí tự.", "Là đơn vị đo tốc độ của máy tính.", "Là một dãy 8 chữ số.", "Là đơn vị dữ liệu 8 bit"], correct:3},
+      {tag:"Máy tính & xã hội tri thức", text:"Thiết bị nào sau đây là thiết bị số?", options:["Xe đạp điện.", "Đồng hồ cơ.", "Đĩa hát (đĩa than).", "Máy tính xách tay."], correct:3},
+      {tag:"Máy tính & xã hội tri thức", text:"Theo bảng đơn vị đo lường dữ liệu, 1 Megabyte (MB) bằng bao nhiêu Kilobyte (KB)?", options:["1000 KB", "1024 KB", "2 KB", "8 KB"], correct:1},
+      {tag:"Máy tính & xã hội tri thức", text:"Một thẻ nhớ có dung lượng 16 GB. Nếu kích thước trung bình của một bức ảnh là khoảng 10.000 KB, thẻ nhớ này có thể chứa được khoảng bao nhiêu ảnh?", options:["Khoảng 16 ảnh.", "Khoảng 16.000 ảnh.", "Khoảng 160 ảnh.", "Khoảng 1.600 ảnh"], correct:3},
+      {tag:"Máy tính & xã hội tri thức", text:"Quá trình xử lí thông tin của máy tính gồm những bước nào?", options:["Tìm kiếm dữ liệu, Phân tích dữ liệu, Báo cáo kết quả.", "Nhận thông tin, Lưu trữ thông tin, Gửi thông tin.", "Nhập dữ liệu, Lưu dữ liệu, In dữ liệu.", "Tiếp nhận dữ liệu, Xử lí dữ liệu, Đưa ra kết quả"], correct:3},
+      {tag:"Máy tính & xã hội tri thức", text:"Tại sao việc xử lí của máy tính lại vượt trội hơn tính toán thủ công của con người đối với các bài toán lớn như dự báo thời tiết?", options:["Vì máy tính là thiết bị hoạt động mà không cần sử dụng năng lượng điện.", "Vì máy tính có khả năng suy luận sáng tạo khi đưa ra các dự báo thời tiết.", "Vì máy tính tính toán cực nhanh, chính xác và có thể làm việc liên tục.", "Vì máy tính được thiết kế với kích thước vật lí nhỏ gọn hơn con"], correct:2},
+      {tag:"Máy tính & xã hội tri thức", text:"Một thư viện có khoảng 2000 cuốn sách. Nếu số hoá một cuốn sách cần khoảng 50 MB dữ liệu, cần khoảng bao nhiêu Gigabyte (GB) để lưu trữ toàn bộ thư viện này?", options:["1000 GB", "100 GB", "10 GB", "1 GB"], correct:1},
+      {tag:"Máy tính & xã hội tri thức", text:"Tại sao cùng một dữ liệu \"39°C\" lại có thể mang những thông tin khác nhau?", options:["Vì thang đo nhiệt độ Celsius tồn tại sai số không đáng kể.", "Vì mỗi máy tính sẽ xử lí cùng một dữ liệu theo cách khác nhau.", "Vì ý nghĩa của dữ liệu còn tùy thuộc vào ngữ cảnh sử dụng nó.", "Vì dữ liệu dạng số nguyên tố luôn mang nhiều ý nghĩa khác biệt"], correct:2},
+      {tag:"Máy tính & xã hội tri thức", text:"Ưu điểm chính của việc lưu trữ thông tin bằng thiết bị số so với các phương pháp truyền thống (ví dụ: sách trong thư viện) là gì?", options:["Thông tin trên thiết bị số không bao giờ có thể bị mất.", "Phương pháp truyền thống giúp truy cập thông tin nhanh hơn.", "Chi phí cho các thiết bị số để lưu trữ luôn rẻ hơn.", "Lưu trữ khối lượng thông tin lớn trong không gian nhỏ gọn."], correct:3},
+      {tag:"Máy tính & xã hội tri thức", text:"Trong tin học, dữ liệu là gì?", options:["Là ý nghĩa rút ra được sau quá trình xử lí thông tin.", "Là các sự thật thô, đối tượng chưa được gán ngữ cảnh.", "Là đầu vào (số, văn bản, hình ảnh,…) cho máy tính xử lí.", "Là một tập hợp chỉ bao gồm các con số và các văn bản."], correct:2},
+      {tag:"Máy tính & xã hội tri thức", text:"Bạn của bạn gửi một tin nhắn chỉ có con số \"18\". Để hiểu được \"thông tin\" từ con số đó, bạn cần thêm yếu tố nào?", options:["Hình thức thể hiện của con số đó.", "Bối cảnh cụ thể của cuộc trò chuyện.", "Thời điểm chính xác tin nhắn được gửi.", "Loại thiết bị dùng để gửi tin nhắn."], correct:1},
+      {tag:"Máy tính & xã hội tri thức", text:"Phát biểu nào mô tả đúng nhất mối quan hệ giữa dữ liệu và thông tin?", options:["Dữ liệu luôn được mặc định là đúng, còn thông tin có thể sai.", "Thông tin là đầu vào, còn dữ liệu là kết quả đầu ra của máy tính.", "Dữ liệu và thông tin là hai khái niệm hoàn toàn đồng nhất.", "Thông tin là ý nghĩa còn dữ liệu là hình thức thể hiện của nó."], correct:3}
     ],
     part2: [
-      {tag:"Khái niệm", text:"Nhận định nào sau đây đúng hay sai về thông tin và dữ liệu?", items:[
-        {label:"a) Dữ liệu là hình thức thể hiện của thông tin trong máy tính.", correct:true},
-        {label:"b) Thông tin và dữ liệu là một khái niệm hoàn toàn giống nhau.", correct:false},
-        {label:"c) Máy tính lưu trữ dữ liệu dưới dạng dãy bit.", correct:true},
-        {label:"d) Một byte gồm 4 bit.", correct:false}
-      ]},
-      {tag:"Xử lí TT", text:"Nhận định nào sau đây đúng hay sai về xử lí thông tin?", items:[
-        {label:"a) Thu thập là bước đầu tiên trong xử lí thông tin.", correct:true},
-        {label:"b) Truyền tải là bước cuối trong xử lí thông tin.", correct:true},
-        {label:"c) Xử lí thông tin chỉ diễn ra trên máy tính.", correct:false},
-        {label:"d) Lưu trữ giúp dữ liệu được sử dụng lại về sau.", correct:true}
-      ]}
+      {tag:"Máy tính & xã hội tri thức", text:"Điện thoại thông minh là một thiết bị số mạnh mẽ xử lí thông tin dưới nhiều dạng khác nhau. Khi bạn chụp ảnh, cảm biến máy ảnh thu nhận ánh sáng (tiếp nhận), bộ xử lí của điện thoại chuyển nó thành tệp JPG (xử lí), và hình ảnh xuất hiện trên màn hình của bạn (kết quả). Hành động đơn giản này bao gồm toàn bộ chu trình xử lí thông tin.", items:[{label:"Thông tin biểu diễn hình ảnh được lưu trữ dưới dạng một dãy các bit (gồm các kí hiệu 0 và 1) trong bộ nhớ của điện thoại.", correct:true}, {label:"Tệp JPG cuối cùng được lưu trên thẻ nhớ là một dạng dữ liệu.", correct:true}, {label:"Việc bạn có thể gửi bức ảnh này cho một người bạn ở khắp nơi trên thế giới chỉ trong vài giây thể hiện ưu điểm về tốc độ truyền thông tin của thiết bị số.", correct:true}, {label:"Dữ liệu là con số \"2048\" có thể biểu thị số Kilobyte trong 2 Megabyte, hoặc cũng có thể là năm một bức ảnh được chụp. Điều này cho thấy dữ liệu cần có ngữ cảnh để trở thành thông tin có ý nghĩa.", correct:true}]},
+      {tag:"Máy tính & xã hội tri thức", text:"Một kế toán viên nhận được một tệp bảng tính chứa số liệu bán hàng của công ty trong năm qua. Bản thân tệp này là dữ liệu. Công việc của kế toán viên là phân tích dữ liệu này để cung cấp các thông tin chi tiết cho ban lãnh đạo công ty về hiệu quả kinh doanh của họ.", items:[{label:"Trong tình huống này, tệp bảng tính được coi là dữ liệu vì nó đã được đưa vào máy tính để xử lí.", correct:true}, {label:"Một ô trong bảng tính chứa \"39°C\" sẽ không rõ ràng về ý nghĩa nếu không có ngữ cảnh của toàn bộ bộ dữ liệu.", correct:true}, {label:"Nhận định \"Doanh số trong quý IV tăng 20%\" là thông tin mà kế toán viên rút ra được bằng cách xử lí các dữ liệu bán hàng thô.", correct:true}, {label:"Tốc độ truyền dữ liệu khi kế toán viên gửi báo cáo qua email được đo bằng Byte trên giây (B/s).", correct:false}]},
+      {tag:"Máy tính & xã hội tri thức", text:"Một sinh viên đang chuẩn bị bài thuyết trình về biến đổi khí hậu. Sinh viên này thu thập dữ liệu từ nhiều nguồn: bản ghi nhiệt độ từ một trạm thời tiết (tệp văn bản), ảnh vệ tinh về các tảng băng tan (tệp hình ảnh), và một video tài liệu về nước biển dâng (tệp video). Họ dùng máy tính để xử lí các dữ liệu này và tạo ra một báo cáo cuối cùng.", items:[{label:"Các tệp hình ảnh vệ tinh và video tài liệu được xem là dữ liệu có thể đưa vào máy tính.", correct:true}, {label:"Quá trình máy tính kết hợp văn bản, hình ảnh và video để tạo ra báo cáo được gọi là \"xử lí dữ liệu\".", correct:true}, {label:"Kết luận \"Trái Đất đang nóng lên\" chính là thông tin được rút ra sau khi xử lí các bộ dữ liệu khác nhau (nhiệt độ, băng tan, nước biển dâng).", correct:true}, {label:"Nếu ổ cứng của sinh viên còn trống 2 GB, họ có thể lưu trữ một tệp video có dung lượng 2500 MB.", correct:false}]},
+      {tag:"Máy tính & xã hội tri thức", text:"Bạn quyết định số hoá các album ảnh cũ của gia đình để bảo quản chúng và chia sẻ dễ dàng với người thân. Bạn dùng máy quét để chuyển đổi các bức ảnh vật lí thành tệp hình ảnh và lưu trữ chúng trên một ổ cứng ngoài. Quá trình này thể hiện rõ các ưu điểm của việc sử dụng thiết bị số để quản lí thông tin.", items:[{label:"Máy quét là một thiết bị hỗ trợ cho bước \"Tiếp nhận dữ liệu\" trong quá trình xử lí thông tin.", correct:true}, {label:"Ổ cứng ngoài là một vật mang tin, một phương tiện lưu trữ dữ liệu số.", correct:true}, {label:"Lợi ích chính của phương pháp số hoá này là một số lượng lớn ảnh có thể được lưu trữ gọn nhẹ và chia sẻ tức thì qua Internet, vượt trội so với việc mang album vật lí.", correct:true}, {label:"Nếu mỗi tệp ảnh có dung lượng 5 MB, bạn có thể lưu trữ được đúng 200 ảnh trên một thẻ nhớ 1 GB.", correct:false}]}
+    ]
+  },
+  "10-2": {
+    title: "Đề kiểm tra Bài 2 — Vai trò của thiết bị thông minh và tin học đối với xã hội",
+    grade: 10, duration: 20, ngayDang: "31/08/2026", point1: 0.5, point2: 0.25,
+    part1: [
+      {tag:"Thiết bị thông minh", text:"Đâu là một công nghệ nền tảng của cuộc Cách mạng công nghiệp 4.0 được nhắc đến trong bài?", options:["Internet vạn vật (IoT).", "Sản xuất dây chuyền.", "Máy tính cầm tay.", "Động cơ hơi nước."], correct:0},
+      {tag:"Thiết bị thông minh", text:"Đặc điểm cốt lõi nào giúp phân biệt một chiếc \"smart watch\" với một chiếc đồng hồ điện tử thông thường?", options:["Có màn hình trang bị đèn nền để xem giờ vào ban đêm.", "Có chức năng hiển thị lịch và cài đặt báo thức hằng ngày.", "Có khả năng kết nối không dây để trao đổi dữ liệu.", "Có tính năng bấm giờ thể thao với độ chính xác cao."], correct:2},
+      {tag:"Thiết bị thông minh", text:"Tin học đã góp phần thay đổi công tác quản lý trong các tổ chức, doanh nghiệp như thế nào?", options:["Chỉ thay đổi phương thức lưu trữ hồ sơ, tài liệu truyền thống.", "Giúp xử lý công việc nhanh chóng, hiệu quả và tiết kiệm chi phí.", "Yêu cầu nguồn nhân lực có chuyên môn cao hơn để vận hành.", "Làm cho các quy trình vận hành trở nên phức tạp, rườm rà hơn."], correct:1},
+      {tag:"Thiết bị thông minh", text:"Theo bài học, giao thức nào cho phép kết nối mạng máy tính toàn cầu, hình thành nên Internet?", options:["WWW", "HTTP/FTP", "Bluetooth", "TCP/IP"], correct:3},
+      {tag:"Thiết bị thông minh", text:"Ngôn ngữ lập trình bậc cao đầu tiên được công bố chính thức vào năm 1957 có tên là gì?", options:["Pascal", "FORTRAN", "Python", "C"], correct:1},
+      {tag:"Thiết bị thông minh", text:"Lợi ích chính của việc sử dụng các ngôn ngữ lập trình bậc cao so với ngôn ngữ máy là gì?", options:["Là loại ngôn ngữ lập trình duy nhất có thể viết được các phần mềm game.", "Giúp chương trình khi chạy sử dụng ít tài nguyên bộ nhớ của máy tính hơn.", "Giúp chương trình được thực thi nhanh hơn so với viết bằng ngôn ngữ máy.", "Giúp lập trình viên tập trung vào thuật toán, không cần biết chi"], correct:3},
+      {tag:"Thiết bị thông minh", text:"Tại sao thiết bị thông minh được coi là \"thành phần chủ chốt\" của Cách mạng công nghiệp 4.0?", options:["Vì chúng là sản phẩm công nghệ hiện đại và có giá thành rất cao.", "Vì chúng là thành phần cốt lõi của các hệ thống Internet vạn vật (IoT).", "Vì chúng là những thiết bị điện tử tiêu thụ nhiều năng lượng điện.", "Vì chúng là phát minh công nghệ quan trọng và mới nhất của loài"], correct:1},
+      {tag:"Thiết bị thông minh", text:"Thiết bị nào sau đây KHÔNG phải là thiết bị thông minh theo giải thích trong bài?", options:["Camera kết nối Internet.", "Điện thoại di động thông minh.", "Máy tính cầm tay.", "Đồng hồ kết nối bluetooth."], correct:2},
+      {tag:"Thiết bị thông minh", text:"Một nhiếp ảnh gia sử dụng máy ảnh kỹ thuật số, sau đó dùng máy tính để chỉnh sửa ảnh bằng phần mềm chuyên dụng và cuối cùng là đăng tải lên mạng xã hội. Quá trình này thể hiện rõ nhất đóng góp nào của tin học?", options:["Giải quyết bài toán khoa học kỹ thuật.", "Giao tiếp cộng đồng bằng thư điện tử.", "Thay đổi cách thức làm việc của ngành nghề.", "Tự động hoá trong sản xuất."], correct:2},
+      {tag:"Thiết bị thông minh", text:"Một chiếc ô tô hiện đại có khả năng tự phanh khi phát hiện vật cản, tự động giữ khoảng cách với xe phía trước và kết nối internet để cập nhật bản đồ. Chiếc ô tô này được coi là một thiết bị thông minh vì:", options:["Nó có đầy đủ các bộ phận cơ bản như bánh xe và động cơ.", "Nó đáp ứng tốt nhu cầu di chuyển cơ bản của con người.", "Nó có phần mềm điều khiển, khả năng tự chủ và kết nối mạng.", "Nó là một thiết bị cơ khí phức tạp làm từ kim loại, kính."], correct:2},
+      {tag:"Thiết bị thông minh", text:"Một hệ thống nhà kính thông minh sử dụng các cảm biến để đo nhiệt độ, độ ẩm và ánh sáng. Dữ liệu này được gửi đến một máy tính trung tâm, sau đó máy tính sẽ tự động điều khiển hệ thống tưới tiêu, mái che và quạt gió. Đây là một ví dụ ứng dụng của công nghệ nào?", options:["Chế bản điện tử.", "Hệ điều hành MS-DOS.", "Ngôn ngữ lập trình FORTRAN.", "Internet vạn vật (IoT)."], correct:3},
+      {tag:"Thiết bị thông minh", text:"Theo định nghĩa trong bài, thiết bị thông minh là gì?", options:["Là thiết bị có màn hình cảm ứng và cài được nhiều ứng dụng.", "Là thiết bị điện tử có thể hoạt động tự chủ và trao đổi dữ liệu.", "Là mọi thiết bị điện tử được sản xuất sau năm 2010.", "Là thiết bị có sử dụng trí tuệ nhân tạo để trò chuyện với con người."], correct:1}
+    ],
+    part2: [
+      {tag:"Thiết bị thông minh", text:"Trong một lớp học hiện đại, giáo viên sử dụng máy tính để soạn bài giảng điện tử và trình chiếu. Học sinh sử dụng máy tính bảng để truy cập Internet, tìm kiếm tài liệu học tập và làm bài tập trực tuyế", items:[{label:"Hoạt động dạy và học này là ví dụ về việc tin học thay đổi cách thức làm việc của nhiều ngành nghề.", correct:true}, {label:"Các hệ điều hành phổ biến trên máy tính bảng của học sinh là Android và iOS.", correct:true}, {label:"Việc học sinh có thể dễ dàng tìm kiếm thông tin trên Internet là nhờ vào sự phát triển của World Wide Web và các công cụ tìm kiếm.", correct:true}, {label:"Để xây dựng hệ thống quản lý học tập phức tạp này, các lập trình viên bắt buộc phải viết chương trình bằng hợp ngữ để máy tính có thể hiểu được.", correct:false}]},
+      {tag:"Thiết bị thông minh", text:"Một công ty thương mại điện tử lớn sử dụng hệ thống máy tính để quản lý hàng triệu giao dịch mỗi ngày. Hệ thống này phân tích dữ liệu mua sắm của khách hàng để gợi ý các sản phẩm phù hợp, qua đó giúp", items:[{label:"Việc gợi ý sản phẩm cho khách hàng dựa trên phân tích dữ liệu là một ứng dụng của trí tuệ nhân tạo.", correct:true}, {label:"Hệ thống quản lý hàng triệu giao dịch và thông tin khách hàng này cần đến các hệ quản trị cơ sở dữ liệu.", correct:true}, {label:"Việc công ty sử dụng các nền tảng trực tuyến và mạng xã hội để quảng bá sản phẩm thể hiện sự thay đổi trong thói quen giao tiếp cộng đồng nhờ tin học.", correct:true}, {label:"Công ty này có thể xây dựng toàn bộ hệ thống thương mại điện tử của mình mà không cần đến mạng Internet.", correct:false}]},
+      {tag:"Thiết bị thông minh", text:"Một gia đình lắp đặt hệ thống nhà thông minh bao gồm đèn, điều hòa và camera an ninh. Tất cả các thiết bị này đều được kết nối vào mạng Internet và người dùng có thể điều khiển chúng từ xa thông qua m", items:[{label:"Chiếc điện thoại thông minh được dùng để điều khiển hệ thống là một ví dụ về thiết bị thông minh.", correct:true}, {label:"Việc kết nối các thiết bị này với nhau qua Internet để chúng có thể trao đổi dữ liệu được gọi là Internet vạn vật (IoT).", correct:true}, {label:"Lợi ích chính của hệ thống này là khả năng hoạt động tự chủ và cho phép con người điều khiển từ xa, thể hiện vai trò của thiết bị thông minh trong đời sống.", correct:true}, {label:"Một chiếc cân điện tử thông thường (chỉ hiện cân nặng, không kết nối mạng) đặt trong nhà cũng được coi là một phần của hệ thống nhà thông minh này.", correct:false}]},
+      {tag:"Thiết bị thông minh", text:"Một nhà máy sản xuất ô tô đã tự động hóa hoàn toàn dây chuyền lắp ráp của mình bằng robot. Các robot này hoạt động theo chương trình được lập trình sẵn, có độ chính xác cao và có thể làm việc trong mô", items:[{label:"Robot trong ví dụ này là một thành công điển hình của lĩnh vực tự động hoá nhờ tin học.", correct:true}, {label:"Các hệ quản trị cơ sở dữ liệu được dùng để lưu trữ và quản lý các chương trình hoạt động của robot.", correct:false}, {label:"Việc sử dụng robot cho thấy tin học giúp giải quyết các công việc đòi hỏi độ chính xác cao và có thể thay thế con người trong môi trường nguy hiểm.", correct:true}, {label:"Để hoạt động, mỗi robot này phải được cài đặt một hệ điều hành riêng biệt như Windows hoặc macOS.", correct:false}]}
     ]
   },
   "11-1": {
     title: "Đề kiểm tra Bài 1 — Hệ điều hành",
-    grade: 11, duration: 10, ngayDang: "26/08/2026",
+    grade: 11, duration: 20, ngayDang: "26/08/2026", point1: 0.5, point2: 0.25,
     part1: [
-      {tag:"Chức năng HĐH", text:"Hệ điều hành KHÔNG có chức năng nào sau đây?", options:["Quản lí thiết bị","Quản lí lưu trữ dữ liệu","Thiết kế mạch điện tử","Tổ chức thực hiện chương trình"], correct:2},
-      {tag:"Chức năng HĐH", text:"Chức năng nào thể hiện rõ nhất đặc thù của hệ điều hành máy tính cá nhân?", options:["Quản lí thiết bị","Tính bảo mật cao","Không cần giao diện","Chạy được nhiều hệ điều hành cùng lúc"], correct:0},
-      {tag:"HĐH di động", text:"Hệ điều hành di động ưu tiên cao cho điều gì?", options:["Chạy được nhiều cửa sổ cùng lúc","Kết nối mạng di động và giao tiếp thân thiện","In ấn tài liệu","Quản trị máy chủ"], correct:1},
-      {tag:"HĐH di động", text:"Hệ điều hành nào sau đây KHÔNG phải hệ điều hành di động?", options:["iOS","Android","Windows Server","HarmonyOS"], correct:2}
+      {tag:"Hệ điều hành", text:"Khi bạn cắm một chiếc USB vào máy tính chạy hệ điều hành Windows 10 và máy tính ngay lập tức hiển thị một ổ đĩa mới mà không cần bạn phải cài đặt thủ công, tính năng nào của hệ điều hành đã hoạt động?", options:["Mã nguồn mở", "Đa người dùng", "Giao diện dòng lệnh", "Plug & Play"], correct:3},
+      {tag:"Hệ điều hành", text:"Cơ chế giúp hệ điều hành tự động nhận biết thiết bị ngoại vi khi được kết nối vào máy tính được gọi là gì?", options:["Plug & Play (Cắm và chạy)", "Đa nhiệm (Multitasking)", "Giao diện đồ hoạ (GUI)", "Mã nguồn mở (Open Source)"], correct:0},
+      {tag:"Hệ điều hành", text:"Trong mối quan hệ giữa các thành phần của hệ thống máy tính, hệ điều hành đóng vai trò là gì?", options:["Là một phần mềm ứng dụng với các chức năng rất chuyên biệt.", "Là lớp phần mềm trên cùng, giao tiếp duy nhất với người dùng.", "Là một bộ phận vật lí không thể thiếu của hệ thống máy tính.", "Là cầu nối trung gian giữa phần cứng và các phần mềm ứng dụng."], correct:3},
+      {tag:"Hệ điều hành", text:"Phiên bản Windows nào được xem là một trong những phiên bản thành công nhất của Microsoft với số người dùng rất lớn và có nâng cấp quan trọng cho bộ xử lí 64 bit?", options:["Windows 1.0", "Windows XP", "Windows 3.1", "Windows 95"], correct:1},
+      {tag:"Hệ điều hành", text:"Ý nghĩa quan trọng nhất của việc hệ điều hành Windows 95 tích hợp trực tiếp nhiều tính năng cơ bản là gì?", options:["Loại bỏ hoàn toàn giao diện đồ hoạ để tăng cường hiệu suất hệ thống.", "Giúp Windows trở thành hệ điều hành hoàn chỉnh và không còn phụ thuộc DOS.", "Khiến hệ điều hành hoạt động không ổn định và gặp nhiều sự cố hơn.Y", "êu cầu người dùng phải quay lại sử dụng hoàn toàn giao diện dòng"], correct:1},
+      {tag:"Hệ điều hành", text:"Hệ điều hành nào sau đây là một hệ điều hành mã nguồn mở có nguồn gốc từ UNIX?", options:["MacOS", "Ios", "LINUX", "Windows XP"], correct:2},
+      {tag:"Hệ điều hành", text:"Tại sao giao diện đồ hoạ (GUI) được coi là thân thiện với người dùng hơn so với giao diện dòng lệnh (CLI)?", options:["Nó cung cấp một môi trường trực quan với các biểu tượng, cửa sổ và menu để người dùng tương tác.", "Nó yêu cầu người dùng phải ghi nhớ chính xác cú pháp của từng câu lệnh để có thể thao tác.", "Vì nó được thiết kế để xử lí thông tin và thực thi các tác vụ nhanh hơn so với giao diện dòng lệnh.", "Vì nó chỉ cho phép người dùng tương tác bằng chuột, loại bỏ hoàn"], correct:0},
+      {tag:"Hệ điều hành", text:"Một chiếc Tivi thông minh (Smart TV) cho phép người dùng cài đặt thêm các ứng dụng như YouTube, Netflix, trình duyệt web từ một kho ứng dụng. Điều này cho thấy chiếc Tivi đó có đặc điểm gì?", options:["Nó được quản lí và vận hành bởi một hệ điều hành đa nhiệm.", "Nó là một thiết bị chuyên dụng chỉ có một chức năng duy nhất.", "Nó chỉ tương thích với các ứng dụng từ một nhà sản xuất duy nhất.", "Nó không có phần cứng xử lí và phải kết nối với thiết bị khác."], correct:0},
+      {tag:"Hệ điều hành", text:"Đặc điểm nào giải thích tại sao hệ điều hành cho thiết bị di động lại ưu tiên khả năng kết nối mạng không dây?", options:["Vì thiết bị di động thường chỉ hoạt động hiệu quả tại một vị trí cố định.", "Vì công nghệ kết nối không dây luôn đảm bảo an toàn và bảo mật tuyệt đối.", "Do đặc tính di động, người dùng cần kết nối mạng liên tục ở nhiều địa điểm.", "Do màn hình của các thiết bị di động nhỏ nên cần kết nối mạng không"], correct:2},
+      {tag:"Hệ điều hành", text:"Một người dùng muốn xoá tệp \"tailieu.txt\". Thay vì gõ lệnh \"erase C:tailieu.txt\" vào một màn hình đen, họ dùng chuột kéo biểu tượng của tệp vào biểu tượng Thùng rác. Hành động này thể hiện ưu điểm của loại giao diện nào?", options:["Giao diện kết nối mạng", "Giao diện đồ hoạ (GUI)", "Giao diện phần cứng", "Giao diện dòng lệnh (CLI)"], correct:1},
+      {tag:"Hệ điều hành", text:"Vì sao các thiết bị đa năng như máy tính cá nhân cần phải có hệ điều hành, trong khi thiết bị chuyên dụng như lò vi sóng thì không?", options:["Vì máy tính cần kết nối mạng để hoạt động, còn lò vi sóng thì không cần.", "Vì lò vi sóng cần quản lí tài nguyên và tổ chức dữ liệu để chạy nhiều ứng dụng khác nhau.", "Vì máy tính cần quản lí tài nguyên và tổ chức dữ liệu để chạy nhiều ứng dụng khác nhau.", "Vì máy tính là thiết bị có giá thành đắt tiền hơn lò vi sóng nên cần"], correct:2},
+      {tag:"Hệ điều hành", text:"Hai hệ điều hành phổ biến nhất cho thiết bị di động được đề cập trong bài là gì?", options:["Windows và LINUX", "iOS và Android", "UNIX và DOS", "macOS và Ubuntu"], correct:1}
     ],
     part2: [
-      {tag:"Chức năng HĐH", text:"Nhận định nào sau đây đúng hay sai về hệ điều hành?", items:[
-        {label:"a) Hệ điều hành là phần mềm trung gian giữa người dùng và phần cứng.", correct:true},
-        {label:"b) Không cần hệ điều hành thì phần mềm ứng dụng vẫn chạy bình thường.", correct:false},
-        {label:"c) Hệ điều hành có chức năng cung cấp môi trường giao tiếp với người dùng.", correct:true},
-        {label:"d) Mọi thiết bị điện tử đều bắt buộc phải có hệ điều hành.", correct:false}
-      ]},
-      {tag:"HĐH di động", text:"Nhận định nào sau đây đúng hay sai về hệ điều hành di động?", items:[
-        {label:"a) Android và iOS là hai hệ điều hành di động phổ biến.", correct:true},
-        {label:"b) Hệ điều hành di động không hỗ trợ kết nối mạng không dây.", correct:false},
-        {label:"c) Hệ điều hành di động thường có giao diện thân thiện hơn máy tính.", correct:true},
-        {label:"d) Hệ điều hành di động không thể cài thêm ứng dụng.", correct:false}
-      ]}
+      {tag:"Hệ điều hành", text:"Một nhà quản trị mạng tại một công ty lớn quyết định sử dụng hệ điều hành LINUX cho các máy chủ vì tính ổn định và an toàn cao. Trong khi đó, các nhân viên văn phòng lại sử dụng máy tính cá nhân chạy", items:[{label:"Hệ điều hành LINUX có nguồn gốc từ hệ điều hành UNIX và có thể được dùng cho cả máy chủ và máy tính cá nhân.", correct:true}, {label:"Hệ điều hành Windows gần như thống trị thị trường hệ điều hành máy tính cá nhân.", correct:true}, {label:"Việc lựa chọn LINUX cho máy chủ cho thấy hệ điều hành này được đánh giá cao về tính hiệu quả, ổn định và an toàn, những yếu tố quan trọng cho máy chủ.", correct:true}, {label:"Vì LINUX là mã nguồn mở, nó chỉ được phát triển bởi một người duy nhất là Linus Torvalds và không có các biến thể khác.", correct:false}]},
+      {tag:"Hệ điều hành", text:"Một lập trình viên đang viết một phần mềm ứng dụng nghe nhạc. Để phần mềm có thể đọc được file nhạc từ ổ đĩa cứng, lập trình viên không cần viết mã để điều khiển trực tiếp phần cứng ổ đĩa. Thay vào đó", items:[{label:"Trong trường hợp này, hệ điều hành đóng vai trò là môi trường trung gian giữa phần mềm nghe nhạc và phần cứng máy tính.", correct:true}, {label:"Việc quản lí tệp và thư mục là một trong năm nhóm chức năng chính của hệ điều hành.", correct:true}, {label:"Mô hình làm việc này cho thấy phần mềm ứng dụng phụ thuộc vào các dịch vụ của hệ điều hành, giúp đảm bảo tính nhất quán và giảm độ phức tạp cho người lập trình.", correct:true}, {label:"Phần mềm nghe nhạc này có thể chạy trên một thiết bị không có hệ điều hành, ví dụ như hệ thống điều khiển lò vi sóng.", correct:false}]},
+      {tag:"Hệ điều hành", text:"Một người dùng sở hữu điện thoại iPhone chạy hệ điều hành iOS. Họ thường xuyên sử dụng kết nối 4G để truy cập mạng xã hội khi đang di chuyển và dùng cảm biến vân tay để mở khoá. Giao diện của điện tho", items:[{label:"iOS là hệ điều hành do Google phát triển.", correct:false}, {label:"Hệ điều hành di động như iOS được thiết kế để ưu tiên kết nối mạng di động như 4G.", correct:true}, {label:"Giao diện thân thiện của iOS có được là nhờ việc tận dụng các cảm biến (vân tay, cảm ứng) để nhận dạng hành vi người dùng, giúp các thao tác tự nhiên hơn.", correct:true}, {label:"Vì iOS là một hệ điều hành, người dùng có thể dễ dàng gỡ bỏ nó và cài đặt hệ điều hành Windows 11 lên chiếc iPhone của mình.", correct:false}]},
+      {tag:"Hệ điều hành", text:"Một học sinh vừa nhận được chiếc máy tính xách tay mới cài sẵn hệ điều hành Windows 11. Bạn ấy kết nối con chuột không dây qua cổng USB và máy tính nhận ngay lập tức. Sau đó, bạn ấy mở đồng thời trình", items:[{label:"Hệ điều hành Windows 11 mà học sinh đang sử dụng có giao diện đồ hoạ.", correct:true}, {label:"Cơ chế giúp máy tính tự động nhận biết con chuột không dây được gọi là \"đa nhiệm\".", correct:false}, {label:"Việc mở đồng thời trình duyệt web và phần mềm soạn thảo văn bản cho thấy hệ điều hành có khả năng đa nhiệm, giúp nâng cao hiệu quả làm việc.", correct:true}, {label:"Nếu muốn trải nghiệm một hệ điều hành mã nguồn mở miễn phí trên chiếc máy tính này, học sinh có thể cài đặt Ubuntu.", correct:true}]}
     ]
-  }  ,"12-1": {
+  },
+  "11-2": {
+    title: "Đề kiểm tra Bài 2 — Thực hành sử dụng hệ điều hành",
+    grade: 11, duration: 20, ngayDang: "31/08/2026", point1: 0.5, point2: 0.25,
+    part1: [
+      {tag:"Thực hành hệ điều hành", text:"Theo tài liệu, thanh chứa các biểu tượng của ứng dụng đang chạy và nút Start trên Windows được gọi là gì?", options:["Cửa sổ ứng dụng", "Thanh trạng thái (Status bar)", "Vùng lệnh", "Thanh công việc (Taskbar)"], correct:3},
+      {tag:"Thực hành hệ điều hành", text:"Tiện ích nào của Windows được sử dụng để quản lí tệp và thư mục?", options:["Check Disk", "File Explorer", "Optimize", "Properties"], correct:1},
+      {tag:"Thực hành hệ điều hành", text:"Mục đích chính của việc sử dụng các thư mục (folders) để quản lí tệp là gì?", options:["Để các biểu tượng tệp tin hiển thị trực quan và đẹp hơn.", "Để tăng tốc độ xử lí tổng thể của các tệp tin và thư mục khi truy cập.", "Để tổ chức các tệp tin có hệ thống, dễ dàng tìm kiếm và quản lý.", "Để giảm dung lượng lưu trữ của tất cả các tệp tin và thư mục."], correct:2},
+      {tag:"Thực hành hệ điều hành", text:"Tại sao việc phân mảnh tệp (file fragmentation) làm giảm tốc độ truy cập dữ liệu?", options:["Vì nó làm giảm dung lượng trống của đĩa cứng và làm cho hệ điều hành không truy cập được vào các tệp cần thiết.", "Vì đầu từ của đĩa cứng phải di chuyển cơ học đến nhiều vị trí khác nhau để đọc trọn vẹn một tệp.", "Vì nó làm tăng kích thước của các tệp trên đĩa làm cho bộ nhớ lưu trữ bị hẹp lại.", "Vì hệ điều hành phải nén dữ liệu và tìm các tệp đã nén trước đó để"], correct:1},
+      {tag:"Thực hành hệ điều hành", text:"Tiện ích nào được dùng để kiểm tra và khắc phục các lỗi tệp trên đĩa cứng?", options:["Properties (Thuộc tính)", "Disk Cleanup (Dọn đĩa)", "Optimize (Tối ưu hoá)", "Check (Kiểm tra đĩa)"], correct:3},
+      {tag:"Thực hành hệ điều hành", text:"Sự khác biệt cơ bản giữa thao tác \"nháy nút phải chuột\" và \"nháy đúp chuột\" vào một đối tượng là gì?", options:["Không có sự khác biệt về chức năng, vì cả hai thao tác đều có mục đích chung là mở đối tượng.", "Nháy đúp chuột thường dùng để mở hoặc thực thi, còn nháy phải chuột để hiển thị menu các lệnh.", "Nháy phải chuột dùng để xóa đối tượng đã chọn, còn nháy đúp chuột được dùng để sao chép.", "Nháy đúp chuột dùng để chọn đối tượng, còn thao tác nháy phải chuột"], correct:1},
+      {tag:"Thực hành hệ điều hành", text:"Nếu máy tính của bạn hoạt động rất chậm khi mở các tệp lớn và bạn nghi ngờ đĩa cứng có vấn đề, theo tài liệu, bạn nên thực hiện các tiện ích nào và theo thứ tự nào?", options:["Thực hiện việc xóa bớt các tệp không còn cần thiết và sắp xếp lại các thư mục và tệp tin.", "Chạy tiện ích kiểm tra đĩa (Check), sau đó chạy tiện ích chống phân mảnh (Optimize).", "Chỉ cần chạy ngay tiện ích chống phân mảnh (Optimize), không cần chạy tiện ích kiểm tra đĩa.", "Tiến hành cài đặt lại hệ điều hành ngay lập tức hoặc cài đặt lại các"], correct:1},
+      {tag:"Thực hành hệ điều hành", text:"Bạn vừa hoàn thành một bài tập lớn và lưu tất cả các tệp (văn bản, hình ảnh, bảng tính) vào một thư mục có tên \"BÀI TẬP\". Bây giờ bạn muốn gửi toàn bộ bài tập này cho giáo viên qua email. Thao tác nào sau đây là hợp lí nhất?", options:["Mở từng tệp và sao chép nội dung vào thư điện tử.", "Đổi tên tất cả các tệp để chúng có cùng tên gọi.", "Nén thư mục \"BÀI TẬP\" thành tệp duy nhất để gửi đi.", "Di chuyển các tệp ra màn hình nền rồi đính kèm."], correct:2},
+      {tag:"Thực hành hệ điều hành", text:"Hành động nào thường được sử dụng để kích hoạt một ứng dụng từ biểu tượng của nó?", options:["Kéo thả chuột", "Nháy đúp chuột", "Nháy nút phải chuột", "Nháy chuột"], correct:1},
+      {tag:"Thực hành hệ điều hành", text:"Thanh trạng thái (Status bar) trên cả Windows và Ubuntu cung cấp thông tin gì cho người dùng?", options:["Cung cấp các lệnh và công cụ để chỉnh sửa nội dung tệp.", "Hiển thị trạng thái hệ thống như mạng, pin, âm lượng, thời gian.", "Liệt kê tất cả phần mềm, ứng dụng đã được cài đặt sẵn.", "Liệt kê toàn bộ danh sách các tệp tin có trên máy tính."], correct:1},
+      {tag:"Thực hành hệ điều hành", text:"Trên đĩa cứng, dữ liệu được ghi theo các đường tròn đồng tâm được gọi là gì?", options:["Cung (sector)", "Tệp (file)", "Liên cung (cluster)", "Đường ghi (track)"], correct:3},
+      {tag:"Thực hành hệ điều hành", text:"Một người dùng muốn tạo một cấu trúc thư mục để lưu trữ ảnh gia đình theo năm và sự kiện. Cấu trúc nào sau đây là hợp lí và dễ quản lí nhất?", options:["Lưu trực tiếp toàn bộ ảnh lên màn hình nền (Desktop) để dễ dàng truy cập và xem ngay.", "Tạo thư mục con theo năm (2023, 2024), trong mỗi năm tạo thư mục con theo sự kiện (Du lịch hè, Tết).", "Tạo các thư mục được đặt tên bằng số thứ tự đơn giản (1, 2, 3…) cho tất cả các bức ảnh.", "Chỉ tạo duy nhất một thư mục tên \"Ảnh\" và lưu toàn bộ ảnh chung"], correct:1}
+    ],
+    part2: [
+      {tag:"Thực hành hệ điều hành", text:"Minh vừa cài đặt hệ điều hành Ubuntu cho máy tính của mình để học lập trình. Giao diện của Ubuntu có một vài điểm khác biệt so với Windows. Minh thấy một thanh chứa các ứng dụng ở bên trái màn hình và", items:[{label:"Thanh ở góc trên bên phải hiển thị các thông tin như kết nối mạng, pin được gọi là Thanh trạng thái (Status bar).", correct:true}, {label:"Để mở một thư mục và xem các tệp con bên trong, Minh cần nháy đúp chuột vào biểu tượng thư mục đó.", correct:true}, {label:"Giao diện đồ họa của cả Ubuntu và Windows đều sử dụng các thành phần chung như cửa sổ, biểu tượng và con trỏ chuột để người dùng tương tác với máy tính.", correct:true}, {label:"Để tăng tốc độ truy cập tệp trên Ubuntu, Minh nên tìm tiện ích \"Check Disk\" và \"Optimize\" có sẵn trong mục cài đặt.", correct:false}]},
+      {tag:"Thực hành hệ điều hành", text:"Bạn An là một học sinh, bạn ấy sử dụng máy tính Windows để làm bài tập và lưu trữ tài liệu học tập. An tạo các thư mục riêng cho từng môn học như Toán, Văn, Anh. Trong quá trình sử dụng, An nhận thấy", items:[{label:"Tiện ích mà An sử dụng để tạo và sắp xếp các thư mục môn học được gọi là File Explorer.", correct:true}, {label:"Việc nháy nút phải chuột vào một thư mục sẽ hiển thị một bảng chọn với các lệnh như \"Đổi tên\" (Rename) hoặc \"Xoá\" (Delete).", correct:true}, {label:"Việc các tệp hình ảnh bị lỗi có thể do các \"liên cung mất liên kết\" hoặc \"cung bị hỏng về vật lí\" (bad sector) trên đĩa cứng.", correct:true}, {label:"Để khắc phục tình trạng tệp bị lỗi, An chỉ cần chạy tiện ích hợp mảnh (Optimize) là đủ.", correct:false}]},
+      {tag:"Thực hành hệ điều hành", text:"Cô Lan sử dụng điện thoại thông minh chạy hệ điều hành Android để quản lí công việc và liên lạc. Cô muốn thêm một liên hệ mới của khách hàng vào danh bạ, đặt lịch hẹn cho cuộc họp quan trọng vào tuần", items:[{label:"Để thêm thông tin khách hàng, cô Lan cần sử dụng tiện ích \"Danh bạ\".", correct:true}, {label:"Để gỡ bỏ ứng dụng, cô Lan cần vào mục \"Quản lí ứng dụng\" trong phần Cài đặt của điện thoại.", correct:true}, {label:"Tiện ích đặt lịch hẹn và đồng hồ là các công cụ phần mềm được hệ điều hành di động cung cấp sẵn để giúp người dùng quản lí thời gian cá nhân một cách hiệu quả.", correct:true}, {label:"Tất cả các tiện ích như danh bạ, lịch, quản lí ứng dụng đều được cài đặt sẵn cùng hệ điều hành và người dùng không thể cài đặt thêm bất kỳ tiện ích nào khác.", correct:false}]},
+      {tag:"Thực hành hệ điều hành", text:"Một kĩ thuật viên máy tính giải thích cho khách hàng về tầm quan trọng của việc bảo trì đĩa cứng. Anh ấy mô tả rằng khi các tệp bị xoá và tạo mới liên tục, các phần của một tệp lớn có thể bị ghi ở nhữ", items:[{label:"Đơn vị nhỏ nhất để đọc, ghi dữ liệu trên đĩa cứng mà hệ điều hành quản lí được gọi là liên cung (cluster).", correct:true}, {label:"Tiện ích có chức năng sắp xếp lại các liên cung của một tệp được ghi liên tục được gọi là hợp mảnh (Defragment) hay tối ưu hoá (Optimize).", correct:true}, {label:"Hiện tượng phân mảnh không ảnh hưởng đến tốc độ của máy tính, nó chỉ làm tốn dung lượng đĩa.", correct:false}, {label:"Chức năng hợp mảnh (Defragment) chỉ thực sự hữu ích đối với các loại đĩa từ truyền thống (HDD) và không cần thiết cho các ổ đĩa thể rắn (SSD) hiện đại.", correct:true}]}
+    ]
+  },
+  "12-2": {
+    title: "Đề kiểm tra Bài 2 — Trí tuệ nhân tạo trong khoa học và đời sống",
+    grade: 12, duration: 20, ngayDang: "31/08/2026", point1: 0.5, point2: 0.25,
+    part1: [
+      {tag:"Trí tuệ nhân tạo", text:"Phát biểu nào mô tả đúng nhất về tình trạng phát triển AI hiện nay theo nội dung tài liệu?", options:["Con người đã tạo ra Trí tuệ nhân tạo mạnh, vượt qua trí tuệ con người.", "AI chỉ được ứng dụng trong lĩnh vực trò chơi điện tử và giải trí.", "Việc phát triển AI đã dừng lại do các rủi ro về đạo đức.", "Các thành tựu của AI vẫn chỉ hạn chế trong phạm vi Trí tuệ nhân tạo"], correct:3},
+      {tag:"Trí tuệ nhân tạo", text:"Một trong những nguy cơ của việc phát triển AI được cảnh báo trong tài liệu là gì?", options:["Áp lực thất nghiệp", "Giảm khả năng sáng tạo của con người", "Tăng chi phí sản xuất", "Làm máy tính chạy chậm hơn"], correct:0},
+      {tag:"Trí tuệ nhân tạo", text:"Tại sao \"khả năng thiếu minh bạch\" của các hệ thống AI lại là một vấn đề đáng lo ngại?", options:["Vì việc minh bạch hóa thuật toán sẽ làm tăng khối lượng tính toán, gây ảnh hưởng đến hiệu suất của hệ thống.", "Vì nó yêu cầu người dùng phải có kiến thức chuyên sâu về lập trình mới có thể tương tác và sử dụng được.", "Vì khó khăn trong việc hiểu các quyết định của AI được đưa ra như thế nào, dẫn đến thiếu trách nhiệm giải trình.", "Vì các hệ thống này thường thu thập quá nhiều dữ liệu không cần"], correct:2},
+      {tag:"Trí tuệ nhân tạo", text:"Một nông dân sử dụng drone (máy bay không người lái) tích hợp AI để phun thuốc trừ sâu chính xác vào những khu vực bị ảnh hưởng thay vì phun trên toàn bộ cánh đồng. Điều này thể hiện ứng dụng của AI trong lĩnh vực nào?", options:["Giáo dục", "Nông nghiệp", "Y tế", "Giao thông vận tải"], correct:1},
+      {tag:"Trí tuệ nhân tạo", text:"Một người dùng yêu cầu ChatGPT viết một bài thơ về mùa thu. Khả năng tạo ra một tác phẩm văn học mới này của ChatGPT thuộc về loại AI nào?", options:["Thị giác máy tính", "AI trong giao thông", "Hệ chuyên gia", "AI tạo sinh (Generative AI)"], correct:3},
+      {tag:"Trí tuệ nhân tạo", text:"AI hỗ trợ \"cá nhân hóa\" trong giáo dục bằng cách nào?", options:["Thay thế hoàn toàn vai trò của giáo viên trong lớp học.", "Chỉ cho phép học sinh học các môn mà họ yêu thích.", "Theo dõi tiến trình học tập và đề xuất nội dung phù hợp cho từng cá nhân.", "Cung cấp cho mọi học sinh cùng một bộ bài giảng duy nhất."], correct:2},
+      {tag:"Trí tuệ nhân tạo", text:"Sự kết hợp giữa IoT và AI (AIoT) cho phép các nhà khoa học làm gì?", options:["Giám sát môi trường tự nhiên và biến đổi khí hậu", "Sáng tác nhạc và hội họa", "Thiết kế trò chơi điện tử", "Dịch thuật tự động"], correct:0},
+      {tag:"Trí tuệ nhân tạo", text:"Sự khác biệt cơ bản giữa hệ chuyên gia ban đầu và hệ chuyên gia hiện đại có ứng dụng AI là gì?", options:["Hệ chuyên gia ban đầu chỉ cần cấu hình máy tính đơn giản, còn hệ chuyên gia hiện đại đòi hỏi hệ thống phần cứng rất mạnh.", "Hệ chuyên gia ban đầu dựa trên các luật suy diễn có sẵn, còn hệ chuyên gia hiện đại có khả năng tự học từ dữ liệu.", "Hệ chuyên gia ban đầu được lập trình bằng ngôn ngữ cấp thấp, còn hệ chuyên gia hiện đại chỉ được lập trình bằng Python.", "Hệ chuyên gia ban đầu tương tác với người dùng qua dòng lệnh, còn hệ"], correct:1},
+      {tag:"Trí tuệ nhân tạo", text:"Loại Trí tuệ nhân tạo nào được mô tả là có năng lực trí tuệ như con người, bao gồm cả khả năng áp dụng tri thức từ lĩnh vực này sang lĩnh vực khác?", options:["Trí tuệ nhân tạo yếu", "Trí tuệ nhân tạo hẹp", "Trí tuệ nhân tạo tổng quát/mạnh", "Hệ chuyên gia"], correct:2},
+      {tag:"Trí tuệ nhân tạo", text:"Theo tài liệu, hệ thống AI nào được coi là bước đột phá trong lĩnh vực AI của năm 2022?", options:["AlphaGo", "ChatGPT", "IBM Watson", "Xe tự lái Tesla"], correct:1},
+      {tag:"Trí tuệ nhân tạo", text:"Lĩnh vực nào sau đây KHÔNG được liệt kê trong tài liệu là có sự phát triển mạnh mẽ nhờ AI?", options:["Y học và chăm sóc sức khỏe", "Giao thông vận tải", "Khảo cổ học", "Sản xuất công nghiệp"], correct:2},
+      {tag:"Trí tuệ nhân tạo", text:"Một ngân hàng sử dụng hệ thống AI để phân tích các giao dịch và phát hiện những hoạt động đáng ngờ có thể là gian lận. Đây là ứng dụng của AI trong lĩnh vực nào được đề cập trong tài liệu?", options:["Giáo dục", "Sản xuất", "Y học", "Tài chính, ngân hàng"], correct:3}
+    ],
+    part2: [
+      {tag:"Trí tuệ nhân tạo", text:"Một bệnh viện đang thử nghiệm phần mềm AI mới có tên \"Dr.AI\" để hỗ trợ các bác sĩ. \"Dr.AI\" có thể phân tích hình ảnh y tế như X-quang, CT scan để phát hiện các dấu hiệu bất thường, đồng thời đọc h", items:[{label:"Theo tài liệu, AI được sử dụng để cải thiện chất lượng hình ảnh y tế và hỗ trợ đưa ra chẩn đoán.", correct:true}, {label:"Phần mềm IBM Watson for Oncology được đề cập trong tài liệu như một ví dụ về AI góp phần nâng cao hiệu quả điều trị ung thư.", correct:true}, {label:"Việc \"Dr.AI\" có thể đọc và tổng hợp thông tin từ hàng nghìn bài báo cho thấy khả năng xử lí dữ liệu lớn và tri thức sâu rộng của nó, tương tự như cách ChatGPT được huấn luyện.", correct:true}, {label:"Vì \"Dr.AI\" rất thông minh trong lĩnh vực y học, nó có thể được coi là một Trí tuệ nhân tạo tổng quát.", correct:false}]},
+      {tag:"Trí tuệ nhân tạo", text:"Một nền tảng giáo dục trực tuyến sử dụng AI để tạo ra lộ trình học tập riêng cho mỗi học viên. Hệ thống theo dõi câu trả lời của học viên, xác định điểm mạnh, điểm yếu và tự động đề xuất các bài giảng", items:[{label:"Tài liệu có đề cập đến việc AI được sử dụng để phát triển các nền tảng học tập được cá nhân hóa.", correct:true}, {label:"Các trợ lý học tập ảo dựa trên AI có thể hỗ trợ học sinh bằng cách trả lời câu hỏi, theo như mô tả trong tài liệu.", correct:true}, {label:"Việc hệ thống AI thu thập và phân tích dữ liệu học tập của từng cá nhân làm dấy lên mối lo ngại về quyền riêng tư, một nguy cơ đã được cảnh báo trong tài liệu.", correct:true}, {label:"Nếu chatbot trợ lý ảo này có thể thảo luận triết học và viết kịch bản phim, nó chắc chắn là một hệ thống AI yếu.", correct:false}]},
+      {tag:"Trí tuệ nhân tạo", text:"Một công ty công nghệ phát triển một ứng dụng dịch thuật tự động sử dụng AI. Ứng dụng này không chỉ dịch từng từ mà còn có khả năng hiểu ngữ cảnh của cả câu để đưa ra bản dịch tự nhiên hơn. Nó được hu", items:[{label:"Dịch thuật tự động là một trong những ứng dụng thiết thực cho đời sống được phát triển nhờ các thành tựu của xử lí ngôn ngữ tự nhiên trong AI.", correct:true}, {label:"ChatGPT, theo tài liệu, cũng là một hệ thống có khả năng hiểu và tạo ra văn bản ngôn ngữ tự nhiên.", correct:true}, {label:"Khả năng hiểu \"ngữ cảnh\" để dịch tự nhiên hơn cho thấy AI không chỉ xử lý dữ liệu thô mà còn có khả năng suy luận để tạo ra thông tin (bản dịch) có ý nghĩa hơn.", correct:true}, {label:"Vì ứng dụng này có thể dịch được nhiều ngôn ngữ, nó nên được giao toàn quyền quyết định điều khiển vũ khí sát thương trong các nhiệm vụ quốc tế.", correct:false}]},
+      {tag:"Trí tuệ nhân tạo", text:"Một công ty sản xuất ô tô quyết định triển khai một dây chuyền lắp ráp hoàn toàn tự động sử dụng các robot công nghiệp được điều khiển bởi AI. Hệ thống này có thể tự điều chỉnh tốc độ làm việc dựa trê", items:[{label:"Việc sử dụng robot trong dây chuyền lắp ráp là một ứng dụng của AI trong lĩnh vực sản xuất được nêu trong tài liệu.", correct:true}, {label:"Tài liệu có cảnh báo rằng việc tự động hóa như thế này có thể dẫn đến nguy cơ thất nghiệp cho người lao động.", correct:true}, {label:"Khả năng hệ thống AI tự điều chỉnh dựa trên dữ liệu thị trường cho thấy nó có năng lực học hỏi và ra quyết định, chứ không chỉ thực hiện các lệnh được lập trình sẵn.", correct:true}, {label:"Hệ thống AI này là một ví dụ của Trí tuệ nhân tạo mạnh vì nó có thể tự mình thiết kế một mẫu xe hoàn toàn mới.", correct:false}]}
+    ]
+  },
+  "12-1": {
     title: "Đề kiểm tra Bài 1 — Làm quen với Trí tuệ nhân tạo",
     grade: 12, duration: 20, ngayDang: "29/08/2026", point1: 0.5, point2: 0.25,
     part1: [
@@ -878,6 +1009,10 @@ const EXAMS = {
 function renderExamBank(grade){
   const data = CURRICULUM[grade];
   const el = document.getElementById(`exam-bank-${grade}`);
+  const gradeExamIds = data.lessons.filter(b => EXAMS[`${grade}-${b.id}`]).map(b => b.id);
+  const freeBaiId = gradeExamIds.length ? Math.min(...gradeExamIds) : null;
+  const isPro = !!(currentUserPro && currentUserPro[grade]);
+
   el.innerHTML = Object.keys(data.chude).map(cd => {
     const baiCuaChude = data.lessons.filter(b => b.chude == cd);
     return `<details class="chude">
@@ -886,13 +1021,19 @@ function renderExamBank(grade){
         ${baiCuaChude.map(b => {
           const key = `${grade}-${b.id}`;
           const has = EXAMS[key];
+          if (!has) return `<li>
+            <span><span class="bt">Bài ${b.id}</span> ${b.ten}</span>
+            <span class="status-pending">Chưa có đề</span>
+          </li>`;
+          const unlocked = (b.id === freeBaiId) || isPro;
           return `<li>
             <span><span class="bt">Bài ${b.id}</span> ${b.ten}</span>
-            ${has ? `<span style="display:flex; align-items:center; gap:10px;">
+            ${unlocked ? `<span style="display:flex; align-items:center; gap:10px;">
                 <span class="attempt-count" id="ac-${key}" style="font-size:.72rem; color:#7C8AA0;">…</span>
                 <a class="status-ready" href="#" onclick="startExam('${key}'); return false;">Xem đề thi →</a>
               </span>`
-                  : `<span class="status-pending">Chưa có đề</span>`}
+              : `<a href="#" class="status-pending" style="color:#B4830A; font-weight:700; text-decoration:none;"
+                    onclick="openProModal(${grade}); return false;">🔒 Cần tài khoản PRO</a>`}
           </li>`;
         }).join('')}
       </ul>
@@ -911,13 +1052,146 @@ function renderGradeCounts(){
   document.getElementById('gcount-bank').textContent = `Tổng hợp · ${totalAll} Đề thi`;
 }
 renderGradeCounts();
+renderQuestionBank();
+
+/* ============================================================
+   NỘP BÀI ONLINE (SUBMIT 10 / 11 / 12)
+   ============================================================ */
+function renderSubmitSection(grade){
+  const el = document.getElementById(`submit-content-${grade}`);
+  const lessons = CURRICULUM[grade].lessons;
+  el.innerHTML = `
+    <h2 class="block-title">📤 Nộp bài online — Tin học ${grade}</h2>
+    <div class="submit-card">
+      <div id="submit-guard-${grade}">
+        <p style="font-size:.88rem; color:#8A6D1D; background:rgba(255,200,69,.15); padding:12px 16px; border-radius:8px;">
+          🔒 Bạn cần <a style="color:var(--brilliant-blue); font-weight:700; cursor:pointer;" onclick="openModal('login-modal')">đăng nhập</a> để nộp bài.
+        </p>
+      </div>
+      <div id="submit-form-${grade}" style="display:none;">
+        <div class="field">
+          <label style="display:block; font-size:.8rem; font-weight:600; color:var(--ink); margin-bottom:5px;">Chọn bài *</label>
+          <select id="submit-bai-${grade}">
+            ${lessons.map(b => `<option value="${b.id}">Bài ${b.id}. ${b.ten}</option>`).join('')}
+          </select>
+        </div>
+        <div class="field">
+          <label style="display:block; font-size:.8rem; font-weight:600; color:var(--ink); margin-bottom:5px;">Link bài làm (Google Drive, GitHub…)</label>
+          <input type="text" id="submit-link-${grade}" placeholder="https://drive.google.com/...">
+        </div>
+        <div class="field">
+          <label style="display:block; font-size:.8rem; font-weight:600; color:var(--ink); margin-bottom:5px;">Ghi chú / Nội dung bài làm</label>
+          <textarea id="submit-note-${grade}" placeholder="Mô tả ngắn về bài làm, hoặc dán trực tiếp nội dung nếu không có link…"></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="submitHomework(${grade})">✅ Nộp bài</button>
+        <div class="form-msg" id="submit-msg-${grade}"></div>
+      </div>
+      <div class="submit-history">
+        <h4>🗂️ Lịch sử nộp bài của tôi</h4>
+        <div id="submit-history-${grade}"><p style="color:#9AA6B8; font-size:.85rem;">Đăng nhập để xem lịch sử nộp bài.</p></div>
+      </div>
+    </div>`;
+}
+[10,11,12].forEach(renderSubmitSection);
+
+function refreshSubmitAccess(){
+  [10,11,12].forEach(grade => {
+    const guard = document.getElementById(`submit-guard-${grade}`);
+    const form = document.getElementById(`submit-form-${grade}`);
+    if (!guard || !form) return;
+    if (currentUser) {
+      guard.style.display = 'none';
+      form.style.display = 'block';
+      loadSubmitHistory(grade);
+    } else {
+      guard.style.display = 'block';
+      form.style.display = 'none';
+      document.getElementById(`submit-history-${grade}`).innerHTML = '<p style="color:#9AA6B8; font-size:.85rem;">Đăng nhập để xem lịch sử nộp bài.</p>';
+    }
+  });
+}
+
+function submitHomework(grade){
+  if (!currentUser) { openModal('login-modal'); return; }
+  const baiId = document.getElementById(`submit-bai-${grade}`).value;
+  const baiTen = CURRICULUM[grade].lessons.find(b => b.id == baiId)?.ten || '';
+  const link = document.getElementById(`submit-link-${grade}`).value.trim();
+  const note = document.getElementById(`submit-note-${grade}`).value.trim();
+  if (!link && !note) { showMsg(`submit-msg-${grade}`, 'Vui lòng nhập link bài làm hoặc ghi chú nội dung.', false); return; }
+
+  db.collection('submissions').add({
+    uid: currentUser.uid,
+    name: currentUser.displayName || currentUser.email || 'Học sinh',
+    grade, baiId: parseInt(baiId,10), baiTen, link, note,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    showMsg(`submit-msg-${grade}`, '✅ Nộp bài thành công!', true);
+    document.getElementById(`submit-link-${grade}`).value = '';
+    document.getElementById(`submit-note-${grade}`).value = '';
+    loadSubmitHistory(grade);
+  }).catch(err => showMsg(`submit-msg-${grade}`, 'Lỗi: ' + err.message, false));
+}
+
+function loadSubmitHistory(grade){
+  const el = document.getElementById(`submit-history-${grade}`);
+  el.innerHTML = '<p style="color:#9AA6B8; font-size:.85rem;">Đang tải…</p>';
+  db.collection('submissions').where('uid','==',currentUser.uid).where('grade','==',grade).get()
+    .then(snap => {
+      if (snap.empty) { el.innerHTML = '<p style="color:#9AA6B8; font-size:.85rem;">Bạn chưa nộp bài nào cho môn này.</p>'; return; }
+      const list = snap.docs.map(d => d.data()).sort((a,b) => (b.createdAt?.toMillis()||0) - (a.createdAt?.toMillis()||0));
+      el.innerHTML = list.map(s => `
+        <div class="submit-item">
+          <div class="si-top">
+            <span class="si-bai">Bài ${s.baiId}. ${escapeHTML(s.baiTen)}</span>
+            <span class="si-date">${s.createdAt ? s.createdAt.toDate().toLocaleString('vi-VN') : ''}</span>
+          </div>
+          ${s.link ? `<div class="si-content">🔗 <a href="${escapeHTML(s.link)}" target="_blank" rel="noopener" style="color:var(--brilliant-blue);">${escapeHTML(s.link)}</a></div>` : ''}
+          ${s.note ? `<div class="si-content">${escapeHTML(s.note)}</div>` : ''}
+        </div>`).join('');
+    })
+    .catch(err => { el.innerHTML = `<p style="color:#9AA6B8; font-size:.85rem;">Không tải được (${err.code||err.message}).</p>`; });
+}
 
 function showBank(grade){
   document.querySelectorAll('.exam-bank').forEach(e => e.classList.remove('show'));
-  if (grade === 'bank') { document.getElementById('question-bank').scrollIntoView({behavior:'smooth'}); return; }
+  if (grade === 'bank') {
+    renderQuestionBank();
+    document.getElementById('question-bank').scrollIntoView({behavior:'smooth'});
+    return;
+  }
+  if (grade === 'tn') {
+    document.getElementById('bank-tn').scrollIntoView({behavior:'smooth'});
+    return;
+  }
   const el = document.getElementById(`exam-bank-${grade}`);
   el.classList.add('show');
+  // Tự mở Chủ đề đầu tiên để Bài 1 hiện ra ngay, không cần bấm thêm
+  const firstDetails = el.querySelector('details.chude');
+  if (firstDetails) firstDetails.open = true;
   document.getElementById(`bank-${grade}`).scrollIntoView({behavior:'smooth'});
+  // Cuộn tiếp tới đúng dòng Bài 1 sau khi mở
+  setTimeout(() => {
+    const firstItem = el.querySelector('.exam-list li');
+    if (firstItem) firstItem.scrollIntoView({behavior:'smooth', block:'center'});
+  }, 300);
+}
+
+function renderQuestionBank(){
+  const el = document.getElementById('question-bank-list');
+  const allKeys = Object.keys(EXAMS);
+  if (!allKeys.length) { el.innerHTML = '<p style="color:#7C8AA0; font-size:.9rem;">Chưa có đề nào trong ngân hàng.</p>'; return; }
+  const byGrade = {10:[],11:[],12:[]};
+  allKeys.forEach(key => { const ex = EXAMS[key]; if (byGrade[ex.grade]) byGrade[ex.grade].push({key, ex}); });
+  el.innerHTML = [10,11,12].map(g => {
+    if (!byGrade[g].length) return '';
+    return `<h3 style="font-size:.95rem; color:var(--brilliant-blue); margin:18px 0 10px;">Tin học ${g}</h3>
+    <ul class="exam-list" style="border:1px solid var(--line); border-radius:10px; overflow:hidden;">
+      ${byGrade[g].map(({key,ex}) => `<li>
+          <span>${ex.title}</span>
+          <a class="status-ready" href="#" onclick="startExam('${key}'); return false;">Xem đề thi →</a>
+        </li>`).join('')}
+    </ul>`;
+  }).join('');
 }
 
 /* ============================================================
@@ -929,11 +1203,15 @@ function renderTicker(){
 
   const realItems = Object.entries(EXAMS)
     .sort((a,b) => parseVNDate(b[1].ngayDang) - parseVNDate(a[1].ngayDang))
-    .map(([key, ex]) => `
+    .map(([key, ex]) => {
+      const count = examAttemptCounts[key];
+      const countText = count !== undefined ? `· 👥 ${count} lượt làm` : '';
+      return `
       <div class="ticker-item" onclick="startExam('${key}')" style="cursor:pointer;">
-        <span>${ex.title}<br><span style="color:#7C8AA0; font-size:.72rem;">📅 ${ex.ngayDang||'—'}</span></span>
+        <span>${ex.title}<br><span style="color:#7C8AA0; font-size:.72rem;">📅 ${ex.ngayDang||'—'} ${countText}</span></span>
         <span class="tg" style="background:${colorMap[ex.grade]}">TIN ${ex.grade}</span>
-      </div>`);
+      </div>`;
+    });
 
   const placeholders = [
     {label:"Đề tốt nghiệp THPT — đang biên soạn", tag:"TỐT NGHIỆP", color:"var(--m-tn)"},
@@ -958,10 +1236,8 @@ renderTicker();
 
 /* ============================================================
    SỐ LƯỢT LÀM BÀI — tổng cộng + theo từng đề + theo cá nhân
+   (2 biến examAttemptCounts / myAttemptCounts đã khai báo sớm ở đầu script)
    ============================================================ */
-let examAttemptCounts = {};   // { examKey: tổng số lượt của tất cả thí sinh }
-let myAttemptCounts = {};     // { examKey: số lượt của riêng người đang đăng nhập }
-
 function loadAttemptCounts(){
   db.collection('attempts').get().then(snap => {
     examAttemptCounts = {}; myAttemptCounts = {};
@@ -984,6 +1260,7 @@ function loadAttemptCounts(){
     const grandTotal = snap.size;
     const tt = document.getElementById('ticker-total');
     if (tt) tt.textContent = `🔥 Tổng cộng ${grandTotal.toLocaleString('vi-VN')} lượt thi đã thực hiện`;
+    renderTicker(); // vẽ lại slider để hiện đúng số lượt làm bài
   }).catch(err => console.error('loadAttemptCounts error:', err));
 }
 loadAttemptCounts();
@@ -1004,6 +1281,16 @@ let currentExamKey = null, currentExam = null, timerInterval = null, timeLeftSec
 let userAnswers = {p1:{}, p2:{}};
 
 function startExam(key){
+  const ex = EXAMS[key];
+  const grade = ex.grade;
+  const gradeExamIds = CURRICULUM[grade].lessons.filter(b => EXAMS[`${grade}-${b.id}`]).map(b => b.id);
+  const freeBaiId = Math.min(...gradeExamIds);
+  const thisBaiId = parseInt(key.split('-')[1], 10);
+  const isPro = !!(currentUserPro && currentUserPro[grade]);
+  if (thisBaiId !== freeBaiId && !isPro) {
+    openProModal(grade);
+    return;
+  }
   currentExamKey = key;
   currentExam = EXAMS[key];
   userAnswers = {p1:{}, p2:{}};
@@ -1096,6 +1383,44 @@ function setP2(qi, ii, val){
     trueBtn.classList.toggle('active', val === true);
     falseBtn.classList.toggle('active', val === false);
   }
+}
+
+/* ============================================================
+   NÂNG CẤP PRO — mở khoá toàn bộ đề của 1 môn (50.000đ/môn)
+   Không có cổng thanh toán tự động: học sinh chuyển khoản thủ công,
+   gửi ảnh xác nhận qua Telegram, giáo viên duyệt tay trong Firebase.
+   ============================================================ */
+let proModalGrade = null;
+
+function openProModal(grade){
+  if (!currentUser) {
+    closeModal('pro-modal');
+    alert('Bạn cần đăng nhập trước khi nâng cấp PRO.');
+    openModal('login-modal');
+    return;
+  }
+  proModalGrade = grade;
+  const totalBai = CURRICULUM[grade] ? CURRICULUM[grade].lessons.length : '';
+  document.getElementById('pro-grade-label').textContent = `Tin học ${grade}`;
+  document.getElementById('pro-grade-count').textContent = `toàn bộ ${totalBai} bài trong môn này`;
+  document.getElementById('pro-msg').className = 'form-msg';
+  openModal('pro-modal');
+}
+
+function requestPro(){
+  if (!currentUser || !proModalGrade) return;
+  db.collection('pro_requests').add({
+    uid: currentUser.uid,
+    name: currentUser.displayName || currentUser.email || 'Học sinh',
+    email: currentUser.email || '',
+    grade: proModalGrade,
+    status: 'pending',
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(() => {
+    showMsg('pro-msg', '✅ Đã gửi yêu cầu! Đừng quên gửi ảnh chuyển khoản qua Telegram để giáo viên xác nhận nhanh hơn.', true);
+  }).catch(err => {
+    showMsg('pro-msg', 'Lỗi gửi yêu cầu: ' + err.message, false);
+  });
 }
 
 function backToBank(){
