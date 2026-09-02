@@ -1,257 +1,773 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="WEBH2T - Website học Tin học THPT, bài giảng Tin 10, Tin 11, Tin 12, thời khóa biểu và kiến thức năng lực số.">
-<title>WEBH2T | Informatics Subject</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --ink:#0f1c2e; --ink2:#16283f; --paper:#eef3f1; --card:#fff;
-  --amber:#ffc845; --teal:#2ec4b6; --blue:#5d8cff; --muted:#6f7d91;
-  --line:rgba(15,28,46,.11); --shadow:0 10px 28px rgba(15,28,46,.08); --r:18px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth;scroll-padding-top:82px}
-body{font-family:'Be Vietnam Pro',sans-serif;background:var(--paper);color:var(--ink2);line-height:1.6}
-a{color:inherit;text-decoration:none}
-button{font:inherit}
-.container{width:min(1160px,calc(100% - 32px));margin:auto}
-.mono{font-family:'Space Grotesk',monospace}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="WEBH2T - Giáo dục Tin học THPT song ngữ Anh - Việt, bài giảng, lịch học, ngân hàng đề thi và năng lực số.">
+  <meta name="theme-color" content="#071a2b">
+  <title>WEBH2T | Tin học THPT · Song ngữ · Năng lực số</title>
+  <link rel="icon" type="image/jpeg" href="assets/FAVICON.jpg">
 
-/* HEADER + MENU */
-header{position:sticky;top:0;z-index:100;background:rgba(15,28,46,.97);color:#fff;border-bottom:3px solid var(--amber);backdrop-filter:blur(12px)}
-.nav-wrap{min-height:68px;display:flex;align-items:center;justify-content:space-between;gap:22px}
-.brand{display:flex;align-items:center;gap:11px;white-space:nowrap;font-weight:800}
-.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 5px rgba(46,196,182,.18)}
-.brand small{display:block;color:var(--amber);font:600 .62rem 'Space Grotesk';letter-spacing:.13em}
-nav>ul{display:flex;align-items:center;gap:4px;list-style:none}
-nav li{position:relative}
-nav a{display:block;padding:12px 13px;color:#dce4ee;font-size:.88rem;font-weight:600;border-radius:9px;transition:.18s}
-nav a:hover,nav a:focus-visible{background:rgba(255,255,255,.08);color:var(--amber);outline:none}
-.dropdown>a::after{content:'⌄';font-size:.8em;margin-left:6px}
-.dropdown-menu{position:absolute;left:0;top:calc(100% + 8px);min-width:180px;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:12px;padding:7px;box-shadow:var(--shadow);opacity:0;visibility:hidden;transform:translateY(-5px);transition:.18s}
-.dropdown:hover .dropdown-menu,.dropdown:focus-within .dropdown-menu{opacity:1;visibility:visible;transform:none}
-.dropdown-menu a{color:var(--ink);padding:10px 12px}.dropdown-menu a:hover{background:#f1f6f5;color:var(--ink)}
-.menu-toggle{display:none;border:1px solid rgba(255,255,255,.22);background:transparent;color:#fff;border-radius:9px;padding:8px 10px;cursor:pointer}
+  <style>
+    :root{
+      --ink:#071a2b;
+      --ink-2:#0b263b;
+      --ink-3:#10344c;
+      --chalk:#f4d35e;
+      --tech:#20c997;
+      --tech-2:#72f1c0;
+      --white:#f7fbff;
+      --muted:#b8c9d6;
+      --line:rgba(114,241,192,.22);
+      --shadow:0 18px 45px rgba(0,0,0,.25);
+      --radius:20px;
+    }
 
-/* HERO */
-.hero{background:radial-gradient(circle at 85% 18%,rgba(46,196,182,.24),transparent 38%),linear-gradient(135deg,var(--ink),#14283f);color:#fff;padding:78px 0 58px;overflow:hidden;position:relative}
-.hero::after{content:'01001001 01010100 01000111';position:absolute;right:-40px;top:35px;color:rgba(255,255,255,.05);font:700 1.3rem 'Space Grotesk';letter-spacing:.25em;transform:rotate(7deg)}
-.eyebrow{display:inline-flex;gap:8px;align-items:center;color:var(--amber);border:1px solid rgba(255,200,69,.38);border-radius:999px;padding:6px 12px;font:600 .74rem 'Space Grotesk';letter-spacing:.08em}
-h1{font-size:clamp(2rem,5vw,3.6rem);line-height:1.12;max-width:900px;margin-top:18px;font-weight:800}.hero h1 span{display:block}.hero h1 .en{font:500 clamp(.9rem,2vw,1.3rem) 'Space Grotesk';color:var(--teal);margin-top:14px;line-height:1.35}
-.hero p{max-width:730px;margin-top:20px;color:#c3ccda;font-size:1rem}.hero-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:28px}
-.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 19px;border-radius:10px;font-weight:700;transition:.18s}.btn:hover{transform:translateY(-2px)}.primary{background:var(--amber);color:var(--ink)}.ghost{border:1px solid rgba(255,255,255,.25);color:#fff}
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+    body{
+      margin:0;
+      color:var(--white);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(32,201,151,.10), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(244,211,94,.08), transparent 25%),
+        var(--ink);
+      font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
+      line-height:1.6;
+    }
+    a{color:inherit;text-decoration:none}
+    img{max-width:100%;display:block}
+    button,input{font:inherit}
 
-/* SECTIONS */
-section{padding:62px 0}.section-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:25px}.tag{color:var(--teal);background:rgba(46,196,182,.1);padding:4px 10px;border-radius:7px;font:700 .75rem 'Space Grotesk'}.section-head h2{font-size:1.55rem;color:var(--ink)}.section-head .en{color:#8490a2;font:.8rem 'Space Grotesk'}
+    .container{width:min(1180px,92%);margin:auto}
 
-/* LATEST POSTS SLIDER */
-.latest-wrap{position:relative}.latest-scroller{display:flex;gap:16px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:thin;padding:3px 3px 14px;cursor:grab}.latest-scroller:active{cursor:grabbing}.latest-card{flex:0 0 300px;scroll-snap-align:start;background:var(--card);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:0 4px 14px rgba(15,28,46,.04)}
-.thumb{height:160px;display:flex;align-items:flex-end;padding:16px;color:#fff;position:relative;overflow:hidden;background:linear-gradient(135deg,#16283f,#2ec4b6)}
-.thumb::before{content:'0101 0010 1100';position:absolute;right:-5px;top:20px;font:700 1.2rem 'Space Grotesk';opacity:.16;transform:rotate(-7deg)}
-.thumb b{position:relative;z-index:1;font-size:1.1rem}.post-body{padding:17px}.post-meta{font:.72rem 'Space Grotesk';color:#8490a2}.post-body h3{margin:6px 0 7px;font-size:1rem;color:var(--ink);line-height:1.35}.post-body p{font-size:.83rem;color:var(--muted)}.post-link{display:inline-block;margin-top:11px;font-size:.82rem;font-weight:700;border-bottom:2px solid var(--amber)}
-.slider-btns{display:flex;gap:8px;position:absolute;right:3px;top:-58px}.slider-btn{width:38px;height:38px;border:1px solid var(--line);background:#fff;border-radius:50%;cursor:pointer;color:var(--ink);font-weight:800}.slider-btn:hover{background:var(--ink);color:#fff}
+    /* ===== HEADER ===== */
+    .topbar{
+      border-bottom:1px solid var(--line);
+      background:rgba(7,26,43,.94);
+      position:sticky;top:0;z-index:1000;
+      backdrop-filter:blur(14px);
+    }
+    .topbar-inner{
+      min-height:86px;display:flex;align-items:center;
+      justify-content:space-between;gap:24px;
+    }
+    .brand{display:flex;align-items:center;gap:16px;min-width:0}
+    .brand img{
+      width:clamp(120px,18vw,190px);
+      height:auto;object-fit:contain;
+    }
+    .brand-text{border-left:1px solid var(--line);padding-left:16px}
+    .brand-text strong{display:block;font-size:clamp(13px,1.5vw,18px);letter-spacing:.08em}
+    .brand-text span{display:block;color:var(--muted);font-size:12px}
+    .clock{text-align:right;white-space:nowrap}
+    .clock .day{color:var(--chalk);font-weight:700;font-size:14px}
+    .clock .time{font-variant-numeric:tabular-nums;font-size:20px;font-weight:800;letter-spacing:.04em}
 
-/* TIMETABLE */
-.tkb-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:auto;box-shadow:0 4px 14px rgba(15,28,46,.04)}table{width:100%;border-collapse:collapse}.tkb th{background:var(--ink);color:#fff;padding:12px 11px;text-align:left;font:600 .73rem 'Space Grotesk';letter-spacing:.04em}.tkb td{padding:12px 11px;border-top:1px solid var(--line);vertical-align:top;font-size:.88rem}.tkb tr:nth-child(even) td{background:rgba(46,196,182,.035)}.session{font-weight:700;color:var(--ink)}.class-tag{display:inline-block;background:var(--amber);color:var(--ink);padding:2px 8px;border-radius:6px;font:700 .7rem 'Space Grotesk'}
+    /* ===== NAV ===== */
+    .nav-wrap{border-bottom:1px solid var(--line);background:var(--ink-2)}
+    .nav{display:flex;align-items:stretch;gap:4px;overflow:visible}
+    .nav-item{position:relative}
+    .nav-link{
+      min-height:64px;padding:9px 14px;display:flex;flex-direction:column;
+      justify-content:center;align-items:center;border-radius:12px 12px 0 0;
+      transition:.2s ease;white-space:nowrap;
+    }
+    .nav-link .en{font-size:12px;font-weight:800;letter-spacing:.08em}
+    .nav-link .vi{font-size:12px;color:var(--chalk);font-weight:700}
+    .nav-link:hover,.nav-link.active{background:var(--ink-3);transform:translateY(-2px)}
+    .dropdown{
+      position:absolute;left:0;top:100%;min-width:230px;padding:10px;
+      background:#092238;border:1px solid var(--line);border-radius:0 0 16px 16px;
+      box-shadow:var(--shadow);display:none
+    }
+    .nav-item:hover .dropdown,.nav-item:focus-within .dropdown{display:block}
+    .dropdown a{display:block;padding:10px 12px;border-radius:10px}
+    .dropdown a:hover{background:rgba(32,201,151,.12);color:var(--tech-2)}
+    .menu-toggle{display:none;background:none;border:1px solid var(--line);color:white;border-radius:10px;padding:8px 12px}
 
-/* LESSONS */
-.grade-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}.grade-card{background:#fff;border:1px solid var(--line);border-radius:var(--r);overflow:hidden;box-shadow:0 4px 14px rgba(15,28,46,.04);transition:.18s}.grade-card:hover{transform:translateY(-4px);box-shadow:var(--shadow)}
-.book-cover{height:235px;padding:20px;display:flex;align-items:center;justify-content:center;position:relative;background:linear-gradient(145deg,#13243a,#2ec4b6)}.book{width:150px;height:195px;border-radius:6px 10px 10px 6px;background:linear-gradient(145deg,#fff,#dbe8e6);box-shadow:-8px 10px 0 rgba(0,0,0,.12),0 14px 24px rgba(0,0,0,.22);padding:18px;color:var(--ink);position:relative}.book::before{content:'';position:absolute;left:0;top:0;bottom:0;width:8px;background:var(--amber);border-radius:6px 0 0 6px}.book .grade{font:800 2rem 'Space Grotesk';color:var(--teal)}.book strong{display:block;margin-top:8px;font-size:1rem}.book small{display:block;margin-top:16px;color:#65758a}.grade-info{padding:19px}.grade-info .num{font:700 .75rem 'Space Grotesk';color:var(--teal)}.grade-info h3{margin-top:5px;color:var(--ink)}.grade-info p{margin-top:7px;color:var(--muted);font-size:.84rem}.more{display:inline-block;margin-top:12px;font-size:.82rem;font-weight:800;border-bottom:2px solid var(--amber)}
+    /* ===== QUOTE ===== */
+    .quote-bar{overflow:hidden;border-bottom:1px solid var(--line);background:#061521}
+    .quote-track{
+      display:flex;width:max-content;gap:80px;padding:9px 0;
+      animation:marquee 75s linear infinite;
+      color:#39d98a;font-size:15px;
+    }
+    .quote-track:hover{animation-play-state:paused}
+    @keyframes marquee{from{transform:translateX(-50%)}to{transform:translateX(0)}}
 
-/* KNOWLEDGE */
-.knowledge-grid{display:grid;grid-template-columns:1fr 1.4fr;gap:24px;align-items:start}.competency{background:linear-gradient(145deg,var(--ink),#193550);color:#fff;border-radius:var(--r);padding:25px}.competency h3{font-size:1.1rem}.competency p{color:#bcc7d5;font-size:.86rem;margin-top:8px}.badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}.badge{padding:8px 11px;border-radius:999px;background:rgba(255,255,255,.08);font-size:.77rem}.badge b{color:var(--amber);font-family:'Space Grotesk';margin-right:4px}.article-list{display:grid;gap:10px}.article-item{display:flex;justify-content:space-between;gap:16px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px 16px}.article-item h3{font-size:.92rem;color:var(--ink)}.article-item p{font-size:.77rem;color:var(--muted);margin-top:3px}.article-item a{font-weight:800;color:var(--teal);white-space:nowrap}
+    /* ===== HERO ===== */
+    .hero{padding:72px 0 54px;position:relative;overflow:hidden}
+    .hero-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:34px;align-items:center}
+    .eyebrow{color:var(--tech-2);font-weight:800;letter-spacing:.12em;font-size:13px}
+    h1{font-size:clamp(38px,6vw,72px);line-height:1.02;margin:12px 0 18px}
+    h1 span{color:var(--chalk)}
+    .hero p{font-size:18px;color:var(--muted);max-width:760px}
+    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+    .btn{
+      display:inline-flex;align-items:center;justify-content:center;gap:8px;
+      padding:12px 18px;border-radius:12px;font-weight:800;border:1px solid transparent;
+      transition:.2s ease;cursor:pointer
+    }
+    .btn-primary{background:var(--chalk);color:#14202a}
+    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(244,211,94,.18)}
+    .btn-outline{border-color:var(--tech);color:var(--tech-2);background:transparent}
+    .btn-outline:hover{background:rgba(32,201,151,.10)}
+    .hero-panel{
+      padding:24px;border:1px solid var(--line);border-radius:24px;
+      background:linear-gradient(145deg,rgba(16,52,76,.9),rgba(7,26,43,.9));
+      box-shadow:var(--shadow)
+    }
+    .hero-panel h3{margin:0 0 12px;color:var(--chalk)}
+    .pill-list{display:grid;gap:10px}
+    .pill{padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:var(--muted)}
+    .pill b{color:var(--white)}
 
-/* CONTACT + DONATE */
-.contact-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px}.contact-card,.donate{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:26px;box-shadow:0 4px 14px rgba(15,28,46,.04)}.contact-card h3,.donate h3{color:var(--ink);font-size:1.15rem}.contact-card p{color:var(--muted);font-size:.9rem;margin-top:8px}.contact-list{display:grid;gap:10px;margin-top:17px}.contact-list a{font-weight:700;color:var(--ink)}.donate{background:linear-gradient(135deg,var(--ink),#172f49);color:#fff;display:flex;align-items:center;gap:24px}.donate-copy{flex:1}.donate p{color:#bec9d7;font-size:.84rem;margin-top:8px}.qr{flex:0 0 auto;background:#fff;padding:12px;border-radius:12px;text-align:center}.qr img{width:150px;height:150px;display:block}.qr small{display:block;color:var(--ink);font:700 .65rem 'Space Grotesk';margin-top:6px}
+    /* ===== SECTIONS ===== */
+    section{padding:52px 0}
+    .section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}
+    .kicker{color:var(--tech-2);font-size:12px;font-weight:900;letter-spacing:.13em}
+    h2{margin:3px 0 0;font-size:clamp(26px,4vw,38px);line-height:1.15}
+    .section-head p{margin:0;color:var(--muted);max-width:520px}
 
-/* FOOTER + TOP */
-footer{background:var(--ink);color:#a8b4c4;text-align:center;padding:27px 16px;font-size:.82rem}footer strong{color:#fff}footer a{color:#fff;font-weight:700}.to-top{position:fixed;right:18px;bottom:18px;z-index:80;width:44px;height:44px;border:0;border-radius:50%;background:var(--amber);color:var(--ink);font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(15,28,46,.2);opacity:0;visibility:hidden;transform:translateY(8px);transition:.2s}.to-top.show{opacity:1;visibility:visible;transform:none}
+    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+    .card{
+      background:linear-gradient(160deg,rgba(16,52,76,.78),rgba(9,34,56,.9));
+      border:1px solid var(--line);border-radius:var(--radius);padding:22px;
+      box-shadow:0 10px 30px rgba(0,0,0,.14);transition:.22s ease
+    }
+    .card:hover{transform:translateY(-5px);border-color:rgba(114,241,192,.5)}
+    .card .icon{font-size:30px;margin-bottom:12px}
+    .card h3{margin:0 0 7px}
+    .card p{color:var(--muted);margin:0 0 16px}
+    .card .link{color:var(--tech-2);font-weight:800}
 
-@media(max-width:900px){.nav-wrap{padding:10px 16px}.menu-toggle{display:block}nav{display:none;width:100%}nav.open{display:block}nav>ul{flex-direction:column;align-items:stretch;gap:2px;padding-bottom:8px}nav a{padding:10px 12px}.dropdown-menu{position:static;display:none;box-shadow:none;border:0;background:#1a2a40;margin:0 8px}.dropdown:hover .dropdown-menu,.dropdown:focus-within .dropdown-menu{display:block;opacity:1;visibility:visible;transform:none}.dropdown-menu a{color:#dce4ee}.grade-grid{grid-template-columns:1fr 1fr}.knowledge-grid,.contact-grid{grid-template-columns:1fr}}
-@media(max-width:620px){.hero{padding:58px 0 46px}section{padding:48px 0}.container{width:min(100% - 24px,1160px)}.latest-card{flex-basis:84vw}.grade-grid{grid-template-columns:1fr}.book-cover{height:215px}.slider-btns{position:static;margin-top:-5px;margin-bottom:12px}.contact-grid{grid-template-columns:1fr}.donate{align-items:flex-start;flex-direction:column}.qr{align-self:center}.tkb th,.tkb td{font-size:.76rem;padding:9px}}
+    /* ===== NEWS ===== */
+    .news-slider{position:relative}
+    .news-track{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+    .news-card{min-height:220px}
+    .tag{
+      display:inline-flex;padding:5px 9px;border-radius:999px;
+      border:1px solid var(--line);color:var(--chalk);font-size:11px;font-weight:800
+    }
+    .news-card h3{font-size:21px;line-height:1.25;margin:15px 0 9px}
+    .news-card small{color:var(--muted)}
+    .loading{color:var(--muted);padding:20px;border:1px dashed var(--line);border-radius:16px}
 
-/* CURRENT TIME BAR */
-.time-bar{background:#fff;border-bottom:1px solid rgba(15,28,46,.08);box-shadow:0 3px 12px rgba(15,28,46,.05);color:var(--ink);font:.78rem 'Space Grotesk'}
-.time-bar .container{min-height:38px;display:flex;align-items:center;justify-content:center;gap:8px;text-align:center}.time-dot{width:7px;height:7px;border-radius:50%;background:#18a999;box-shadow:0 0 0 4px rgba(46,196,182,.12)}#currentTime{font-weight:700}
-/* EXAMS */
-.exam-menu{background:#0d6efd!important;color:#fff!important;font-weight:800!important}.exam-menu:hover{background:#0b5ed7!important;color:#fff!important}.dropdown-menu.exam-dropdown{min-width:220px;border-top:3px solid #0d6efd}.dropdown-menu.exam-dropdown a{color:#0756b8!important;font-weight:700}.dropdown-menu.exam-dropdown a:hover{background:#eaf3ff!important;color:#064b9e!important}.dropdown-sub{position:relative}.dropdown-sub>a::after{content:'›';float:right;font-size:1.1em}.dropdown-menu.nested{left:calc(100% + 6px);top:-7px;min-width:210px;border-top:3px solid #e53935}.dropdown-menu.nested a{color:#d62828!important}.dropdown-menu.nested a:hover{background:#fff0f0!important;color:#b71c1c!important}
-/* SEARCH */
-.search-section{padding:26px 0 8px}.search-box{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:8px 10px 8px 15px;box-shadow:0 4px 14px rgba(15,28,46,.04)}.search-icon{font-size:1.1rem;color:#6d7d92}#siteSearch{flex:1;border:0;outline:0;background:transparent;color:var(--ink);font:500 .92rem 'Be Vietnam Pro';min-width:0}#siteSearch::placeholder{color:#9aa6b5}.search-clear{border:0;background:#eef3f8;color:#506078;border-radius:9px;padding:7px 10px;cursor:pointer;display:none}.search-clear.show{display:block}.search-status{min-height:22px;margin:8px 2px 0;color:#718097;font-size:.75rem}.search-hit{outline:3px solid rgba(255,200,69,.55);scroll-margin-top:100px}
-/* HERO BUTTONS */
-.hero-actions{gap:10px}.hero-actions .btn{font-size:.84rem;padding:11px 15px}.btn.blue{background:#0d6efd;color:#fff}.btn.red{background:#e53935;color:#fff}.btn.blue:hover{background:#0b5ed7}.btn.red:hover{background:#c62828}
-/* LATEST POSTS */
-.latest-scroller{padding:7px 3px 18px;scrollbar-width:none}.latest-scroller::-webkit-scrollbar{display:none}.latest-card{flex-basis:315px;box-shadow:0 8px 24px rgba(15,28,46,.07);transition:transform .2s,box-shadow .2s}.latest-card:hover{transform:translateY(-5px);box-shadow:0 16px 30px rgba(15,28,46,.12)}.thumb{height:175px;background-size:cover!important;background-position:center!important}.thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 35%,rgba(6,16,28,.58))}.thumb b{font-size:1.15rem;text-shadow:0 2px 8px rgba(0,0,0,.25)}.post-body{min-height:164px;display:flex;flex-direction:column}.post-link{margin-top:auto;align-self:flex-start}.slider-btn{box-shadow:0 4px 12px rgba(15,28,46,.08)}.latest-progress{height:4px;background:#dfe6ee;border-radius:999px;margin-top:2px;overflow:hidden}.latest-progress span{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--teal),var(--amber));border-radius:inherit;transition:width .25s}
-/* TIMETABLE */
-.tkb th:nth-child(6),.tkb th:nth-child(7){min-width:170px}.tkb td:nth-child(6){color:#34445a}.check-time{font-weight:700;color:#0d6efd}
-/* STATS */
-.stats-section{padding:22px 0 55px}.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.stat-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 4px 14px rgba(15,28,46,.04)}.stat-icon{width:44px;height:44px;display:grid;place-items:center;border-radius:12px;background:#eef6ff;color:#0d6efd;font-size:1.25rem}.stat-card strong{display:block;color:var(--ink);font:800 1.35rem 'Space Grotesk'}.stat-card span{display:block;color:#7a8799;font-size:.76rem;margin-top:2px}
-@media(max-width:900px){.dropdown-sub>a::after{content:'⌄'}.dropdown-menu.nested{position:static;margin:0 8px;display:none;background:#122943;border-left:3px solid #e53935}.dropdown-sub:hover .nested,.dropdown-sub:focus-within .nested{display:block}.dropdown-menu.exam-dropdown a{color:#cfe2ff!important}.dropdown-menu.nested a{color:#ffb2b2!important}.time-bar .container{padding:7px 16px;min-height:44px}.stats-grid{grid-template-columns:1fr 1fr}}
-@media(max-width:560px){.stats-grid{grid-template-columns:1fr}.latest-card{flex-basis:84vw}.slider-btns{position:static;margin:-8px 0 8px;justify-content:flex-end}}
+    /* ===== TABLE ===== */
+    .table-box{overflow:auto;border:1px solid var(--line);border-radius:18px;background:rgba(6,21,33,.7)}
+    table{width:100%;border-collapse:collapse;min-width:850px}
+    th,td{padding:13px 14px;border-bottom:1px solid rgba(114,241,192,.12);text-align:left}
+    th{color:var(--chalk);font-size:12px;text-transform:uppercase;letter-spacing:.05em;background:#092238}
+    td{color:#dce8ef}
+    tr:hover td{background:rgba(32,201,151,.05)}
 
+    /* ===== SUBJECT ===== */
+    .subject-card{position:relative;overflow:hidden}
+    .subject-card::after{
+      content:"";position:absolute;right:-35px;top:-35px;width:110px;height:110px;
+      border-radius:50%;border:20px solid rgba(32,201,151,.07)
+    }
+    .grade{font-size:12px;color:var(--chalk);font-weight:900;letter-spacing:.12em}
 
-/* FINAL CUSTOMIZATION */
-:root{--purple:#7c3aed;--green-deep:#166534;--green-deep-hover:#14532d}
-.lessons-dropdown{border-top:3px solid var(--green-deep)}
-.lessons-dropdown a{background:var(--green-deep);color:#fff!important;font-weight:800!important}
-.lessons-dropdown a:hover{background:var(--green-deep-hover)!important;color:#fff!important}
-nav a.lessons-menu, .dropdown > a[href="#lessons"]{background:var(--purple)!important;color:#fff!important;font-weight:800!important}
-nav a.lessons-menu:hover, .dropdown > a[href="#lessons"]:hover{background:#6d28d9!important;color:#fff!important}
-.time-grid{display:grid!important;grid-template-columns:2fr 1fr;align-items:center;gap:14px;min-height:48px!important;text-align:left!important}
-.time-col{display:flex;align-items:center;gap:8px;min-width:0;white-space:nowrap;overflow:hidden}
-.time-col #currentTime{overflow:hidden;text-overflow:ellipsis}
-.time-search{display:flex;align-items:center;gap:8px;background:#f5f7fa;border:1px solid rgba(15,28,46,.1);border-radius:10px;padding:4px 7px 4px 10px;min-width:0}
-.time-search #siteSearch{flex:1;border:0;outline:0;background:transparent;color:var(--ink);font:500 .78rem 'Be Vietnam Pro';min-width:0}
-.time-search #siteSearch::placeholder{color:#8a96a8}
-.time-search .search-icon{font-size:1rem;color:#6d7d92}
-.time-search .search-clear{border:0;background:#e6ebf1;color:#506078;border-radius:7px;padding:4px 8px;cursor:pointer;display:none}
-.time-search .search-clear.show{display:block}
-.purple{background:var(--purple)!important;color:#fff!important}.purple:hover{background:#6d28d9!important}
-.search-status{min-height:22px;margin:8px 2px 0;color:#718097;font-size:.75rem}
-@media(max-width:900px){.dropdown-menu.lessons-dropdown a{background:#14532d;color:#fff!important}.time-grid{grid-template-columns:1fr;gap:7px;padding:7px 16px}.time-col{white-space:normal}.time-search{width:100%}}
-@media(max-width:620px){.time-col{font-size:.7rem}.time-search #siteSearch{font-size:.75rem}}
-</style>
+    /* ===== TICKER ===== */
+    .ticker-window{overflow:hidden;border:1px solid var(--line);border-radius:18px;padding:8px;background:#061521}
+    .ticker{display:flex;width:max-content;gap:18px;animation:ticker 42s linear infinite}
+    .ticker:hover{animation-play-state:paused}
+    .ticker-item{width:250px;padding:17px;border-radius:14px;background:var(--ink-2);border:1px solid var(--line)}
+    .ticker-item b{display:block;margin-bottom:5px}
+    .ticker-item span{font-size:13px;color:var(--muted)}
+    @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+    /* ===== AI ===== */
+    .ai{
+      display:grid;grid-template-columns:.8fr 1.2fr;gap:22px;align-items:stretch
+    }
+    .ai-info,.chatbox{
+      border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#0c2a41,#071a2b)
+    }
+    .ai-info{padding:26px}
+    .ai-info h3{font-size:30px;margin:0 0 8px}
+    .ai-info p{color:var(--muted)}
+    .ai-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
+    .ai-badges span{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
+    .chatbox{display:flex;flex-direction:column;min-height:370px;overflow:hidden}
+    .chat-head{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+    .chat-head strong{color:var(--tech-2)}
+    .chat-body{padding:18px;flex:1;display:flex;flex-direction:column;gap:10px;overflow:auto}
+    .bubble{max-width:82%;padding:10px 13px;border-radius:14px;background:#10344c}
+    .bubble.user{align-self:flex-end;background:#12624d}
+    .chat-note{font-size:12px;color:var(--muted)}
+    .chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
+    .chat-form input{
+      flex:1;min-width:0;background:#061521;color:white;border:1px solid var(--line);
+      border-radius:11px;padding:11px 12px;outline:none
+    }
+    .chat-form button{border:0;border-radius:11px;background:var(--chalk);padding:0 15px;font-weight:900;cursor:pointer}
+
+    /* ===== STATS / FOOTER ===== */
+    .stat{text-align:center}
+    .stat strong{display:block;font-size:34px;color:var(--chalk)}
+    .stat span{font-size:12px;color:var(--muted);letter-spacing:.08em}
+    footer{border-top:1px solid var(--line);background:#05131f;padding:45px 0 25px}
+    .footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:25px}
+    footer h3{margin-top:0}
+    footer p,footer li{color:var(--muted)}
+    footer ul{list-style:none;padding:0;margin:0}
+    footer li{margin:7px 0}
+    .footer-bottom{border-top:1px solid var(--line);margin-top:30px;padding-top:18px;display:flex;justify-content:space-between;gap:15px;color:var(--muted);font-size:13px}
+    .top-btn{
+      position:fixed;right:20px;bottom:20px;width:46px;height:46px;border-radius:50%;
+      border:1px solid var(--tech);background:var(--ink-2);color:var(--tech-2);
+      cursor:pointer;display:none;z-index:999
+    }
+    .top-btn.show{display:block}
+
+    @media(max-width:900px){
+      .hero-grid,.ai{grid-template-columns:1fr}
+      .grid-3,.news-track{grid-template-columns:1fr 1fr}
+      .grid-4{grid-template-columns:1fr 1fr}
+      .nav{flex-wrap:wrap;padding:6px 0}
+      .nav-link{min-height:55px}
+    }
+    @media(max-width:680px){
+      .topbar-inner{min-height:72px}
+      .brand-text{display:none}
+      .clock .time{font-size:16px}
+      .clock .day{font-size:11px}
+      .menu-toggle{display:block;margin:7px 0}
+      .nav-wrap{display:none}
+      .nav-wrap.open{display:block}
+      .nav{display:block}
+      .nav-link{align-items:flex-start;padding:10px 12px}
+      .dropdown{position:static;display:block;box-shadow:none;margin:0 10px 8px}
+      .grid-3,.grid-4,.news-track{grid-template-columns:1fr}
+      .hero{padding-top:45px}
+      .hero-actions .btn{width:100%}
+      .section-head{display:block}
+      .section-head p{margin-top:8px}
+      .footer-grid{grid-template-columns:1fr}
+      .footer-bottom{display:block}
+      .footer-bottom span{display:block;margin-top:5px}
+    }
+  </style>
 </head>
+
 <body>
-<header>
-  <div class="nav-wrap container">
-    <a class="brand" href="#home" aria-label="WEBH2T Home"><span class="dot"></span><span>WEBH2T<small>TIN HỌC THPT</small></span></a>
-    <button class="menu-toggle" id="menuToggle" aria-label="Mở menu" aria-expanded="false">☰</button>
-    <nav id="mainNav">
-      <ul>
-        <li><a href="#home">HOME</a></li>
-        <li><a href="#timetable">TIMETABLE</a></li>
-        <li class="dropdown"><a href="#lessons">LESSONS</a>
-          <ul class="dropdown-menu lessons-dropdown">
-            <li><a href="tin10.html">TIN 10</a></li><li><a href="tin11.html">TIN 11</a></li><li><a href="tin12.html">TIN 12</a></li>
-          </ul>
-        </li>
-        <li class="dropdown"><a class="exam-menu" href="exam.html">EXAMS</a>
-          <ul class="dropdown-menu exam-dropdown">
-            <li><a href="exam.html#question-bank">QUESTION BANK</a></li>
-            <li class="dropdown-sub"><a href="exam.html#submit">SUBMIT TEST</a>
-              <ul class="dropdown-menu nested">
-                <li><a href="exam.html#submit-10">SUBMIT TEST 10</a></li><li><a href="exam.html#submit-11">SUBMIT TEST 11</a></li><li><a href="exam.html#submit-12">SUBMIT TEST 12</a></li>
-              </ul>
-            </li>
-            <li><a href="exam.html#results">EXAM RESULTS</a></li>
-          </ul>
-        </li>
-        <li><a href="#knowledge">KNOWLEDGE</a></li><li><a href="#contact">CONTACT</a></li>
-      </ul>
-    </nav>
-  </div>
-</header>
-
-<div class="time-bar" aria-live="polite"><div class="container time-grid"><div class="time-col"><span class="time-dot"></span><span id="currentTime">Đang cập nhật thời gian HCM…</span><span class="mono">GMT+7</span></div><div class="time-search"><span class="search-icon">⌕</span><input id="siteSearch" type="search" autocomplete="off" placeholder="Tìm kiếm bài giảng, kiến thức, đề kiểm tra…" aria-label="Tìm kiếm trên website"><button class="search-clear" id="searchClear" type="button">×</button></div></div></div>
-
-<main>
-<section class="hero" id="home">
-  <div class="container">
-    <span class="eyebrow">● TIN HỌC 10 · 11 · 12 · DIGITAL COMPETENCE</span>
-    <h1><span>Học Tin học thời 4.0 — song ngữ, thực hành, đúng năng lực số</span><span class="en">Learning Informatics the modern way — bilingual, practical and digitally competent.</span></h1>
-    <p>WEBH2T là không gian học tập dành cho Tin học THPT: bài giảng theo khối, kiến thức năng lực số, thời khóa biểu và các bài viết mới.</p>
-    <div class="hero-actions">
-      <a class="btn primary" href="#lessons">Xem bài giảng</a><a class="btn purple" href="#knowledge">Khám phá kiến thức</a><a class="btn blue" href="exam.html#question-bank">Ngân hàng đề</a><a class="btn red" href="exam.html#submit-10">Nộp bài 10</a><a class="btn red" href="exam.html#submit-11">Nộp bài 11</a><a class="btn red" href="exam.html#submit-12">Nộp bài 12</a>
-    </div>
-  </div>
-</section>
-
-
-<!-- 3. Bài viết mới nhất -->
-<section id="latest">
-  <div class="container latest-wrap">
-    <div class="section-head"><span class="tag">LATEST POSTS</span><h2>Bài viết mới nhất</h2><span class="en">Latest articles</span></div>
-    <div class="slider-btns"><button class="slider-btn" id="slidePrev" aria-label="Bài trước">←</button><button class="slider-btn" id="slideNext" aria-label="Bài sau">→</button></div>
-    <div class="latest-scroller" id="latestScroller">
-      <article class="latest-card"><div class="thumb"><b>Khung năng lực số</b></div><div class="post-body"><div class="post-meta">KIẾN THỨC · 2026</div><h3>Khung năng lực số tích hợp trong dạy học Tin học</h3><p>Các nhóm năng lực và cách vận dụng trong học tập.</p><a class="post-link" href="#knowledge">Đọc bài →</a></div></article>
-      <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#1d3150,#5d8cff)"><b>Tin học 10</b></div><div class="post-body"><div class="post-meta">BÀI GIẢNG · TIN 10</div><h3>Bài giảng Tin học 10 mới cập nhật</h3><p>Mở trang Tin 10 để xem toàn bộ bài học và tài liệu.</p><a class="post-link" href="tin10.html">Xem Tin 10 →</a></div></article>
-      <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#153c4a,#2ec4b6)"><b>Tin học 11</b></div><div class="post-body"><div class="post-meta">BÀI GIẢNG · TIN 11</div><h3>Tài liệu và bài học Tin học 11</h3><p>Nội dung được sắp xếp theo từng chủ đề.</p><a class="post-link" href="tin11.html">Xem Tin 11 →</a></div></article>
-      <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#3d2a16,#ffc845)"><b>Tin học 12</b></div><div class="post-body"><div class="post-meta">BÀI GIẢNG · TIN 12</div><h3>Tài liệu và bài học Tin học 12</h3><p>Ôn tập, kiến thức mạng và các chủ đề trọng tâm.</p><a class="post-link" href="tin12.html">Xem Tin 12 →</a></div></article>
-      <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#26324b,#8c9bb8)"><b>Học tập hiệu quả</b></div><div class="post-body"><div class="post-meta">GÓC HỌC TẬP</div><h3>Mẹo học Tin học và thực hành kỹ năng số</h3><p>Gợi ý cách học, tự luyện và quản lý tài liệu.</p><a class="post-link" href="#knowledge">Xem thêm →</a></div></article>
-      <article class="latest-card"><div class="thumb" style="background:linear-gradient(135deg,#14342e,#2ec4b6)"><b>Digital Skills</b></div><div class="post-body"><div class="post-meta">DIGITAL COMPETENCE</div><h3>Kỹ năng số an toàn cho học sinh THPT</h3><p>Những nguyên tắc cơ bản để học tập an toàn trên môi trường số.</p><a class="post-link" href="#knowledge">Đọc bài →</a></div></article>
-    </div><div class="latest-progress" aria-hidden="true"><span id="latestProgress"></span></div>
-  </div>
-</section>
-
-<!-- 4. Thời khóa biểu -->
-<section id="timetable">
-  <div class="container">
-    <div class="section-head"><span class="tag">TIMETABLE</span><h2>Thời khóa biểu tuần</h2><span class="en">Weekly teaching schedule</span></div>
-    <div class="tkb-card"><table class="tkb"><thead><tr><th>Ngày</th><th>Buổi</th><th>Tiết</th><th>Môn / Hoạt động</th><th>Lớp</th><th>Nội dung</th><th>Kiểm tra / Thời gian</th></tr></thead><tbody>
-<tr><td>Thứ 2</td><td class="session">Sáng</td><td>1</td><td>Tin học</td><td><span class="class-tag">C5</span></td><td>Giảng dạy theo kế hoạch tuần</td><td class="check-time">—</td></tr>
-<tr><td>Thứ 2</td><td class="session">Sáng</td><td>3</td><td>HĐTN2</td><td><span class="class-tag">B1</span></td><td>Hoạt động trải nghiệm</td><td class="check-time">—</td></tr>
-<tr><td>Thứ 3</td><td class="session">Sáng</td><td>2</td><td>Tin học</td><td><span class="class-tag">A2</span></td><td>Bài học và thực hành</td><td class="check-time">—</td></tr>
-<tr><td>Thứ 3</td><td class="session">Chiều</td><td>5</td><td>Tin học</td><td><span class="class-tag">B8</span></td><td>Bài học và thực hành</td><td class="check-time">—</td></tr>
-<tr><td>Thứ 7</td><td class="session">Sáng</td><td>2</td><td>Bồi dưỡng học sinh giỏi</td><td><span class="class-tag">HSG</span></td><td>Luyện tập chuyên sâu</td><td class="check-time">—</td></tr>
-</tbody></table></div>
-  </div>
-</section>
-
-<!-- 5. Bài giảng -->
-<section id="lessons">
-  <div class="container">
-    <div class="section-head"><span class="tag">LESSONS</span><h2>Bài giảng theo khối</h2><span class="en">Lessons by grade</span></div>
-    <div class="grade-grid">
-      <article class="grade-card"><div class="book-cover"><div class="book"><div class="grade">10</div><strong>TIN HỌC<br>THPT</strong><small>Thông tin · Dữ liệu · Năng lực số</small></div></div><div class="grade-info"><div class="num">GRADE 10</div><h3>Tin học 10</h3><p>Bài giảng và tài liệu dành cho khối 10.</p><a class="more" href="tin10.html">Mở bài giảng →</a></div></article>
-      <article class="grade-card"><div class="book-cover" style="background:linear-gradient(145deg,#193b4c,#5d8cff)"><div class="book"><div class="grade">11</div><strong>TIN HỌC<br>THPT</strong><small>Kiến thức · Thực hành · Dự án</small></div></div><div class="grade-info"><div class="num">GRADE 11</div><h3>Tin học 11</h3><p>Bài giảng và tài liệu dành cho khối 11.</p><a class="more" href="tin11.html">Mở bài giảng →</a></div></article>
-      <article class="grade-card"><div class="book-cover" style="background:linear-gradient(145deg,#4a3519,#ffc845)"><div class="book"><div class="grade">12</div><strong>TIN HỌC<br>THPT</strong><small>Mạng · Hệ thống · Ôn tập</small></div></div><div class="grade-info"><div class="num">GRADE 12</div><h3>Tin học 12</h3><p>Bài giảng và tài liệu dành cho khối 12.</p><a class="more" href="tin12.html">Mở bài giảng →</a></div></article>
-    </div>
-  </div>
-</section>
-
-<!-- 6. Kiến thức -->
-<section id="knowledge">
-  <div class="container">
-    <div class="section-head"><span class="tag">KNOWLEDGE</span><h2>Khung năng lực số tích hợp</h2><span class="en">Digital competence & articles</span></div>
-    <div class="knowledge-grid">
-      <div class="competency"><h3>5 nhóm năng lực số</h3><p>Danh mục tổng hợp để học sinh dễ tìm kiến thức và bài viết theo kỹ năng.</p><div class="badges"><span class="badge"><b>01</b> Thông tin & dữ liệu</span><span class="badge"><b>02</b> Giao tiếp & hợp tác</span><span class="badge"><b>03</b> Sáng tạo nội dung số</span><span class="badge"><b>04</b> An toàn số</span><span class="badge"><b>05</b> Giải quyết vấn đề</span></div></div>
-      <div class="article-list">
-        <article class="article-item"><div><h3>Khai thác và đánh giá thông tin trên Internet</h3><p>Kỹ năng tìm kiếm, chọn lọc và kiểm chứng nguồn tin.</p></div><a href="#">Đọc →</a></article>
-        <article class="article-item"><div><h3>An toàn tài khoản và bảo vệ dữ liệu cá nhân</h3><p>Mật khẩu, xác thực hai bước và thói quen an toàn.</p></div><a href="#">Đọc →</a></article>
-        <article class="article-item"><div><h3>Tạo nội dung số có trách nhiệm</h3><p>Bản quyền, trích dẫn và chia sẻ nội dung trên môi trường số.</p></div><a href="#">Đọc →</a></article>
-        <article class="article-item"><div><h3>Giải quyết vấn đề bằng công cụ số</h3><p>Tư duy thuật toán, công cụ trực tuyến và hợp tác.</p></div><a href="#">Đọc →</a></article>
+  <header class="topbar" id="top">
+    <div class="container topbar-inner">
+      <a class="brand" href="index.html" aria-label="WEBH2T Trang chủ">
+        <img src="assets/LOGO1.png" alt="WEBH2T">
+        <div class="brand-text">
+          <strong>WEBH2T · TIN HỌC THPT</strong>
+          <span>SONG NGỮ · NĂNG LỰC SỐ · AI</span>
+        </div>
+      </a>
+      <div class="clock" aria-live="polite">
+        <div class="day" id="vnDay">Đang cập nhật...</div>
+        <div class="time" id="vnTime">--:--:--</div>
       </div>
     </div>
+  </header>
+
+  <div class="quote-bar" aria-label="Danh ngôn giáo dục">
+    <div class="quote-track" id="quoteTrack"></div>
   </div>
-</section>
 
-<!-- 7. THỐNG KÊ -->
-<section class="stats-section" id="stats"><div class="container"><div class="stats-grid"><div class="stat-card"><div class="stat-icon">◉</div><div><strong id="viewCount">—</strong><span>Tổng số lượt xem</span></div></div><div class="stat-card"><div class="stat-icon">▤</div><div><strong id="postCount">0</strong><span>Tổng số bài viết</span></div></div></div></div></section>
+  <button class="menu-toggle container" id="menuToggle" aria-expanded="false">☰ MENU</button>
 
-<!-- 8. Contact + Donate -->
-<section id="contact">
-  <div class="container">
-    <div class="section-head"><span class="tag">CONTACT</span><h2>Liên hệ & ủng hộ</h2><span class="en">Author · Contact · Donate</span></div>
-    <div class="contact-grid">
-      <div class="contact-card"><h3>Tác giả WEBH2T</h3><p>Website chia sẻ tài liệu và bài giảng Tin học THPT. Nếu bạn có góp ý, tài liệu hoặc đề xuất nội dung, hãy liên hệ qua email.</p><div class="contact-list"><a href="mailto:websiteh2t@gmail.com">✉ websiteh2t@gmail.com</a><a href="https://webh2t.github.io/">🌐 webh2t.github.io</a></div></div>
-      <div class="donate" id="donate"><div class="donate-copy"><h3>Ủng hộ WEBH2T ☕</h3><p>Nếu website hữu ích cho việc dạy và học, bạn có thể quét QR để ủng hộ chi phí duy trì và cập nhật nội dung.</p></div><div class="qr"><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=https%3A%2F%2Fwww.buymeacoffee.com%2Fwebh2t" alt="QR code donate"><small>SCAN TO DONATE</small></div></div>
+  <div class="nav-wrap" id="navWrap">
+    <nav class="nav container" aria-label="Menu chính">
+      <div class="nav-item">
+        <a class="nav-link active" href="index.html"><span class="en">HOME</span><span class="vi">TRANG CHỦ</span></a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="#schedule"><span class="en">SCHEDULE</span><span class="vi">LỊCH BIỂU</span></a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="#lessons"><span class="en">LESSONS</span><span class="vi">BÀI GIẢNG</span></a>
+        <div class="dropdown">
+          <a href="tin10.html">COMPUTER SCIENCE 10 · TIN HỌC 10</a>
+          <a href="tin11.html">COMPUTER SCIENCE 11 · TIN HỌC 11</a>
+          <a href="tin12.html">COMPUTER SCIENCE 12 · TIN HỌC 12</a>
+          <a href="chuyende.html">TOPICS · CHUYÊN ĐỀ</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="exam.html"><span class="en">EXAM</span><span class="vi">KIỂM TRA</span></a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="knowledge.html"><span class="en">KNOWLEDGE</span><span class="vi">THỦ THUẬT</span></a>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="#"><span class="en">APPS</span><span class="vi">ỨNG DỤNG</span></a>
+        <div class="dropdown">
+          <a href="autochongoi.html">CLASS SEATING · SƠ ĐỒ LỚP</a>
+          <a href="#competition">COMPETITION · NHẬP THI ĐUA</a>
+        </div>
+      </div>
+      <div class="nav-item">
+        <a class="nav-link" href="#contact"><span class="en">CONTACT</span><span class="vi">LIÊN HỆ</span></a>
+      </div>
+    </nav>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <div class="eyebrow">DIGITAL CLASSROOM · 2026</div>
+          <h1>Học Tin học <span>thời 4.0</span><br>song ngữ & năng lực số.</h1>
+          <p>
+            Bài giảng, lịch học, thực hành và kiểm tra môn Tin học THPT.
+            Thiết kế theo hướng Anh–Việt, thực hành và phát triển năng lực số,
+            sẵn sàng mở rộng công cụ AI hỗ trợ học tập.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#lessons">📚 XEM BÀI GIẢNG</a>
+            <a class="btn btn-outline" href="exam.html">📝 NỘP / LÀM BÀI KIỂM TRA</a>
+          </div>
+        </div>
+
+        <aside class="hero-panel">
+          <h3>🎯 Learning Focus</h3>
+          <div class="pill-list">
+            <div class="pill"><b>01</b> Khai thác thông tin · Information</div>
+            <div class="pill"><b>02</b> An toàn số · Digital Safety</div>
+            <div class="pill"><b>03</b> Giải quyết vấn đề · Problem Solving</div>
+            <div class="pill"><b>04</b> Sáng tạo nội dung · Digital Creation</div>
+            <div class="pill"><b>05</b> Giao tiếp & hợp tác · Collaboration</div>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="latest">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="kicker">LATEST UPDATES</div>
+            <h2>Bài viết mới nhất</h2>
+          </div>
+          <p>Tự động đọc tiêu đề từ các trang con hiện có trên GitHub Pages. Nếu trang con chưa có cấu trúc tiêu đề chuẩn, hệ thống dùng nội dung dự phòng.</p>
+        </div>
+        <div class="news-track" id="latestPosts">
+          <div class="loading">Đang tải nội dung từ tin10.html, tin11.html, tin12.html, chuyende.html, exam.html và knowledge.html...</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="schedule">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="kicker">SCHEDULE</div>
+            <h2>Thời khóa biểu môn Tin học</h2>
+          </div>
+          <p>Hiện đang có dữ liệu mẫu. Có thể thay bằng Google Sheets/CSV mà không phải sửa phần giao diện.</p>
+        </div>
+        <div class="table-box">
+          <table>
+            <thead>
+              <tr>
+                <th>Thứ ngày / Day</th>
+                <th>Buổi / Session</th>
+                <th>Tiết / Period</th>
+                <th>Môn / Subject</th>
+                <th>Lớp / Class</th>
+                <th>Nội dung / Content</th>
+                <th>Kiểm tra / Test</th>
+              </tr>
+            </thead>
+            <tbody id="scheduleBody">
+              <tr><td>Thứ 2</td><td>Sáng</td><td>3</td><td>Tin học</td><td>10</td><td>Bài 1 — Thông tin và dữ liệu</td><td>—</td></tr>
+              <tr><td>Thứ 3</td><td>Sáng</td><td>5</td><td>Tin học</td><td>11</td><td>Bài 2 — Thiết bị số thông minh</td><td>—</td></tr>
+              <tr><td>Thứ 5</td><td>Sáng</td><td>2</td><td>Tin học</td><td>12</td><td>Bài 1 — Thiết bị và giao thức mạng</td><td>—</td></tr>
+              <tr><td>Thứ 6</td><td>Chiều</td><td>4</td><td>HSG</td><td>HSG</td><td>Ôn luyện học sinh giỏi</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="lessons">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="kicker">LESSONS BY GRADE</div>
+            <h2>Bài giảng theo khối</h2>
+          </div>
+          <p>Ba cổng học tập chính cho Tin học 10, 11 và 12.</p>
+        </div>
+        <div class="grid-3">
+          <article class="card subject-card">
+            <div class="grade">GRADE 10</div>
+            <div class="icon">💻</div>
+            <h3>Tin học 10</h3>
+            <p>Thông tin, dữ liệu và các nội dung nền tảng năng lực số cho học sinh đầu cấp.</p>
+            <a class="link" href="tin10.html">Xem bài giảng →</a>
+          </article>
+          <article class="card subject-card">
+            <div class="grade">GRADE 11</div>
+            <div class="icon">🖥️</div>
+            <h3>Tin học 11</h3>
+            <p>Kiến trúc máy tính, thiết bị số thông minh, hệ điều hành và thực hành.</p>
+            <a class="link" href="tin11.html">Xem bài giảng →</a>
+          </article>
+          <article class="card subject-card">
+            <div class="grade">GRADE 12</div>
+            <div class="icon">🌐</div>
+            <h3>Tin học 12</h3>
+            <p>Mạng máy tính, giao thức và các nội dung Tin học THPT nâng cao.</p>
+            <a class="link" href="tin12.html">Xem bài giảng →</a>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="knowledge">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="kicker">KNOWLEDGE</div>
+            <h2>5 thủ thuật mới nhất</h2>
+          </div>
+          <a class="btn btn-outline" href="knowledge.html">Xem tất cả</a>
+        </div>
+        <div class="ticker-window">
+          <div class="ticker" id="knowledgeTicker">
+            <div class="ticker-item"><b>HTML / CSS</b><span>Mẹo xây dựng giao diện học tập dễ dùng.</span></div>
+            <div class="ticker-item"><b>JavaScript</b><span>Tự động hóa các thành phần tương tác.</span></div>
+            <div class="ticker-item"><b>GitHub Pages</b><span>Tổ chức website giáo dục tĩnh hiệu quả.</span></div>
+            <div class="ticker-item"><b>Digital Skills</b><span>Rèn năng lực số qua hoạt động thực hành.</span></div>
+            <div class="ticker-item"><b>AI Learning</b><span>Sử dụng AI như trợ lý học tập có định hướng.</span></div>
+            <div class="ticker-item"><b>HTML / CSS</b><span>Mẹo xây dựng giao diện học tập dễ dùng.</span></div>
+            <div class="ticker-item"><b>JavaScript</b><span>Tự động hóa các thành phần tương tác.</span></div>
+            <div class="ticker-item"><b>GitHub Pages</b><span>Tổ chức website giáo dục tĩnh hiệu quả.</span></div>
+            <div class="ticker-item"><b>Digital Skills</b><span>Rèn năng lực số qua hoạt động thực hành.</span></div>
+            <div class="ticker-item"><b>AI Learning</b><span>Sử dụng AI như trợ lý học tập có định hướng.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="exam-bank">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="kicker">EXAM BANK</div>
+            <h2>Đề thi mới nhất</h2>
+          </div>
+          <a class="btn btn-outline" href="exam.html">Mở ngân hàng đề</a>
+        </div>
+        <div class="grid-3" id="examCards">
+          <article class="card"><div class="icon">📝</div><h3>Kiểm tra Tin học 10</h3><p>Đề kiểm tra và bài tập thực hành.</p><a class="link" href="exam.html">Xem đề →</a></article>
+          <article class="card"><div class="icon">📝</div><h3>Kiểm tra Tin học 11</h3><p>Đề luyện tập theo nội dung chương trình.</p><a class="link" href="exam.html">Xem đề →</a></article>
+          <article class="card"><div class="icon">📝</div><h3>Kiểm tra Tin học 12</h3><p>Đề ôn tập và kiểm tra trực tuyến.</p><a class="link" href="exam.html">Xem đề →</a></article>
+        </div>
+      </div>
+    </section>
+
+    <section id="ai-assistant">
+      <div class="container ai">
+        <div class="ai-info">
+          <div class="kicker">AI LEARNING ASSISTANT</div>
+          <h3>🤖 Trợ lý học tập AI</h3>
+          <p>
+            Khu vực giao diện dành cho trợ lý AI song ngữ Anh–Việt.
+            Bản GitHub Pages này chỉ cung cấp giao diện; không đặt API key trực tiếp
+            trong mã nguồn trình duyệt. Khi kết nối AI thật, nên dùng backend/serverless
+            để bảo vệ khóa API.
+          </p>
+          <div class="ai-badges">
+            <span>🇻🇳 Tiếng Việt</span>
+            <span>🇬🇧 English</span>
+            <span>💻 Tin học THPT</span>
+            <span>🧠 Digital Competence</span>
+          </div>
+        </div>
+
+        <div class="chatbox">
+          <div class="chat-head">
+            <strong>WEBH2T AI CHATBOX</strong>
+            <span>● Demo UI</span>
+          </div>
+          <div class="chat-body" id="chatBody">
+            <div class="bubble">Xin chào! Mình là giao diện trợ lý học tập WEBH2T. Bạn có thể nhập câu hỏi để thử giao diện.</div>
+            <div class="chat-note">AI thật cần được kết nối qua backend/serverless an toàn trước khi triển khai.</div>
+          </div>
+          <form class="chat-form" id="chatForm">
+            <input id="chatInput" autocomplete="off" placeholder="Hỏi bằng tiếng Việt hoặc English...">
+            <button type="submit">GỬI</button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <section id="comments">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="kicker">LATEST COMMENTS</div>
+            <h2>Bình luận mới nhất</h2>
+          </div>
+          <p>Khu vực sẵn sàng kết nối dữ liệu bình luận khi hệ thống bình luận/Firebase được cấu hình.</p>
+        </div>
+        <div class="ticker-window">
+          <div class="ticker" style="animation-direction:reverse">
+            <div class="ticker-item"><b>💬 Học sinh</b><span>Bài giảng dễ theo dõi và có phần thực hành.</span></div>
+            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần song ngữ giúp em nhớ thuật ngữ Tin học.</span></div>
+            <div class="ticker-item"><b>💬 Giáo viên</b><span>Có thể dùng ngân hàng đề để ôn tập theo chủ đề.</span></div>
+            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần năng lực số rất hữu ích cho hoạt động thực hành.</span></div>
+            <div class="ticker-item"><b>💬 Học sinh</b><span>Bài giảng dễ theo dõi và có phần thực hành.</span></div>
+            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần song ngữ giúp em nhớ thuật ngữ Tin học.</span></div>
+            <div class="ticker-item"><b>💬 Giáo viên</b><span>Có thể dùng ngân hàng đề để ôn tập theo chủ đề.</span></div>
+            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần năng lực số rất hữu ích cho hoạt động thực hành.</span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stats">
+      <div class="container">
+        <div class="section-head">
+          <div>
+            <div class="kicker">WEBH2T STATISTICS</div>
+            <h2>Thống kê website</h2>
+          </div>
+        </div>
+        <div class="grid-4">
+          <div class="card stat"><strong id="visitCount">—</strong><span>LƯỢT TRUY CẬP</span></div>
+          <div class="card stat"><strong id="memberCount">—</strong><span>THÀNH VIÊN</span></div>
+          <div class="card stat"><strong id="postCount">—</strong><span>BÀI VIẾT</span></div>
+          <div class="card stat"><strong id="examCount">—</strong><span>ĐỀ THI</span></div>
+        </div>
+        <p class="chat-note" style="margin-top:12px">
+          Hai chỉ số truy cập/thành viên cần kết nối Firebase. Số bài viết và đề thi có thể lấy tự động khi xây dựng data JSON.
+        </p>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contact">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <h3>WEBH2T</h3>
+          <p>Website giáo dục Tin học THPT · Song ngữ Anh–Việt · Năng lực số · Digital Classroom 2026.</p>
+        </div>
+        <div>
+          <h3>LIÊN KẾT</h3>
+          <ul>
+            <li><a href="tin10.html">Tin học 10</a></li>
+            <li><a href="tin11.html">Tin học 11</a></li>
+            <li><a href="tin12.html">Tin học 12</a></li>
+            <li><a href="chuyende.html">Chuyên đề</a></li>
+            <li><a href="exam.html">Kiểm tra</a></li>
+            <li><a href="knowledge.html">Thủ thuật</a></li>
+            <li><a href="autochongoi.html">Sơ đồ lớp</a></li>
+          </ul>
+        </div>
+        <div>
+          <h3>CONTACT</h3>
+          <ul>
+            <li>✉ websiteh2t@gmail.com</li>
+            <li><a href="https://www.youtube.com/@WEBH2T" target="_blank" rel="noopener">▶ YouTube · @WEBH2T</a></li>
+            <li><a href="https://www.facebook.com/share/g/1BmLZhpvbZ/" target="_blank" rel="noopener">f Facebook · WEBH2T</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 WEBH2T · Tài liệu giáo dục Tin học THPT</span>
+        <span>Song ngữ Anh–Việt · Digital Competence · AI Learning</span>
+      </div>
     </div>
-  </div>
-</section>
-</main>
+  </footer>
 
-<footer>© 2026 WEBH2T · Tin học THPT · Liên hệ: <a href="mailto:websiteh2t@gmail.com">websiteh2t@gmail.com</a></footer>
-<button class="to-top" id="toTop" aria-label="Lên đầu trang">↑</button>
+  <button class="top-btn" id="topBtn" aria-label="Về đầu trang">↑</button>
 
-<script>
-const menuToggle=document.getElementById('menuToggle'),mainNav=document.getElementById('mainNav');
-menuToggle.addEventListener('click',()=>{const open=mainNav.classList.toggle('open');menuToggle.setAttribute('aria-expanded',open?'true':'false')});mainNav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{mainNav.classList.remove('open');menuToggle.setAttribute('aria-expanded','false')}));
-// GMT+7 Ho Chi Minh time
-const currentTime=document.getElementById('currentTime'),weekdays=['Chủ nhật','Thứ hai','Thứ ba','Thứ tư','Thứ năm','Thứ sáu','Thứ bảy'];
-function updateHCMTime(){const now=new Date(),parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(now),get=k=>parts.find(x=>x.type===k)?.value||'',d=new Date(Date.UTC(+get('year'),+get('month')-1,+get('day')));currentTime.textContent=`Hôm nay: ${weekdays[d.getUTCDay()]}, ngày ${get('day')}/ ${get('month')}/ ${get('year')} – ${get('hour')}:${get('minute')}:${get('second')}`;}updateHCMTime();setInterval(updateHCMTime,1000);
-// Latest slider
-const scroller=document.getElementById('latestScroller'),progress=document.getElementById('latestProgress');function updateSliderProgress(){const max=scroller.scrollWidth-scroller.clientWidth;progress.style.width=(max<=0?100:Math.min(100,18+(scroller.scrollLeft/max)*82))+'%';}document.getElementById('slidePrev').addEventListener('click',()=>scroller.scrollBy({left:-330,behavior:'smooth'}));document.getElementById('slideNext').addEventListener('click',()=>scroller.scrollBy({left:330,behavior:'smooth'}));scroller.addEventListener('scroll',updateSliderProgress,{passive:true});let autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:325,behavior:'smooth'})},4800);scroller.addEventListener('mouseenter',()=>clearInterval(autoSlide));scroller.addEventListener('mouseleave',()=>{autoSlide=setInterval(()=>{if(scroller.scrollLeft+scroller.clientWidth>=scroller.scrollWidth-10)scroller.scrollTo({left:0,behavior:'smooth'});else scroller.scrollBy({left:325,behavior:'smooth'})},4800)});updateSliderProgress();
-// Search
-const search=document.getElementById('siteSearch'),clearSearch=document.getElementById('searchClear'),searchable=[...document.querySelectorAll('main section')];function runSearch(){const q=search.value.trim().toLowerCase();document.querySelectorAll('.search-hit').forEach(el=>el.classList.remove('search-hit'));clearSearch.classList.toggle('show',!!q);if(!q)return;const hits=searchable.filter(el=>el.innerText.toLowerCase().includes(q));if(hits[0]){hits[0].classList.add('search-hit');hits[0].scrollIntoView({behavior:'smooth',block:'start'});}}search.addEventListener('input',runSearch);clearSearch.addEventListener('click',()=>{search.value='';runSearch();search.focus()});
-// Statistics
-document.getElementById('postCount').textContent=document.querySelectorAll('.latest-card').length;const viewCount=document.getElementById('viewCount');fetch('https://api.countapi.xyz/hit/webh2t-github-io/views').then(r=>r.ok?r.json():Promise.reject()).then(data=>{viewCount.textContent=Number(data.value||0).toLocaleString('vi-VN')}).catch(()=>{viewCount.textContent='—'});
-// Back to top
-const toTop=document.getElementById('toTop');window.addEventListener('scroll',()=>toTop.classList.toggle('show',window.scrollY>450));toTop.addEventListener('click',()=>window.scrollTo({top:0,behavior:'smooth'}));
-</script>
+  <script>
+    /* ==============================
+       1. VIETNAM CLOCK
+       ============================== */
+    const dayNames = [
+      "Chủ nhật","Thứ hai","Thứ ba","Thứ tư","Thứ năm","Thứ sáu","Thứ bảy"
+    ];
+
+    function updateClock(){
+      const now = new Date();
+      const parts = new Intl.DateTimeFormat("vi-VN",{
+        timeZone:"Asia/Ho_Chi_Minh",
+        weekday:"long",day:"2-digit",month:"2-digit",year:"numeric",
+        hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false
+      }).formatToParts(now);
+
+      const get = type => parts.find(p=>p.type===type)?.value || "";
+      document.getElementById("vnDay").textContent =
+        `Hôm nay, ${get("weekday")} ngày ${get("day")}/${get("month")}/${get("year")}`;
+      document.getElementById("vnTime").textContent =
+        `${get("hour")}:${get("minute")}:${get("second")}`;
+    }
+    updateClock();
+    setInterval(updateClock,1000);
+
+    /* ==============================
+       2. DAILY QUOTE
+       ============================== */
+    const quotes = [
+      ["Học, học nữa, học mãi.","V.I. Lenin"],
+      ["Giáo dục là vũ khí mạnh nhất mà người ta có thể sử dụng để thay đổi cả thế giới.","Nelson Mandela"],
+      ["Đầu tư vào tri thức mang lại lợi nhuận tốt nhất.","Benjamin Franklin"],
+      ["Sự học tập không chỉ là chuẩn bị cho cuộc sống, mà là cuộc sống chính nó.","John Dewey"],
+      ["Học tập không bao giờ kết thúc.","Leonardo da Vinci"],
+      ["Thầy cô giáo có thể mở cửa, nhưng chính bạn phải bước vào.","Ngạn ngữ Trung Hoa"],
+      ["Hiền tài là nguyên khí của quốc gia.","Thân Nhân Trung"],
+      ["Mục đích của giáo dục là thay thế một cái tâm trống rỗng bằng một cái tâm mở rộng.","Malcolm Forbes"],
+      ["Cám ơn những kẻ đã làm khó tôi, vì nhờ họ tôi mới biết mình phải học thêm điều mới.","Khuyết danh"],
+      ["Học hỏi là một kho báu sẽ đi theo chủ nhân của nó khắp mọi nơi.","Ngạn ngữ Trung Hoa"],
+      ["Không có con đường nào dài quá đối với người có lòng kiên nhẫn; không có phần thưởng nào xa xôi quá đối với người có sự kiên trì.","Jean de La Bruyère"],
+      ["Thành công không phải là đích đến, mà là một hành trình.","A.H. Benso"],
+      ["Điều duy nhất đứng giữa bạn và thành công là bạn không dám đối mặt với nỗi sợ hãi.","Brian Tracy"],
+      ["Người ta không vấp ngã vì những ngọn núi lớn, mà thường vấp ngã vì những hòn đá nhỏ.","Khuyết danh"],
+      ["Khi một cánh cửa đóng lại, cánh cửa khác sẽ mở ra.","Alexander Graham Bell"],
+      ["Không có áp lực, không có kim cương.","Thomas Carlyle"],
+      ["Thất bại đơn giản chỉ là cơ hội để bắt đầu lại mọi thứ một cách thông minh hơn.","Henry Ford"],
+      ["Cố gắng không bao giờ là muộn.","Ngạn ngữ Anh"],
+      ["Người chịu đựng được gian khổ là người chiến thắng cuối cùng.","Tục ngữ Việt Nam"],
+      ["Đừng đo lường chiều cao của ngọn núi cho đến khi bạn leo lên đỉnh.","Dag Hammarskjöld"],
+      ["Thời gian của bạn là hữu hạn, đừng lãng phí nó để sống cuộc đời của người khác.","Steve Jobs"],
+      ["Giá cả là những gì bạn trả. Giá trị là những gì bạn nhận được.","Warren Buffett"],
+      ["Đầu tư vào bản thân là khoản đầu tư sinh lời tốt nhất.","Warren Buffett"],
+      ["Người giàu mua tài sản, người nghèo mua tiêu sản.","Robert Kiyosaki"]
+    ];
+
+    const q = quotes[new Date().getDate() % quotes.length];
+    const quoteHTML = quotes.map(x => `✦ “${x[0]}” – ${x[1]}`).join("<span>✦</span>");
+    document.getElementById("quoteTrack").innerHTML = quoteHTML + quoteHTML;
+
+    /* ==============================
+       3. LOAD TITLES FROM EXISTING PAGES
+       ============================== */
+    const sources = [
+      {url:"tin10.html", label:"TIN HỌC 10"},
+      {url:"tin11.html", label:"TIN HỌC 11"},
+      {url:"tin12.html", label:"TIN HỌC 12"},
+      {url:"chuyende.html", label:"CHUYÊN ĐỀ"},
+      {url:"exam.html", label:"KIỂM TRA"},
+      {url:"knowledge.html", label:"THỦ THUẬT"}
+    ];
+
+    async function extractPageInfo(source){
+      try{
+        const response = await fetch(source.url,{cache:"no-store"});
+        if(!response.ok) throw new Error("HTTP "+response.status);
+        const text = await response.text();
+        const doc = new DOMParser().parseFromString(text,"text/html");
+        const title =
+          doc.querySelector("h1")?.textContent.trim() ||
+          doc.querySelector("h2")?.textContent.trim() ||
+          doc.title ||
+          source.label;
+        const description =
+          doc.querySelector('meta[name="description"]')?.content ||
+          doc.querySelector("p")?.textContent.trim() ||
+          "Nội dung mới trên WEBH2T.";
+        return { ...source, title, description:description.slice(0,150) };
+      }catch(e){
+        return null;
+      }
+    }
+
+    async function loadLatest(){
+      const results = (await Promise.all(sources.map(extractPageInfo))).filter(Boolean);
+      const target = document.getElementById("latestPosts");
+
+      if(!results.length){
+        target.innerHTML = `
+          <article class="card news-card"><span class="tag">WEBH2T</span>
+          <h3>Bài giảng và nội dung mới</h3>
+          <p>Các trang con đã sẵn sàng. Hãy mở menu để truy cập.</p></article>
+          <article class="card news-card"><span class="tag">LESSONS</span>
+          <h3>Tin học 10 · 11 · 12</h3>
+          <p>Kho bài giảng Tin học THPT.</p></article>
+          <article class="card news-card"><span class="tag">EXAM</span>
+          <h3>Ngân hàng kiểm tra</h3>
+          <p>Các bài kiểm tra và đề thi trực tuyến.</p></article>`;
+        return;
+      }
+
+      target.innerHTML = results.slice(0,6).map(item => `
+        <article class="card news-card">
+          <span class="tag">${item.label}</span>
+          <h3>${escapeHTML(item.title)}</h3>
+          <p>${escapeHTML(item.description)}</p>
+          <a class="link" href="${item.url}">Mở nội dung →</a>
+        </article>
+      `).join("");
+    }
+
+    function escapeHTML(value){
+      return String(value).replace(/[&<>"']/g,c=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+      }[c]));
+    }
+    loadLatest();
+
+    /* ==============================
+       4. MOBILE MENU
+       ============================== */
+    const menuToggle = document.getElementById("menuToggle");
+    const navWrap = document.getElementById("navWrap");
+    menuToggle.addEventListener("click",()=>{
+      const open = navWrap.classList.toggle("open");
+      menuToggle.setAttribute("aria-expanded",open);
+    });
+
+    /* ==============================
+       5. DEMO AI CHAT UI
+       ============================== */
+    const chatForm = document.getElementById("chatForm");
+    const chatInput = document.getElementById("chatInput");
+    const chatBody = document.getElementById("chatBody");
+
+    chatForm.addEventListener("submit",(e)=>{
+      e.preventDefault();
+      const text = chatInput.value.trim();
+      if(!text) return;
+
+      const user = document.createElement("div");
+      user.className = "bubble user";
+      user.textContent = text;
+      chatBody.appendChild(user);
+
+      const bot = document.createElement("div");
+      bot.className = "bubble";
+      bot.textContent =
+        "Đây là giao diện demo. Để AI trả lời thật, hãy kết nối form này với backend/serverless của WEBH2T; không đặt API key trực tiếp trong index.html.";
+      chatBody.appendChild(bot);
+
+      chatInput.value = "";
+      chatBody.scrollTop = chatBody.scrollHeight;
+    });
+
+    /* ==============================
+       6. BACK TO TOP
+       ============================== */
+    const topBtn = document.getElementById("topBtn");
+    window.addEventListener("scroll",()=>{
+      topBtn.classList.toggle("show",window.scrollY>500);
+    });
+    topBtn.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
+
+    /* ==============================
+       7. OPTIONAL STAT PLACEHOLDERS
+       Replace these with Firebase/JSON later.
+       ============================== */
+    document.getElementById("postCount").textContent = "—";
+    document.getElementById("examCount").textContent = "—";
+    document.getElementById("visitCount").textContent = "—";
+    document.getElementById("memberCount").textContent = "—";
+  </script>
 </body>
 </html>
