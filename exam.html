@@ -238,6 +238,10 @@
   .stat-mini b{ color:var(--brilliant-blue); font-family:'Space Grotesk',monospace;}
   .badge-list{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px;}
   .badge-chip{ background:var(--ink); color:var(--amber); font-size:.78rem; padding:6px 12px; border-radius:20px;}
+  .profile-edit-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
+  .profile-edit-actions .btn{font-size:.8rem;padding:9px 14px;}
+  .profile-readonly{background:#F4F6F8!important;color:#66758A!important;}
+  .profile-hint{font-size:.72rem;color:#7C8AA0;margin-top:6px;}
 
   /* ================= LEADERBOARD ================= */
   .lb-toggle{ display:flex; align-items:center; gap:8px; font-size:.82rem; color:#5B6B82; margin-bottom:14px;}
@@ -560,6 +564,20 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="profile-edit-modal">
+  <div class="modal-box" style="max-width:460px;">
+    <button class="modal-close" onclick="closeModal('profile-edit-modal')">✕</button>
+    <h3>✏️ Chỉnh sửa hồ sơ học sinh</h3>
+    <div class="field"><label>Họ và Tên <span style="color:#E5342B;">*</span></label><input type="text" id="edit-name" placeholder="Nguyễn Văn A" maxlength="80"></div>
+    <div class="field"><label>Lớp <span style="color:#E5342B;">*</span></label><input type="text" id="edit-class" placeholder="Ví dụ: 11A1" maxlength="20"></div>
+    <div class="field"><label>Tỉnh/Thành phố <span style="color:#E5342B;">*</span></label><input type="text" id="edit-province" placeholder="Ví dụ: Khánh Hòa" maxlength="60"></div>
+    <div class="field"><label>Email Google / tài khoản</label><input class="profile-readonly" type="email" id="edit-email" readonly></div>
+    <div class="profile-hint">🔒 Email và quyền PRO do hệ thống quản lý, học sinh không thể tự thay đổi.</div>
+    <button class="modal-submit" id="profile-save-btn" onclick="saveProfile()">💾 LƯU THAY ĐỔI</button>
+    <div class="form-msg" id="profile-msg"></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="pro-modal">
   <div class="modal-box" style="max-width:460px;">
     <button class="modal-close" onclick="closeModal('pro-modal')">✕</button>
@@ -714,6 +732,37 @@ function signInFacebook(){
     .then(() => closeModal('login-modal'))
     .catch(err => showMsg('login-msg', 'Lỗi Facebook: ' + err.message, false));
 }
+function openEditProfile(){
+  if (!currentUser) { openModal('login-modal'); return; }
+  db.collection('users').doc(currentUser.uid).get().then(doc => {
+    const d = doc.exists ? (doc.data() || {}) : {};
+    document.getElementById('edit-name').value = d.name || currentUser.displayName || '';
+    document.getElementById('edit-class').value = d.class || '';
+    document.getElementById('edit-province').value = d.province || '';
+    document.getElementById('edit-email').value = currentUser.email || '';
+    document.getElementById('profile-msg').className = 'form-msg';
+    document.getElementById('profile-msg').textContent = '';
+    openModal('profile-edit-modal');
+  }).catch(err => showMsg('profile-msg','Không tải được hồ sơ: '+err.message,false));
+}
+
+function saveProfile(){
+  if (!currentUser) return;
+  const name = document.getElementById('edit-name').value.trim();
+  const klass = document.getElementById('edit-class').value.trim();
+  const province = document.getElementById('edit-province').value.trim();
+  if (!name) return showMsg('profile-msg','Vui lòng nhập Họ và Tên.',false);
+  if (!klass) return showMsg('profile-msg','Vui lòng nhập Lớp.',false);
+  if (!province) return showMsg('profile-msg','Vui lòng nhập Tỉnh/Thành phố.',false);
+  const btn = document.getElementById('profile-save-btn');
+  if (btn) { btn.disabled=true; btn.textContent='⏳ Đang lưu…'; }
+  db.collection('users').doc(currentUser.uid).set({name, class:klass, province}, {merge:true})
+    .then(() => showMsg('profile-msg','✅ Hồ sơ đã được cập nhật thành công.',true))
+    .then(() => setTimeout(() => closeModal('profile-edit-modal'), 700))
+    .catch(err => showMsg('profile-msg','❌ Không thể lưu hồ sơ: '+err.message,false))
+    .finally(() => { if(btn){btn.disabled=false; btn.textContent='💾 LƯU THAY ĐỔI';} });
+}
+
 function signOutUser(){ auth.signOut(); }
 
 function sendResetEmail(){
@@ -754,14 +803,17 @@ auth.onAuthStateChanged(user => {
         proStatus.className = 'pro-status ' + (proGrades.length ? '' : 'free');
         proStatus.textContent = proGrades.length ? `⭐ PRO: ${proGrades.map(g=>'Tin '+g).join(' · ')}` : 'Tài khoản thường';
       }
+      const profileName = data.name || user.displayName || user.email || 'Học sinh';
+      document.getElementById('user-name').textContent = profileName;
       document.getElementById('user-class').textContent = data.class ? `Lớp ${data.class}` : (user.email || '—');
       document.getElementById('profile-basic').innerHTML = `
-        <div class="stat-mini"><span>Họ tên</span><b>${escapeHTML(user.displayName || data.name || '—')}</b></div>
+        <div class="stat-mini"><span>Họ tên</span><b>${escapeHTML(profileName)}</b></div>
         <div class="stat-mini"><span>Email</span><b>${escapeHTML(user.email || '—')}</b></div>
         <div class="stat-mini"><span>Lớp</span><b>${escapeHTML(data.class || 'Chưa cập nhật')}</b></div>
         <div class="stat-mini"><span>Tỉnh/TP</span><b>${escapeHTML(data.province || 'Chưa cập nhật')}</b></div>
         <div class="stat-mini"><span>Quyền truy cập</span><b>${proGrades.length ? proGrades.map(g=>'PRO Tin '+g).join(', ') : 'Tài khoản thường'}</b></div>
-        <div style="margin-top:10px;">${proBadges || '<span class="badge-chip">Bài 1 mỗi môn miễn phí</span>'}</div>`;
+        <div style="margin-top:10px;">${proBadges || '<span class="badge-chip">Bài 1 mỗi môn miễn phí</span>'}</div>
+        <div class="profile-edit-actions"><button class="btn btn-primary" onclick="openEditProfile()">✏️ Chỉnh sửa thông tin</button></div>`;
       [10,11,12].forEach(renderExamBank);
       refreshProRequestBadges();
     }, err => console.error('user profile listener error:', err));
@@ -1615,7 +1667,7 @@ function saveAttempt(score, correct, wrong, skip, timeSpent){
     const d = doc.data() || {};
     return db.collection('attempts').add({
       uid: currentUser.uid,
-      name: currentUser.displayName || d.name || 'Học sinh',
+      name: d.name || currentUser.displayName || 'Học sinh',
       class: d.class || '',
       province: d.province || '',
       examKey: currentExamKey,
