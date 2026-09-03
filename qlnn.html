@@ -674,3 +674,27 @@
             <td class="border px-2 py-1 text-xs">×${r.lan}${r.heso?'×'+r.heso:''}</td>
             <td class="border px-2 py-1 text-xs font-bold ${r.total>=0?'text-green-600':'text-red-600'}">${r.total>=0?'+':''}${r.total}</td>
             <td class="border px-2
+
+<script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyDOqMkioHhQ9YuFY9mCpx_kRLOLL_tf9jU",
+    authDomain: "webh2t-tin.firebaseapp.com",
+    projectId: "webh2t-tin",
+    storageBucket: "webh2t-tin.firebasestorage.app",
+    messagingSenderId: "1016309715061",
+    appId: "1:1016309715061:web:334a28a80b9e998c77e83c",
+    measurementId: "G-82JKYH5C86"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
