@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản Lý Nề Nếp Thi Đua — THPT Hà Huy Tập</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+    }
+    :root {
+      --good: #22c55e; --fair: #3b82f6; --avg: #f97316; --poor: #ef4444;
+    }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; }
+    .badge-tot { background-color: #dcfce7; color: #166534; }
+    .badge-kha { background-color: #dbeafe; color: #1e40af; }
+    .badge-dat { background-color: #ffedd5; color: #c2410c; }
+    .badge-chua { background-color: #fee2e2; color: #b91c1c; }
+    .tab-active { border-bottom: 3px solid #3b82f6; color: #1d4ed8; font-weight: 600; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <!-- Header -->
+  <header class="bg-blue-700 text-white shadow">
+    <div class="max-w-7xl mx-auto px-4 py-3">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div>
+          <h1 class="text-xl md:text-2xl font-bold">🏫 Quản Lý Nề Nếp Thi Đua</h1>
+          <p class="text-blue-200 text-sm">Trường THPT Hà Huy Tập — Năm học 2026-2027</p>
+        </div>
+        <div id="user-area" class="text-sm no-print">
+          <span id="cur-user" class="mr-2">Chưa đăng nhập</span>
+          <button id="btn-login" class="bg-white text-blue-700 px-3 py-1 rounded text-sm font-medium">
+            <i class="fas fa-user-lock mr-1"></i> Đăng nhập
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Thanh điều hướng -->
+  <nav class="bg-white border-b sticky top-0 z-30 no-print">
+    <div class="max-w-7xl mx-auto px-4 flex gap-6 text-sm font-medium">
+      <button data-tab="nhap" class="py-3 px-1 tab-active">📝 Nhập điểm</button>
+      <button data-tab="danhsach" class="py-3 px-1 text-gray-500">👥 Danh sách</button>
+      <button data-tab="baocao" class="py-3 px-1 text-gray-500">📊 Báo cáo</button>
+      <button data-tab="hinhphat" class="py-3 px-1 text-gray-500">⚠️ Hình phạt</button>
+      <button data-tab="cauhinh" class="py-3 px-1 text-gray-500">⚙️ Cấu hình</button>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-4 py-4">
+    <!-- ===== TAB: NHẬP ĐIỂM ===== -->
+    <section id="tab-nhap" class="tab-content">
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <div class="bg-white rounded shadow p-4">
+          <h3 class="font-semibold mb-3">📅 Thông tin chung</h3>
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="text-sm">Năm học</label>
+              <input type="text" id="nam-hoc" value="2026-2027" class="w-full border rounded px-2 py-1 text-sm">
+            </div>
+            <div>
+              <label class="text-sm">Tuần</label>
+              <input type="number" id="tuan" value="1" class="w-full border rounded px-2 py-1 text-sm">
+            </div>
+            <div>
+              <label class="text-sm">Tháng</label>
+              <input type="text" id="thang" value="09/2026" class="w-full border rounded px-2 py-1 text-sm">
+            </div>
+            <div>
+              <label class="text-sm">Ngày</label>
+              <input type="date" id="ngay" class="w-full border rounded px-2 py-1 text-sm">
+            </div>
+            <div>
+              <label class="text-sm">Thứ</label>
+              <select id="thu" class="w-full border rounded px-2 py-1 text-sm">
+                <option value="2">Thứ 2</option><option value="3">Thứ 3</option>
+                <option value="4">Thứ 4</option><option value="5">Thứ 5</option>
+                <option value="6">Thứ 6</option><option value="7">Thứ 7</option>
+                <option value="CN">Chủ nhật</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm">Môn học</label>
+              <input type="text" id="mon" placeholder="Toán, Văn, Anh..." class="w-full border rounded px-2 py-1 text-sm">
+            </div>
+            <div>
+              <label class="text-sm">Lớp</label>
+              <select id="lop" class="w-full border rounded px-2 py-1 text-sm">
+                <option value="11B9" selected>11B9</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-sm">Tổ</label>
+              <select id="to" class="w-full border rounded px-2 py-1 text-sm">
+                <option value="Tổ 1">Tổ 1</option>
+                <option value="Tổ 2">Tổ 2</option>
+                <option value="Tổ 3">Tổ 3</option>
+                <option value="Tổ 4">Tổ 4</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-white rounded shadow p-4">
+          <h3 class="font-semibold mb-3">👤 Học sinh</h3>
+          <select id="hocsinh" class="w-full border rounded px-2 py-2 text-sm mb-2">
+            <option value="">-- Chọn học sinh --</option>
+          </select>
+          <div class="text-sm text-gray-500 mt-1">
+            Người nhập: <span id="nguoi-nhap-ten">--</span> | Chức vụ: <span id="nguoi-nhap-chucvu">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ưu điểm -->
+      <div class="bg-green-50 rounded shadow p-4 mb-4">
+        <h3 class="font-semibold text-green-800 mb-3">✅ Nhập Ưu Điểm — Điểm Cộng</h3>
+        <div class="grid md:grid-cols-3 gap-3">
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium">Nội dung ưu điểm</label>
+            <select id="uudiem-select" class="w-full border rounded px-2 py-2 text-sm">
+              <option value="">-- Chọn nội dung --</option>
+              <option data-code="A1" data-score="+3">A1. Kiểm tra điểm 7 (+3)</option>
+              <option data-code="A2" data-score="+5">A2. Kiểm tra điểm 8 (+5)</option>
+              <option data-code="A3" data-score="+8">A3. Kiểm tra điểm 9 (+8)</option>
+              <option data-code="A4" data-score="+10">A4. Kiểm tra điểm 10 (+10)</option>
+              <option data-code="A5" data-score="+10">A5. Gieo hạt nuôi heo (+10)</option>
+              <option data-code="A6" data-score="+20">A6. Thi HSG cấp trường/tỉnh (+20)</option>
+              <option data-code="A7" data-score="+20">A7. Tham gia tình nguyện (+20)</option>
+              <option data-code="A8" data-score="+10">A8. Cứu người gặp nạn (+10)</option>
+              <option data-code="A9" data-score="+5">A9. Giơ tay phát biểu GV mời (+5)</option>
+              <option data-code="A10" data-score="+5">A10. Hoạt động nhóm tích cực (+5)</option>
+              <option data-code="A11" data-score="+5">A11. Thi viết do Đoàn cấp tỉnh (+5)</option>
+              <option data-code="A13" data-score="+10">A13. Thi trực tuyến Đoàn cấp trường/tỉnh (+10)</option>
+              <option data-code="A14" data-score="+10">A14. Biểu diễn văn nghệ trường tổ chức (+10)</option>
+              <option data-code="A15" data-score="+20">A15. Công trình thanh niên, hiến máu (+20)</option>
+              <option data-code="A16" data-score="+20">A16. Tập luyện ngoại khóa tích cực (+20)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Số lần</label>
+            <input type="number" id="uudiem-lan" value="1" min="1" class="w-full border rounded px-2 py-2 text-sm">
+          </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+          <span class="text-sm">Điểm cộng:</span>
+          <strong id="uudiem-diem" class="text-green-700">+0</strong>
+          <button id="btn-them-uudiem" class="ml-auto bg-green-600 text-white px-4 py-1.5 rounded text-sm font-medium">
+            <i class="fas fa-plus mr-1"></i> Thêm Ưu Điểm
+          </button>
+        </div>
+      </div>
+
+      <!-- Vi phạm -->
+      <div class="bg-red-50 rounded shadow p-4 mb-4">
+        <h3 class="font-semibold text-red-800 mb-3">❌ Nhập Vi Phạm — Điểm Trừ</h3>
+        <div class="grid md:grid-cols-3 gap-3">
+          <div class="md:col-span-2">
+            <label class="text-sm font-medium">Nội dung vi phạm</label>
+            <select id="vipham-select" class="w-full border rounded px-2 py-2 text-sm">
+              <option value="">-- Chọn nội dung --</option>
+              <option data-code="V01" data-score="-20">Vô lễ xúc phạm GV/NV (-20)</option>
+              <option data-code="V02" data-score="-20">Không nghe lời GV giảng dạy (-20)</option>
+              <option data-code="V03" data-score="-20">Hút thuốc/Xem VP không lành mạnh (-20)</option>
+              <option data-code="V04" data-score="-20">Nói tục, chửi thề trong trường (-20)</option>
+              <option data-code="V05" data-score="-20">Dùng điện thoại trong giờ học (-20)</option>
+              <option data-code="V06" data-score="-20">Vắng không phép (-20)</option>
+              <option data-code="V07" data-score="-20">Gây lộn/đánh nhau (-20)</option>
+              <option data-code="V08" data-score="-20">Tráo đề/sử dụng TL khi kiểm tra (-20)</option>
+              <option data-code="V09" data-score="-20">Chơi game trong giờ học (-20)</option>
+              <option data-code="V10" data-score="-10">Vi phạm giao thông/Không đội mũ (-10)</option>
+              <option data-code="V11" data-score="-10">Để điện thoại reo trong lớp (-10)</option>
+              <option data-code="V12" data-score="-10">Nói chuyện trong giờ học (-10)</option>
+              <option data-code="V13" data-score="-5">Bỏ tiết/Trốn học (-5)</option>
+              <option data-code="V14" data-score="-5">Trốn chào cờ (-5)</option>
+              <option data-code="V15" data-score="-5">Không trực nhật theo phân công (-5)</option>
+              <option data-code="V16" data-score="-5">Đồng phục không đúng quy định (-5)</option>
+              <option data-code="V17" data-score="-3">Đi học trễ/vào lớp trễ (-3)</option>
+              <option data-code="V18" data-score="-2">Soi gương trong lớp (-2)</option>
+              <option data-code="V19" data-score="-1">Vắng học có phép (-1)</option>
+              <option data-code="V20" data-score="-1">Soạn bài thiếu/Thiếu BTVN/Không đem sách (-1)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Số lần</label>
+            <input type="number" id="vipham-lan" value="1" min="1" class="w-full border rounded px-2 py-2 text-sm">
+          </div>
+        </div>
+        <div class="mt-2 grid md:grid-cols-2 gap-2">
+          <div class="flex items-center gap-2">
+            <span class="text-sm">Điểm trừ:</span>
+            <strong id="vipham-diem" class="text-red-700">0</strong>
+            <span class="text-sm">| Lần vi phạm:</span>
+            <select id="vipham-lan-so" class="border rounded px-2 py-0.5 text-sm">
+              <option value="1" selected>Lần 1 (x1)</option>
+              <option value="3">Lần 2 (x3)</option>
+              <option value="4">Lần 3 (x4)</option>
+              <option value="5">Lần 4 (x5)</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-medium">Hình phạt đề xuất</label>
+            <select id="hinhphat-select" class="w-full border rounded px-2 py-1 text-sm">
+              <option value="">-- Chọn hình phạt --</option>
+              <option>📹 Ngồi yên hít thở tự nhiên</option>
+              <option>🏃 5h sáng tập thể dục/chạy bộ</option>
+              <option>📖 Đọc sách + nêu cảm nghĩ</option>
+              <option>🏠 Phụ giúp gia đình việc nhà</option>
+              <option>🎥 Video tài năng cá nhân</option>
+              <option>🤝 Thiện nguyện giúp đỡ mọi người</option>
+              <option>🧹 Trực nhật quét lớp + lau bảng 1 tuần</option>
+              <option>🧹 Trực nhật quét cầu thang + đổ rác 1 tuần</option>
+              <option>🚲 Trực nhật xếp xe + đóng cửa tắt thiết bị 1 tuần</option>
+              <option>✉️ Viết thư xin lỗi phụ huynh + biện pháp khắc phục</option>
+              <option>📝 Viết bản tường trình có chữ ký phụ huynh</option>
+              <option>👨‍🏫 GVCN gặp phụ huynh</option>
+              <option>🏫 Hiệu trưởng gặp phụ huynh</option>
+            </select>
+          </div>
+        </div>
+        <div class="mt-2 flex items-center gap-2">
+          <button id="btn-them-vipham" class="bg-red-600 text-white px-4 py-1.5 rounded text-sm font-medium">
+            <i class="fas fa-plus mr-1"></i> Thêm Vi Phạm
+          </button>
+        </div>
+      </div>
+
+      <!-- Bảng tạm -->
+      <div class="bg-white rounded shadow p-4">
+        <div class="flex justify-between items-center mb-3">
+          <h3 class="font-semibold">📋 Danh sách đã nhập trong tuần</h3>
+          <button id="btn-luu-tuan" class="bg-blue-600 text-white px-4 py-1.5 rounded text-sm font-medium">
+            <i class="fas fa-save mr-1"></i> Lưu Dữ Liệu Tuần
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border px-2 py-1">Ngày</th>
+                <th class="border px-2 py-1">HS</th>
+                <th class="border px-2 py-1">Nội dung</th>
+                <th class="border px-2 py-1">Điểm</th>
+                <th class="border px-2 py-1">Số lần</th>
+                <th class="border px-2 py-1">Tổng</th>
+                <th class="border px-2 py-1">Người nhập</th>
+                <th class="border px-2 py-1" style="width:60px"></th>
+              </tr>
+            </thead>
+            <tbody id="table-tbody">
+              <tr><td colspan="8" class="text-center text-gray-400 py-3">Chưa có dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Tính điểm & Xếp loại -->
+        <div class="grid md:grid-cols-4 gap-3 mt-4 text-center">
+          <div class="bg-blue-50 rounded p-3">
+            <div class="text-sm">Điểm khởi đầu</div>
+            <div class="text-xl font-bold">100</div>
+          </div>
+          <div class="bg-green-50 rounded p-3">
+            <div class="text-sm">Tổng điểm cộng</div>
+            <div id="tong-cong" class="text-xl font-bold text-green-700">+0</div>
+          </div>
+          <div class="bg-red-50 rounded p-3">
+            <div class="text-sm">Tổng điểm trừ</div>
+            <div id="tong-tru" class="text-xl font-bold text-red-700">0</div>
+          </div>
+          <div class="bg-gray-50 rounded p-3">
+            <div class="text-sm">Điểm Tuần / Xếp loại</div>
+            <div id="diem-tuan" class="text-xl font-bold">100</div>
+            <div id="xep-loai" class="text-sm font-semibold">⚖️ —</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TAB: DANH SÁCH & BÁO CÁO ===== -->
+    <section id="tab-danhsach" class="tab-content hidden">
+      <div class="bg-white rounded shadow p-4 mb-4">
+        <h3 class="font-semibold mb-3">👥 Danh sách học sinh — Lớp 11B9</h3>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div id="to1-list"></div>
+          <div id="to2-list"></div>
+          <div id="to3-list"></div>
+          <div id="to4-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-baocao" class="tab-content hidden">
+      <div class="bg-white rounded shadow p-4 mb-4">
+        <h3 class="font-semibold mb-3">📊 Báo cáo tổng hợp</h3>
+        <div class="grid md:grid-cols-5 gap-2 mb-4">
+          <div>
+            <label class="text-sm">Năm học</label>
+            <select id="filter-namhoc" class="w-full border rounded px-2 py-1 text-sm"></select>
+          </div>
+          <div>
+            <label class="text-sm">Tháng</label>
+            <select id="filter-thang" class="w-full border rounded px-2 py-1 text-sm"></select>
+          </div>
+          <div>
+            <label class="text-sm">Tuần</label>
+            <select id="filter-tuan" class="w-full border rounded px-2 py-1 text-sm"></select>
+          </div>
+          <div>
+            <label class="text-sm">Tổ</label>
+            <select id="filter-to" class="w-full border rounded px-2 py-1 text-sm">
+              <option value="">-- Tất cả --</option>
+              <option value="Tổ 1">Tổ 1</option>
+              <option value="Tổ 2">Tổ 2</option>
+              <option value="Tổ 3">Tổ 3</option>
+              <option value="Tổ 4">Tổ 4</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm">Học sinh</label>
+            <input type="text" id="filter-hs" placeholder="Tên/Mã HS" class="w-full border rounded px-2 py-1 text-sm">
+          </div>
+        </div>
+        <div class="flex gap-2 mb-4 no-print">
+          <button id="btn-xuat-excel" class="bg-green-600 text-white px-4 py-2 rounded text-sm font-medium">
+            <i class="fas fa-file-excel mr-1"></i> Xuất Excel (.xlsx)
+          </button>
+          <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium">
+            <i class="fas fa-print mr-1"></i> In / Lưu PDF
+          </button>
+          <button id="btn-xoa-du-lieu" class="bg-red-600 text-white px-4 py-2 rounded text-sm font-medium">
+            <i class="fas fa-trash-alt mr-1"></i> Xóa Dữ Liệu Tuần
+          </button>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border" id="report-table">
+            <thead class="bg-gray-100">
+              <tr>
+                <th class="border px-2 py-1">Lớp</th><th class="border px-2 py-1">Tổ</th><th class="border px-2 py-1">Mã HS</th>
+                <th class="border px-2 py-1">Họ tên</th><th class="border px-2 py-1">Nội dung ưu điểm</th><th class="border px-2 py-1">Tổng cộng</th>
+                <th class="border px-2 py-1">Nội dung vi phạm</th><th class="border px-2 py-1">Tổng trừ</th>
+                <th class="border px-2 py-1">Điểm tuần</th><th class="border px-2 py-1">Xếp loại</th>
+                <th class="border px-2 py-1">Hình phạt</th><th class="border px-2 py-1">Người nhập</th><th class="border px-2 py-1">Thời gian</th>
+              </tr>
+            </thead>
+            <tbody id="report-tbody">
+              <tr><td colspan="13" class="text-center text-gray-400 py-3">Chưa có dữ liệu — vui lòng nhập và lưu trước</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TAB: HÌNH PHẠT ===== -->
+    <section id="tab-hinhphat" class="tab-content hidden">
+      <div class="bg-white rounded shadow p-4">
+        <h3 class="font-semibold mb-3">⚠️ Quy định hình phạt theo mức độ vi phạm</h3>
+        <div class="space-y-3 text-sm">
+          <div class="p-3 bg-green-50 rounded"><strong>Lần 1:</strong> Chọn hình phạt giáo dục phù hợp (video tự rèn luyện, đọc sách, giúp việc nhà...)</div>
+          <div class="p-3 bg-yellow-50 rounded"><strong>Lần 2:</strong> Trừ điểm thi đua gấp <span class="text-red-600 font-bold">3 lần</span>; tăng thời gian/hình thức phạt gấp 3 lần</div>
+          <div class="p-3 bg-orange-100 rounded"><strong>Lần 3:</strong> Trừ điểm thi đua gấp <span class="text-red-600 font-bold">4 lần</span>; viết bản tường trình có chữ ký phụ huynh</div>
+          <div class="p-3 bg-red-100 rounded"><strong>Lần 4:</strong> Trừ điểm thi đua gấp <span class="text-red-600 font-bold">5 lần</span>; GVCN gặp phụ huynh; hạ 2 bậc hạnh kiểm</div>
+          <div class="p-3 bg-red-200 rounded"><strong>Lần 5:</strong> Hiệu trưởng gặp phụ huynh; xem xét hình thức xử lý cao hơn</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== TAB: CẤU HÌNH ===== -->
+    <section id="tab-cauhinh" class="tab-content hidden">
+      <div class="bg-white rounded shadow p-4 space-y-4">
+        <h3 class="font-semibold">⚙️ Kết nối Dữ liệu</h3>
+        <div class="p-3 bg-gray-50 rounded text-sm">
+          <p class="font-medium mb-2">🔌 Tích hợp Firebase / Google Sheets</p>
+          <p class="text-gray-600 mb-2">Hiện tại hệ thống lưu dữ liệu trên trình duyệt (LocalStorage). Để đồng bộ hóa trực tuyến, bạn có thể điền thông tin cấu hình bên dưới:</p>
+          <textarea id="firebase-config" placeholder="Dán cấu hình Firebase / Google Sheets API key vào đây..." class="w-full border rounded p-2 text-sm h-24"></textarea>
+          <button id="btn-luu-cauhinh" class="mt-2 bg-blue-600 text-white px-4 py-1.5 rounded text-sm">Lưu Cấu Hình</button>
+          <p class="text-xs text-gray-500 mt-2">💡 Hướng dẫn chi tiết xem tại phần cuối trang. Hiện tại bạn có thể dùng ngay mà không cần điền cấu hình — dữ liệu sẽ lưu trên máy.</p>
+        </div>
+        <div class="p-3 bg-blue-50 rounded text-sm">
+          <p class="font-medium mb-1">👤 Tài khoản & Phân quyền</p>
+          <table class="w-full text-xs border mt-2">
+            <thead class="bg-blue-100"><tr><th class="border p-1">Vai trò</th><th class="border p-1">Quyền hạn</th></tr></thead>
+            <tbody>
+              <tr><td class="border p-1">👨‍🏫 GVCN / Admin</td><td class="border p-1">Quản lý lớp, HS, tổ, tài khoản; Xem/Sửa/Xóa toàn bộ dữ liệu; Báo cáo</td></tr>
+              <tr><td class="border p-1">👨‍🎓 Tổ trưởng / Tổ phó</td><td class="border p-1">Chỉ xem & nhập điểm cho tổ viên thuộc tổ mình được phân công</td></tr>
+              <tr><td class="border p-1">👁️ Học sinh / Phụ huynh</td><td class="border p-1">Chỉ xem kết quả, không được sửa/xóa dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Modal Đăng nhập -->
+  <div id="modal-login" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-lg shadow-xl p-5 w-full max-w-sm mx-4">
+      <h3 class="text-lg font-bold mb-4">🔐 Đăng nhập hệ thống</h3>
+      <div class="space-y-3">
+        <div>
+          <label class="text-sm font-medium">Mã số / Tên đăng nhập</label>
+          <input type="text" id="login-id" placeholder="VD: totruong1, gvcn_11B9..." class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="text-sm font-medium">Mật khẩu</label>
+          <input type="password" id="login-pass" placeholder="••••••••" class="w-full border rounded px-3 py-2">
+        </div>
+        <div>
+          <label class="text-sm font-medium">Chức vụ</label>
+          <select id="login-role" class="w-full border rounded px-3 py-2">
+            <option value="admin">👨‍🏫 Giáo viên chủ nhiệm / Admin</option>
+            <option value="totruong">👨‍🎓 Tổ trưởng</option>
+            <option value="tophu">👨‍🎓 Tổ phó</option>
+            <option value="xem">👁️ Chỉ xem (Phụ huynh/HS)</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm font-medium">Tổ phụ trách</label>
+          <select id="login-to" class="w-full border rounded px-3 py-2">
+            <option value="">— Không thuộc tổ nào —</option>
+            <option value="Tổ 1">Tổ 1</option>
+            <option value="Tổ 2">Tổ 2</option>
+            <option value="Tổ 3">Tổ 3</option>
+            <option value="Tổ 4">Tổ 4</option>
+          </select>
+        </div>
+        <div class="flex gap-2 pt-2">
+          <button id="btn-xac-nhan-dangnhap" class="flex-1 bg-blue-600 text-white py-2 rounded font-medium">Xác nhận</button>
+          <button id="btn-huy-dangnhap" class="flex-1 bg-gray-200 py-2 rounded font-medium">Hủy</button>
+        </div>
+        <p class="text-xs text-gray-500 mt-2">⚠️ Phiên bản demo: Bất kỳ thông tin nào cũng đăng nhập được. Khi kết nối Firebase sẽ kiểm tra tài khoản thật.</p>
+      </div>
+    </div>
+  </div>
+
+  <footer class="text-center text-sm text-gray-500 py-4 mt-6 border-t">
+    <p>🏫 Trang Quản Lý Nề Nếp Thi Đua — THPT Hà Huy Tập | Năm học 2026-2027</p>
+    <p>Xây dựng từ trang chính <a href="https://webh2t.github.io/" target="_blank" class="text-blue-600">webh2t.github.io</a> — Chuyển đổi số trong nhà trường</p>
+  </footer>
+
+  <script>
+    // === DANH SÁCH HỌC SINH LỚP 11B9 — 48 em, 4 tổ ===
+    const HS_LIST = [
+      {id:1,name:"Nguyễn Gia An",to:"Tổ 1"},
+      {id:2,name:"Phạm Trương Chí An",to:"Tổ 1"},
+      {id:3,name:"Nguyễn Phương Hà Anh",to:"Tổ 1"},
+      {id:4,name:"Võ Ngọc Lan Anh",to:"Tổ 1"},
+      {id:5,name:"Nguyễn Khánh Băng",to:"Tổ 1"},
+      {id:6,name:"Nguyễn Dương Cầm",to:"Tổ 1"},
+      {id:7,name:"Đào Duy Công",to:"Tổ 1"},
+      {id:8,name:"Nguyễn Huỳnh Hồng Hạnh",to:"Tổ 1"},
+      {id:9,name:"Phan Ngọc Gia Hân",to:"Tổ 1"},
+      {id:10,name:"Trần Thanh Hoài",to:"Tổ 1"},
+      {id:11,name:"Châu Nguyễn Hoàng Huy",to:"Tổ 1"},
+      {id:12,name:"Diệp Minh Huy",to:"Tổ 1"},
+      {id:13,name:"Đặng Nguyễn Gia Huy",to:"Tổ 2"},
+      {id:14,name:"Trần Gia Hưng",to:"Tổ 2"},
+      {id:15,name:"Nguyễn Văn Khánh",to:"Tổ 2"},
+      {id:16,name:"Nguyễn Vân Khánh",to:"Tổ 2"},
+      {id:17,name:"Mai Nhật Kim",to:"Tổ 2"},
+      {id:18,name:"Đồng Kim Nhật Linh",to:"Tổ 2"},
+      {id:19,name:"Trần Khánh Linh",to:"Tổ 2"},
+      {id:20,name:"Nguyễn Bình Minh",to:"Tổ 2"},
+      {id:21,name:"Nguyễn Quang Minh",to:"Tổ 2"},
+      {id:22,name:"Trần Hoàng Lê Minh",to:"Tổ 2"},
+      {id:23,name:"Nguyễn Ngọc Giáng My",to:"Tổ 2"},
+      {id:24,name:"Nguyễn Nhật Yến My",to:"Tổ 2"},
+      {id:25,name:"Nguyễn Quỳnh Khánh Ngọc",to:"Tổ 3"},
+      {id:26,name:"Phạm Thị Hồng Ngọc",to:"Tổ 3"},
+      {id:27,name:"Phan Thanh Yến Ngọc",to:"Tổ 3"},
+      {id:28,name:"Nguyễn Phương Nhi",to:"Tổ 3"},
+      {id:29,name:"Võ Nguyễn Khánh Nhi",to:"Tổ 3"},
+      {id:30,name:"Nguyễn Ngọc Bảo Như",to:"Tổ 3"},
+      {id:31,name:"Nguyễn Thị Tâm Như",to:"Tổ 3"},
+      {id:32,name:"Nguyễn Cao Phúc",to:"Tổ 3"},
+      {id:33,name:"Nguyễn Thị Hồng Phúc",to:"Tổ 3"},
+      {id:34,name:"Ngô Hoàng Kim Phụng",to:"Tổ 3"},
+      {id:35,name:"Nguyễn Hoàng Nhật Quỳnh",to:"Tổ 3"},
+      {id:36,name:"Nguyễn Đức Thanh Thanh",to:"Tổ 4"},
+      {id:37,name:"Lê Kiều Chiến Thắng",to:"Tổ 4"},
+      {id:38,name:"Nguyễn Trần Ái Thi",to:"Tổ 4"},
+      {id:39,name:"Hồ Nguyễn Minh Thư",to:"Tổ 4"},
+      {id:40,name:"Nguyễn Nhật Thanh Thư",to:"Tổ 4"},
+      {id:41,name:"Nguyễn Thị Kim Tuyền",to:"Tổ 4"},
+      {id:42,name:"Nguyễn Trần Lê Vũ",to:"Tổ 4"},
+      {id:43,name:"Hồ Nguyên Vương",to:"Tổ 4"},
+      {id:44,name:"Lê Trần Khánh Vy",to:"Tổ 4"},
+      {id:45,name:"Ngô Hải Vy",to:"Tổ 4"},
+      {id:46,name:"Nguyễn Lê Tường Vy",to:"Tổ 4"},
+      {id:47,name:"Nguyễn Nhật Vy",to:"Tổ 4"},
+      {id:48,name:"Lê Nguyên Nhật Ý",to:"Tổ 4"},
+    ];
+
+    // === Biến toàn cục ===
+    let currentUser = null;
+    let dataList = [];
+    const STORAGE_KEY = 'qlnn_11B9_2026_data';
+
+    // === Khởi tạo ===
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('ngay').valueAsDate = new Date();
+      renderHocSinhSelect();
+      renderDanhSachTo();
+      loadData();
+      bindEvents();
+      setupFilterOptions();
+    });
+
+    // === Hiển thị danh sách HS theo Tổ ===
+    function renderDanhSachTo() {
+      ['Tổ 1','Tổ 2','Tổ 3','Tổ 4'].forEach(to => {
+        const container = document.getElementById(`${to.replace(' ','').toLowerCase()}-list`);
+        const hsInTo = HS_LIST.filter(h => h.to === to);
+        container.innerHTML = `<h4 class="font-semibold text-blue-700 mb-2">${to} (${hsInTo.length} HS)</h4>` +
+          hsInTo.map(h => `<div class="text-sm py-1 border-b">${String(h.id).padStart(2,'0')}. ${h.name}</div>`).join('');
+      });
+    }
+
+    // === Tạo danh sách chọn học sinh ===
+    function renderHocSinhSelect() {
+      const sel = document.getElementById('hocsinh');
+      sel.innerHTML = '<option value="">-- Chọn học sinh --</option>' +
+        HS_LIST.map(h => `<option value="${h.id}" data-to="${h.to}">${String(h.id).padStart(2,'0')}. ${h.name} — ${h.to}</option>`).join('');
+    }
+
+    // === Lấy tên HS theo ID ===
+    function getHsName(id) {
+      const h = HS_LIST.find(x => x.id === Number(id));
+      return h ? h.name : 'Không rõ';
+    }
+
+    // === Lấy Tổ theo ID ===
+    function getHsTo(id) {
+      const h = HS_LIST.find(x => x.id === Number(id));
+      return h ? h.to : '';
+    }
+
+    // === Gán sự kiện ===
+    function bindEvents() {
+      // Chuyển tab
+      document.querySelectorAll('[data-tab]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('[data-tab]').forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-gray-500'); });
+          btn.classList.add('tab-active'); btn.classList.remove('text-gray-500');
+          document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+          document.getElementById(`tab-${btn.dataset.tab}`).classList.remove('hidden');
+          if (btn.dataset.tab === 'baocao') renderBaoCao();
+        });
+      });
+
+      // Ưu điểm: tự hiện điểm
+      document.getElementById('uudiem-select').addEventListener('change', calcUuDiem);
+      document.getElementById('uudiem-lan').addEventListener('input', calcUuDiem);
+      document.getElementById('vipham-select').addEventListener('change', calcViPham);
+      document.getElementById('vipham-lan').addEventListener('input', calcViPham);
+      document.getElementById('vipham-lan-so').addEventListener('input', calcViPham);
+
+      // Nút thêm
+      document.getElementById('btn-them-uudiem').addEventListener('click', () => addRecord('uudiem'));
+      document.getElementById('btn-them-vipham').addEventListener('click', () => addRecord('vipham'));
+
+      // Lưu dữ liệu tuần
+      document.getElementById('btn-luu-tuan').addEventListener('click', saveData);
+
+      // Xuất Excel
+      document.getElementById('btn-xuat-excel').addEventListener('click', exportExcel);
+
+      // Xóa dữ liệu tuần
+      document.getElementById('btn-xoa-du-lieu').addEventListener('click', () => {
+        if(confirm('Bạn có chắc chắn muốn xóa toàn bộ dữ liệu tuần này?')) {
+          dataList = []; saveData(); renderTable(); renderBaoCao();
+        }
+      });
+
+      // Đăng nhập
+      document.getElementById('btn-login').addEventListener('click', () => {
+        document.getElementById('modal-login').classList.remove('hidden');
+      });
+      document.getElementById('btn-huy-dangnhap').addEventListener('click', () => {
+        document.getElementById('modal-login').classList.add('hidden');
+      });
+      document.getElementById('btn-xac-nhan-dangnhap').addEventListener('click', login);
+    }
+
+    // === Tính điểm ưu điểm ===
+    function calcUuDiem() {
+      const sel = document.getElementById('uudiem-select');
+      const score = Number(sel.selectedOptions[0].dataset.score || 0);
+      const lan = Number(document.getElementById('uudiem-lan').value || 1);
+      document.getElementById('uudiem-diem').textContent = (score * lan) > 0 ? `+${score * lan}` : '+0';
+    }
+
+    // === Tính điểm vi phạm ===
+    function calcViPham() {
+      const sel = document.getElementById('vipham-select');
+      const score = Number(sel.selectedOptions[0].dataset.score || 0);
+      const lan = Number(document.getElementById('vipham-lan').value || 1);
+      const heso = Number(document.getElementById('vipham-lan-so').value || 1);
+      const total = score * lan * heso;
+      document.getElementById('vipham-diem').textContent = total;
+    }
+
+    // === Thêm bản ghi ===
+    function addRecord(type) {
+      if (!currentUser) return alert('⚠️ Vui lòng Đăng nhập trước!');
+      const hsId = document.getElementById('hocsinh').value;
+      if (!hsId) return alert('⚠️ Vui lòng chọn học sinh!');
+
+      // Kiểm tra quyền tổ trưởng/tổ phó: chỉ nhập tổ viên tổ mình
+      const hsTo = getHsTo(hsId);
+      if (currentUser.role !== 'admin' && currentUser.to && currentUser.to !== hsTo) {
+        return alert('⚠️ Bạn chỉ được nhập điểm cho học sinh thuộc tổ mình!');
+      }
+
+      const ngay = document.getElementById('ngay').value;
+      const thu = document.getElementById('thu').value;
+      const mon = document.getElementById('mon').value.trim() || 'Chưa ghi';
+      const tuan = document.getElementById('tuan').value;
+      const thang = document.getElementById('thang').value;
+      const namhoc = document.getElementById('nam-hoc').value;
+
+      if (type === 'uudiem') {
+        const sel = document.getElementById('uudiem-select');
+        const code = sel.selectedOptions[0].dataset.code;
+        const score = Number(sel.selectedOptions[0].dataset.score || 0);
+        const lan = Number(document.getElementById('uudiem-lan').value || 1);
+        const name = sel.value;
+        if (!code) return alert('⚠️ Vui lòng chọn nội dung ưu điểm!');
+        dataList.push({
+          type:'uudiem', namhoc, thang, tuan, ngay, thu, mon,
+          hsId, hsName: getHsName(hsId), hsTo,
+          code, name, score, lan, total: score * lan,
+          nguoiNhap: currentUser.name || currentUser.id,
+          chucVu: currentUser.roleName,
+          thoiGian: new Date().toLocaleString('vi-VN')
+        });
+      } else {
+        const sel = document.getElementById('vipham-select');
+        const code = sel.selectedOptions[0].dataset.code;
+        const score = Number(sel.selectedOptions[0].dataset.score || 0);
+        const lan = Number(document.getElementById('vipham-lan').value || 1);
+        const heso = Number(document.getElementById('vipham-lan-so').value || 1);
+        const name = sel.value;
+        const hinhPhat = document.getElementById('hinhphat-select').value;
+        if (!code) return alert('⚠️ Vui lòng chọn nội dung vi phạm!');
+        dataList.push({
+          type:'vipham', namhoc, thang, tuan, ngay, thu, mon,
+          hsId, hsName: getHsName(hsId), hsTo,
+          code, name, score, lan, heso, total: score * lan * heso,
+          hinhPhat,
+          nguoiNhap: currentUser.name || currentUser.id,
+          chucVu: currentUser.roleName,
+          thoiGian: new Date().toLocaleString('vi-VN')
+        });
+      }
+      renderTable();
+    }
+
+    // === Cập nhật bảng tạm & tính điểm ===
+    function renderTable() {
+      const tbody = document.getElementById('table-tbody');
+      if (!dataList.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="text-center text-gray-400 py-3">Chưa có dữ liệu</td></tr>';
+      } else {
+        tbody.innerHTML = dataList.map((r, i) => `
+          <tr class="${r.type==='uudiem'?'bg-green-50':'bg-red-50'}">
+            <td class="border px-2 py-1 text-xs">${r.ngay||''}</td>
+            <td class="border px-2 py-1 text-xs">${r.hsId}. ${r.hsName}</td>
+            <td class="border px-2 py-1 text-xs">${r.code} — ${r.name}</td>
+            <td class="border px-2 py-1 text-xs">${r.score}</td>
+            <td class="border px-2 py-1 text-xs">×${r.lan}${r.heso?'×'+r.heso:''}</td>
+            <td class="border px-2 py-1 text-xs font-bold ${r.total>=0?'text-green-600':'text-red-600'}">${r.total>=0?'+':''}${r.total}</td>
+            <td class="border px-2
