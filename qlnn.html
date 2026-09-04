@@ -14,7 +14,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-body{font-family:Inter,system-ui,sans-serif}
+body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 .glass{background:rgba(30,41,59,.92);backdrop-filter:blur(12px)}
 .btn-primary{background:#facc15;color:#0f172a;font-weight:600;padding:.5rem 1rem;border-radius:.5rem}
 .btn-primary:hover{background:#fde047}
@@ -22,7 +22,7 @@ body{font-family:Inter,system-ui,sans-serif}
 .btn-secondary:hover{background:#64748b}
 .btn-ocean{background:#0284c7;color:#fff;padding:.5rem 1rem;border-radius:.5rem}
 .btn-ocean:hover{background:#0ea5e9}
-.input-field{width:100%;background:#0f172a!important;border:1px solid #475569;border-radius:.5rem;padding:.5rem .75rem;color:#38bdf8!important;font-weight:500}
+.input-field{width:100%;background:#0f172a!important;border:1px solid #475569;border-radius:.5rem;padding:.65rem .85rem;color:#38bdf8!important;font-weight:500;font-size:1rem}
 .input-field:focus{outline:none;border-color:#38bdf8;box-shadow:0 0 0 2px rgba(56,189,248,.35)}
 .input-field option{background:#1e293b;color:#e2e8f0}
 .rank-tot{background:rgba(34,197,94,.2);color:#4ade80;border:1px solid rgba(34,197,94,.4);padding:.15rem .5rem;border-radius:.25rem;font-size:.75rem;font-weight:600}
@@ -33,6 +33,12 @@ body{font-family:Inter,system-ui,sans-serif}
 .cream-panel{background:#fef9e7;color:#1e293b;border-radius:.75rem;padding:1rem}
 .cream-panel input,.cream-panel select{background:#fff!important;color:#0f172a!important;border:1px solid #d4a373;font-size:1rem}
 .cream-panel label{color:#334155;font-weight:600;font-size:1rem}
+.btn-upload-green{background:#16a34a;color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 4px 14px rgba(22,163,74,.45);font-weight:600}
+.btn-upload-green:hover{background:#15803d}
+.btn-del-purple{color:#c084fc;font-weight:600;text-shadow:0 0 8px rgba(168,85,247,.5)}
+.pts-bonus{color:#15803d!important;font-weight:700}
+.pts-viol{color:#b91c1c!important;font-weight:700}
+
 
 .subtab-active{background:#0ea5e9!important;color:#fff!important}
 @media print{header,.no-print,footer{display:none!important}}
@@ -41,7 +47,7 @@ body{font-family:Inter,system-ui,sans-serif}
 <body class="bg-slate-950 text-slate-100 min-h-screen">
 
 <header class="sticky top-0 z-50 glass border-b border-slate-700">
-<div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+<div class="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
 <a href="https://webh2t.github.io/" class="flex items-center gap-3">
 <img src="https://webh2t.github.io/assets/LOGO1.png" alt="WEBH2T" class="w-11 h-11 rounded-full object-cover border-2 border-yellow-400/50" onerror="this.style.display='none'"/>
 <div>
@@ -59,7 +65,7 @@ body{font-family:Inter,system-ui,sans-serif}
 
 <!-- AUTH MODAL -->
 <div id="authModal" class="fixed inset-0 z-[100] bg-black/75 flex items-center justify-center p-4 hidden overflow-y-auto">
-<div class="bg-slate-800 rounded-2xl p-6 md:p-8 w-full max-w-3xl border border-slate-600 my-6 shadow-2xl">
+<div class="bg-slate-800 rounded-2xl p-6 md:p-10 w-full max-w-4xl border border-slate-600 my-4 shadow-2xl text-base">
 <div class="flex items-center gap-3 mb-4">
 <img src="https://webh2t.github.io/assets/LOGO1.png" class="w-12 h-12 rounded-full" onerror="this.style.display='none'"/>
 <div>
@@ -86,7 +92,7 @@ body{font-family:Inter,system-ui,sans-serif}
 <div id="loginError" class="text-red-400 text-sm hidden"></div>
 <button onclick="doLogin()" class="btn-primary w-full py-2.5">Đăng nhập</button>
 </div>
-<p class="mt-4 text-xs text-slate-500 leading-relaxed">Admin WEBH2T · GVCN đã duyệt · Tổ trưởng/phó · <strong class="text-sky-400">PH/HS xem lớp</strong> (ID do GVCN cấp, vd <code class="text-yellow-400">xemb9</code>).</p>
+<p class="mt-4 text-sm text-slate-400 leading-relaxed">Khu vực dùng đăng nhập cho <strong class="text-sky-400">GVCN</strong>, <strong class="text-sky-400">Nhập thi đua</strong> và <strong class="text-sky-400">ID PH/HS xem báo cáo</strong>.</p>
 </div>
 
 <!-- REGISTER GVCN -->
@@ -151,18 +157,51 @@ body{font-family:Inter,system-ui,sans-serif}
 </div>
 </div>
 
-<main class="max-w-7xl mx-auto px-4 py-8">
+
+<!-- Parent / HS report login (no register) -->
+<div id="parentReportModal" class="fixed inset-0 z-[100] bg-black/75 flex items-center justify-center p-4 hidden overflow-y-auto">
+<div class="bg-slate-800 rounded-2xl p-6 md:p-8 w-full max-w-md border border-slate-600 my-6 shadow-2xl">
+<div class="flex items-center gap-3 mb-4">
+<img src="https://webh2t.github.io/assets/LOGO1.png" class="w-12 h-12 rounded-full" onerror="this.style.display='none'"/>
+<div>
+<h2 class="text-xl font-bold text-yellow-400">Xem báo cáo thi đua</h2>
+<p class="text-sm text-slate-400">Phụ huynh / Học sinh</p>
+</div>
+</div>
+<div class="space-y-4">
+<div>
+<label class="block text-sm mb-1.5 text-slate-200 font-medium">GVCN – Lớp – Năm học</label>
+<select id="parentClassSelect" class="input-field text-base py-3">
+<option value="">— Chọn lớp —</option>
+</select>
+</div>
+<div>
+<label class="block text-sm mb-1.5 text-slate-200 font-medium">ID xem lớp (do GVCN cấp)</label>
+<input id="parentLoginId" class="input-field text-base py-3" placeholder="vd: xemb9"/>
+</div>
+<div>
+<label class="block text-sm mb-1.5 text-slate-200 font-medium">Mật khẩu</label>
+<input id="parentLoginPass" type="password" class="input-field text-base py-3" placeholder="••••••••"/>
+</div>
+<div id="parentLoginError" class="text-red-400 text-sm hidden"></div>
+<button type="button" onclick="doParentReportLogin()" class="btn-primary w-full py-3 text-base">Xem báo cáo</button>
+<button type="button" onclick="document.getElementById('parentReportModal').classList.add('hidden')" class="btn-secondary w-full py-2.5">Đóng</button>
+</div>
+</div>
+</div>
+
+<main class="max-w-[1400px] mx-auto px-4 md:px-6 py-6 md:py-8">
 <!-- HOME (not logged in) -->
 <div id="welcomeSection" class="text-center py-10">
 <img src="https://webh2t.github.io/assets/LOGO1.png" class="w-24 h-24 mx-auto rounded-full mb-6 border-2 border-yellow-400/40 object-cover" onerror="this.style.display='none'"/>
 <p class="text-sky-400 text-sm font-semibold tracking-widest mb-2">ỨNG DỤNG QUẢN LÝ</p>
-<h1 class="text-3xl md:text-4xl font-bold text-yellow-400 mb-3 leading-tight">NỀ NẾP TÁC PHONG<br class="sm:hidden"/> TRƯỜNG HỌC</h1>
+<h1 class="text-3xl md:text-5xl font-bold text-yellow-400 mb-3 leading-tight">NỀ NẾP TÁC PHONG<br class="sm:hidden"/> TRƯỜNG HỌC</h1>
 <p class="text-slate-300 text-lg mb-8">NĂM HỌC: <span class="text-yellow-400 font-semibold">2026 – 2027</span></p>
 
 <div class="flex flex-wrap justify-center gap-3 mb-10">
 <button onclick="showAuth('register')" class="btn-primary px-6 py-3">ĐĂNG KÝ GVCN</button>
 <button onclick="showAuth('login')" class="btn-ocean px-6 py-3">ĐĂNG NHẬP</button>
-<button onclick="showAuth('login')" class="btn-secondary px-6 py-3">Xem báo cáo thi đua<br/><span class="text-xs font-normal opacity-80">PH / HS · Đăng nhập ID lớp (vd xemb9)</span></button>
+<button onclick="showParentReportLogin()" class="btn-secondary px-6 py-3">Xem báo cáo thi đua<br/><span class="text-xs font-normal opacity-80">PH / HS</span></button>
 </div>
 
 <div class="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-left text-sm">
@@ -214,12 +253,12 @@ body{font-family:Inter,system-ui,sans-serif}
 <input type="number" id="fWeekNo" class="input-field" min="1" max="40" placeholder="VD: 5"/>
 </div>
 <div>
-<label class="text-slate-300">Từ ngày</label>
-<input type="date" id="fWeekFrom" class="input-field"/>
+<label class="text-slate-300">Từ ngày (chọn lịch)</label>
+<input type="date" id="fWeekFrom" class="input-field text-base py-2"/>
 </div>
 <div>
-<label class="text-slate-300">Đến ngày</label>
-<input type="date" id="fWeekTo" class="input-field"/>
+<label class="text-slate-300">Đến ngày (chọn lịch)</label>
+<input type="date" id="fWeekTo" class="input-field text-base py-2"/>
 </div>
 </div>
 <form id="entryForm" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -309,7 +348,7 @@ body{font-family:Inter,system-ui,sans-serif}
 
 <section id="tab-report" class="tab-content hidden">
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-4">
-<h2 class="text-xl font-bold text-yellow-400 mb-4">📊 Báo cáo thi đua</h2>
+<h2 class="text-xl font-bold text-yellow-400 mb-4" id="reportTitle">📊 Báo cáo thi đua</h2>
 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4">
 <div>
 <label class="text-xs text-slate-400">Tháng</label>
@@ -352,6 +391,26 @@ body{font-family:Inter,system-ui,sans-serif}
 <canvas id="rankChart" height="150"></canvas>
 </div>
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700" id="reportHighlights"></div>
+</div>
+<div id="parentStudentPanel" class="bg-slate-800 rounded-xl p-5 border border-sky-500/40 mb-4 hidden">
+<h3 class="text-lg font-bold text-yellow-400 mb-3">Tra cứu học sinh · So sánh tổ & lớp</h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+<div class="md:col-span-2">
+<label class="text-sm text-slate-300">Chọn học sinh</label>
+<select id="parentStudentSelect" class="input-field text-base py-2.5" onchange="renderParentStudentDetail()">
+<option value="">— Chọn học sinh —</option>
+</select>
+</div>
+<div>
+<label class="text-sm text-slate-300">Phạm vi</label>
+<select id="parentScope" class="input-field text-base py-2.5" onchange="renderParentStudentDetail()">
+<option value="week">Theo tuần hiện tại</option>
+<option value="month">Theo tháng lọc</option>
+<option value="all">Tất cả dữ liệu lọc</option>
+</select>
+</div>
+</div>
+<div id="parentStudentDetail" class="text-sm space-y-3"></div>
 </div>
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 overflow-x-auto mb-4">
 <div id="teamSummary" class="mb-3 text-sm"></div>
@@ -443,7 +502,7 @@ body{font-family:Inter,system-ui,sans-serif}
 <div class="flex flex-wrap gap-2">
 <button onclick="saveCatalogs()" class="btn-primary text-sm">💾 Lưu</button>
 <button onclick="exportCatalogsExcel()" class="btn-secondary text-sm">Tải Excel</button>
-<label class="btn-secondary text-sm cursor-pointer">Upload Excel
+<label class="btn-upload-green text-sm cursor-pointer inline-flex items-center">Upload Excel
 <input type="file" accept=".xlsx,.xls" class="hidden" onchange="importCatalogsExcel(event)"/>
 </label>
 </div>
@@ -525,55 +584,74 @@ body{font-family:Inter,system-ui,sans-serif}
 
 <!-- Account modal -->
 <div id="accountModal" class="fixed inset-0 z-[90] bg-black/60 flex items-center justify-center p-4 hidden overflow-y-auto">
-<div class="bg-slate-800 rounded-xl p-6 w-full max-w-lg border border-slate-600 my-4">
-<h3 class="text-lg font-bold text-yellow-400 mb-2" id="accModalTitle">Thêm tài khoản</h3>
-<p class="text-xs text-slate-400 mb-4" id="accGuide">Chọn GVCN đã duyệt → hệ thống gắn lớp & gợi ý ID</p>
+<div class="bg-slate-800 rounded-xl p-6 md:p-8 w-full max-w-2xl border border-slate-600 my-4 text-base">
+<h3 class="text-xl font-bold text-yellow-400 mb-2" id="accModalTitle">Thêm tài khoản</h3>
+<p class="text-sm text-slate-400 mb-4" id="accGuide">Chọn GVCN → học sinh → tổ / vai trò · ID lấy từ danh sách lớp</p>
 <input type="hidden" id="accEditId"/>
-<div class="space-y-3">
-<div id="accGvcnWrap">
-<label class="text-sm text-slate-300">1. Chọn GVCN (đã đăng ký thành công)</label>
-<select id="accGvcn" class="input-field" onchange="onAccGvcnChange()">
+<div class="space-y-4">
+<div>
+<label class="text-sm text-slate-200 font-medium">1. Chọn GVCN (đã duyệt) — hiện danh sách lớp</label>
+<select id="accGvcn" class="input-field text-base py-2.5" onchange="onAccGvcnChange()">
 <option value="">— Chọn GVCN —</option>
 </select>
+<p id="accGvcnClassInfo" class="text-sm text-sky-400 mt-1"></p>
 </div>
 <div>
-<label class="text-sm text-slate-300">2. Vai trò</label>
-<select id="accRoleDetail" class="input-field" onchange="onAccRoleChange(); autoAccId();">
-<option value="truong">Tổ trưởng</option>
-<option value="pho1">Tổ phó 1</option>
-<option value="pho2">Tổ phó 2</option>
-<option value="viewer">Phụ huynh / Học sinh (xem)</option>
+<label class="text-sm text-slate-200 font-medium">2. Họ và tên học sinh</label>
+<select id="accStudent" class="input-field text-base py-2.5" onchange="onAccStudentPick()">
+<option value="">— Chọn học sinh —</option>
 </select>
 </div>
-<div id="accTeamWrap">
-<label class="text-sm text-slate-300">3. Tổ (1–4)</label>
-<select id="accTeam" class="input-field" onchange="autoAccId()">
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="text-sm text-slate-200 font-medium">3. Tổ</label>
+<select id="accTeam" class="input-field text-base py-2.5" onchange="autoAccId()">
 <option value="">—</option>
 <option value="1">Tổ 1</option><option value="2">Tổ 2</option>
 <option value="3">Tổ 3</option><option value="4">Tổ 4</option>
 </select>
 </div>
 <div>
-<label class="text-sm text-slate-300">4. Họ tên người dùng</label>
-<input id="accName" class="input-field" placeholder="Họ tên tổ trưởng / phụ huynh…"/>
+<label class="text-sm text-slate-200 font-medium">Vai trò</label>
+<select id="accRoleDetail" class="input-field text-base py-2.5" onchange="onAccRoleChange(); autoAccId();">
+<option value="truong">Tổ trưởng</option>
+<option value="pho1">Tổ phó 1</option>
+<option value="pho2">Tổ phó 2</option>
+<option value="viewer">PH / HS (xem báo cáo)</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="text-sm text-slate-200 font-medium">4. Điện thoại</label>
+<input id="accPhone" class="input-field text-base py-2.5"/>
 </div>
 <div>
-<label class="text-sm text-slate-300">5. ID (tự sinh — có thể sửa)</label>
-<input id="accId" class="input-field font-mono"/>
-<p class="text-xs text-slate-500 mt-1">t1b9 · p31b9 · p32b9 · xemb9</p>
+<label class="text-sm text-slate-200 font-medium">Giới tính</label>
+<div class="flex gap-6 pt-2.5 text-base">
+<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="accGender" value="Nam" class="w-4 h-4"/> Nam</label>
+<label class="flex items-center gap-2 cursor-pointer"><input type="radio" name="accGender" value="Nữ" class="w-4 h-4"/> Nữ</label>
+</div>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div>
+<label class="text-sm text-slate-200 font-medium">5. ID (từ danh sách HS / tự sinh)</label>
+<input id="accId" class="input-field text-base py-2.5 font-mono"/>
 </div>
 <div>
-<label class="text-sm text-slate-300">6. Mật khẩu</label>
-<input id="accPass" class="input-field" placeholder="Mật khẩu đăng nhập"/>
-</div>
-<div id="accPhoneWrap">
-<label class="text-sm text-slate-300">7. Điện thoại (tuỳ chọn)</label>
-<input id="accPhone" class="input-field"/>
+<label class="text-sm text-slate-200 font-medium">Mật khẩu</label>
+<input id="accPass" class="input-field text-base py-2.5" placeholder="Mật khẩu đăng nhập"/>
 </div>
 </div>
-<div class="flex gap-2 mt-5">
-<button type="button" onclick="saveAccount()" class="btn-primary flex-1">Lưu</button>
-<button type="button" onclick="closeAccountModal()" class="btn-secondary flex-1">Hủy</button>
+<div>
+<label class="text-sm text-slate-200 font-medium">Họ tên hiển thị tài khoản</label>
+<input id="accName" class="input-field text-base py-2.5"/>
+</div>
+</div>
+<div class="flex gap-3 mt-6">
+<button type="button" onclick="saveAccount()" class="btn-primary flex-1 py-3">Lưu</button>
+<button type="button" onclick="closeAccountModal()" class="btn-secondary flex-1 py-3">Hủy</button>
 </div>
 </div>
 </div>
@@ -638,13 +716,12 @@ body{font-family:Inter,system-ui,sans-serif}
 Khi trống → dùng localStorage
 ============================================================= */
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyAilx-c6669fbSHumNZcfApja-bdqFagA8",
-    authDomain: "webh2t-qlnn-61eaf.firebaseapp.com",
-    projectId: "webh2t-qlnn-61eaf",
-    storageBucket: "webh2t-qlnn-61eaf.firebasestorage.app",
-    messagingSenderId: "456875506885",
-    appId: "1:456875506885:web:4e1f0af0f17becb73084ac",
-
+  apiKey: "",
+  authDomain: "",
+  projectId: "",
+  storageBucket: "",
+  messagingSenderId: "",
+  appId: ""
 };
 let firebaseReady = false, db = null;
 function initFirebase() {
@@ -880,6 +957,13 @@ function doLogin() {
     return;
   }
   currentUser = { id, ...acc };
+  // Đảm bảo classId từ parent GVCN
+  if (currentUser.role === "viewer" && currentUser.parentId && accounts[currentUser.parentId]) {
+    const pg = accounts[currentUser.parentId];
+    currentUser.classId = currentUser.classId || pg.classId;
+    currentUser.className = currentUser.className || pg.className;
+    currentUser.school = currentUser.school || pg.school;
+  }
   localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
   loadClassData();
   hideAuth();
@@ -1023,6 +1107,95 @@ function saveSuperEdit() {
   renderPending();
 }
 
+
+function showParentReportLogin() {
+  const sel = document.getElementById("parentClassSelect");
+  const gvcns = listApprovedGvcn();
+  sel.innerHTML = '<option value="">— Chọn GVCN · Lớp · Năm học —</option>' +
+    gvcns.map(([gid, a]) => '<option value="' + gid + '" data-classid="' + (a.classId || "") + '">' +
+      (a.name || gid) + " – Lớp " + (a.className || "?") + " – " + (a.year || "2026-2027") +
+      (a.school ? " (" + a.school + ")" : "") + "</option>").join("");
+  document.getElementById("parentLoginId").value = "";
+  document.getElementById("parentLoginPass").value = "";
+  document.getElementById("parentLoginError").classList.add("hidden");
+  document.getElementById("parentReportModal").classList.remove("hidden");
+}
+function doParentReportLogin() {
+  const gid = document.getElementById("parentClassSelect").value;
+  const id = (document.getElementById("parentLoginId").value || "").trim().toLowerCase();
+  const pass = document.getElementById("parentLoginPass").value;
+  const err = document.getElementById("parentLoginError");
+  if (!gid || !accounts[gid]) {
+    err.textContent = "Chọn GVCN – Lớp – Năm học";
+    err.classList.remove("hidden");
+    return;
+  }
+  const g = accounts[gid];
+  if (!g.classId) {
+    // đảm bảo có classId
+    g.classId = (g.school + "_" + g.className).toLowerCase().replace(/\s+/g, "_");
+    accounts[gid] = g;
+    saveAccounts();
+  }
+  const acc = accounts[id];
+  // Cho phép: viewer đúng lớp, hoặc bất kỳ account cùng classId/parentId, hoặc ID xem lớp khớp suffix
+  let ok = false;
+  if (acc && acc.pass === pass) {
+    if (!acc.classId || acc.classId === g.classId) ok = true;
+    if (acc.parentId === gid) ok = true;
+    if (acc.role === "viewer") ok = true;
+  }
+  // Fallback: mật khẩu xem lớp lưu trên GVCN (viewPass) — tuỳ chọn
+  if (!ok && g.viewId && g.viewId === id && g.viewPass === pass) ok = true;
+  if (!ok) {
+    err.textContent = "Sai ID/mật khẩu hoặc tài khoản không thuộc lớp đã chọn. Liên hệ GVCN cấp ID xem lớp.";
+    err.classList.remove("hidden");
+    return;
+  }
+  const base = acc || {
+    role: "viewer",
+    name: "PH/HS xem lớp " + (g.className || ""),
+    classId: g.classId,
+    className: g.className,
+    school: g.school,
+    parentId: gid,
+    year: g.year || "2026-2027"
+  };
+  currentUser = {
+    id: id || ("xem_" + g.classId),
+    role: "viewer",
+    name: base.name || ("Xem lớp " + (g.className || "")),
+    classId: g.classId,
+    className: g.className || base.className,
+    school: g.school || base.school,
+    parentId: gid,
+    year: g.year || base.year || "2026-2027",
+    pass: pass
+  };
+  guestMode = false;
+  localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
+  loadClassData();
+  // Nếu chưa có HS trong classId, thử quét mọi key students cùng className
+  if (!students.length) {
+    Object.keys(localStorage).forEach(k => {
+      if (!k.startsWith("qlnn_students_")) return;
+      try {
+        const arr = JSON.parse(localStorage.getItem(k) || "[]");
+        if (arr.length && arr.some(s => (s.className || "") === (g.className || ""))) {
+          students = arr;
+          const cid = k.replace("qlnn_students_", "");
+          currentUser.classId = cid;
+          entries = JSON.parse(localStorage.getItem("qlnn_entries_" + cid) || "[]");
+          penaltyAssigns = JSON.parse(localStorage.getItem("qlnn_penAssign_" + cid) || "[]");
+        }
+      } catch (e) {}
+    });
+  }
+  document.getElementById("parentReportModal").classList.add("hidden");
+  renderApp();
+}
+
+
 function loadSession() {
   const s = localStorage.getItem("qlnn_session_v2");
   if (!s) return;
@@ -1059,14 +1232,18 @@ function renderApp() {
   btnOut.classList.remove("hidden");
   badge.textContent = (currentUser.name || currentUser.id) + (currentUser.className ? " · " + currentUser.className : "");
 
-  let html = '<button data-tab="overview" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Tổng quan</button>';
-  if (currentUser.role === "gvcn" || currentUser.role === "leader" || currentUser.role === "super") {
-    if (currentUser.role !== "super")
+  let html = "";
+  if (currentUser.role === "viewer") {
+    html = '<button data-tab="report" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm tab-active">Báo cáo thống kê nề nếp thi đua lớp</button>';
+  } else {
+    html = '<button data-tab="overview" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Tổng quan</button>';
+    if (currentUser.role === "gvcn" || currentUser.role === "leader") {
       html += '<button data-tab="input" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Nhập thi đua</button>';
-  }
-  html += '<button data-tab="report" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Báo cáo</button>';
-  if (currentUser.role === "gvcn" || currentUser.role === "super") {
-    html += '<button data-tab="admin" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Quản trị</button>';
+    }
+    html += '<button data-tab="report" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Báo cáo</button>';
+    if (currentUser.role === "gvcn" || currentUser.role === "super") {
+      html += '<button data-tab="admin" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Quản trị</button>';
+    }
   }
   document.getElementById("mainTabs").innerHTML = html;
   document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
@@ -1105,7 +1282,8 @@ function renderApp() {
     document.getElementById("dlHour").value = deadlineCfg.hour ?? 10;
     document.getElementById("dlPenalty").value = deadlineCfg.penaltyText || "";
   }
-  switchTab("overview");
+  if (currentUser.role === "viewer") switchTab("report");
+  else switchTab("overview");
 }
 
 function switchTab(name) {
@@ -1165,7 +1343,7 @@ function renderOverview() {
     const male = students.filter(s => s.gender === "Nam").length;
     const female = students.filter(s => s.gender === "Nữ").length;
     const stuRows = students.length ? (
-      '<div class="overflow-x-auto max-h-80 overflow-y-auto"><table class="w-full text-sm"><thead class="text-slate-400 border-b border-slate-600 sticky top-0 bg-slate-900"><tr>' +
+      '<div class="overflow-x-auto min-h-[50vh]"><table class="w-full text-sm"><thead class="text-slate-400 border-b border-slate-600 sticky top-0 bg-slate-900"><tr>' +
       '<th class="text-left py-2">ID</th><th class="text-left">Họ tên</th><th class="text-left">Ngày sinh</th><th class="text-center">Tổ</th><th class="text-left">SĐT</th><th class="text-left">Địa chỉ</th></tr></thead><tbody>' +
       students.map(s => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono text-sky-400">' + s.id + '</td><td class="font-medium">' + s.name +
       '</td><td class="text-xs">' + (s.dob || "—") + '</td><td class="text-center">' + (s.team || "—") + '</td><td class="text-xs">' + (s.phone || "—") +
@@ -1494,7 +1672,119 @@ function aggregateByStudent(list) {
   }).sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }));
 }
 
+function renderParentStudentDetail() {
+  const box = document.getElementById("parentStudentDetail");
+  const panel = document.getElementById("parentStudentPanel");
+  if (!box || !panel) return;
+  if (!currentUser || currentUser.role !== "viewer") {
+    panel.classList.add("hidden");
+    return;
+  }
+  panel.classList.remove("hidden");
+  const sel = document.getElementById("parentStudentSelect");
+  // fill students if empty
+  if (sel && sel.options.length <= 1) {
+    sel.innerHTML = '<option value="">— Chọn học sinh —</option>' +
+      students.map(s => '<option value="' + s.id + '">' + s.id + ". " + s.name + (s.team ? " · Tổ " + s.team : "") + "</option>").join("");
+  }
+  const sid = sel ? sel.value : "";
+  if (!sid) {
+    box.innerHTML = '<p class="text-slate-400">Chọn tên học sinh để xem chi tiết thi đua, ưu điểm / vi phạm và so sánh với tổ & lớp.</p>';
+    return;
+  }
+  const st = students.find(s => String(s.id) === String(sid));
+  if (!st) {
+    box.innerHTML = '<p class="text-red-400">Không tìm thấy học sinh.</p>';
+    return;
+  }
+  // Use same filter as report
+  let list = getFilteredEntries().filter(e => String(e.studentId) === String(sid));
+  const scope = (document.getElementById("parentScope") || {}).value || "all";
+  const now = new Date();
+  if (scope === "week") {
+    const tw = getWeekNumber(now);
+    list = list.filter(e => getWeekNumber(new Date(e.date)) === tw);
+  } else if (scope === "month") {
+    const m = document.getElementById("rMonth").value;
+    if (m) list = list.filter(e => (new Date(e.date).getMonth() + 1) == m);
+    else list = list.filter(e => (new Date(e.date).getMonth() + 1) === (now.getMonth() + 1));
+  }
+  let bonus = 0, viol = 0;
+  const bonusRows = [], violRows = [];
+  list.forEach(e => {
+    if (e.type === "bonus") { bonus += e.total; bonusRows.push(e); }
+    else { viol += e.total; violRows.push(e); }
+  });
+  const score = 100 + bonus + viol;
+  const rk = rankClass(score);
+
+  // Class & team rankings from filtered entries (same scope base)
+  let allList = getFilteredEntries();
+  if (scope === "week") {
+    const tw = getWeekNumber(now);
+    allList = allList.filter(e => getWeekNumber(new Date(e.date)) === tw);
+  } else if (scope === "month") {
+    const m = document.getElementById("rMonth").value;
+    if (m) allList = allList.filter(e => (new Date(e.date).getMonth() + 1) == m);
+    else allList = allList.filter(e => (new Date(e.date).getMonth() + 1) === (now.getMonth() + 1));
+  }
+  const aggAll = aggregateByStudent(allList);
+  // include students with no entries as 100?
+  const byId = {};
+  aggAll.forEach(a => { byId[String(a.id)] = a; });
+  students.forEach(s => {
+    if (!byId[String(s.id)]) {
+      byId[String(s.id)] = { id: s.id, name: s.name, team: s.team, bonus: 0, violation: 0, score: 100, rank: rankClass(100), violationCount: 0 };
+    }
+  });
+  const classList = Object.values(byId).sort((a, b) => b.score - a.score);
+  const teamList = classList.filter(a => String(a.team) === String(st.team)).sort((a, b) => b.score - a.score);
+  const classPos = classList.findIndex(a => String(a.id) === String(sid)) + 1;
+  const teamPos = teamList.findIndex(a => String(a.id) === String(sid)) + 1;
+  const classAvg = classList.length ? (classList.reduce((s, x) => s + x.score, 0) / classList.length) : 100;
+  const teamAvg = teamList.length ? (teamList.reduce((s, x) => s + x.score, 0) / teamList.length) : 100;
+
+  const fmtE = e => '<tr class="border-b border-slate-700/40"><td class="py-1.5">' + formatDate(e.date) + '</td><td class="text-xs">' + (e.weekday || "") +
+    '</td><td class="text-xs">' + (e.subject || "") + '</td><td>' + (e.contentText || e.contentCode) +
+    '</td><td class="text-right ' + (e.points > 0 ? "text-green-400" : "text-red-400") + '">' + (e.points > 0 ? "+" : "") + e.points +
+    " ×" + e.times + "</td></tr>";
+
+  box.innerHTML =
+    '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">' +
+    '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Họ tên</div><div class="font-semibold text-yellow-400 text-base">' + st.name + '</div></div>' +
+    '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">ID · Tổ · Lớp</div><div class="font-semibold text-sky-400">' + st.id + " · Tổ " + (st.team || "—") + " · " + (currentUser.className || st.className || "") + "</div></div>" +
+    '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Điểm (phạm vi chọn)</div><div class="font-bold text-yellow-400 text-xl">' + score + ' <span class="' + rk.cls + '">' + rk.label + "</span></div></div>" +
+    '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Cộng / Trừ</div><div><span class="text-green-400 font-semibold">+' + bonus + '</span> / <span class="text-red-400 font-semibold">' + viol + "</span></div></div>" +
+    "</div>" +
+    '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-2">' +
+    '<div class="p-4 bg-slate-900/80 rounded-xl border border-sky-500/30">' +
+    '<div class="font-semibold text-sky-400 mb-2">So với tổ ' + (st.team || "") + "</div>" +
+    '<p>Vị trí trong tổ: <strong class="text-yellow-400">' + (teamPos || "—") + " / " + teamList.length + "</strong></p>" +
+    '<p>Điểm TB tổ: <strong>' + teamAvg.toFixed(1) + "</strong> · Chênh lệch: <strong class=\"" + (score >= teamAvg ? "text-green-400" : "text-red-400") + "\">" + (score - teamAvg >= 0 ? "+" : "") + (score - teamAvg).toFixed(1) + "</strong></p>" +
+    "</div>" +
+    '<div class="p-4 bg-slate-900/80 rounded-xl border border-yellow-500/30">' +
+    '<div class="font-semibold text-yellow-400 mb-2">So với cả lớp</div>' +
+    '<p>Vị trí trong lớp: <strong class="text-yellow-400">' + (classPos || "—") + " / " + classList.length + "</strong></p>" +
+    '<p>Điểm TB lớp: <strong>' + classAvg.toFixed(1) + "</strong> · Chênh lệch: <strong class=\"" + (score >= classAvg ? "text-green-400" : "text-red-400") + "\">" + (score - classAvg >= 0 ? "+" : "") + (score - classAvg).toFixed(1) + "</strong></p>" +
+    '<p>Xếp loại: <span class="' + rk.cls + '">' + rk.label + "</span></p>" +
+    "</div></div>" +
+    '<div class="mt-3"><h4 class="font-semibold text-green-400 mb-2">Ưu điểm (' + bonusRows.length + ")</h4>" +
+    (bonusRows.length ? '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-slate-400"><tr><th class="text-left">Ngày</th><th>Thứ</th><th>Môn</th><th class="text-left">Nội dung</th><th class="text-right">Điểm</th></tr></thead><tbody>' + bonusRows.map(fmtE).join("") + "</tbody></table></div>" : '<p class="text-slate-500">Không có bản ghi ưu điểm trong phạm vi này.</p>') +
+    "</div>" +
+    '<div class="mt-3"><h4 class="font-semibold text-red-400 mb-2">Vi phạm (' + violRows.length + ")</h4>" +
+    (violRows.length ? '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-slate-400"><tr><th class="text-left">Ngày</th><th>Thứ</th><th>Môn</th><th class="text-left">Nội dung</th><th class="text-right">Điểm</th></tr></thead><tbody>' + violRows.map(fmtE).join("") + "</tbody></table></div>" : '<p class="text-slate-500">Không có bản ghi vi phạm trong phạm vi này.</p>') +
+    "</div>";
+}
+
 function renderReport() {
+  const rt = document.getElementById("reportTitle");
+  if (rt) {
+    if (currentUser && currentUser.role === "viewer") {
+      rt.textContent = "📊 Báo cáo thống kê nề nếp thi đua lớp " + (currentUser.className || "");
+    } else {
+      rt.textContent = "📊 Báo cáo thi đua";
+    }
+  }
   const list = getFilteredEntries();
   const agg = aggregateByStudent(list);
   const teamMap = { 1: { scores: [], bonus: 0, viol: 0 }, 2: { scores: [], bonus: 0, viol: 0 }, 3: { scores: [], bonus: 0, viol: 0 }, 4: { scores: [], bonus: 0, viol: 0 } };
@@ -1593,6 +1883,28 @@ function renderReport() {
   }
 }
 
+  // Parent / viewer panel
+  if (currentUser && currentUser.role === "viewer") {
+    const panel = document.getElementById("parentStudentPanel");
+    if (panel) panel.classList.remove("hidden");
+    const sel = document.getElementById("parentStudentSelect");
+    if (sel) {
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">— Chọn học sinh —</option>' +
+        students.map(s => '<option value="' + s.id + '">' + s.id + ". " + s.name + (s.team ? " · Tổ " + s.team : "") + "</option>").join("");
+      if (cur) sel.value = cur;
+    }
+    // Ẩn nút export nếu còn
+    const be = document.getElementById("btnExportExcel");
+    const bp = document.getElementById("btnPrint");
+    if (be) be.classList.add("hidden");
+    if (bp) bp.classList.add("hidden");
+    renderParentStudentDetail();
+  } else {
+    const panel = document.getElementById("parentStudentPanel");
+    if (panel) panel.classList.add("hidden");
+  }
+
 function exportExcel() {
   const list = getFilteredEntries();
   const agg = aggregateByStudent(list);
@@ -1635,37 +1947,79 @@ function renderAccountsTable() {
 function listApprovedGvcn() {
   return Object.entries(accounts).filter(([, a]) => a.role === "gvcn");
 }
+function reservedIds() {
+  const set = new Set([SUPER_ADMIN.id, "websiteh2t", (SUPER_ADMIN.email || "").toLowerCase()]);
+  Object.keys(accounts).forEach(k => set.add(k.toLowerCase()));
+  return set;
+}
+function reservedPasses() {
+  const set = new Set([SUPER_ADMIN.pass]);
+  Object.values(accounts).forEach(a => { if (a.pass) set.add(a.pass); });
+  return set;
+}
+function loadStudentsForClassId(classId) {
+  if (!classId) return [];
+  try {
+    return JSON.parse(localStorage.getItem("qlnn_students_" + classId) || "[]");
+  } catch (e) { return []; }
+}
 function onAccGvcnChange() {
-  autoAccId();
   const gid = document.getElementById("accGvcn").value;
-  const g = accounts[gid];
-  if (g && !document.getElementById("accName").value) {
-    /* leave name for user */
+  const info = document.getElementById("accGvcnClassInfo");
+  const stuSel = document.getElementById("accStudent");
+  if (!gid || !accounts[gid]) {
+    if (info) info.textContent = "";
+    if (stuSel) stuSel.innerHTML = '<option value="">— Chọn học sinh —</option>';
+    return;
   }
+  const g = accounts[gid];
+  if (info) {
+    info.textContent = "Lớp " + (g.className || "—") + " · " + (g.school || "") + " · NH " + (g.year || "2026-2027") + " · Sĩ số " + (g.size || "—");
+  }
+  const list = loadStudentsForClassId(g.classId);
+  // if current user is this gvcn, prefer live students array
+  let live = list;
+  if (currentUser && currentUser.role === "gvcn" && currentUser.id === gid) live = students.length ? students : list;
+  if (currentUser && currentUser.role === "gvcn" && currentUser.classId === g.classId) live = students.length ? students : list;
+  if (stuSel) {
+    stuSel.innerHTML = '<option value="">— Chọn học sinh —</option>' +
+      live.map(s => '<option value="' + s.id + '" data-team="' + (s.team || "") + '" data-phone="' + (s.phone || "") + '" data-gender="' + (s.gender || "") + '" data-name="' + (s.name || "").replace(/"/g, "&quot;") + '">' + s.id + ". " + s.name + (s.team ? " (Tổ " + s.team + ")" : "") + "</option>").join("");
+  }
+  autoAccId();
+}
+function onAccStudentPick() {
+  const sel = document.getElementById("accStudent");
+  if (!sel || !sel.value) return;
+  const opt = sel.selectedOptions[0];
+  if (!opt) return;
+  document.getElementById("accName").value = opt.dataset.name || opt.textContent.replace(/^\S+\.\s*/, "");
+  if (opt.dataset.team) document.getElementById("accTeam").value = String(opt.dataset.team);
+  if (opt.dataset.phone) document.getElementById("accPhone").value = opt.dataset.phone;
+  if (opt.dataset.gender) {
+    const r = document.querySelector('input[name="accGender"][value="' + opt.dataset.gender + '"]');
+    if (r) r.checked = true;
+  }
+  // ID mặc định = ID học sinh (có thể sửa)
+  const role = document.getElementById("accRoleDetail").value;
+  if (role === "viewer") autoAccId();
+  else document.getElementById("accId").value = String(sel.value).toLowerCase();
 }
 function onAccRoleChange() {
   const role = document.getElementById("accRoleDetail").value;
-  const teamWrap = document.getElementById("accTeamWrap");
-  const phoneWrap = document.getElementById("accPhoneWrap");
-  if (role === "viewer") {
-    if (teamWrap) teamWrap.classList.add("hidden");
-    if (phoneWrap) phoneWrap.classList.add("hidden");
-  } else {
-    if (teamWrap) teamWrap.classList.remove("hidden");
-    if (phoneWrap) phoneWrap.classList.remove("hidden");
-  }
+  // viewer: ID xem lớp; leader: ID HS hoặc t1b9
+  autoAccId();
 }
 function openAccountModal(id) {
   document.getElementById("accountModal").classList.remove("hidden");
   const gsel = document.getElementById("accGvcn");
   const gvcns = listApprovedGvcn();
   gsel.innerHTML = '<option value="">— Chọn GVCN —</option>' +
-    gvcns.map(([gid, a]) => '<option value="' + gid + '">' + (a.name || gid) + ' · ' + (a.className || "") + ' · ' + (a.school || "") + '</option>').join("");
+    gvcns.map(([gid, a]) => '<option value="' + gid + '">' + (a.name || gid) + " · Lớp " + (a.className || "") + " · " + (a.school || "") + "</option>").join("");
 
-  // Super: must pick GVCN. GVCN user: preselect self
   if (currentUser.role === "gvcn") {
     gsel.value = currentUser.id;
     gsel.disabled = true;
+    onAccGvcnChange();
   } else {
     gsel.disabled = false;
   }
@@ -1681,12 +2035,14 @@ function openAccountModal(id) {
     const rd = accounts[id].roleDetail || (accounts[id].role === "viewer" ? "viewer" : "truong");
     document.getElementById("accRoleDetail").value = rd;
     const parent = accounts[id].parentId || "";
-    if (parent && accounts[parent]) gsel.value = parent;
-    else if (accounts[id].classId) {
-      const match = gvcns.find(([, a]) => a.classId === accounts[id].classId);
-      if (match) gsel.value = match[0];
+    if (parent && accounts[parent]) {
+      gsel.value = parent;
+      onAccGvcnChange();
     }
-    onAccRoleChange();
+    if (accounts[id].gender) {
+      const r = document.querySelector('input[name="accGender"][value="' + accounts[id].gender + '"]');
+      if (r) r.checked = true;
+    }
   } else {
     document.getElementById("accModalTitle").textContent = "Thêm tài khoản";
     document.getElementById("accEditId").value = "";
@@ -1696,8 +2052,7 @@ function openAccountModal(id) {
     document.getElementById("accPass").value = "";
     document.getElementById("accPhone").value = "";
     document.getElementById("accRoleDetail").value = "truong";
-    onAccRoleChange();
-    autoAccId();
+    if (currentUser.role === "gvcn") onAccGvcnChange();
   }
 }
 function closeAccountModal() { document.getElementById("accountModal").classList.add("hidden"); }
@@ -1705,9 +2060,27 @@ function saveAccount() {
   const edit = document.getElementById("accEditId").value;
   let id = (document.getElementById("accId").value || "").trim().toLowerCase();
   if (!id) { alert("Cần ID"); return; }
-  if (id === SUPER_ADMIN.id || id === "websiteh2t") {
-    alert("Không được dùng ID Admin WEBH2T");
+  const pass = document.getElementById("accPass").value || "";
+  // Không trùng Admin WEBH2T
+  if (id === SUPER_ADMIN.id || id === "websiteh2t" || id === (SUPER_ADMIN.email || "").toLowerCase()) {
+    alert("Không được đặt ID trùng Admin WEBH2T");
     return;
+  }
+  if (pass && pass === SUPER_ADMIN.pass) {
+    alert("Không được đặt mật khẩu trùng Admin WEBH2T");
+    return;
+  }
+  // Không trùng ID / MK tài khoản khác (trừ chính mình khi sửa)
+  for (const [oid, a] of Object.entries(accounts)) {
+    if (edit && oid === edit) continue;
+    if (oid.toLowerCase() === id) {
+      alert("ID đã được người khác dùng");
+      return;
+    }
+    if (pass && a.pass === pass) {
+      alert("Mật khẩu đã trùng với tài khoản khác — hãy chọn mật khẩu khác");
+      return;
+    }
   }
   const roleDetail = document.getElementById("accRoleDetail").value;
   const role = roleDetail === "viewer" ? "viewer" : "leader";
@@ -1716,8 +2089,11 @@ function saveAccount() {
     alert("Chọn GVCN đã đăng ký thành công");
     return;
   }
+  if (accounts[gvcnId].role !== "gvcn") {
+    alert("Tài khoản được chọn không phải GVCN");
+    return;
+  }
   const g = accounts[gvcnId];
-  // rename id if editing
   if (edit && edit !== id) {
     if (accounts[id]) { alert("ID mới đã tồn tại"); return; }
     delete accounts[edit];
@@ -1725,13 +2101,16 @@ function saveAccount() {
     alert("ID đã tồn tại");
     return;
   }
+  const genderEl = document.querySelector('input[name="accGender"]:checked');
   accounts[id] = {
-    pass: document.getElementById("accPass").value || "123456",
+    pass: pass || "123456",
     role: role,
     roleDetail: roleDetail,
     team: role === "viewer" ? null : (document.getElementById("accTeam").value ? +document.getElementById("accTeam").value : null),
     name: document.getElementById("accName").value.trim(),
     phone: document.getElementById("accPhone").value.trim(),
+    gender: genderEl ? genderEl.value : "",
+    studentId: document.getElementById("accStudent") ? document.getElementById("accStudent").value : null,
     classId: g.classId,
     className: g.className,
     school: g.school,
@@ -1753,15 +2132,16 @@ function autoAccId() {
   if (gvcnId && accounts[gvcnId]) cls = accounts[gvcnId].className || "";
   else if (currentUser && currentUser.className) cls = currentUser.className;
   const suf = classSuffix(cls);
+  const stu = document.getElementById("accStudent");
   let id = "";
   if (role === "viewer") id = "xem" + suf;
+  else if (stu && stu.value && role !== "viewer") id = String(stu.value).toLowerCase();
   else if (role === "truong" && team) id = "t" + team + suf;
   else if (role === "pho1" && team) id = "p" + team + "1" + suf;
   else if (role === "pho2" && team) id = "p" + team + "2" + suf;
   const accId = document.getElementById("accId");
   if (accId && id) accId.value = id;
 }
-
 
 function deleteAccount(id) {
   if (!confirm("Xóa " + id + "?")) return;
@@ -1896,23 +2276,23 @@ function importStudentsExcel(ev) {
 /* ===== CATALOGS ===== */
 function renderCatalogs() {
   document.getElementById("bonusCatalogList").innerHTML = bonuses.map((item, i) =>
-    '<div class="flex flex-wrap gap-2 items-center p-2 bg-slate-900/50 rounded-lg border border-slate-700">' +
-    '<input class="input-field text-xs w-16" value="' + item.code + '" data-i="' + i + '" data-k="code" data-t="bonus"/>' +
-    '<input class="input-field text-xs flex-1 min-w-[180px]" value="' + item.text + '" data-i="' + i + '" data-k="text" data-t="bonus"/>' +
-    '<input class="input-field text-xs w-20" type="number" value="' + item.points + '" data-i="' + i + '" data-k="points" data-t="bonus"/>' +
-    '<button type="button" class="text-red-400 text-sm px-2" data-t="bonus" data-i="' + i + '">× Xóa</button></div>'
+    '<div class="flex flex-wrap gap-2 items-center p-2 bg-white/80 rounded-lg border border-amber-200">' +
+    '<input class="input-field text-sm w-16" value="' + item.code + '" data-i="' + i + '" data-k="code" data-t="bonus"/>' +
+    '<input class="input-field text-sm flex-1 min-w-[180px]" value="' + item.text + '" data-i="' + i + '" data-k="text" data-t="bonus"/>' +
+    '<input class="input-field text-sm w-20 pts-bonus" type="number" value="' + item.points + '" data-i="' + i + '" data-k="points" data-t="bonus"/>' +
+    '<button type="button" class="btn-del-purple text-sm px-2" data-t="bonus" data-i="' + i + '">× Xóa</button></div>'
   ).join("");
   document.getElementById("violCatalogList").innerHTML = violations.map((item, i) =>
-    '<div class="flex flex-wrap gap-2 items-center p-2 bg-slate-900/50 rounded-lg border border-slate-700">' +
-    '<input class="input-field text-xs w-16" value="' + item.code + '" data-i="' + i + '" data-k="code" data-t="violation"/>' +
-    '<input class="input-field text-xs flex-1 min-w-[180px]" value="' + item.text + '" data-i="' + i + '" data-k="text" data-t="violation"/>' +
-    '<input class="input-field text-xs w-20" type="number" value="' + item.points + '" data-i="' + i + '" data-k="points" data-t="violation"/>' +
-    '<button type="button" class="text-red-400 text-sm px-2" data-t="violation" data-i="' + i + '">× Xóa</button></div>'
+    '<div class="flex flex-wrap gap-2 items-center p-2 bg-white/80 rounded-lg border border-amber-200">' +
+    '<input class="input-field text-sm w-16" value="' + item.code + '" data-i="' + i + '" data-k="code" data-t="violation"/>' +
+    '<input class="input-field text-sm flex-1 min-w-[180px]" value="' + item.text + '" data-i="' + i + '" data-k="text" data-t="violation"/>' +
+    '<input class="input-field text-sm w-20 pts-viol" type="number" value="' + item.points + '" data-i="' + i + '" data-k="points" data-t="violation"/>' +
+    '<button type="button" class="btn-del-purple text-sm px-2" data-t="violation" data-i="' + i + '">× Xóa</button></div>'
   ).join("");
   document.getElementById("penaltyList").innerHTML = penalties.map((p, i) =>
-    '<div class="flex gap-2 items-center p-2 bg-slate-900/50 rounded-lg border border-slate-700">' +
-    '<input class="input-field text-xs flex-1" value="' + p.replace(/"/g, "&quot;") + '" data-pi="' + i + '"/>' +
-    '<button type="button" class="text-red-400 text-sm px-2 del-pen" data-i="' + i + '">×</button></div>'
+    '<div class="flex gap-2 items-center p-2 bg-white/80 rounded-lg border border-amber-200">' +
+    '<input class="input-field text-sm flex-1" value="' + p.replace(/"/g, "&quot;") + '" data-pi="' + i + '"/>' +
+    '<button type="button" class="btn-del-purple text-sm px-2 del-pen" data-i="' + i + '">× Xóa</button></div>'
   ).join("");
   document.querySelectorAll("#bonusCatalogList button, #violCatalogList button").forEach(btn => {
     btn.onclick = () => { removeCatalog(btn.dataset.t, +btn.dataset.i); };
