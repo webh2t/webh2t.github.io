@@ -624,8 +624,13 @@
     /* ========== 3 CỘT LỚP ========== */
     .grade-cards {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-      gap: 28px;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    @media (max-width: 900px) {
+      .grade-cards { grid-template-columns: 1fr; }
     }
 
     .grade-card {
@@ -636,6 +641,9 @@
       transition: var(--transition);
       border-top: 5px solid var(--teal);
       position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
     }
 
     .grade-card::after {
@@ -656,13 +664,14 @@
     .grade-card.tin12 { border-top-color: #E65100; }
 
     .grade-card-header {
-      padding: 28px 20px 16px;
+      padding: 24px 18px 12px;
       text-align: center;
+      flex-shrink: 0;
     }
 
     .grade-card-header i {
-      font-size: 3rem;
-      margin-bottom: 12px;
+      font-size: 2.8rem;
+      margin-bottom: 10px;
       transition: transform 0.4s;
     }
 
@@ -675,30 +684,36 @@
     .tin12 .grade-card-header i { color: #E65100; }
 
     .grade-card-header h3 {
-      font-size: 1.55rem;
+      font-size: 1.45rem;
       font-weight: 800;
     }
 
     .grade-card-body {
-      padding: 0 18px 26px;
+      padding: 0 16px 22px;
       text-align: left;
+      display: flex;
+      flex-direction: column;
+      flex: 1;
     }
 
     .grade-card-body p {
       color: #444;
-      margin-bottom: 18px;
-      font-size: 0.88rem;
+      margin-bottom: 16px;
+      font-size: 0.86rem;
       line-height: 1.55;
       text-align: justify;
+      flex: 1;
     }
 
     .grade-card-body .btn-wrap {
       text-align: center;
+      margin-top: auto;
+      padding-top: 8px;
     }
 
     .btn-grade {
       display: inline-block;
-      padding: 12px 30px;
+      padding: 11px 28px;
       border-radius: 40px;
       font-weight: 700;
       color: white;
@@ -818,8 +833,9 @@
       animation: marquee-right 55s linear infinite;
       font-size: 0.98rem;
       padding-left: 100%;
-      color: #1B5E20;
-      font-weight: 600;
+      color: #FFD700;
+      font-weight: 700;
+      text-shadow: 0 0 6px rgba(255, 215, 0, 0.3);
     }
 
     @keyframes marquee-right {
@@ -1472,7 +1488,7 @@
           <h3>TIN HỌC 11</h3>
         </div>
         <div class="grade-card-body">
-          <p>Vai trò của thiết bị thông minh và tin học trong phát triển kinh tế - xã hội. Hợp tác trong môi trường số và đạo đức, pháp luật trong sử dụng công nghệ. Mạng máy tính, Internet, điện toán đám mây và internet vạn vật (IoT). Tìm kiếm, đánh giá và bảo mật thông tin trên mạng. Cơ sở dữ liệu (CSDL), mô hình quan hệ, hệ quản trị CSDL MySQL hoặc MS Access.</p>
+          <p>Vai trò của thiết bị thông minh và tin học trong phát triển kinh tế - xã hội. Mạng máy tính, Internet, điện toán đám mây và internet vạn vật (IoT). Tìm kiếm, khai thác, trao đổi thông tin an toàn, hiệu quả và các hệ thống lưu trữ đám mây. Cơ sở dữ liệu (CSDL), mô hình quan hệ, hệ quản trị CSDL MySQL hoặc MS Access. Các kỹ thuật cấu trúc dữ liệu, thuật toán, hàm, lập trình có cấu trúc và giải quyết bài toán thực tế bằng ngôn ngữ lập trình bậc cao (Python).</p>
           <div class="btn-wrap"><a href="tin11.html" class="btn-grade">Vào học →</a></div>
         </div>
       </div>
@@ -1482,7 +1498,7 @@
           <h3>TIN HỌC 12</h3>
         </div>
         <div class="grade-card-body">
-          <p>Trí tuệ nhân tạo AI trong khoa học và đời sống. Sử dụng phần mềm thiết kế, xử lý dữ liệu và truyền thông đa phương tiện. Kết nối, thiết bị mạng và các dịch vụ Internet.</p>
+          <p>Trí tuệ nhân tạo AI trong khoa học - đời sống và phân loại AI (AI hẹp/yếu và AI tổng quát/mạnh). Nhận biết và sử dụng các thiết bị mạng thông dụng (như bộ định tuyến, switch). Tìm hiểu về giao thức mạng và thực hành chia sẻ tài nguyên trên mạng. Ứng dụng phần mềm thiết kế, xử lý dữ liệu và truyền thông đa phương tiện. Kết nối, thiết bị mạng và các dịch vụ Internet. Kỹ năng tạo lập trang web, làm việc với siêu văn bản HTML, tạo liên kết và xử lý dữ liệu nâng cao.</p>
           <div class="btn-wrap"><a href="tin12.html" class="btn-grade">Vào học →</a></div>
         </div>
       </div>
@@ -1640,12 +1656,16 @@
         <div class="label">Lượt truy cập</div>
       </div>
       <div class="stat-item">
-        <div class="num" id="memberCount">128</div>
-        <div class="label"><a href="tin10.html" style="color:inherit;font-weight:600">Thành viên đăng ký</a></div>
+        <div class="num" id="memberCount">—</div>
+        <div class="label">Thành viên đăng ký</div>
       </div>
       <div class="stat-item">
-        <div class="num" id="postCount">86</div>
-        <div class="label"><a href="knowledge.html" style="color:inherit;font-weight:600">Bài viết</a> + <a href="exam.html" style="color:inherit;font-weight:600">Đề thi</a></div>
+        <div class="num" id="postCount">—</div>
+        <div class="label"><a href="knowledge.html" style="color:inherit;font-weight:600">Bài viết</a></div>
+      </div>
+      <div class="stat-item">
+        <div class="num" id="examCount">—</div>
+        <div class="label"><a href="exam.html" style="color:inherit;font-weight:600">Đề thi</a></div>
       </div>
     </div>
 
@@ -1705,8 +1725,19 @@
        Model đang dùng: gemini-2.0-flash  (nhanh + miễn phí)
        Có thể đổi sang: gemini-1.5-flash / gemini-2.0-flash-lite
        ============================================================ */
-    const GEMINI_API_KEY = "AQ.Ab8RN6JsxfnIN_JkhOGNqwx1UhD5nEOoKMz-5X36BtXRcqnwvg";
-    const GEMINI_MODEL   = "gemini-2.0-flash";          // Model mặc định
+    /* 
+       LỖI "invalid authentication credentials" = KEY SAI ĐỊNH DẠNG
+       Key Gemini đúng phải bắt đầu bằng: AIzaSy...
+       Key bạn gửi (AQ.Ab8...) không phải Gemini API key.
+       
+       Cách lấy key đúng:
+       1. Vào https://aistudio.google.com/app/apikey
+       2. Bấm "Create API key" → chọn project hoặc tạo project mới
+       3. Copy key (dạng AIzaSy...)
+       4. Dán vào dòng dưới đây
+    */
+    const GEMINI_API_KEY = "AIzaSy_PASTE_YOUR_REAL_KEY_HERE";  // ← Dán key AIzaSy... vào đây
+    const GEMINI_MODEL   = "gemini-2.0-flash";                 // Model mặc định
 
     // ========== PARTICLES EFFECT ==========
     (function initParticles() {
@@ -1921,8 +1952,12 @@
 
     async function callGemini(userText) {
       // Kiểm tra key
-      if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 20) {
-        return `<strong>⚠️ API Key chưa hợp lệ</strong><br>Vui lòng kiểm tra lại key trong file index.html.`;
+      if (!GEMINI_API_KEY || GEMINI_API_KEY.includes("PASTE_YOUR_REAL_KEY") || !GEMINI_API_KEY.startsWith("AIza")) {
+        return `<strong>⚠️ API Key chưa đúng</strong><br><br>
+        Key Gemini phải bắt đầu bằng <code>AIzaSy...</code><br>
+        1. Vào <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#008C8C">aistudio.google.com/app/apikey</a><br>
+        2. Tạo API key mới<br>
+        3. Copy key và dán vào dòng <code>GEMINI_API_KEY</code> trong file index.html`;
       }
 
       // System prompt giúp AI trả lời đúng ngữ cảnh giáo dục
@@ -2005,11 +2040,18 @@ Nhiệm vụ của bạn:
       if (e.key === 'Enter') sendMessage();
     });
 
-    // ========== ĐẾM LƯỢT TRUY CẬP (localStorage tạm) ==========
+    // ========== THỐNG KÊ ==========
+    // Lượt truy cập: tự tăng mỗi lần mở trang (localStorage)
     (function () {
       let visits = parseInt(localStorage.getItem('webh2t_visits') || '0') + 1;
       localStorage.setItem('webh2t_visits', visits);
       document.getElementById('visitCount').textContent = visits.toLocaleString('vi-VN');
+
+      // Các số còn lại: cập nhật thủ công khi có dữ liệu thật
+      // (GitHub Pages không có backend nên không tự đếm được từ trang con)
+      document.getElementById('memberCount').textContent = '128';  // ← Sửa số thành viên tại đây
+      document.getElementById('postCount').textContent = '64';    // ← Sửa số bài viết tại đây
+      document.getElementById('examCount').textContent = '22';    // ← Sửa số đề thi tại đây
     })();
   </script>
 </body>
