@@ -255,21 +255,14 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 </div>
 
-<!-- HÀNG 2: TUẦN / TỪ / ĐẾN / NGÀY / THỨ -->
-<div class="mb-4 p-4 bg-slate-900/70 rounded-xl border border-sky-500/30 grid grid-cols-2 md:grid-cols-5 gap-3">
-<div>
-<label class="text-slate-300 text-sm font-medium">Tuần</label>
-<select id="fWeekNo" class="input-field text-base py-2" onchange="onWeekSelect()">
+<!-- HÀNG 2: TUẦN / NGÀY / THỨ -->
+<div class="mb-4 p-4 bg-slate-900/70 rounded-xl border border-sky-500/30 grid grid-cols-1 md:grid-cols-3 gap-3">
+<div class="min-w-[280px]">
+<label class="text-slate-300 text-sm font-medium">Tuần NH</label>
+<select id="fWeekNo" class="input-field text-base py-2.5 w-full" onchange="onWeekSelect()" style="min-width:280px">
 <option value="">— Chọn tuần —</option>
 </select>
-</div>
-<div>
-<label class="text-slate-300 text-sm">Từ ngày</label>
-<input type="date" id="fWeekFrom" class="input-field text-base py-2" readonly/>
-</div>
-<div>
-<label class="text-slate-300 text-sm">Đến ngày</label>
-<input type="date" id="fWeekTo" class="input-field text-base py-2" readonly/>
+<p id="fWeekRangeHint" class="text-xs text-sky-400 mt-1"></p>
 </div>
 <div>
 <label class="text-slate-300 text-sm">Ngày</label>
@@ -280,6 +273,8 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <input type="text" id="fWeekday" class="input-field text-base py-2 bg-slate-900" readonly placeholder="Tự động"/>
 </div>
 </div>
+<input type="hidden" id="fWeekFrom" value=""/>
+<input type="hidden" id="fWeekTo" value=""/>
 
 <form id="entryForm" class="space-y-4">
 <input type="hidden" id="fClass" value=""/>
@@ -368,10 +363,10 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <section id="tab-report" class="tab-content hidden">
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-4">
 <h2 class="text-xl font-bold text-yellow-400 mb-4" id="reportTitle">📊 Báo cáo thi đua</h2>
-<div class="grid grid-cols-1 md:grid-cols-12 gap-3 mb-4 items-end">
-<div class="md:col-span-3">
-<label class="text-xs text-slate-400">Thời gian</label>
-<select id="rPeriod" class="input-field text-sm" onchange="onReportPeriodChange()">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 items-end">
+<div class="md:col-span-2">
+<label class="text-sm text-slate-300 font-medium mb-1 block">Thời gian</label>
+<select id="rPeriod" class="input-field text-base py-3" onchange="onReportPeriodChange()">
 <option value="year">Cả năm</option>
 <option value="week">Theo tuần</option>
 <option value="month">Theo tháng</option>
@@ -380,38 +375,39 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </select>
 </div>
 <div class="md:col-span-2" id="rMonthWrap">
-<label class="text-xs text-slate-400">Tháng</label>
-<select id="rMonth" class="input-field text-sm">
+<label class="text-sm text-slate-300 font-medium mb-1 block">Tháng</label>
+<select id="rMonth" class="input-field text-base py-3">
 <option value="">—</option>
 <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
 <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
 </select>
 </div>
-<div class="md:col-span-2" id="rWeekWrap">
-<label class="text-xs text-slate-400">Tuần NH</label>
-<select id="rWeek" class="input-field text-sm">
+<div class="md:col-span-3" id="rWeekWrap">
+<label class="text-sm text-slate-300 font-medium mb-1 block">Tuần NH</label>
+<select id="rWeek" class="input-field text-base py-3 w-full" style="min-width:260px">
 <option value="">Tất cả tuần</option>
 </select>
 </div>
 <div class="md:col-span-3">
-<label class="text-xs text-slate-400">Họ tên học sinh</label>
-<select id="rStudent" class="input-field text-sm" onchange="renderReport()">
+<label class="text-sm text-slate-300 font-medium mb-1 block">Họ và tên học sinh</label>
+<select id="rStudent" class="input-field text-base py-3" onchange="renderReport()">
 <option value="">— Tất cả HS —</option>
 </select>
 </div>
 <div class="md:col-span-1">
-<label class="text-xs text-slate-400">Tổ</label>
-<select id="rTeam" class="input-field text-sm">
+<label class="text-sm text-slate-300 font-medium mb-1 block">Tổ</label>
+<select id="rTeam" class="input-field text-base py-3">
 <option value="">All</option>
 <option>1</option><option>2</option><option>3</option><option>4</option>
 </select>
 </div>
 <div class="md:col-span-1">
-<label class="text-xs text-slate-400">Lớp</label>
-<input type="text" id="rClass" class="input-field text-sm" placeholder="Lớp"/>
+<label class="text-sm text-slate-300 font-medium mb-1 block">Lớp</label>
+<input type="text" id="rClass" class="input-field text-base py-3" placeholder="Lớp"/>
 </div>
 </div>
 <input type="hidden" id="rSearch" value=""/>
+<div id="reportStudentProfile" class="hidden mb-4 p-4 bg-slate-900 rounded-xl border border-sky-500/40"></div>
 <div class="flex flex-wrap gap-2 no-print">
 <button onclick="renderReport()" class="btn-primary text-sm">🔍 Lọc & Xem</button>
 <button id="btnExportExcel" onclick="exportExcel()" class="btn-secondary text-sm">📥 Excel</button>
@@ -974,7 +970,7 @@ function fillWeekSelects() {
   const opts = SCHOOL_WEEKS.map(w => {
     const f = w.from.slice(8,10) + "/" + w.from.slice(5,7) + "/" + w.from.slice(0,4);
     const to = w.to.slice(8,10) + "/" + w.to.slice(5,7) + "/" + w.to.slice(0,4);
-    return '<option value="' + w.w + '">Tuần ' + w.w + " · " + f + " → " + to + "</option>";
+    return '<option value="' + w.w + '">Tuần ' + w.w + " | " + f + " – " + to + "</option>";
   }).join("");
   const fw = document.getElementById("fWeekNo");
   if (fw && fw.options.length < 3) {
@@ -990,26 +986,37 @@ function fillWeekSelects() {
 function onWeekSelect() {
   const v = document.getElementById("fWeekNo").value;
   const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(v));
+  const hint = document.getElementById("fWeekRangeHint");
+  const fromEl = document.getElementById("fWeekFrom");
+  const toEl = document.getElementById("fWeekTo");
   if (!sw) {
-    document.getElementById("fWeekFrom").value = "";
-    document.getElementById("fWeekTo").value = "";
+    if (fromEl) fromEl.value = "";
+    if (toEl) toEl.value = "";
+    if (hint) hint.textContent = "";
     return;
   }
-  document.getElementById("fWeekFrom").value = sw.from;
-  document.getElementById("fWeekTo").value = sw.to;
-  // Mặc định ngày = ngày bắt đầu tuần nếu trống
+  if (fromEl) fromEl.value = sw.from;
+  if (toEl) toEl.value = sw.to;
+  if (hint) {
+    const f = sw.from.slice(8,10) + "/" + sw.from.slice(5,7) + "/" + sw.from.slice(0,4);
+    const to = sw.to.slice(8,10) + "/" + sw.to.slice(5,7) + "/" + sw.to.slice(0,4);
+    hint.textContent = "Từ " + f + " đến " + to;
+  }
   const fd = document.getElementById("fDate");
   if (fd && !fd.value) {
     fd.value = sw.from;
     autoWeekday();
   }
+  renderRecent();
 }
 function onReportPeriodChange() {
   const p = document.getElementById("rPeriod").value;
   const mw = document.getElementById("rMonthWrap");
   const ww = document.getElementById("rWeekWrap");
-  if (mw) mw.style.display = (p === "month") ? "" : "none";
-  if (ww) ww.style.display = (p === "week") ? "" : "none";
+  if (mw) mw.style.display = (p === "month" || p === "week") ? "" : (p === "year" || p === "hk1" || p === "hk2" ? "none" : "");
+  if (ww) ww.style.display = ""; // luôn hiện khung tuần rộng
+  if (mw && p === "month") mw.style.display = "";
+  if (mw && p !== "month") mw.style.display = "none";
   renderReport();
 }
 
@@ -1447,7 +1454,15 @@ function switchTab(name) {
   if (name === "report") renderReport();
   if (name === "admin") switchAdminSub(currentUser.role === "super" ? "pending" : "accounts");
   if (name === "overview") renderOverview();
-  if (name === "input") { fillWeekSelects(); filterStudentsByTeam(); updateMissingAssigned(); const cw=currentSchoolWeek(); const fw=document.getElementById("fWeekNo"); if(fw&&!fw.value&&cw){fw.value=cw.w;onWeekSelect();} }
+  if (name === "input") {
+    fillWeekSelects();
+    filterStudentsByTeam();
+    const cw = currentSchoolWeek();
+    const fw = document.getElementById("fWeekNo");
+    if (fw && cw) { fw.value = cw.w; onWeekSelect(); }
+    updateMissingAssigned();
+    renderRecent();
+  }
 }
 
 document.getElementById("adminSubTabs").addEventListener("click", e => {
@@ -1750,7 +1765,24 @@ function studentWeekScore(studentId) {
 function renderRecent() {
   const body = document.getElementById("recentBody");
   if (!body) return;
-  const mine = entries.filter(e => e.inputBy === currentUser.id).slice(0, 30);
+  // Chỉ hiện bản ghi trong tuần đang chọn (hoặc tuần hiện tại)
+  let activeWeek = (document.getElementById("fWeekNo") || {}).value || "";
+  let activeFrom = "", activeTo = "";
+  if (!activeWeek) {
+    const cur = currentSchoolWeek();
+    if (cur) { activeWeek = cur.w; activeFrom = cur.from; activeTo = cur.to; }
+  } else {
+    const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(activeWeek));
+    if (sw) { activeFrom = sw.from; activeTo = sw.to; }
+  }
+  const inWeek = e => {
+    if (activeFrom && activeTo && e.date) {
+      if (e.date >= activeFrom && e.date <= activeTo) return true;
+    }
+    if (activeWeek && String(e.weekNo) === String(activeWeek)) return true;
+    return false;
+  };
+  const mine = entries.filter(e => e.inputBy === currentUser.id && inWeek(e)).slice(0, 50);
   if (!mine.length) {
     body.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-slate-500">Chưa có bản ghi</td></tr>';
     return;
@@ -1783,7 +1815,7 @@ function renderRecent() {
   });
   const sums = Object.values(summaryMap);
   if (sums.length) {
-    html += '<tr class="bg-slate-900/80"><td colspan="6" class="py-2 text-sky-400 font-semibold text-sm">TỔNG KẾT</td></tr>';
+    html += '<tr class="bg-slate-900/80"><td colspan="6" class="py-2 text-sky-400 font-semibold text-sm">TỔNG KẾT · Tuần ' + (activeWeek || '') + '</td></tr>';
     html += '<tr class="text-xs text-slate-400 border-b border-slate-600"><td class="py-1">Tuần</td><td>Họ tên học sinh</td><td>Số lần VP</td><td>Số lần ƯĐ</td><td class="text-right">Điểm tuần</td><td class="text-center">Hình phạt</td></tr>';
     sums.forEach(s => {
       const score = 100 + s.bonus + s.viol;
@@ -1822,13 +1854,24 @@ function updateMissingAssigned() {
   const el = document.getElementById("missingAssigned");
   if (!el || currentUser.role !== "leader") { if (el) el.innerHTML = ""; return; }
   const assigned = students.filter(s => s.inputBy === currentUser.id);
-  const tw = getWeekNumber(new Date());
-  const covered = new Set(entries.filter(e => getWeekNumber(new Date(e.date)) === tw).map(e => String(e.studentId)));
+  let aw = (document.getElementById("fWeekNo") || {}).value;
+  let from = "", to = "";
+  if (!aw) {
+    const cur = currentSchoolWeek();
+    if (cur) { aw = cur.w; from = cur.from; to = cur.to; }
+  } else {
+    const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(aw));
+    if (sw) { from = sw.from; to = sw.to; }
+  }
+  const covered = new Set(entries.filter(e => {
+    if (from && to && e.date >= from && e.date <= to) return true;
+    return String(e.weekNo) === String(aw);
+  }).map(e => String(e.studentId)));
   const missing = assigned.filter(s => !covered.has(String(s.id)));
   if (!missing.length) {
-    el.innerHTML = '<span class="text-green-400">✅ Đã nhập đủ ' + assigned.length + ' HS được giao tuần này.</span>';
+    el.innerHTML = '<span class="text-green-400">✅ Đã nhập đủ ' + assigned.length + ' HS được giao trong tuần ' + (aw || "") + '.</span>';
   } else {
-    el.innerHTML = '⚠️ Còn <strong>' + missing.length + '</strong> / ' + assigned.length + ' HS chưa nhập: ' +
+    el.innerHTML = '⚠️ Tuần ' + (aw || "") + ': còn <strong>' + missing.length + '</strong> / ' + assigned.length + ' HS chưa nhập: ' +
       missing.map(s => s.name).join(", ");
   }
 }
@@ -2156,6 +2199,84 @@ function renderParentStudentDetail() {
     "</div>";
 }
 
+
+function renderReportStudentProfile(list) {
+  const box = document.getElementById("reportStudentProfile");
+  if (!box) return;
+  const rStuVal = (document.getElementById("rStudent") || {}).value || "";
+  if (!rStuVal) {
+    box.classList.add("hidden");
+    box.innerHTML = "";
+    return;
+  }
+  const st = students.find(s => String(s.id) === String(rStuVal));
+  if (!st) {
+    box.classList.remove("hidden");
+    box.innerHTML = '<p class="text-amber-300">Không tìm thấy HS trong danh sách lớp.</p>';
+    return;
+  }
+  // Người nhập: từ phân công + từ bản ghi
+  const inputorIds = new Set();
+  if (st.inputBy) inputorIds.add(st.inputBy);
+  list.filter(e => String(e.studentId) === String(rStuVal)).forEach(e => {
+    if (e.inputBy) inputorIds.add(e.inputBy);
+  });
+  const inputorNames = [...inputorIds].map(id => {
+    const a = accounts[id];
+    return a ? (a.name || id) : id;
+  }).join(", ") || "—";
+
+  const stuEntries = list.filter(e => String(e.studentId) === String(rStuVal))
+    .sort((a, b) => (a.createdAt || a.date) < (b.createdAt || b.date) ? 1 : -1);
+  let bonus = 0, viol = 0, bonusTimes = 0, violTimes = 0;
+  const bonusRows = [], violRows = [];
+  stuEntries.forEach(e => {
+    if (e.type === "bonus") { bonus += e.total; bonusTimes += e.times; bonusRows.push(e); }
+    else { viol += e.total; violTimes += e.times; violRows.push(e); }
+  });
+  const score = 100 + bonus + viol;
+  const rk = rankClass(score);
+  const pad = n => String(n).padStart(2, "0");
+  const fmtDT = iso => {
+    if (!iso) return "—";
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return pad(d.getDate()) + "/" + pad(d.getMonth()+1) + "/" + d.getFullYear() + ":" + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+  };
+  const rowE = e => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono text-xs text-sky-300">' + fmtDT(e.createdAt || e.date) +
+    '</td><td class="text-xs">' + (e.weekday || "") + '</td><td class="text-xs">' + (e.subject || "") +
+    '</td><td>' + (e.contentText || e.contentCode) + '</td><td class="text-right ' + (e.points > 0 ? "text-green-400" : "text-red-400") + '">' +
+    (e.points > 0 ? "+" : "") + e.points + " ×" + e.times + '</td><td class="text-xs text-amber-300">' + (e.inputByName || e.inputBy || "—") + "</td></tr>";
+
+  box.classList.remove("hidden");
+  box.innerHTML =
+    '<h3 class="text-lg font-bold text-yellow-400 mb-3">Hồ sơ học sinh (danh sách lớp)</h3>' +
+    '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-sm mb-4">' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Họ tên</div><div class="font-semibold text-yellow-400">' + st.name + '</div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Lớp</div><div class="font-semibold text-sky-400">' + (st.className || currentUser.className || "—") + '</div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Tổ</div><div class="font-semibold text-sky-400">' + (st.team || "—") + '</div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Ngày sinh</div><div class="font-semibold text-sky-400">' + (st.dob || "—") + '</div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Giới tính</div><div class="font-semibold text-sky-400">' + (st.gender || "—") + '</div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Địa chỉ</div><div class="font-semibold text-sky-400 text-xs">' + (st.address || "—") + '</div></div>' +
+    '</div>' +
+    '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Người nhập thi đua</div><div class="font-semibold text-amber-300">' + inputorNames + '</div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Điểm tuần (phạm vi lọc)</div><div class="font-bold text-yellow-400 text-lg">' + score + ' <span class="' + rk.cls + '">' + rk.label + '</span></div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Số lần ưu điểm</div><div class="font-semibold text-green-400">' + bonusTimes + " · +" + bonus + '</div></div>' +
+    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Số lần vi phạm</div><div class="font-semibold text-red-400">' + violTimes + " · " + viol + '</div></div>' +
+    '</div>' +
+    '<h4 class="font-semibold text-green-400 mb-2">Ưu điểm (từ bản ghi nhập thi đua)</h4>' +
+    (bonusRows.length
+      ? '<div class="overflow-x-auto mb-4"><table class="w-full text-sm"><thead class="text-slate-400"><tr><th class="text-left py-1">Ngày giờ</th><th>Thứ</th><th>Môn</th><th class="text-left">Nội dung</th><th class="text-right">Điểm</th><th class="text-left">Người nhập</th></tr></thead><tbody>' +
+        bonusRows.map(rowE).join("") + "</tbody></table></div>"
+      : '<p class="text-slate-500 text-sm mb-4">Chưa có bản ghi ưu điểm trong phạm vi lọc.</p>') +
+    '<h4 class="font-semibold text-red-400 mb-2">Vi phạm (từ bản ghi nhập thi đua)</h4>' +
+    (violRows.length
+      ? '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-slate-400"><tr><th class="text-left py-1">Ngày giờ</th><th>Thứ</th><th>Môn</th><th class="text-left">Nội dung</th><th class="text-right">Điểm</th><th class="text-left">Người nhập</th></tr></thead><tbody>' +
+        violRows.map(rowE).join("") + "</tbody></table></div>"
+      : '<p class="text-slate-500 text-sm">Chưa có bản ghi vi phạm trong phạm vi lọc.</p>');
+}
+
 function renderReport() {
   const rt = document.getElementById("reportTitle");
   if (rt) {
@@ -2181,6 +2302,7 @@ function renderReport() {
   fillWeekSelects();
 
   const list = getFilteredEntries();
+  renderReportStudentProfile(list);
   const agg = aggregateByStudent(list);
   const teamMap = { 1: { scores: [], bonus: 0, viol: 0 }, 2: { scores: [], bonus: 0, viol: 0 }, 3: { scores: [], bonus: 0, viol: 0 }, 4: { scores: [], bonus: 0, viol: 0 } };
   agg.forEach(s => {
@@ -2328,6 +2450,7 @@ function renderReport() {
 
 function exportExcel() {
   const list = getFilteredEntries();
+  renderReportStudentProfile(list);
   const agg = aggregateByStudent(list);
   const rows = [["STT", "Họ tên", "Tổ", "Cộng", "Trừ", "Điểm tuần", "Xếp loại", "Hình phạt"]];
   agg.forEach((s, i) => rows.push([i + 1, s.name, s.team, s.bonus, s.violation, s.score, s.rank.label, s.penalty]));
