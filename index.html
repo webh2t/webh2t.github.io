@@ -1,787 +1,1941 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="WEBH2T - Giáo dục Tin học THPT song ngữ Anh - Việt, bài giảng, lịch học, ngân hàng đề thi và năng lực số.">
-  <meta name="theme-color" content="#071a2b">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="WEBH2T | Informatics Engineering - Trang giáo dục Tin học THPT 2026 tích hợp AI, song ngữ Anh-Việt" />
   <title>WEBH2T | Informatics Engineering</title>
-  <link rel="icon" type="image/jpeg" href="assets/FAVICON.jpg">
+  <link rel="icon" type="image/jpeg" href="assets/FAVICON.jpg" />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
 
   <style>
-    :root{
-      --ink:#071a2b;
-      --ink-2:#0b263b;
-      --ink-3:#10344c;
-      --chalk:#f4d35e;
-      --tech:#20c997;
-      --tech-2:#72f1c0;
-      --white:#f7fbff;
-      --muted:#b8c9d6;
-      --line:rgba(114,241,192,.22);
-      --shadow:0 18px 45px rgba(0,0,0,.25);
-      --radius:20px;
+    :root {
+      /* Màu mới nổi bật hơn */
+      --chalk: #FFF9E6;
+      --chalk-dark: #F7E9C0;
+      --teal: #00B4B4;
+      --teal-dark: #008C8C;
+      --teal-glow: #00E0E0;
+      --ink: #071E36;
+      --ink-mid: #0F2F4F;
+      --sky: #00BFFF;
+      --white: #FFFFFF;
+      --card-bg: rgba(255, 255, 255, 0.92);
+      --shadow: 0 8px 30px rgba(7, 30, 54, 0.18);
+      --radius: 14px;
+      --transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
-    *{box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      margin:0;
-      color:var(--white);
-      background:
-        radial-gradient(circle at 10% 0%, rgba(32,201,151,.10), transparent 30%),
-        radial-gradient(circle at 90% 10%, rgba(244,211,94,.08), transparent 25%),
-        var(--ink);
-      font-family:Inter,Segoe UI,Roboto,Arial,sans-serif;
-      line-height:1.6;
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
-    a{color:inherit;text-decoration:none}
-    img{max-width:100%;display:block}
-    button,input{font:inherit}
 
-    .container{width:min(1180px,92%);margin:auto}
+    html {
+      scroll-behavior: smooth;
+    }
 
-    /* ===== HEADER ===== */
-    .topbar{
-      border-bottom:1px solid var(--line);
-      background:rgba(7,26,43,.94);
-      position:sticky;top:0;z-index:1000;
-      backdrop-filter:blur(14px);
+    body {
+      font-family: 'Be Vietnam Pro', 'Roboto', system-ui, sans-serif;
+      background: var(--chalk);
+      color: var(--ink);
+      line-height: 1.65;
+      overflow-x: hidden;
     }
-    .topbar-inner{
-      min-height:86px;display:flex;align-items:center;
-      justify-content:space-between;gap:24px;
-    }
-    .brand{display:flex;align-items:center;gap:16px;min-width:0}
-    .brand img{
-      width:clamp(108px,13vw,150px);
-      height:auto;object-fit:contain;
-    }
-    .brand-text{border-left:1px solid var(--line);padding-left:16px}
-    .brand-text strong{display:block;font-size:clamp(13px,1.5vw,18px);letter-spacing:.08em}
-    .brand-text span{display:block;color:var(--muted);font-size:12px}
-    .clock{text-align:right;white-space:nowrap}
-    .clock .day{color:var(--chalk);font-weight:700;font-size:14px}
-    .clock .time{font-variant-numeric:tabular-nums;font-size:20px;font-weight:800;letter-spacing:.04em}
 
-    /* ===== NAV ===== */
-    .nav-wrap{border-bottom:1px solid var(--line);background:var(--ink-2)}
-    .nav{display:flex;align-items:stretch;gap:4px;overflow:visible}
-    .nav-item{position:relative;flex:1 1 0;min-width:112px}
-    .nav-link{
-      min-height:64px;padding:9px 14px;display:flex;flex-direction:column;
-      justify-content:center;align-items:center;border-radius:12px 12px 0 0;
-      transition:.2s ease;white-space:nowrap;
+    /* ========== PARTICLES CANVAS ========== */
+    #particles-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.55;
     }
-    .nav-link .en{font-size:12px;font-weight:800;letter-spacing:.08em}
-    .nav-link .vi{font-size:12px;color:var(--chalk);font-weight:700}
-    .nav-link:hover,.nav-link.active{background:var(--ink-3);transform:translateY(-2px)}
-    .dropdown{
-      position:absolute;left:0;top:100%;min-width:230px;padding:10px;
-      background:#092238;border:1px solid var(--line);border-radius:0 0 16px 16px;
-      box-shadow:var(--shadow);display:none
-    }
-    .nav-item:hover .dropdown,.nav-item:focus-within .dropdown{display:block}
-    .dropdown a{display:block;padding:10px 12px;border-radius:10px}
-    .dropdown a:hover{background:rgba(32,201,151,.12);color:var(--tech-2)}
-    .menu-toggle{display:none;background:none;border:1px solid var(--line);color:white;border-radius:10px;padding:8px 12px}
 
-    /* ===== QUOTE ===== */
-    .quote-bar{overflow:hidden;border-bottom:1px solid var(--line);background:#061521}
-    .quote-track{display:inline-block;white-space:nowrap;padding-left:100%;animation:quoteMove 180s linear infinite;font-weight:800;color:var(--chalk);}
-    .quote-track:hover{animation-play-state:paused}
-    @keyframes quoteMove{from{transform:translateX(-100%)}to{transform:translateX(100%)}}to{transform:translateX(0)}}
+    .content-wrapper {
+      position: relative;
+      z-index: 1;
+    }
 
-    /* ===== HERO ===== */
-    .hero{padding:72px 0 54px;position:relative;overflow:hidden}
-    .hero-grid{display:grid;grid-template-columns:1.35fr .65fr;gap:34px;align-items:center}
-    .eyebrow{color:var(--tech-2);font-weight:800;letter-spacing:.12em;font-size:13px}
-    h1{font-size:clamp(38px,6vw,72px);line-height:1.02;margin:12px 0 18px}
-    h1 span{color:var(--chalk)}
-    .hero p{font-size:18px;color:var(--muted);max-width:760px}
-    .hero-actions{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
-    .btn{
-      display:inline-flex;align-items:center;justify-content:center;gap:8px;
-      padding:12px 18px;border-radius:12px;font-weight:800;border:1px solid transparent;
-      transition:.2s ease;cursor:pointer
+    a {
+      text-decoration: none;
+      color: inherit;
+      transition: var(--transition);
     }
-    .btn-primary{background:var(--chalk);color:#14202a}
-    .btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 24px rgba(244,211,94,.18)}
-    .btn-outline{border-color:var(--tech);color:var(--tech-2);background:transparent}
-    .btn-outline:hover{background:rgba(32,201,151,.10)}
-    .hero-panel{
-      padding:24px;border:1px solid var(--line);border-radius:24px;
-      background:linear-gradient(145deg,rgba(16,52,76,.9),rgba(7,26,43,.9));
-      box-shadow:var(--shadow)
-    }
-    .hero-panel h3{margin:0 0 12px;color:var(--chalk)}
-    .pill-list{display:grid;gap:10px}
-    .pill{padding:10px 12px;border:1px solid var(--line);border-radius:12px;color:var(--muted)}
-    .pill b{color:var(--white)}
 
-    /* ===== SECTIONS ===== */
-    section{padding:52px 0}
-    .section-head{display:flex;justify-content:space-between;gap:20px;align-items:end;margin-bottom:22px}
-    .kicker{color:var(--tech-2);font-size:12px;font-weight:900;letter-spacing:.13em}
-    h2{margin:3px 0 0;font-size:clamp(26px,4vw,38px);line-height:1.15}
-    .section-head p{margin:0;color:var(--muted);max-width:520px}
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+    }
 
-    .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-    .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
-    .card{
-      background:linear-gradient(160deg,rgba(16,52,76,.78),rgba(9,34,56,.9));
-      border:1px solid var(--line);border-radius:var(--radius);padding:22px;
-      box-shadow:0 10px 30px rgba(0,0,0,.14);transition:.22s ease
+    /* ========== HIỆU ỨNG CHUNG ========== */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s ease, transform 0.7s ease;
     }
-    .card:hover{transform:translateY(-5px);border-color:rgba(114,241,192,.5)}
-    .card .icon{font-size:30px;margin-bottom:12px}
-    .card h3{margin:0 0 7px}
-    .card p{color:var(--muted);margin:0 0 16px}
-    .card .link{color:var(--tech-2);font-weight:800}
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
 
-    /* ===== NEWS ===== */
-    .news-slider{position:relative}
-    .news-track{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-    .news-card{min-height:220px}
-    .tag{
-      display:inline-flex;padding:5px 9px;border-radius:999px;
-      border:1px solid var(--line);color:var(--chalk);font-size:11px;font-weight:800
+    /* ========== KHỐI 1: HEADER ========== */
+    .header-top {
+      background: linear-gradient(135deg, var(--ink) 0%, var(--ink-mid) 60%, #0a3a5c 100%);
+      color: var(--white);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 16px;
+      box-shadow: 0 4px 25px rgba(0,0,0,0.25);
+      position: relative;
+      overflow: hidden;
     }
-    .news-card h3{font-size:21px;line-height:1.25;margin:15px 0 9px}
-    .news-card small{color:var(--muted)}
-    .loading{color:var(--muted);padding:20px;border:1px dashed var(--line);border-radius:16px}
 
-    /* ===== TABLE ===== */
-    .table-box{overflow:auto;border:1px solid var(--line);border-radius:18px;background:rgba(6,21,33,.7)}
-    table{width:100%;border-collapse:collapse;min-width:850px}
-    th,td{padding:13px 14px;border-bottom:1px solid rgba(114,241,192,.12);text-align:left}
-    th{color:var(--chalk);font-size:12px;text-transform:uppercase;letter-spacing:.05em;background:#092238}
-    td{color:#dce8ef}
-    tr:hover td{background:rgba(32,201,151,.05)}
+    .header-top::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--teal), var(--teal-glow), var(--sky), var(--teal));
+      background-size: 200% 100%;
+      animation: gradientMove 4s linear infinite;
+    }
 
-    /* ===== SUBJECT ===== */
-    .subject-card{position:relative;overflow:hidden}
-    .subject-card::after{
-      content:"";position:absolute;right:-35px;top:-35px;width:110px;height:110px;
-      border-radius:50%;border:20px solid rgba(32,201,151,.07)
+    @keyframes gradientMove {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
     }
-    .grade{font-size:12px;color:var(--chalk);font-weight:900;letter-spacing:.12em}
 
-    /* ===== TICKER ===== */
-    .ticker-window{overflow:hidden;border:1px solid var(--line);border-radius:18px;padding:8px;background:#061521}
-    .ticker{display:flex;width:max-content;gap:18px;animation:ticker 42s linear infinite}
-    .ticker:hover{animation-play-state:paused}
-    .ticker-item{width:250px;padding:17px;border-radius:14px;background:var(--ink-2);border:1px solid var(--line)}
-    .ticker-item b{display:block;margin-bottom:5px}
-    .ticker-item span{font-size:13px;color:var(--muted)}
-    @keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+    .logo-wrap {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
 
-    /* ===== AI ===== */
-    .ai{
-      display:grid;grid-template-columns:.8fr 1.2fr;gap:22px;align-items:stretch
+    .logo-wrap img {
+      height: 56px;
+      width: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 3px 6px rgba(0,0,0,0.35));
+      transition: transform 0.4s ease;
     }
-    .ai-info,.chatbox{
-      border:1px solid var(--line);border-radius:22px;background:linear-gradient(145deg,#0c2a41,#071a2b)
-    }
-    .ai-info{padding:26px}
-    .ai-info h3{font-size:30px;margin:0 0 8px}
-    .ai-info p{color:var(--muted)}
-    .ai-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}
-    .ai-badges span{border:1px solid var(--line);border-radius:999px;padding:6px 10px;font-size:12px}
-    .chatbox{display:flex;flex-direction:column;min-height:370px;overflow:hidden}
-    .chat-head{padding:15px 18px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
-    .chat-head strong{color:var(--tech-2)}
-    .chat-body{padding:18px;flex:1;display:flex;flex-direction:column;gap:10px;overflow:auto}
-    .bubble{max-width:82%;padding:10px 13px;border-radius:14px;background:#10344c}
-    .bubble.user{align-self:flex-end;background:#12624d}
-    .chat-note{font-size:12px;color:var(--muted)}
-    .chat-form{display:flex;gap:8px;padding:12px;border-top:1px solid var(--line)}
-    .chat-form input{
-      flex:1;min-width:0;background:#061521;color:white;border:1px solid var(--line);
-      border-radius:11px;padding:11px 12px;outline:none
-    }
-    .chat-form button{border:0;border-radius:11px;background:var(--chalk);padding:0 15px;font-weight:900;cursor:pointer}
 
-    /* ===== STATS / FOOTER ===== */
-    .stat{text-align:center}
-    .stat strong{display:block;font-size:34px;color:var(--chalk)}
-    .stat span{font-size:12px;color:var(--muted);letter-spacing:.08em}
-    footer{border-top:1px solid var(--line);background:#05131f;padding:45px 0 25px}
-    .footer-grid{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:25px}
-    footer h3{margin-top:0}
-    footer p,footer li{color:var(--muted)}
-    footer ul{list-style:none;padding:0;margin:0}
-    footer li{margin:7px 0}
-    .footer-bottom{border-top:1px solid var(--line);margin-top:30px;padding-top:18px;display:flex;justify-content:space-between;gap:15px;color:var(--muted);font-size:13px}
-    .top-btn{
-      position:fixed;right:20px;bottom:20px;width:46px;height:46px;border-radius:50%;
-      border:1px solid var(--tech);background:var(--ink-2);color:var(--tech-2);
-      cursor:pointer;display:none;z-index:999
+    .logo-wrap img:hover {
+      transform: scale(1.08) rotate(-2deg);
     }
-    .top-btn.show{display:block}
 
-    @media(max-width:900px){
-      .hero-grid,.ai{grid-template-columns:1fr}
-      .grid-3,.news-track{grid-template-columns:1fr 1fr}
-      .grid-4{grid-template-columns:1fr 1fr}
-      .nav{flex-wrap:wrap;padding:6px 0}
-      .nav-link{min-height:55px}
+    .site-title {
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 0.4px;
     }
-    @media(max-width:680px){
-      .topbar-inner{min-height:72px}
-      .brand-text{display:none}
-      .clock .time{font-size:16px}
-      .clock .day{font-size:11px}
-      .menu-toggle{display:block;margin:7px 0}
-      .nav-wrap{display:none}
-      .nav-wrap.open{display:block}
-      .nav{display:block}
-      .nav-link{align-items:flex-start;padding:10px 12px}
-      .dropdown{position:static;display:block;box-shadow:none;margin:0 10px 8px}
-      .grid-3,.grid-4,.news-track{grid-template-columns:1fr}
-      .hero{padding-top:45px}
-      .hero-actions .btn{width:100%}
-      .section-head{display:block}
-      .section-head p{margin-top:8px}
-      .footer-grid{grid-template-columns:1fr}
-      .footer-bottom{display:block}
-      .footer-bottom span{display:block;margin-top:5px}
+
+    .site-title span {
+      color: var(--teal-glow);
+      text-shadow: 0 0 12px rgba(0, 224, 224, 0.4);
     }
-  .site-footer a{color:#3a2508}.footer-links{columns:2;column-gap:28px}</style>
+
+    .clock {
+      font-size: 0.95rem;
+      font-weight: 500;
+      background: rgba(255,255,255,0.12);
+      padding: 9px 18px;
+      border-radius: 40px;
+      border: 1px solid rgba(255,255,255,0.22);
+      backdrop-filter: blur(6px);
+      white-space: nowrap;
+      box-shadow: 0 0 15px rgba(0, 180, 180, 0.15);
+    }
+
+    /* ========== KHỐI 2: DANH NGÔN ========== */
+    .quote-bar {
+      background: linear-gradient(90deg, var(--teal-dark), #007777);
+      color: #7FDBFF;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 15px 0;
+      position: relative;
+      border-bottom: 3px solid var(--teal-glow);
+    }
+
+    .quote-track {
+      display: inline-block;
+      animation: marquee 50s linear infinite;
+      font-size: 1.28rem;
+      font-weight: 600;
+      padding-left: 100%;
+      text-shadow: 0 0 8px rgba(0, 191, 255, 0.3);
+    }
+
+    .quote-track:hover {
+      animation-play-state: paused;
+    }
+
+    @keyframes marquee {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
+
+    /* ========== KHỐI 3: MENU ========== */
+    .main-nav {
+      background: rgba(255,255,255,0.97);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      border-bottom: 1px solid rgba(0,180,180,0.15);
+    }
+
+    .nav-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: stretch;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 14px;
+    }
+
+    .nav-item {
+      position: relative;
+    }
+
+    .nav-link {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 112px;
+      padding: 13px 14px;
+      border-radius: 12px;
+      background: linear-gradient(180deg, #f8fafc 0%, #eef2f6 100%);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      transition: var(--transition);
+      text-align: center;
+      border: 2px solid transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-link::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(0,180,180,0.15), transparent);
+      transition: 0.5s;
+    }
+
+    .nav-link:hover::before {
+      left: 100%;
+    }
+
+    .nav-link:hover,
+    .nav-item:hover > .nav-link {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 22px rgba(0,180,180,0.35);
+      border-color: var(--teal);
+      background: linear-gradient(180deg, #e0fafa 0%, #c8f2f2 100%);
+    }
+
+    .nav-link .en {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--ink);
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      opacity: 0.75;
+    }
+
+    .nav-link .vi {
+      font-size: 0.95rem;
+      font-weight: 800;
+      color: var(--teal-dark);
+      margin-top: 2px;
+    }
+
+    .nav-link i {
+      font-size: 1.35rem;
+      margin-bottom: 5px;
+      color: var(--teal);
+      transition: transform 0.3s;
+    }
+
+    .nav-link:hover i {
+      transform: scale(1.2);
+      color: var(--teal-dark);
+    }
+
+    /* Submenu */
+    .submenu {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: var(--white);
+      min-width: 230px;
+      border-radius: 14px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 999;
+      overflow: hidden;
+      border: 2px solid var(--teal);
+    }
+
+    .nav-item:hover .submenu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .submenu a {
+      display: block;
+      padding: 15px 20px;
+      font-weight: 700;
+      font-size: 1.02rem;
+      border-bottom: 1px solid #eee;
+      transition: all 0.25s;
+      position: relative;
+    }
+
+    .submenu a:last-child { border-bottom: none; }
+
+    .submenu a:nth-child(1) { background: linear-gradient(90deg, #E3F2FD, #BBDEFB); color: #0D47A1; }
+    .submenu a:nth-child(2) { background: linear-gradient(90deg, #E8F5E9, #C8E6C9); color: #1B5E20; }
+    .submenu a:nth-child(3) { background: linear-gradient(90deg, #FFF3E0, #FFE0B2); color: #E65100; }
+    .submenu a:nth-child(4) { background: linear-gradient(90deg, #F3E5F5, #E1BEE7); color: #4A148C; }
+
+    .submenu a:hover {
+      padding-left: 28px;
+      filter: brightness(0.97);
+      letter-spacing: 0.3px;
+    }
+
+    /* ========== HERO ========== */
+    .hero {
+      background: linear-gradient(135deg, var(--ink) 0%, #0c3558 45%, var(--teal-dark) 100%);
+      color: var(--white);
+      padding: 60px 20px 70px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 20% 80%, rgba(0,180,180,0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(0,191,255,0.12) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .hero-content {
+      position: relative;
+      max-width: 920px;
+      margin: 0 auto;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      font-size: clamp(1.9rem, 4.5vw, 3rem);
+      font-weight: 800;
+      margin-bottom: 14px;
+      text-shadow: 0 3px 12px rgba(0,0,0,0.35);
+      animation: titleGlow 3s ease-in-out infinite alternate;
+    }
+
+    @keyframes titleGlow {
+      from { text-shadow: 0 3px 12px rgba(0,0,0,0.35); }
+      to { text-shadow: 0 3px 20px rgba(0,224,224,0.4), 0 0 30px rgba(0,180,180,0.2); }
+    }
+
+    .hero p {
+      font-size: 1.2rem;
+      opacity: 0.95;
+      margin-bottom: 28px;
+      font-weight: 500;
+    }
+
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 14px;
+    }
+
+    .badge {
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.28);
+      padding: 10px 20px;
+      border-radius: 40px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      backdrop-filter: blur(6px);
+      transition: var(--transition);
+    }
+
+    .badge:hover {
+      background: rgba(0,180,180,0.25);
+      border-color: var(--teal-glow);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 18px rgba(0,180,180,0.3);
+    }
+
+    /* ========== SECTION CHUNG ========== */
+    .section {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 50px 20px;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 36px;
+    }
+
+    .section-title h2 {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: var(--ink);
+      display: inline-block;
+      padding-bottom: 12px;
+      position: relative;
+    }
+
+    .section-title h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 4px;
+      background: linear-gradient(90deg, var(--teal), var(--sky));
+      border-radius: 4px;
+    }
+
+    .section-title p {
+      color: #555;
+      margin-top: 12px;
+      font-size: 1.05rem;
+    }
+
+    /* ========== SLIDER ========== */
+    .slider-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: var(--radius);
+      background: var(--white);
+      box-shadow: var(--shadow);
+    }
+
+    .slider-track {
+      display: flex;
+      transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .slide {
+      min-width: 100%;
+      padding: 40px 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      background: linear-gradient(145deg, #e8fafa 0%, #fff 60%);
+    }
+
+    .slide h3 {
+      font-size: 1.5rem;
+      color: var(--ink);
+      margin-bottom: 12px;
+      font-weight: 800;
+    }
+
+    .slide p {
+      color: #444;
+      max-width: 620px;
+      font-size: 1.05rem;
+    }
+
+    .slide a {
+      margin-top: 20px;
+      display: inline-block;
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      color: white;
+      padding: 12px 28px;
+      border-radius: 40px;
+      font-weight: 700;
+      box-shadow: 0 4px 15px rgba(0,180,180,0.35);
+      transition: var(--transition);
+    }
+
+    .slide a:hover {
+      transform: scale(1.07) translateY(-2px);
+      box-shadow: 0 8px 25px rgba(0,180,180,0.45);
+    }
+
+    .slider-btn {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--ink);
+      color: white;
+      border: none;
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      z-index: 10;
+      opacity: 0.85;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+    }
+
+    .slider-btn:hover {
+      opacity: 1;
+      background: var(--teal);
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .slider-btn.prev { left: 16px; }
+    .slider-btn.next { right: 16px; }
+
+    /* ========== LỊCH BIỂU ========== */
+    .schedule-section {
+      background: linear-gradient(180deg, var(--ink) 0%, #0a2f4a 100%);
+      color: var(--white);
+      padding: 55px 20px;
+      position: relative;
+    }
+
+    .schedule-section .section-title h2 {
+      color: var(--chalk);
+    }
+
+    .schedule-section .section-title h2::after {
+      background: linear-gradient(90deg, var(--teal-glow), var(--sky));
+    }
+
+    .schedule-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+      overflow-x: auto;
+      border-radius: var(--radius);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.35);
+    }
+
+    table.schedule {
+      width: 100%;
+      border-collapse: collapse;
+      background: #0c3558;
+      min-width: 720px;
+    }
+
+    table.schedule th {
+      background: linear-gradient(180deg, var(--teal-dark), #006666);
+      color: white;
+      padding: 15px 12px;
+      font-weight: 700;
+      text-align: center;
+      border: 1px solid #0a2a4a;
+      letter-spacing: 0.3px;
+    }
+
+    table.schedule td {
+      padding: 13px 10px;
+      text-align: center;
+      border: 1px solid #1a4a6e;
+      font-size: 0.95rem;
+      transition: background 0.25s;
+    }
+
+    table.schedule tr:nth-child(even) {
+      background: rgba(0,180,180,0.07);
+    }
+
+    table.schedule tr:hover td {
+      background: rgba(0,180,180,0.18);
+    }
+
+    .note-schedule {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 0.92rem;
+      opacity: 0.9;
+    }
+
+    .note-schedule a {
+      color: var(--teal-glow);
+      font-weight: 700;
+      text-decoration: underline;
+    }
+
+    /* ========== 3 CỘT LỚP ========== */
+    .grade-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 28px;
+    }
+
+    .grade-card {
+      background: var(--white);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+      border-top: 5px solid var(--teal);
+      position: relative;
+    }
+
+    .grade-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, transparent 70%, rgba(0,180,180,0.06));
+      pointer-events: none;
+    }
+
+    .grade-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 18px 45px rgba(0,180,180,0.28);
+    }
+
+    .grade-card.tin10 { border-top-color: #1565C0; }
+    .grade-card.tin11 { border-top-color: #2E7D32; }
+    .grade-card.tin12 { border-top-color: #E65100; }
+
+    .grade-card-header {
+      padding: 28px 20px 16px;
+      text-align: center;
+    }
+
+    .grade-card-header i {
+      font-size: 3rem;
+      margin-bottom: 12px;
+      transition: transform 0.4s;
+    }
+
+    .grade-card:hover .grade-card-header i {
+      transform: scale(1.15) rotate(5deg);
+    }
+
+    .tin10 .grade-card-header i { color: #1565C0; }
+    .tin11 .grade-card-header i { color: #2E7D32; }
+    .tin12 .grade-card-header i { color: #E65100; }
+
+    .grade-card-header h3 {
+      font-size: 1.55rem;
+      font-weight: 800;
+    }
+
+    .grade-card-body {
+      padding: 0 22px 28px;
+      text-align: center;
+    }
+
+    .grade-card-body p {
+      color: #555;
+      margin-bottom: 20px;
+      font-size: 0.98rem;
+    }
+
+    .btn-grade {
+      display: inline-block;
+      padding: 12px 30px;
+      border-radius: 40px;
+      font-weight: 700;
+      color: white;
+      transition: var(--transition);
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    .tin10 .btn-grade { background: linear-gradient(135deg, #1976D2, #0D47A1); }
+    .tin11 .btn-grade { background: linear-gradient(135deg, #43A047, #1B5E20); }
+    .tin12 .btn-grade { background: linear-gradient(135deg, #FB8C00, #E65100); }
+
+    .btn-grade:hover {
+      transform: scale(1.08);
+      filter: brightness(1.1);
+    }
+
+    /* ========== 2 CỘT ========== */
+    .two-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 800px) {
+      .two-cols { grid-template-columns: 1fr; }
+    }
+
+    .card-box {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      transition: var(--transition);
+    }
+
+    .card-box:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 14px 40px rgba(0,0,0,0.15);
+    }
+
+    .card-box-header {
+      padding: 17px 22px;
+      font-weight: 700;
+      font-size: 1.18rem;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-box-header.knowledge {
+      background: linear-gradient(90deg, #6A1B9A, #AB47BC);
+    }
+
+    .card-box-header.exam {
+      background: linear-gradient(90deg, #C62828, #EF5350);
+    }
+
+    .card-box-body {
+      padding: 12px 20px 18px;
+    }
+
+    .post-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px dashed #e0e0e0;
+      transition: background 0.25s;
+    }
+
+    .post-item:last-child { border-bottom: none; }
+
+    .post-item:hover {
+      background: rgba(0,180,180,0.05);
+      margin: 0 -8px;
+      padding-left: 8px;
+      padding-right: 8px;
+      border-radius: 8px;
+    }
+
+    .post-item i {
+      margin-top: 4px;
+      color: var(--teal);
+    }
+
+    .post-item a {
+      font-weight: 600;
+      color: var(--ink);
+    }
+
+    .post-item a:hover {
+      color: var(--teal-dark);
+    }
+
+    .post-item .date {
+      font-size: 0.8rem;
+      color: #888;
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* ========== BÌNH LUẬN ========== */
+    .comments-bar {
+      background: linear-gradient(90deg, var(--ink-mid), #0a3a5c);
+      color: #90CAF9;
+      overflow: hidden;
+      white-space: nowrap;
+      padding: 14px 0;
+      margin-top: 20px;
+    }
+
+    .comments-track {
+      display: inline-block;
+      animation: marquee-right 55s linear infinite;
+      font-size: 0.98rem;
+      padding-left: 100%;
+    }
+
+    @keyframes marquee-right {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(0); }
+    }
+
+    /* ========== AI CHATBOX ========== */
+    .ai-toggle {
+      position: fixed;
+      bottom: 95px;
+      right: 26px;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      color: white;
+      border: none;
+      font-size: 1.7rem;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(0,180,180,0.5);
+      z-index: 1100;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: pulse 2.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 8px 25px rgba(0,180,180,0.5); }
+      50% { box-shadow: 0 8px 35px rgba(0,224,224,0.7); }
+    }
+
+    .ai-toggle:hover {
+      transform: scale(1.12);
+      animation: none;
+    }
+
+    .ai-chatbox {
+      position: fixed;
+      bottom: 175px;
+      right: 26px;
+      width: 380px;
+      max-width: calc(100vw - 40px);
+      height: 520px;
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 16px 50px rgba(0,0,0,0.3);
+      display: none;
+      flex-direction: column;
+      z-index: 1100;
+      overflow: hidden;
+      border: 2px solid var(--teal);
+      animation: chatOpen 0.35s ease;
+    }
+
+    @keyframes chatOpen {
+      from { opacity: 0; transform: translateY(20px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .ai-chatbox.open {
+      display: flex;
+    }
+
+    .ai-header {
+      background: linear-gradient(90deg, var(--ink), var(--teal-dark));
+      color: white;
+      padding: 15px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+
+    .ai-header button {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1.35rem;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .ai-header button:hover {
+      transform: rotate(90deg);
+    }
+
+    .ai-messages {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      background: #f4f8fb;
+    }
+
+    .ai-msg {
+      margin-bottom: 14px;
+      max-width: 88%;
+      padding: 11px 15px;
+      border-radius: 14px;
+      font-size: 0.93rem;
+      line-height: 1.5;
+      animation: msgIn 0.3s ease;
+    }
+
+    @keyframes msgIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .ai-msg.bot {
+      background: #e0f7f7;
+      color: var(--ink);
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .ai-msg.user {
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      color: white;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .ai-msg.typing {
+      background: #e0f7f7;
+      color: #666;
+      font-style: italic;
+    }
+
+    .ai-input-area {
+      display: flex;
+      padding: 12px 14px;
+      border-top: 1px solid #e0e0e0;
+      gap: 10px;
+      background: white;
+    }
+
+    .ai-input-area input {
+      flex: 1;
+      padding: 11px 16px;
+      border: 1.5px solid #ddd;
+      border-radius: 30px;
+      outline: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: border 0.25s;
+    }
+
+    .ai-input-area input:focus {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 3px rgba(0,180,180,0.15);
+    }
+
+    .ai-input-area button {
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      color: white;
+      border: none;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.1rem;
+      transition: var(--transition);
+    }
+
+    .ai-input-area button:hover {
+      transform: scale(1.08);
+    }
+
+    .ai-input-area button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* ========== FOOTER ========== */
+    footer {
+      background: linear-gradient(180deg, var(--chalk-dark) 0%, #E8D5A0 100%);
+      padding: 50px 20px 25px;
+      margin-top: 40px;
+      border-top: 4px solid var(--teal);
+    }
+
+    .footer-grid {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 45px;
+    }
+
+    @media (max-width: 700px) {
+      .footer-grid { grid-template-columns: 1fr; }
+    }
+
+    .footer-col h3 {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 3px solid var(--teal);
+      display: inline-block;
+    }
+
+    .footer-links {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px 24px;
+    }
+
+    .footer-links a {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 600;
+      color: var(--ink);
+      padding: 7px 0;
+      transition: var(--transition);
+    }
+
+    .footer-links a:hover {
+      color: var(--teal-dark);
+      padding-left: 8px;
+    }
+
+    .footer-links a i {
+      color: var(--teal);
+      width: 20px;
+    }
+
+    .contact-list {
+      list-style: none;
+    }
+
+    .contact-list li {
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 500;
+    }
+
+    .contact-list a {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .contact-list a:hover {
+      color: var(--teal-dark);
+    }
+
+    .contact-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--teal), var(--teal-dark));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0,180,180,0.3);
+      transition: var(--transition);
+    }
+
+    .contact-list li:hover .contact-icon {
+      transform: scale(1.12);
+    }
+
+    /* Stats */
+    .stats-bar {
+      max-width: 1200px;
+      margin: 40px auto 0;
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 30px;
+      padding: 24px;
+      background: rgba(255,255,255,0.65);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .stat-item {
+      text-align: center;
+      min-width: 130px;
+    }
+
+    .stat-item .num {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--teal-dark);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+
+    .stat-item .label {
+      font-size: 0.88rem;
+      color: #555;
+      font-weight: 600;
+      margin-top: 4px;
+    }
+
+    .copyright {
+      text-align: center;
+      margin-top: 35px;
+      padding-top: 22px;
+      border-top: 1px solid rgba(0,0,0,0.1);
+      font-size: 0.92rem;
+      color: #555;
+      font-weight: 500;
+    }
+
+    /* Back to top */
+    .back-top {
+      position: fixed;
+      bottom: 26px;
+      right: 26px;
+      width: 50px;
+      height: 50px;
+      background: var(--ink);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.3rem;
+      cursor: pointer;
+      box-shadow: 0 5px 18px rgba(0,0,0,0.28);
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition);
+      z-index: 1000;
+    }
+
+    .back-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .back-top:hover {
+      background: var(--teal);
+      transform: translateY(-4px);
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .nav-link {
+        min-width: 98px;
+        padding: 11px 9px;
+      }
+      .nav-link .en { font-size: 0.65rem; }
+      .nav-link .vi { font-size: 0.88rem; }
+      .nav-link i { font-size: 1.2rem; }
+    }
+
+    @media (max-width: 600px) {
+      .header-top {
+        flex-direction: column;
+        text-align: center;
+        padding: 14px 16px;
+      }
+      .logo-wrap { justify-content: center; }
+      .clock { font-size: 0.85rem; }
+      .quote-track { font-size: 1.08rem; }
+      .nav-container { gap: 5px; }
+      .nav-link {
+        min-width: 82px;
+        padding: 9px 6px;
+      }
+      .hero { padding: 40px 16px 50px; }
+      .ai-chatbox {
+        right: 12px;
+        bottom: 160px;
+        height: 450px;
+      }
+      .ai-toggle {
+        right: 16px;
+        bottom: 85px;
+      }
+      .back-top {
+        right: 16px;
+        bottom: 20px;
+      }
+    }
+  </style>
 </head>
-
 <body>
-  <header class="topbar" id="top">
-    <div class="container topbar-inner">
-      <a class="brand" href="index.html" aria-label="WEBH2T Trang chủ">
-        <img src="assets/LOGO1.png" alt="WEBH2T">
-        <div class="brand-text">
-          <strong>WEBH2T · TIN HỌC THPT</strong>
-          <span>SONG NGỮ · NĂNG LỰC SỐ · AI</span>
-        </div>
-      </a>
-      <div class="clock" aria-live="polite">
-        <div class="day" id="vnDay">Đang cập nhật...</div>
-        <div class="time" id="vnTime">--:--:--</div>
-      </div>
+
+  <!-- Particles background -->
+  <canvas id="particles-canvas"></canvas>
+
+  <div class="content-wrapper">
+
+  <!-- ========== KHỐI 1: LOGO + ĐỒNG HỒ ========== -->
+  <header class="header-top">
+    <div class="logo-wrap">
+      <img src="assets/LOGO1.png" alt="WEBH2T Logo" />
+      <div class="site-title">WEBH2T | <span>Informatics Engineering</span></div>
     </div>
+    <div class="clock" id="vnClock">Đang tải thời gian...</div>
   </header>
 
-  <div class="quote-bar" aria-label="Danh ngôn giáo dục">
+  <!-- ========== KHỐI 2: DANH NGÔN ========== -->
+  <div class="quote-bar">
     <div class="quote-track" id="quoteTrack"></div>
   </div>
 
-  <button class="menu-toggle container" id="menuToggle" aria-expanded="false">☰ MENU</button>
+  <!-- ========== KHỐI 3: MENU ========== -->
+  <nav class="main-nav">
+    <div class="nav-container">
+      <div class="nav-item">
+        <a href="index.html" class="nav-link">
+          <i class="fas fa-home"></i>
+          <span class="en">Home</span>
+          <span class="vi">TRANG CHỦ</span>
+        </a>
+      </div>
 
-  <div class="nav-wrap" id="navWrap">
-    <nav class="nav container" aria-label="Menu chính">
       <div class="nav-item">
-        <a class="nav-link active" href="index.html"><span class="en">HOME</span><span class="vi">TRANG CHỦ</span></a>
+        <a href="#schedule" class="nav-link">
+          <i class="fas fa-calendar-alt"></i>
+          <span class="en">Timetable</span>
+          <span class="vi">LỊCH BIỂU</span>
+        </a>
       </div>
+
       <div class="nav-item">
-        <a class="nav-link" href="#schedule"><span class="en">SCHEDULE</span><span class="vi">LỊCH BIỂU</span></a>
-      </div>
-      <div class="nav-item">
-        <a class="nav-link" href="#lessons"><span class="en">LESSONS</span><span class="vi">BÀI GIẢNG</span></a>
-        <div class="dropdown">
-          <a href="tin10.html">COMPUTER SCIENCE 10 · TIN HỌC 10</a>
-          <a href="tin11.html">COMPUTER SCIENCE 11 · TIN HỌC 11</a>
-          <a href="tin12.html">COMPUTER SCIENCE 12 · TIN HỌC 12</a>
-          <a href="chuyende.html">TOPICS · CHUYÊN ĐỀ</a>
+        <a href="#" class="nav-link">
+          <i class="fas fa-chalkboard-teacher"></i>
+          <span class="en">Lessons</span>
+          <span class="vi">BÀI GIẢNG</span>
+        </a>
+        <div class="submenu">
+          <a href="tin10.html">TIN HỌC 10</a>
+          <a href="tin11.html">TIN HỌC 11</a>
+          <a href="tin12.html">TIN HỌC 12</a>
+          <a href="chuyende.html">CHUYÊN ĐỀ</a>
         </div>
       </div>
+
       <div class="nav-item">
-        <a class="nav-link" href="exam.html"><span class="en">EXAM</span><span class="vi">KIỂM TRA</span></a>
+        <a href="exam.html" class="nav-link">
+          <i class="fas fa-file-alt"></i>
+          <span class="en">Exams</span>
+          <span class="vi">KIỂM TRA</span>
+        </a>
       </div>
+
       <div class="nav-item">
-        <a class="nav-link" href="knowledge.html"><span class="en">KNOWLEDGE</span><span class="vi">THỦ THUẬT</span></a>
+        <a href="knowledge.html" class="nav-link">
+          <i class="fas fa-lightbulb"></i>
+          <span class="en">Tips</span>
+          <span class="vi">THỦ THUẬT</span>
+        </a>
       </div>
+
       <div class="nav-item">
-        <a class="nav-link" href="#"><span class="en">APPS</span><span class="vi">ỨNG DỤNG</span></a>
-        <div class="dropdown">
-          <a href="autochongoi.html">CLASS SEATING · SƠ ĐỒ LỚP</a>
-          <a href="#competition">COMPETITION · NHẬP THI ĐUA</a>
+        <a href="#" class="nav-link">
+          <i class="fas fa-th-large"></i>
+          <span class="en">Apps</span>
+          <span class="vi">APP</span>
+        </a>
+        <div class="submenu">
+          <a href="autochongoi.html">SƠ ĐỒ LỚP</a>
+          <a href="qlnn.html">QUẢN LÝ NỀ NẾP</a>
         </div>
       </div>
+
       <div class="nav-item">
-        <a class="nav-link" href="#contact"><span class="en">CONTACT</span><span class="vi">LIÊN HỆ</span></a>
+        <a href="#contact" class="nav-link">
+          <i class="fas fa-envelope"></i>
+          <span class="en">Contact</span>
+          <span class="vi">LIÊN HỆ</span>
+        </a>
       </div>
-    </nav>
+    </div>
+  </nav>
+
+  <!-- ========== HERO ========== -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1>WEBH2T – Tin học THPT 2026</h1>
+      <p>Giảng dạy tích hợp song ngữ Anh – Việt • Năng lực số • Trí tuệ nhân tạo AI</p>
+      <div class="hero-badges">
+        <span class="badge"><i class="fas fa-robot"></i> AI Learning Assistant</span>
+        <span class="badge"><i class="fas fa-language"></i> Bilingual EN-VI</span>
+        <span class="badge"><i class="fas fa-laptop-code"></i> Digital Competence</span>
+        <span class="badge"><i class="fas fa-graduation-cap"></i> Informatics Engineering</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== SLIDER ========== -->
+  <section class="section fade-in">
+    <div class="section-title">
+      <h2>Bài viết mới nhất</h2>
+      <p>Cập nhật từ các trang: Tin học 10 • 11 • 12 • Chuyên đề • Kiểm tra • Thủ thuật</p>
+    </div>
+    <div class="slider-container">
+      <button class="slider-btn prev" onclick="moveSlide(-1)" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
+      <div class="slider-track" id="sliderTrack">
+        <div class="slide">
+          <h3>Tin học 10 – Bài 1: Thông tin và dữ liệu</h3>
+          <p>Khám phá khái niệm thông tin, dữ liệu và cách máy tính xử lý thông tin trong đời sống số.</p>
+          <a href="tin10.html">Xem bài giảng →</a>
+        </div>
+        <div class="slide">
+          <h3>Tin học 11 – Lập trình Python cơ bản</h3>
+          <p>Bắt đầu hành trình coding với Python – ngôn ngữ mạnh mẽ và thân thiện với người mới học.</p>
+          <a href="tin11.html">Xem bài giảng →</a>
+        </div>
+        <div class="slide">
+          <h3>Tin học 12 – Cơ sở dữ liệu & SQL</h3>
+          <p>Học cách thiết kế và truy vấn cơ sở dữ liệu – kỹ năng quan trọng của kỷ nguyên dữ liệu.</p>
+          <a href="tin12.html">Xem bài giảng →</a>
+        </div>
+        <div class="slide">
+          <h3>Chuyên đề: Trí tuệ nhân tạo trong giáo dục</h3>
+          <p>Ứng dụng AI Chatbox hỗ trợ học tập cá nhân hóa từ năm học 2026.</p>
+          <a href="chuyende.html">Khám phá →</a>
+        </div>
+        <div class="slide">
+          <h3>Ngân hàng đề thi Tin học THPT</h3>
+          <p>Tổng hợp đề kiểm tra 15 phút, 1 tiết, học kỳ và đề thi thử tốt nghiệp.</p>
+          <a href="exam.html">Làm bài ngay →</a>
+        </div>
+      </div>
+      <button class="slider-btn next" onclick="moveSlide(1)" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
+    </div>
+  </section>
+
+  <!-- ========== LỊCH BIỂU ========== -->
+  <section class="schedule-section fade-in" id="schedule">
+    <div class="section-title">
+      <h2>Lịch biểu / Thời khóa biểu</h2>
+      <p style="color:#b0d4e8">Có thể cập nhật dễ dàng từ Google Sheets / Excel</p>
+    </div>
+    <div class="schedule-wrapper">
+      <table class="schedule">
+        <thead>
+          <tr>
+            <th>Thứ / Ngày</th>
+            <th>Buổi</th>
+            <th>Tiết</th>
+            <th>Môn</th>
+            <th>Lớp</th>
+            <th>Nội dung</th>
+            <th>Kiểm tra</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Thứ 2<br>08/09/2026</td>
+            <td>Sáng</td>
+            <td>1-2</td>
+            <td>Tin học</td>
+            <td>10A1</td>
+            <td>Bài 1: Thông tin & Dữ liệu</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>Thứ 2<br>08/09/2026</td>
+            <td>Sáng</td>
+            <td>3-4</td>
+            <td>Tin học</td>
+            <td>11A2</td>
+            <td>Python: Biến & Kiểu dữ liệu</td>
+            <td>15 phút</td>
+          </tr>
+          <tr>
+            <td>Thứ 3<br>09/09/2026</td>
+            <td>Chiều</td>
+            <td>1-2</td>
+            <td>Tin học</td>
+            <td>12A3</td>
+            <td>SQL: Truy vấn SELECT</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>Thứ 4<br>10/09/2026</td>
+            <td>Sáng</td>
+            <td>2-3</td>
+            <td>Tin học</td>
+            <td>10A2</td>
+            <td>Hệ thống số & Mã hóa</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>Thứ 5<br>11/09/2026</td>
+            <td>Sáng</td>
+            <td>1-2</td>
+            <td>Tin học</td>
+            <td>11A1</td>
+            <td>Cấu trúc điều khiển</td>
+            <td>1 tiết</td>
+          </tr>
+          <tr>
+            <td>Thứ 6<br>12/09/2026</td>
+            <td>Chiều</td>
+            <td>3-4</td>
+            <td>Tin học</td>
+            <td>12A1</td>
+            <td>Thiết kế CSDL quan hệ</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="note-schedule">
+      📌 Để cập nhật lịch biểu: Tạo Google Sheet công khai → Nhúng iframe hoặc copy dữ liệu vào bảng trên.<br>
+      <a href="https://docs.google.com/spreadsheets/" target="_blank" rel="noopener">Mở Google Sheets →</a>
+    </p>
+  </section>
+
+  <!-- ========== 3 CỘT LỚP ========== -->
+  <section class="section fade-in">
+    <div class="section-title">
+      <h2>Chương trình học theo khối</h2>
+      <p>Chọn khối lớp để xem bài giảng chi tiết</p>
+    </div>
+    <div class="grade-cards">
+      <div class="grade-card tin10">
+        <div class="grade-card-header">
+          <i class="fas fa-laptop-code"></i>
+          <h3>TIN HỌC 10</h3>
+        </div>
+        <div class="grade-card-body">
+          <p>Thông tin – Dữ liệu – Hệ thống số – Mạng máy tính – An toàn thông tin cơ bản.</p>
+          <a href="tin10.html" class="btn-grade">Vào học →</a>
+        </div>
+      </div>
+      <div class="grade-card tin11">
+        <div class="grade-card-header">
+          <i class="fas fa-code"></i>
+          <h3>TIN HỌC 11</h3>
+        </div>
+        <div class="grade-card-body">
+          <p>Lập trình Python – Thuật toán – Cấu trúc dữ liệu – Ứng dụng thực tế.</p>
+          <a href="tin11.html" class="btn-grade">Vào học →</a>
+        </div>
+      </div>
+      <div class="grade-card tin12">
+        <div class="grade-card-header">
+          <i class="fas fa-database"></i>
+          <h3>TIN HỌC 12</h3>
+        </div>
+        <div class="grade-card-body">
+          <p>Cơ sở dữ liệu – SQL – Phân tích dữ liệu – Định hướng nghề nghiệp CNTT.</p>
+          <a href="tin12.html" class="btn-grade">Vào học →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== THỦ THUẬT + ĐỀ THI ========== -->
+  <section class="section fade-in">
+    <div class="two-cols">
+      <div class="card-box">
+        <div class="card-box-header knowledge">
+          <i class="fas fa-lightbulb"></i> Thủ thuật mới nhất
+        </div>
+        <div class="card-box-body">
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="knowledge.html">10 phím tắt Windows giúp học sinh tiết kiệm thời gian</a>
+              <span class="date">05/09/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="knowledge.html">Cách tạo sơ đồ tư duy đẹp bằng PowerPoint</a>
+              <span class="date">03/09/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="knowledge.html">Mẹo học Python hiệu quả cho người mới bắt đầu</a>
+              <span class="date">01/09/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="knowledge.html">Bảo mật tài khoản Google Classroom an toàn</a>
+              <span class="date">28/08/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="knowledge.html">Sử dụng AI hỗ trợ làm bài tập Tin học</a>
+              <span class="date">25/08/2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-box">
+        <div class="card-box-header exam">
+          <i class="fas fa-file-alt"></i> Đề thi mới nhất
+        </div>
+        <div class="card-box-body">
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="exam.html">Đề kiểm tra 15 phút – Tin học 10 (Học kỳ 1)</a>
+              <span class="date">04/09/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="exam.html">Đề 1 tiết – Lập trình Python cơ bản (Lớp 11)</a>
+              <span class="date">02/09/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="exam.html">Đề thi thử tốt nghiệp THPT – Tin học 2026</a>
+              <span class="date">30/08/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="exam.html">Đề kiểm tra học kỳ 1 – Tin học 12</a>
+              <span class="date">27/08/2026</span>
+            </div>
+          </div>
+          <div class="post-item">
+            <i class="fas fa-chevron-right"></i>
+            <div>
+              <a href="exam.html">Ngân hàng câu hỏi trắc nghiệm Tin học THPT</a>
+              <span class="date">20/08/2026</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========== BÌNH LUẬN ========== -->
+  <div class="comments-bar">
+    <div class="comments-track">
+      💬 Học sinh A: “Bài giảng Python rất dễ hiểu!” &nbsp;&nbsp;|&nbsp;&nbsp;
+      💬 Phụ huynh B: “Cảm ơn thầy đã cập nhật lịch biểu kịp thời.” &nbsp;&nbsp;|&nbsp;&nbsp;
+      💬 Học sinh C: “Chatbox AI hỗ trợ giải bài tập rất nhanh!” &nbsp;&nbsp;|&nbsp;&nbsp;
+      💬 Giáo viên D: “Tài liệu chuyên đề AI rất bổ ích.” &nbsp;&nbsp;|&nbsp;&nbsp;
+      💬 Học sinh E: “Đề thi thử giúp em tự tin hơn rất nhiều.” &nbsp;&nbsp;|&nbsp;&nbsp;
+      💬 Học sinh F: “Sơ đồ lớp online tiện lợi quá!” &nbsp;&nbsp;|&nbsp;&nbsp;
+    </div>
   </div>
 
-  <main>
-    <section class="hero">
-      <div class="container hero-grid">
-        <div>
-          <div class="eyebrow">DIGITAL CLASSROOM · 2026</div>
-          <h1>Học Tin học <span>thời 4.0</span><br>song ngữ & năng lực số.</h1>
-          <p>
-            Bài giảng, lịch học, thực hành và kiểm tra môn Tin học THPT.
-            Thiết kế theo hướng Anh–Việt, thực hành và phát triển năng lực số,
-            sẵn sàng mở rộng công cụ AI hỗ trợ học tập.
-          </p>
-          <div class="hero-actions">
-            <a class="btn btn-primary" href="#lessons">📚 XEM BÀI GIẢNG</a>
-            <a class="btn btn-outline" href="exam.html">📝 NỘP / LÀM BÀI KIỂM TRA</a>
-          </div>
-        </div>
-
-        <aside class="hero-panel">
-          <h3>🎯 Learning Focus</h3>
-          <div class="pill-list">
-            <div class="pill"><b>01</b> Khai thác thông tin · Information</div>
-            <div class="pill"><b>02</b> An toàn số · Digital Safety</div>
-            <div class="pill"><b>03</b> Giải quyết vấn đề · Problem Solving</div>
-            <div class="pill"><b>04</b> Sáng tạo nội dung · Digital Creation</div>
-            <div class="pill"><b>05</b> Giao tiếp & hợp tác · Collaboration</div>
-          </div>
-        </aside>
-      </div>
-    </section>
-
-    <section id="latest">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="kicker">LATEST UPDATES</div>
-            <h2>Bài viết mới nhất</h2>
-          </div>
-          <p>Tự động đọc tiêu đề từ các trang con hiện có trên GitHub Pages. Nếu trang con chưa có cấu trúc tiêu đề chuẩn, hệ thống dùng nội dung dự phòng.</p>
-        </div>
-        <div class="news-track" id="latestPosts">
-          <div class="loading">Đang tải nội dung từ tin10.html, tin11.html, tin12.html, chuyende.html, exam.html và knowledge.html...</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="schedule">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="kicker">SCHEDULE</div>
-            <h2>Thời khóa biểu môn Tin học</h2>
-          </div>
-          <p>Hiện đang có dữ liệu mẫu. Có thể thay bằng Google Sheets/CSV mà không phải sửa phần giao diện.</p>
-        </div>
-        <div class="table-box">
-          <table>
-            <thead>
-              <tr>
-                <th>Thứ ngày / Day</th>
-                <th>Buổi / Session</th>
-                <th>Tiết / Period</th>
-                <th>Môn / Subject</th>
-                <th>Lớp / Class</th>
-                <th>Nội dung / Content</th>
-                <th>Kiểm tra / Test</th>
-              </tr>
-            </thead>
-            <tbody id="scheduleBody">
-              <tr><td>Thứ 2</td><td>Sáng</td><td>3</td><td>Tin học</td><td>10</td><td>Bài 1 — Thông tin và dữ liệu</td><td>—</td></tr>
-              <tr><td>Thứ 3</td><td>Sáng</td><td>5</td><td>Tin học</td><td>11</td><td>Bài 2 — Thiết bị số thông minh</td><td>—</td></tr>
-              <tr><td>Thứ 5</td><td>Sáng</td><td>2</td><td>Tin học</td><td>12</td><td>Bài 1 — Thiết bị và giao thức mạng</td><td>—</td></tr>
-              <tr><td>Thứ 6</td><td>Chiều</td><td>4</td><td>HSG</td><td>HSG</td><td>Ôn luyện học sinh giỏi</td><td>—</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </section>
-
-    <section id="lessons">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="kicker">LESSONS BY GRADE</div>
-            <h2>Bài giảng theo khối</h2>
-          </div>
-          <p>Ba cổng học tập chính cho Tin học 10, 11 và 12.</p>
-        </div>
-        <div class="grid-3">
-          <article class="card subject-card">
-            <div class="grade">GRADE 10</div>
-            <div class="icon">💻</div>
-            <h3>Tin học 10</h3>
-            <p>Thông tin, dữ liệu và các nội dung nền tảng năng lực số cho học sinh đầu cấp.</p>
-            <a class="link" href="tin10.html">Xem bài giảng →</a>
-          </article>
-          <article class="card subject-card">
-            <div class="grade">GRADE 11</div>
-            <div class="icon">🖥️</div>
-            <h3>Tin học 11</h3>
-            <p>Kiến trúc máy tính, thiết bị số thông minh, hệ điều hành và thực hành.</p>
-            <a class="link" href="tin11.html">Xem bài giảng →</a>
-          </article>
-          <article class="card subject-card">
-            <div class="grade">GRADE 12</div>
-            <div class="icon">🌐</div>
-            <h3>Tin học 12</h3>
-            <p>Mạng máy tính, giao thức và các nội dung Tin học THPT nâng cao.</p>
-            <a class="link" href="tin12.html">Xem bài giảng →</a>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <section id="knowledge">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="kicker">KNOWLEDGE</div>
-            <h2>5 thủ thuật mới nhất</h2>
-          </div>
-          <a class="btn btn-outline" href="knowledge.html">Xem tất cả</a>
-        </div>
-        <div class="ticker-window">
-          <div class="ticker" id="knowledgeTicker">
-            <div class="ticker-item"><b>HTML / CSS</b><span>Mẹo xây dựng giao diện học tập dễ dùng.</span></div>
-            <div class="ticker-item"><b>JavaScript</b><span>Tự động hóa các thành phần tương tác.</span></div>
-            <div class="ticker-item"><b>GitHub Pages</b><span>Tổ chức website giáo dục tĩnh hiệu quả.</span></div>
-            <div class="ticker-item"><b>Digital Skills</b><span>Rèn năng lực số qua hoạt động thực hành.</span></div>
-            <div class="ticker-item"><b>AI Learning</b><span>Sử dụng AI như trợ lý học tập có định hướng.</span></div>
-            <div class="ticker-item"><b>HTML / CSS</b><span>Mẹo xây dựng giao diện học tập dễ dùng.</span></div>
-            <div class="ticker-item"><b>JavaScript</b><span>Tự động hóa các thành phần tương tác.</span></div>
-            <div class="ticker-item"><b>GitHub Pages</b><span>Tổ chức website giáo dục tĩnh hiệu quả.</span></div>
-            <div class="ticker-item"><b>Digital Skills</b><span>Rèn năng lực số qua hoạt động thực hành.</span></div>
-            <div class="ticker-item"><b>AI Learning</b><span>Sử dụng AI như trợ lý học tập có định hướng.</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="exam-bank">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="kicker">EXAM BANK</div>
-            <h2>Đề thi mới nhất</h2>
-          </div>
-          <a class="btn btn-outline" href="exam.html">Mở ngân hàng đề</a>
-        </div>
-        <div class="grid-3" id="examCards">
-          <article class="card"><div class="icon">📝</div><h3>Kiểm tra Tin học 10</h3><p>Đề kiểm tra và bài tập thực hành.</p><a class="link" href="exam.html">Xem đề →</a></article>
-          <article class="card"><div class="icon">📝</div><h3>Kiểm tra Tin học 11</h3><p>Đề luyện tập theo nội dung chương trình.</p><a class="link" href="exam.html">Xem đề →</a></article>
-          <article class="card"><div class="icon">📝</div><h3>Kiểm tra Tin học 12</h3><p>Đề ôn tập và kiểm tra trực tuyến.</p><a class="link" href="exam.html">Xem đề →</a></article>
-        </div>
-      </div>
-    </section>
-
-    <section id="ai-assistant">
-      <div class="container ai">
-        <div class="ai-info">
-          <div class="kicker">AI LEARNING ASSISTANT</div>
-          <h3>🤖 Trợ lý học tập AI</h3>
-          <p>
-            Khu vực giao diện dành cho trợ lý AI song ngữ Anh–Việt.
-            Bản GitHub Pages này chỉ cung cấp giao diện; không đặt API key trực tiếp
-            trong mã nguồn trình duyệt. Khi kết nối AI thật, nên dùng backend/serverless
-            để bảo vệ khóa API.
-          </p>
-          <div class="ai-badges">
-            <span>🇻🇳 Tiếng Việt</span>
-            <span>🇬🇧 English</span>
-            <span>💻 Tin học THPT</span>
-            <span>🧠 Digital Competence</span>
-          </div>
-        </div>
-
-        <div class="chatbox">
-          <div class="chat-head">
-            <strong>WEBH2T AI CHATBOX</strong>
-            <span>● Demo UI</span>
-          </div>
-          <div class="chat-body" id="chatBody">
-            <div class="bubble">Xin chào! Mình là giao diện trợ lý học tập WEBH2T. Bạn có thể nhập câu hỏi để thử giao diện.</div>
-            <div class="chat-note">AI thật cần được kết nối qua backend/serverless an toàn trước khi triển khai.</div>
-          </div>
-          <form class="chat-form" id="chatForm">
-            <input id="chatInput" autocomplete="off" placeholder="Hỏi bằng tiếng Việt hoặc English...">
-            <button type="submit">GỬI</button>
-          </form>
-        </div>
-      </div>
-    </section>
-
-    <section id="comments">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="kicker">LATEST COMMENTS</div>
-            <h2>Bình luận mới nhất</h2>
-          </div>
-          <p>Khu vực sẵn sàng kết nối dữ liệu bình luận khi hệ thống bình luận/Firebase được cấu hình.</p>
-        </div>
-        <div class="ticker-window">
-          <div class="ticker" style="animation-direction:reverse">
-            <div class="ticker-item"><b>💬 Học sinh</b><span>Bài giảng dễ theo dõi và có phần thực hành.</span></div>
-            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần song ngữ giúp em nhớ thuật ngữ Tin học.</span></div>
-            <div class="ticker-item"><b>💬 Giáo viên</b><span>Có thể dùng ngân hàng đề để ôn tập theo chủ đề.</span></div>
-            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần năng lực số rất hữu ích cho hoạt động thực hành.</span></div>
-            <div class="ticker-item"><b>💬 Học sinh</b><span>Bài giảng dễ theo dõi và có phần thực hành.</span></div>
-            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần song ngữ giúp em nhớ thuật ngữ Tin học.</span></div>
-            <div class="ticker-item"><b>💬 Giáo viên</b><span>Có thể dùng ngân hàng đề để ôn tập theo chủ đề.</span></div>
-            <div class="ticker-item"><b>💬 Học sinh</b><span>Phần năng lực số rất hữu ích cho hoạt động thực hành.</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <section id="stats">
-      <div class="container">
-        <div class="section-head">
-          <div>
-            <div class="kicker">WEBH2T STATISTICS</div>
-            <h2>Thống kê website</h2>
-          </div>
-        </div>
-        <div class="grid-4">
-          <div class="card stat"><strong id="visitCount">—</strong><span>LƯỢT TRUY CẬP</span></div>
-          <div class="card stat"><strong id="memberCount">—</strong><span>THÀNH VIÊN</span></div>
-          <div class="card stat"><strong id="postCount">—</strong><span>BÀI VIẾT</span></div>
-          <div class="card stat"><strong id="examCount">—</strong><span>ĐỀ THI</span></div>
-        </div>
-        <p class="chat-note" style="margin-top:12px">
-          Hai chỉ số truy cập/thành viên cần kết nối Firebase. Số bài viết và đề thi có thể lấy tự động khi xây dựng data JSON.
-        </p>
-      </div>
-    </section>
-  </main>
-
+  <!-- ========== FOOTER ========== -->
   <footer id="contact">
-    <div class="container">
-      <div class="footer-grid">
-        <div>
-          <h3>WEBH2T</h3>
-          <p>Website giáo dục Tin học THPT · Song ngữ Anh–Việt · Năng lực số · Digital Classroom 2026.</p>
-        </div>
-        <div>
-          <h3>LIÊN KẾT</h3>
-          <ul>
-            <li><a href="tin10.html">Tin học 10</a></li>
-            <li><a href="tin11.html">Tin học 11</a></li>
-            <li><a href="tin12.html">Tin học 12</a></li>
-            <li><a href="chuyende.html">Chuyên đề</a></li>
-            <li><a href="exam.html">Kiểm tra</a></li>
-            <li><a href="knowledge.html">Thủ thuật</a></li>
-            <li><a href="autochongoi.html">Sơ đồ lớp</a></li>
-          </ul>
-        </div>
-        <div>
-          <h3>CONTACT</h3>
-          <ul>
-            <li>✉ websiteh2t@gmail.com</li>
-            <li><a href="https://www.youtube.com/@WEBH2T" target="_blank" rel="noopener">▶ YouTube · @WEBH2T</a></li>
-            <li><a href="https://www.facebook.com/share/g/1BmLZhpvbZ/" target="_blank" rel="noopener">f Facebook · WEBH2T</a></li>
-          </ul>
+    <div class="footer-grid">
+      <div class="footer-col">
+        <h3>Liên kết nhanh</h3>
+        <div class="footer-links">
+          <div>
+            <a href="autochongoi.html"><i class="fas fa-th"></i> APP Sơ đồ lớp</a>
+            <a href="qlnn.html"><i class="fas fa-user-check"></i> APP Quản lý nề nếp</a>
+          </div>
+          <div>
+            <a href="tin10.html"><i class="fas fa-book"></i> Tin học 10</a>
+            <a href="tin11.html"><i class="fas fa-book"></i> Tin học 11</a>
+            <a href="tin12.html"><i class="fas fa-book"></i> Tin học 12</a>
+            <a href="exam.html"><i class="fas fa-file-alt"></i> Ngân hàng đề thi</a>
+          </div>
         </div>
       </div>
-      <div class="footer-bottom">
-        <span>© 2026 WEBH2T · Tài liệu giáo dục Tin học THPT</span>
-        <span>Song ngữ Anh–Việt · Digital Competence · AI Learning</span>
+
+      <div class="footer-col">
+        <h3>Liên hệ tác giả – WEBH2T</h3>
+        <ul class="contact-list">
+          <li>
+            <span class="contact-icon"><i class="fas fa-envelope"></i></span>
+            <a href="mailto:websiteh2t@gmail.com">websiteh2t@gmail.com</a>
+          </li>
+          <li>
+            <span class="contact-icon"><i class="fab fa-telegram"></i></span>
+            <a href="https://t.me/webh2t" target="_blank" rel="noopener">t.me/webh2t</a>
+          </li>
+          <li>
+            <span class="contact-icon"><i class="fab fa-youtube"></i></span>
+            <a href="https://www.youtube.com/@WEBH2T" target="_blank" rel="noopener">youtube.com/@WEBH2T</a>
+          </li>
+          <li>
+            <span class="contact-icon"><i class="fab fa-facebook"></i></span>
+            <a href="https://www.facebook.com/share/g/1BmLZhpvbZ/" target="_blank" rel="noopener">Facebook Group</a>
+          </li>
+        </ul>
       </div>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-item">
+        <div class="num" id="visitCount">—</div>
+        <div class="label">Lượt truy cập</div>
+      </div>
+      <div class="stat-item">
+        <div class="num" id="memberCount">128</div>
+        <div class="label">Thành viên đăng ký</div>
+      </div>
+      <div class="stat-item">
+        <div class="num" id="postCount">86</div>
+        <div class="label">Bài viết + Đề thi</div>
+      </div>
+    </div>
+
+    <div class="copyright">
+      © 2026 WEBH2T | Informatics Engineering. All rights reserved.
     </div>
   </footer>
 
-  <button class="top-btn" id="topBtn" aria-label="Về đầu trang">↑</button>
+  </div><!-- end content-wrapper -->
+
+  <!-- Nút về đầu trang -->
+  <button class="back-top" id="backTop" title="Về đầu trang">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <!-- AI Chatbox -->
+  <button class="ai-toggle" id="aiToggle" title="AI Learning Assistant">
+    <i class="fas fa-robot"></i>
+  </button>
+
+  <div class="ai-chatbox" id="aiChatbox">
+    <div class="ai-header">
+      <span><i class="fas fa-robot"></i> AI Learning Assistant</span>
+      <button id="aiClose" aria-label="Đóng"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="ai-messages" id="aiMessages">
+      <div class="ai-msg bot">
+        Xin chào! Tôi là <strong>AI Learning Assistant</strong> của WEBH2T.<br><br>
+        Tôi có thể giúp bạn:
+        <ul style="margin:8px 0 0 18px;padding:0">
+          <li>Giải thích bài học Tin học 10-11-12</li>
+          <li>Hướng dẫn làm bài tập / đề thi</li>
+          <li>Mẹo học lập trình Python, SQL</li>
+          <li>Trả lời câu hỏi về lịch học</li>
+        </ul>
+        Hãy hỏi tôi bất cứ điều gì nhé!
+      </div>
+    </div>
+    <div class="ai-input-area">
+      <input type="text" id="aiInput" placeholder="Nhập câu hỏi của bạn..." autocomplete="off" />
+      <button id="aiSend" title="Gửi"><i class="fas fa-paper-plane"></i></button>
+    </div>
+  </div>
 
   <script>
-    /* ==============================
-       1. VIETNAM CLOCK
-       ============================== */
-    const dayNames = [
-      "Chủ nhật","Thứ hai","Thứ ba","Thứ tư","Thứ năm","Thứ sáu","Thứ bảy"
-    ];
+    /* ============================================================
+       CẤU HÌNH API KEY – HƯỚNG DẪN AN TOÀN
+       ------------------------------------------------------------
+       1. Vào https://aistudio.google.com/app/apikey
+       2. Tạo API Key MỚI (đặt tên: WEBH2T-GitHubPages)
+       3. (Khuyến nghị) Hạn chế key theo HTTP referrer:
+          → Thêm domain GitHub Pages của bạn
+            ví dụ: https://username.github.io/*
+       4. Dán key vào dòng GEMINI_API_KEY bên dưới
+       5. Theo dõi hạn mức (Quota) tại cùng trang aistudio
+       ------------------------------------------------------------
+       Model đang dùng: gemini-2.0-flash  (nhanh + miễn phí)
+       Có thể đổi sang: gemini-1.5-flash / gemini-2.0-flash-lite
+       ============================================================ */
+    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";  // ← DÁN KEY VÀO ĐÂY
+    const GEMINI_MODEL   = "gemini-2.0-flash";          // Model mặc định
 
-    function updateClock(){
+    // ========== PARTICLES EFFECT ==========
+    (function initParticles() {
+      const canvas = document.getElementById('particles-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      const PARTICLE_COUNT = 55;
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+      resize();
+      window.addEventListener('resize', resize);
+
+      class Particle {
+        constructor() { this.reset(true); }
+        reset(init = false) {
+          this.x = Math.random() * canvas.width;
+          this.y = init ? Math.random() * canvas.height : canvas.height + 10;
+          this.size = Math.random() * 2.8 + 1;
+          this.speedY = Math.random() * 0.6 + 0.2;
+          this.speedX = (Math.random() - 0.5) * 0.4;
+          this.opacity = Math.random() * 0.5 + 0.15;
+          this.color = Math.random() > 0.5 ? '0,180,180' : '0,191,255';
+        }
+        update() {
+          this.y -= this.speedY;
+          this.x += this.speedX;
+          if (this.y < -10 || this.x < -20 || this.x > canvas.width + 20) this.reset();
+        }
+        draw() {
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(${this.color},${this.opacity})`;
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) particles.push(new Particle());
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => { p.update(); p.draw(); });
+        // Draw subtle connections between nearby particles
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 110) {
+              ctx.beginPath();
+              ctx.strokeStyle = `rgba(0,180,180,${0.12 * (1 - dist / 110)})`;
+              ctx.lineWidth = 0.6;
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.stroke();
+            }
+          }
+        }
+        requestAnimationFrame(animate);
+      }
+      animate();
+    })();
+
+    // ========== ĐỒNG HỒ VIỆT NAM ==========
+    function updateClock() {
       const now = new Date();
-      const parts = new Intl.DateTimeFormat("vi-VN",{
-        timeZone:"Asia/Ho_Chi_Minh",
-        weekday:"long",day:"2-digit",month:"2-digit",year:"numeric",
-        hour:"2-digit",minute:"2-digit",second:"2-digit",hour12:false
-      }).formatToParts(now);
+      const options = {
+        timeZone: 'Asia/Ho_Chi_Minh',
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      };
+      const formatter = new Intl.DateTimeFormat('vi-VN', options);
+      const parts = formatter.formatToParts(now);
+      const get = (type) => parts.find(p => p.type === type)?.value || '';
 
-      const get = type => parts.find(p=>p.type===type)?.value || "";
-      document.getElementById("vnDay").textContent =
-        `Hôm nay, ${get("weekday")} ngày ${get("day")}/${get("month")}/${get("year")}`;
-      document.getElementById("vnTime").textContent =
-        `${get("hour")}:${get("minute")}:${get("second")}`;
+      document.getElementById('vnClock').textContent =
+        `Hôm nay, ${get('weekday')} ngày ${get('day')} tháng ${get('month')} năm ${get('year')}: ${get('hour')}:${get('minute')}:${get('second')}`;
     }
     updateClock();
-    setInterval(updateClock,1000);
+    setInterval(updateClock, 1000);
 
-    /* ==============================
-       2. DAILY QUOTE
-       ============================== */
+    // ========== DANH NGÔN THEO NGÀY ==========
     const quotes = [
-      ["Học, học nữa, học mãi.","V.I. Lenin"],
-      ["Giáo dục là vũ khí mạnh nhất mà người ta có thể sử dụng để thay đổi cả thế giới.","Nelson Mandela"],
-      ["Đầu tư vào tri thức mang lại lợi nhuận tốt nhất.","Benjamin Franklin"],
-      ["Sự học tập không chỉ là chuẩn bị cho cuộc sống, mà là cuộc sống chính nó.","John Dewey"],
-      ["Học tập không bao giờ kết thúc.","Leonardo da Vinci"],
-      ["Thầy cô giáo có thể mở cửa, nhưng chính bạn phải bước vào.","Ngạn ngữ Trung Hoa"],
-      ["Hiền tài là nguyên khí của quốc gia.","Thân Nhân Trung"],
-      ["Mục đích của giáo dục là thay thế một cái tâm trống rỗng bằng một cái tâm mở rộng.","Malcolm Forbes"],
-      ["Cám ơn những kẻ đã làm khó tôi, vì nhờ họ tôi mới biết mình phải học thêm điều mới.","Khuyết danh"],
-      ["Học hỏi là một kho báu sẽ đi theo chủ nhân của nó khắp mọi nơi.","Ngạn ngữ Trung Hoa"],
-      ["Không có con đường nào dài quá đối với người có lòng kiên nhẫn; không có phần thưởng nào xa xôi quá đối với người có sự kiên trì.","Jean de La Bruyère"],
-      ["Thành công không phải là đích đến, mà là một hành trình.","A.H. Benso"],
-      ["Điều duy nhất đứng giữa bạn và thành công là bạn không dám đối mặt với nỗi sợ hãi.","Brian Tracy"],
-      ["Người ta không vấp ngã vì những ngọn núi lớn, mà thường vấp ngã vì những hòn đá nhỏ.","Khuyết danh"],
-      ["Khi một cánh cửa đóng lại, cánh cửa khác sẽ mở ra.","Alexander Graham Bell"],
-      ["Không có áp lực, không có kim cương.","Thomas Carlyle"],
-      ["Thất bại đơn giản chỉ là cơ hội để bắt đầu lại mọi thứ một cách thông minh hơn.","Henry Ford"],
-      ["Cố gắng không bao giờ là muộn.","Ngạn ngữ Anh"],
-      ["Người chịu đựng được gian khổ là người chiến thắng cuối cùng.","Tục ngữ Việt Nam"],
-      ["Đừng đo lường chiều cao của ngọn núi cho đến khi bạn leo lên đỉnh.","Dag Hammarskjöld"],
-      ["Thời gian của bạn là hữu hạn, đừng lãng phí nó để sống cuộc đời của người khác.","Steve Jobs"],
-      ["Giá cả là những gì bạn trả. Giá trị là những gì bạn nhận được.","Warren Buffett"],
-      ["Đầu tư vào bản thân là khoản đầu tư sinh lời tốt nhất.","Warren Buffett"],
-      ["Người giàu mua tài sản, người nghèo mua tiêu sản.","Robert Kiyosaki"]
+      '"Học, học nữa, học mãi." – V.I. Lenin',
+      '"Giáo dục là vũ khí mạnh nhất mà người ta có thể sử dụng để thay đổi cả thế giới." – Nelson Mandela',
+      '"Đầu tư vào tri thức mang lại lãi suất (lợi nhuận) tốt nhất." – Benjamin Franklin',
+      '"Sự học tập không chỉ là chuẩn bị cho cuộc sống, mà là cuộc sống chính nó." – John Dewey',
+      '"Học tập không bao giờ kết thúc." – Leonardo da Vinci',
+      '"Thầy cô giáo có thể mở cửa, nhưng chính bạn phải bước vào." – Ngạn ngữ Trung Hoa',
+      '"Hiền tài là nguyên khí của quốc gia." – Thân Nhân Trung',
+      '"Mục đích của giáo dục là thay thế một cái tâm trống rỗng bằng một cái tâm mở rộng." – Malcolm Forbes',
+      '"Cám ơn những kẻ đã làm khó tôi, vì nhờ họ tôi mới biết mình phải học thêm điều mới." – Khuyết danh',
+      '"Học hỏi là một kho báu sẽ đi theo chủ nhân của nó khắp mọi nơi." – Ngạn ngữ Trung Hoa',
+      '"Không có con đường nào dài quá đối với người có lòng kiên nhẫn; không có phần thưởng nào xa xôi quá đối với người có sự kiên trì." – Jean de La Bruyère',
+      '"Thành công không phải là đích đến, mà là một hành trình." – A.H. Benso',
+      '"Điều duy nhất đứng giữa bạn và thành công là bạn không dám đối mặt với nỗi sợ hãi." – Brian Tracy',
+      '"Người ta không vấp ngã vì những ngọn núi lớn, mà thường vấp ngã vì những hòn đá nhỏ." – Khuyết danh',
+      '"Khi một cánh cửa đóng lại, cánh cửa khác sẽ mở ra." – Alexander Graham Bell',
+      '"Không có áp lực, không có kim cương." – Thomas Carlyle',
+      '"Thất bại đơn giản chỉ là cơ hội để bắt đầu lại mọi thứ một cách thông minh hơn." – Henry Ford',
+      '"Cố gắng không bao giờ là muộn." – Ngạn ngữ Anh',
+      '"Người chịu đựng được gian khổ là người chiến thắng cuối cùng." – Tục ngữ Việt Nam',
+      '"Đừng đo lường chiều cao của ngọn núi cho đến khi bạn leo lên đỉnh. Lúc ấy bạn sẽ thấy nó thấp làm sao." – Dag Hammarskjöld',
+      '"Đừng tiết kiệm những gì còn lại sau khi chi tiêu, mà hãy chi tiêu những gì còn lại sau khi tiết kiệm." – Warren Buffett',
+      '"Quy tắc số 1: Không bao giờ để mất tiền. Quy tắc số 2: Không bao giờ quên quy tắc số 1." – Warren Buffett',
+      '"Rủi ro lớn nhất là không chịu rủi ro nào..." – Mark Zuckerberg',
+      '"Tiền là một người đầy tớ tồi tệ nhưng là một ông chủ tốt." – Francis Bacon',
+      '"Chi tiêu nhiều hơn những gì bạn kiếm được thì sớm muộn gì cũng khánh kiệt." – Benjamin Franklin',
+      '"Sự cẩn trọng là người giữ cửa tốt nhất của sự giàu có." – Ngạn ngữ Pháp',
+      '"Thời gian của bạn là hữu hạn, đừng lãng phí nó để sống cuộc đời của người khác." – Steve Jobs',
+      '"Giá cả là những gì bạn trả. Giá trị là những gì bạn nhận được." – Warren Buffett',
+      '"Đầu tư vào bản thân là khoản đầu tư sinh lời tốt nhất." – Warren Buffett',
+      '"Người giàu mua tài sản, người nghèo mua tiêu sản." – Robert Kiyosaki'
     ];
 
-    const q = quotes[new Date().getDate() % quotes.length];
-    const quoteHTML = quotes.map(x => `✦ “${x[0]}” – ${x[1]}`).join("<span>✦</span>");
-    document.getElementById("quoteTrack").innerHTML = quoteHTML + quoteHTML;
+    const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+    const todayQuote = quotes[dayOfYear % quotes.length];
+    document.getElementById('quoteTrack').textContent = todayQuote + '   •   ' + todayQuote + '   •   ' + todayQuote;
 
-    /* ==============================
-       3. LOAD TITLES FROM EXISTING PAGES
-       ============================== */
-    const sources = [
-      {url:"tin10.html", label:"TIN HỌC 10"},
-      {url:"tin11.html", label:"TIN HỌC 11"},
-      {url:"tin12.html", label:"TIN HỌC 12"},
-      {url:"chuyende.html", label:"CHUYÊN ĐỀ"},
-      {url:"exam.html", label:"KIỂM TRA"},
-      {url:"knowledge.html", label:"THỦ THUẬT"}
-    ];
+    // ========== SLIDER ==========
+    let currentSlide = 0;
+    const totalSlides = document.querySelectorAll('.slide').length;
 
-    async function extractPageInfo(source){
-      try{
-        const response = await fetch(source.url,{cache:"no-store"});
-        if(!response.ok) throw new Error("HTTP "+response.status);
-        const text = await response.text();
-        const doc = new DOMParser().parseFromString(text,"text/html");
-        const title =
-          doc.querySelector("h1")?.textContent.trim() ||
-          doc.querySelector("h2")?.textContent.trim() ||
-          doc.title ||
-          source.label;
-        const description =
-          doc.querySelector('meta[name="description"]')?.content ||
-          doc.querySelector("p")?.textContent.trim() ||
-          "Nội dung mới trên WEBH2T.";
-        return { ...source, title, description:description.slice(0,150) };
-      }catch(e){
-        return null;
+    function moveSlide(dir) {
+      currentSlide = (currentSlide + dir + totalSlides) % totalSlides;
+      document.getElementById('sliderTrack').style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
+    setInterval(() => moveSlide(1), 6500);
+
+    // ========== FADE-IN ON SCROLL ==========
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.12 });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+    // ========== BACK TO TOP ==========
+    const backTop = document.getElementById('backTop');
+    window.addEventListener('scroll', () => {
+      backTop.classList.toggle('show', window.scrollY > 420);
+    });
+    backTop.addEventListener('click', () => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+
+    // ========== AI CHATBOX – GEMINI THẬT ==========
+    const aiToggle = document.getElementById('aiToggle');
+    const aiChatbox = document.getElementById('aiChatbox');
+    const aiClose = document.getElementById('aiClose');
+    const aiMessages = document.getElementById('aiMessages');
+    const aiInput = document.getElementById('aiInput');
+    const aiSend = document.getElementById('aiSend');
+
+    // Lưu lịch sử hội thoại để Gemini nhớ ngữ cảnh
+    let chatHistory = [];
+
+    aiToggle.addEventListener('click', () => aiChatbox.classList.toggle('open'));
+    aiClose.addEventListener('click', () => aiChatbox.classList.remove('open'));
+
+    function addMsg(text, type) {
+      const div = document.createElement('div');
+      div.className = `ai-msg ${type}`;
+      div.innerHTML = text;
+      aiMessages.appendChild(div);
+      aiMessages.scrollTop = aiMessages.scrollHeight;
+      return div;
+    }
+
+    async function callGemini(userText) {
+      // Kiểm tra key
+      if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
+        return `<strong>⚠️ Chưa cấu hình API Key</strong><br><br>
+        1. Vào <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#008C8C">aistudio.google.com/app/apikey</a><br>
+        2. Tạo key mới (đặt tên WEBH2T)<br>
+        3. Mở file index.html → tìm <code>GEMINI_API_KEY</code> → dán key vào<br>
+        4. (Khuyến nghị) Hạn chế key theo domain GitHub Pages của bạn.`;
+      }
+
+      // System prompt giúp AI trả lời đúng ngữ cảnh giáo dục
+      const systemInstruction = `Bạn là AI Learning Assistant của website WEBH2T – trang giáo dục Tin học THPT Việt Nam năm 2026.
+Nhiệm vụ của bạn:
+- Trả lời bằng tiếng Việt rõ ràng, thân thiện, dễ hiểu với học sinh THPT.
+- Hỗ trợ kiến thức Tin học lớp 10, 11, 12 (thông tin & dữ liệu, Python, SQL, mạng máy tính, an toàn thông tin...).
+- Giúp giải thích khái niệm, hướng dẫn làm bài tập, gợi ý mẹo học tập.
+- Nếu hỏi về lịch học, đề thi, trang web → hướng dẫn học sinh xem các mục tương ứng trên website.
+- Không trả lời nội dung không liên quan đến học tập / giáo dục.
+- Trả lời ngắn gọn, có cấu trúc (dùng bullet nếu cần).`;
+
+      // Thêm tin nhắn người dùng vào lịch sử
+      chatHistory.push({ role: "user", parts: [{ text: userText }] });
+
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+
+        const body = {
+          system_instruction: { parts: [{ text: systemInstruction }] },
+          contents: chatHistory,
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1024,
+          }
+        };
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        });
+
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({}));
+          throw new Error(err.error?.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Xin lỗi, tôi chưa nhận được phản hồi. Bạn thử hỏi lại nhé!";
+
+        // Thêm phản hồi của AI vào lịch sử
+        chatHistory.push({ role: "model", parts: [{ text: reply }] });
+
+        // Giới hạn lịch sử để tránh quá dài
+        if (chatHistory.length > 12) {
+          chatHistory = chatHistory.slice(-10);
+        }
+
+        // Chuyển markdown đơn giản sang HTML
+        return reply
+          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+          .replace(/\*(.*?)\*/g, '<em>$1</em>')
+          .replace(/\n/g, '<br>');
+      } catch (err) {
+        console.error(err);
+        return `⚠️ Lỗi kết nối AI: ${err.message}<br><br>Vui lòng kiểm tra lại API Key hoặc kết nối mạng.`;
       }
     }
 
-    async function loadLatest(){
-      const results = (await Promise.all(sources.map(extractPageInfo))).filter(Boolean);
-      const target = document.getElementById("latestPosts");
+    async function sendMessage() {
+      const text = aiInput.value.trim();
+      if (!text) return;
 
-      if(!results.length){
-        target.innerHTML = `
-          <article class="card news-card"><span class="tag">WEBH2T</span>
-          <h3>Bài giảng và nội dung mới</h3>
-          <p>Các trang con đã sẵn sàng. Hãy mở menu để truy cập.</p></article>
-          <article class="card news-card"><span class="tag">LESSONS</span>
-          <h3>Tin học 10 · 11 · 12</h3>
-          <p>Kho bài giảng Tin học THPT.</p></article>
-          <article class="card news-card"><span class="tag">EXAM</span>
-          <h3>Ngân hàng kiểm tra</h3>
-          <p>Các bài kiểm tra và đề thi trực tuyến.</p></article>`;
-        return;
-      }
+      aiInput.value = '';
+      aiSend.disabled = true;
+      addMsg(text, 'user');
 
-      target.innerHTML = results.slice(0,6).map(item => `
-        <article class="card news-card">
-          <span class="tag">${item.label}</span>
-          <h3>${escapeHTML(item.title)}</h3>
-          <p>${escapeHTML(item.description)}</p>
-          <a class="link" href="${item.url}">Mở nội dung →</a>
-        </article>
-      `).join("");
+      const typing = addMsg('Đang suy nghĩ...', 'bot typing');
+
+      const reply = await callGemini(text);
+      typing.remove();
+      addMsg(reply, 'bot');
+      aiSend.disabled = false;
+      aiInput.focus();
     }
 
-    function escapeHTML(value){
-      return String(value).replace(/[&<>"']/g,c=>({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
-      }[c]));
-    }
-    loadLatest();
-
-    /* ==============================
-       4. MOBILE MENU
-       ============================== */
-    const menuToggle = document.getElementById("menuToggle");
-    const navWrap = document.getElementById("navWrap");
-    menuToggle.addEventListener("click",()=>{
-      const open = navWrap.classList.toggle("open");
-      menuToggle.setAttribute("aria-expanded",open);
+    aiSend.addEventListener('click', sendMessage);
+    aiInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') sendMessage();
     });
 
-    /* ==============================
-       5. DEMO AI CHAT UI
-       ============================== */
-    const chatForm = document.getElementById("chatForm");
-    const chatInput = document.getElementById("chatInput");
-    const chatBody = document.getElementById("chatBody");
-
-    chatForm.addEventListener("submit",(e)=>{
-      e.preventDefault();
-      const text = chatInput.value.trim();
-      if(!text) return;
-
-      const user = document.createElement("div");
-      user.className = "bubble user";
-      user.textContent = text;
-      chatBody.appendChild(user);
-
-      const bot = document.createElement("div");
-      bot.className = "bubble";
-      bot.textContent =
-        "Đây là giao diện demo. Để AI trả lời thật, hãy kết nối form này với backend/serverless của WEBH2T; không đặt API key trực tiếp trong index.html.";
-      chatBody.appendChild(bot);
-
-      chatInput.value = "";
-      chatBody.scrollTop = chatBody.scrollHeight;
-    });
-
-    /* ==============================
-       6. BACK TO TOP
-       ============================== */
-    const topBtn = document.getElementById("topBtn");
-    window.addEventListener("scroll",()=>{
-      topBtn.classList.toggle("show",window.scrollY>500);
-    });
-    topBtn.addEventListener("click",()=>window.scrollTo({top:0,behavior:"smooth"}));
-
-    /* ==============================
-       7. OPTIONAL STAT PLACEHOLDERS
-       Replace these with Firebase/JSON later.
-       ============================== */
-    document.getElementById("postCount").textContent = "—";
-    document.getElementById("examCount").textContent = "—";
-    document.getElementById("visitCount").textContent = "—";
-    document.getElementById("memberCount").textContent = "—";
+    // ========== ĐẾM LƯỢT TRUY CẬP (localStorage tạm) ==========
+    (function () {
+      let visits = parseInt(localStorage.getItem('webh2t_visits') || '0') + 1;
+      localStorage.setItem('webh2t_visits', visits);
+      document.getElementById('visitCount').textContent = visits.toLocaleString('vi-VN');
+    })();
   </script>
-
-<script data-webh2t-dropdown>
-document.addEventListener('DOMContentLoaded',function(){
-  document.querySelectorAll('.nav-item').forEach(function(item){
-    var trigger=item.querySelector('.nav-link'), menu=item.querySelector('.dropdown');
-    if(!trigger||!menu)return;
-    trigger.addEventListener('click',function(e){
-      if(window.matchMedia('(max-width:900px)').matches){
-        e.preventDefault();
-        var open=menu.style.display==='block';
-        document.querySelectorAll('.dropdown').forEach(function(d){d.style.display='none';});
-        menu.style.display=open?'none':'block';
-      }
-    });
-  });
-});
-</script>
-
 </body>
 </html>
