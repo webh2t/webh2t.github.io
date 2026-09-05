@@ -1726,18 +1726,11 @@
        Có thể đổi sang: gemini-1.5-flash / gemini-2.0-flash-lite
        ============================================================ */
     /* 
-       LỖI "invalid authentication credentials" = KEY SAI ĐỊNH DẠNG
-       Key Gemini đúng phải bắt đầu bằng: AIzaSy...
-       Key bạn gửi (AQ.Ab8...) không phải Gemini API key.
-       
-       Cách lấy key đúng:
-       1. Vào https://aistudio.google.com/app/apikey
-       2. Bấm "Create API key" → chọn project hoặc tạo project mới
-       3. Copy key (dạng AIzaSy...)
-       4. Dán vào dòng dưới đây
+       Google đã chuyển sang Auth key dạng AQ. (thay cho AIzaSy cũ).
+       Key AQ. là HỢP LỆ. Cách gửi đúng: header x-goog-api-key (không dùng Bearer).
     */
-    const GEMINI_API_KEY = "AIzaSy_PASTE_YOUR_REAL_KEY_HERE";  // ← Dán key AIzaSy... vào đây
-    const GEMINI_MODEL   = "gemini-2.0-flash";                 // Model mặc định
+    const GEMINI_API_KEY = "AQ.Ab8RN6KRUXR3DHD_BRcUmgosU0N7b-LyEmx7a3cLQ4yjhf5mGQ";
+    const GEMINI_MODEL   = "gemini-2.0-flash";
 
     // ========== PARTICLES EFFECT ==========
     (function initParticles() {
@@ -1952,15 +1945,10 @@
 
     async function callGemini(userText) {
       // Kiểm tra key
-      if (!GEMINI_API_KEY || GEMINI_API_KEY.includes("PASTE_YOUR_REAL_KEY") || !GEMINI_API_KEY.startsWith("AIza")) {
-        return `<strong>⚠️ API Key chưa đúng</strong><br><br>
-        Key Gemini phải bắt đầu bằng <code>AIzaSy...</code><br>
-        1. Vào <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#008C8C">aistudio.google.com/app/apikey</a><br>
-        2. Tạo API key mới<br>
-        3. Copy key và dán vào dòng <code>GEMINI_API_KEY</code> trong file index.html`;
+      if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 20) {
+        return `<strong>⚠️ Chưa có API Key</strong><br>Vui lòng kiểm tra dòng GEMINI_API_KEY trong index.html`;
       }
 
-      // System prompt giúp AI trả lời đúng ngữ cảnh giáo dục
       const systemInstruction = `Bạn là AI Learning Assistant của website WEBH2T – trang giáo dục Tin học THPT Việt Nam năm 2026.
 Nhiệm vụ của bạn:
 - Trả lời bằng tiếng Việt rõ ràng, thân thiện, dễ hiểu với học sinh THPT.
@@ -1970,11 +1958,11 @@ Nhiệm vụ của bạn:
 - Không trả lời nội dung không liên quan đến học tập / giáo dục.
 - Trả lời ngắn gọn, có cấu trúc (dùng bullet nếu cần).`;
 
-      // Thêm tin nhắn người dùng vào lịch sử
       chatHistory.push({ role: "user", parts: [{ text: userText }] });
 
       try {
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+        // Endpoint Generative Language API (hỗ trợ cả key AIzaSy và AQ.)
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
         const body = {
           system_instruction: { parts: [{ text: systemInstruction }] },
@@ -1985,9 +1973,13 @@ Nhiệm vụ của bạn:
           }
         };
 
+        // Auth key (AQ.) cần gửi qua header x-goog-api-key (KHÔNG dùng Authorization: Bearer)
         const res = await fetch(url, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            "x-goog-api-key": GEMINI_API_KEY
+          },
           body: JSON.stringify(body)
         });
 
@@ -1999,15 +1991,12 @@ Nhiệm vụ của bạn:
         const data = await res.json();
         const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Xin lỗi, tôi chưa nhận được phản hồi. Bạn thử hỏi lại nhé!";
 
-        // Thêm phản hồi của AI vào lịch sử
         chatHistory.push({ role: "model", parts: [{ text: reply }] });
 
-        // Giới hạn lịch sử để tránh quá dài
         if (chatHistory.length > 12) {
           chatHistory = chatHistory.slice(-10);
         }
 
-        // Chuyển markdown đơn giản sang HTML
         return reply
           .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
           .replace(/\*(.*?)\*/g, '<em>$1</em>')
