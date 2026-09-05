@@ -1694,14 +1694,13 @@
     <div class="ai-messages" id="aiMessages">
       <div class="ai-msg bot">
         Xin chào! Tôi là <strong>AI Learning Assistant</strong> của WEBH2T.<br><br>
-        Tôi có thể giúp bạn:
+        Tôi hỗ trợ kiến thức Tin học THPT:
         <ul style="margin:8px 0 0 18px;padding:0">
-          <li>Giải thích bài học Tin học 10-11-12</li>
-          <li>Hướng dẫn làm bài tập / đề thi</li>
-          <li>Mẹo học lập trình Python, SQL</li>
-          <li>Trả lời câu hỏi về lịch học</li>
+          <li>Tin học 10 · 11 · 12</li>
+          <li>Python · SQL · Mạng · AI</li>
+          <li>Lịch học · Đề thi · Thủ thuật</li>
         </ul>
-        Hãy hỏi tôi bất cứ điều gì nhé!
+        Hãy hỏi thử: <em>“Tin học 11 học gì?”</em> hoặc <em>“Giải thích hệ nhị phân”</em>
       </div>
     </div>
     <div class="ai-input-area">
@@ -1711,27 +1710,6 @@
   </div>
 
   <script>
-    /* ============================================================
-       CẤU HÌNH API KEY – HƯỚNG DẪN AN TOÀN
-       ------------------------------------------------------------
-       1. Vào https://aistudio.google.com/app/apikey
-       2. Tạo API Key MỚI (đặt tên: WEBH2T-GitHubPages)
-       3. (Khuyến nghị) Hạn chế key theo HTTP referrer:
-          → Thêm domain GitHub Pages của bạn
-            ví dụ: https://username.github.io/*
-       4. Dán key vào dòng GEMINI_API_KEY bên dưới
-       5. Theo dõi hạn mức (Quota) tại cùng trang aistudio
-       ------------------------------------------------------------
-       Model đang dùng: gemini-2.0-flash  (nhanh + miễn phí)
-       Có thể đổi sang: gemini-1.5-flash / gemini-2.0-flash-lite
-       ============================================================ */
-    /* 
-       Google đã chuyển sang Auth key dạng AQ. (thay cho AIzaSy cũ).
-       Key AQ. là HỢP LỆ. Cách gửi đúng: header x-goog-api-key (không dùng Bearer).
-    */
-    const GEMINI_API_KEY = "AQ.Ab8RN6KRUXR3DHD_BRcUmgosU0N7b-LyEmx7a3cLQ4yjhf5mGQ";
-    const GEMINI_MODEL   = "gemini-2.0-flash";
-
     // ========== PARTICLES EFFECT ==========
     (function initParticles() {
       const canvas = document.getElementById('particles-canvas');
@@ -1920,16 +1898,13 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
 
-    // ========== AI CHATBOX – GEMINI THẬT ==========
+    // ========== AI CHATBOX – OFFLINE (không cần API key) ==========
     const aiToggle = document.getElementById('aiToggle');
     const aiChatbox = document.getElementById('aiChatbox');
     const aiClose = document.getElementById('aiClose');
     const aiMessages = document.getElementById('aiMessages');
     const aiInput = document.getElementById('aiInput');
     const aiSend = document.getElementById('aiSend');
-
-    // Lưu lịch sử hội thoại để Gemini nhớ ngữ cảnh
-    let chatHistory = [];
 
     aiToggle.addEventListener('click', () => aiChatbox.classList.toggle('open'));
     aiClose.addEventListener('click', () => aiChatbox.classList.remove('open'));
@@ -1943,71 +1918,155 @@
       return div;
     }
 
-    async function callGemini(userText) {
-      // Kiểm tra key
-      if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 20) {
-        return `<strong>⚠️ Chưa có API Key</strong><br>Vui lòng kiểm tra dòng GEMINI_API_KEY trong index.html`;
+    /* ========== AI OFFLINE – Không cần API key, luôn hoạt động ========== */
+    function offlineAI(q) {
+      const t = q.toLowerCase().normalize('NFC');
+
+      // --- Chào hỏi ---
+      if (/xin chào|hello|chào|hi\b|hey/.test(t)) {
+        return `Xin chào! 👋 Tôi là <strong>AI Learning Assistant</strong> của WEBH2T.<br><br>
+Bạn có thể hỏi về:<br>
+• Tin học 10 / 11 / 12<br>
+• Python, SQL, mạng máy tính, AI<br>
+• Lịch học, đề thi, thủ thuật<br>
+Hãy hỏi thử nhé!`;
       }
 
-      const systemInstruction = `Bạn là AI Learning Assistant của website WEBH2T – trang giáo dục Tin học THPT Việt Nam năm 2026.
-Nhiệm vụ của bạn:
-- Trả lời bằng tiếng Việt rõ ràng, thân thiện, dễ hiểu với học sinh THPT.
-- Hỗ trợ kiến thức Tin học lớp 10, 11, 12 (thông tin & dữ liệu, Python, SQL, mạng máy tính, an toàn thông tin...).
-- Giúp giải thích khái niệm, hướng dẫn làm bài tập, gợi ý mẹo học tập.
-- Nếu hỏi về lịch học, đề thi, trang web → hướng dẫn học sinh xem các mục tương ứng trên website.
-- Không trả lời nội dung không liên quan đến học tập / giáo dục.
-- Trả lời ngắn gọn, có cấu trúc (dùng bullet nếu cần).`;
-
-      chatHistory.push({ role: "user", parts: [{ text: userText }] });
-
-      try {
-        // Endpoint Generative Language API (hỗ trợ cả key AIzaSy và AQ.)
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
-
-        const body = {
-          system_instruction: { parts: [{ text: systemInstruction }] },
-          contents: chatHistory,
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
-          }
-        };
-
-        // Auth key (AQ.) cần gửi qua header x-goog-api-key (KHÔNG dùng Authorization: Bearer)
-        const res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "x-goog-api-key": GEMINI_API_KEY
-          },
-          body: JSON.stringify(body)
-        });
-
-        if (!res.ok) {
-          const err = await res.json().catch(() => ({}));
-          throw new Error(err.error?.message || `HTTP ${res.status}`);
-        }
-
-        const data = await res.json();
-        const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "Xin lỗi, tôi chưa nhận được phản hồi. Bạn thử hỏi lại nhé!";
-
-        chatHistory.push({ role: "model", parts: [{ text: reply }] });
-
-        if (chatHistory.length > 12) {
-          chatHistory = chatHistory.slice(-10);
-        }
-
-        return reply
-          .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-          .replace(/\*(.*?)\*/g, '<em>$1</em>')
-          .replace(/\n/g, '<br>');
-      } catch (err) {
-        console.error(err);
-        return `⚠️ Lỗi kết nối AI: ${err.message}<br><br>Vui lòng kiểm tra lại API Key hoặc kết nối mạng.`;
+      // --- Lịch biểu ---
+      if (/lịch|thời khóa|tkb|buổi học|tiết học/.test(t)) {
+        return `📅 <strong>Lịch biểu</strong> nằm ngay trên trang chủ.<br>
+Kéo xuống phần <em>“Lịch biểu / Thời khóa biểu”</em> hoặc bấm menu <strong>Lịch biểu</strong>.<br>
+Bạn cũng có thể cập nhật bảng đó bằng dữ liệu từ Google Sheets.`;
       }
+
+      // --- Đề thi ---
+      if (/đề thi|kiểm tra|thi thử|ngân hàng đề|bài kiểm tra/.test(t)) {
+        return `📝 Ngân hàng đề thi nằm tại trang <a href="exam.html"><strong>exam.html</strong></a>.<br>
+Có đề 15 phút, 1 tiết, học kỳ và đề thi thử tốt nghiệp Tin học THPT.<br>
+Bấm menu <strong>KIỂM TRA</strong> để vào ngay.`;
+      }
+
+      // --- Thủ thuật ---
+      if (/thủ thuật|mẹo|tips|phím tắt|knowledge/.test(t)) {
+        return `💡 Thủ thuật học tập & máy tính nằm tại <a href="knowledge.html"><strong>knowledge.html</strong></a>.<br>
+Bấm menu <strong>THỦ THUẬT</strong> để xem các bài mới nhất.`;
+      }
+
+      // --- Tin học 10 ---
+      if (/tin\s*10|tin học 10|lớp 10/.test(t)) {
+        return `<strong>TIN HỌC 10</strong> gồm các nội dung chính:<br><br>
+• Thông tin, quá trình xử lý thông tin, thiết bị thông minh<br>
+• Kiểu dữ liệu (văn bản, âm thanh, hình ảnh), hệ nhị phân, số nguyên, logic<br>
+• Mạng máy tính & dịch vụ trực tuyến<br>
+• Thuật toán & ngôn ngữ lập trình bậc cao (Python / C++)<br><br>
+→ Xem bài giảng chi tiết: <a href="tin10.html"><strong>tin10.html</strong></a>`;
+      }
+
+      // --- Tin học 11 ---
+      if (/tin\s*11|tin học 11|lớp 11|python|cấu trúc dữ liệu|hàm\b/.test(t) && !/tin\s*12|tin học 12/.test(t)) {
+        return `<strong>TIN HỌC 11</strong> tập trung vào:<br><br>
+• Thiết bị thông minh & tin học trong kinh tế – xã hội<br>
+• Mạng, Internet, điện toán đám mây, IoT<br>
+• Tìm kiếm, trao đổi thông tin an toàn, lưu trữ đám mây<br>
+• Cơ sở dữ liệu (CSDL), mô hình quan hệ, MySQL / MS Access<br>
+• Cấu trúc dữ liệu, thuật toán, hàm, lập trình Python<br><br>
+→ Xem bài giảng: <a href="tin11.html"><strong>tin11.html</strong></a>`;
+      }
+
+      // --- Tin học 12 ---
+      if (/tin\s*12|tin học 12|lớp 12|html|trang web|ai hẹp|ai mạnh|switch|router|định tuyến/.test(t)) {
+        return `<strong>TIN HỌC 12</strong> gồm:<br><br>
+• Trí tuệ nhân tạo AI (AI hẹp/yếu & AI tổng quát/mạnh)<br>
+• Thiết bị mạng (router, switch), giao thức mạng, chia sẻ tài nguyên<br>
+• Phần mềm thiết kế, xử lý dữ liệu, truyền thông đa phương tiện<br>
+• Tạo trang web với HTML, liên kết, xử lý dữ liệu nâng cao<br><br>
+→ Xem bài giảng: <a href="tin12.html"><strong>tin12.html</strong></a>`;
+      }
+
+      // --- Python ---
+      if (/python|biến|vòng lặp|for |while |if else|list|dictionary|hàm def/.test(t)) {
+        return `<strong>Python cơ bản</strong> (Tin học 11):<br><br>
+• Biến & kiểu dữ liệu: <code>int, float, str, bool, list, dict</code><br>
+• Cấu trúc điều khiển: <code>if / elif / else</code>, <code>for</code>, <code>while</code><br>
+• Hàm: <code>def ten_ham():</code><br>
+• List: <code>[1, 2, 3]</code> — Dict: <code>{"ten": "An"}</code><br><br>
+Học chi tiết tại <a href="tin11.html">tin11.html</a>. Bạn muốn ví dụ cụ thể phần nào?`;
+      }
+
+      // --- SQL / CSDL ---
+      if (/sql|cơ sở dữ liệu|csdl|select|mysql|access|bảng|truy vấn/.test(t)) {
+        return `<strong>Cơ sở dữ liệu & SQL</strong>:<br><br>
+• Mô hình quan hệ: bảng, khóa chính, khóa ngoại<br>
+• Lệnh cơ bản: <code>SELECT * FROM bang WHERE ...</code><br>
+• Hệ quản trị: MySQL, MS Access<br>
+• Học ở Tin học 11 & 12<br><br>
+→ <a href="tin11.html">tin11.html</a> | <a href="tin12.html">tin12.html</a>`;
+      }
+
+      // --- Mạng / Internet ---
+      if (/mạng|internet|iot|đám mây|cloud|http|ip|dns|wifi/.test(t)) {
+        return `<strong>Mạng máy tính & Internet</strong>:<br><br>
+• Mạng LAN / WAN, Internet, IoT (Internet vạn vật)<br>
+• Điện toán đám mây (Cloud)<br>
+• Giao thức: HTTP, TCP/IP, DNS<br>
+• Thiết bị: Router, Switch<br>
+• An toàn thông tin khi dùng mạng<br><br>
+Nội dung có ở Tin học 10, 11, 12.`;
+      }
+
+      // --- AI ---
+      if (/\bai\b|trí tuệ nhân tạo|machine learning|chatbot|chatgpt|gemini/.test(t)) {
+        return `<strong>Trí tuệ nhân tạo (AI)</strong> – Tin học 12:<br><br>
+• <em>AI hẹp (yếu)</em>: làm 1 việc cụ thể (nhận diện ảnh, dịch ngôn ngữ…)<br>
+• <em>AI tổng quát (mạnh)</em>: khả năng suy luận rộng như con người<br>
+• Ứng dụng: giáo dục, y tế, giao thông, chatbot hỗ trợ học tập<br><br>
+Xem chuyên đề AI tại <a href="chuyende.html">chuyende.html</a> và <a href="tin12.html">tin12.html</a>.`;
+      }
+
+      // --- Hệ nhị phân / dữ liệu ---
+      if (/nhị phân|binary|bit|byte|kiểu dữ liệu|số nguyên|logic|boolean/.test(t)) {
+        return `<strong>Dữ liệu & Hệ nhị phân</strong> (Tin học 10):<br><br>
+• Bit = 0 hoặc 1 · Byte = 8 bit<br>
+• Hệ nhị phân ↔ thập phân<br>
+• Kiểu dữ liệu: văn bản, số nguyên, logic (True/False), hình ảnh, âm thanh<br>
+• Máy tính xử lý mọi thứ dưới dạng bit<br><br>
+→ <a href="tin10.html">tin10.html</a>`;
+      }
+
+      // --- Chuyên đề ---
+      if (/chuyên đề|chuyende/.test(t)) {
+        return `📚 Chuyên đề nằm tại <a href="chuyende.html"><strong>chuyende.html</strong></a>.<br>
+Hiện có chuyên đề về AI trong giáo dục và các chủ đề nâng cao.`;
+      }
+
+      // --- App sơ đồ lớp / nề nếp ---
+      if (/sơ đồ lớp|chỗ ngồi|nề nếp|qlnn|autochongoi/.test(t)) {
+        return `📱 Ứng dụng hỗ trợ lớp học:<br>
+• <a href="autochongoi.html"><strong>Sơ đồ lớp</strong></a><br>
+• <a href="qlnn.html"><strong>Quản lý nề nếp</strong></a><br>
+Bấm menu <strong>APP</strong> để vào nhanh.`;
+      }
+
+      // --- Liên hệ ---
+      if (/liên hệ|email|telegram|facebook|youtube|contact/.test(t)) {
+        return `📬 Liên hệ WEBH2T:<br>
+• Email: <a href="mailto:websiteh2t@gmail.com">websiteh2t@gmail.com</a><br>
+• Telegram: <a href="https://t.me/webh2t" target="_blank">t.me/webh2t</a><br>
+• YouTube: <a href="https://www.youtube.com/@WEBH2T" target="_blank">@WEBH2T</a><br>
+• Facebook Group: xem chân trang website`;
+      }
+
+      // --- Mặc định ---
+      return `Tôi chưa hiểu rõ câu hỏi.<br><br>
+Bạn có thể hỏi theo các chủ đề:<br>
+• <strong>Tin học 10 / 11 / 12</strong><br>
+• <strong>Python, SQL, mạng, AI</strong><br>
+• <strong>Lịch học, đề thi, thủ thuật</strong><br>
+• <strong>Sơ đồ lớp, quản lý nề nếp</strong><br><br>
+Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải thích hệ nhị phân”</em>`;
     }
 
-    async function sendMessage() {
+    function sendMessage() {
       const text = aiInput.value.trim();
       if (!text) return;
 
@@ -2017,11 +2076,13 @@ Nhiệm vụ của bạn:
 
       const typing = addMsg('Đang suy nghĩ...', 'bot typing');
 
-      const reply = await callGemini(text);
-      typing.remove();
-      addMsg(reply, 'bot');
-      aiSend.disabled = false;
-      aiInput.focus();
+      // Giả lập thời gian suy nghĩ ngắn
+      setTimeout(() => {
+        typing.remove();
+        addMsg(offlineAI(text), 'bot');
+        aiSend.disabled = false;
+        aiInput.focus();
+      }, 400 + Math.random() * 400);
     }
 
     aiSend.addEventListener('click', sendMessage);
