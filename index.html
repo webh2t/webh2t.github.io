@@ -153,21 +153,35 @@
     }
 
     .clock {
-      font-size: 0.95rem;
-      font-weight: 500;
       background: rgba(255,255,255,0.12);
-      padding: 9px 18px;
-      border-radius: 40px;
+      padding: 10px 20px;
+      border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.22);
       backdrop-filter: blur(6px);
       white-space: nowrap;
       box-shadow: 0 0 15px rgba(0, 180, 180, 0.15);
+      text-align: center;
+      line-height: 1.35;
+    }
+    .clock .date-line {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: #FFFFFF;
+      letter-spacing: 0.3px;
+    }
+    .clock .time-line {
+      font-size: 1.55rem;
+      font-weight: 800;
+      color: #FFD700;
+      letter-spacing: 1.5px;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.45);
+      margin-top: 2px;
     }
 
     /* ========== KHỐI 2: DANH NGÔN ========== */
     .quote-bar {
-      background: linear-gradient(90deg, var(--teal-dark), #007777);
-      color: #7FDBFF;
+      background: linear-gradient(135deg, var(--ink) 0%, var(--ink-mid) 60%, #0a3a5c 100%);
+      color: #FFA500;
       overflow: hidden;
       white-space: nowrap;
       padding: 15px 0;
@@ -177,20 +191,12 @@
 
     .quote-track {
       display: inline-block;
-      animation: marquee 50s linear infinite;
       font-size: 1.28rem;
-      font-weight: 600;
+      font-weight: 700;
       padding-left: 100%;
-      text-shadow: 0 0 8px rgba(0, 191, 255, 0.3);
-    }
-
-    .quote-track:hover {
-      animation-play-state: paused;
-    }
-
-    @keyframes marquee {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
+      color: #FFA500;
+      text-shadow: 0 0 8px rgba(255, 165, 0, 0.35);
+      /* animation controlled by JS for pause */
     }
 
     /* ========== KHỐI 3: MENU ========== */
@@ -461,25 +467,44 @@
 
     .slide {
       min-width: 100%;
-      padding: 40px 30px;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      text-align: center;
+      background: linear-gradient(145deg, #e8fafa 0%, #fff 60%);
+      min-height: 420px;
+    }
+
+    .slide-img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+      object-position: center;
+      display: block;
+      background: #0a3a5c;
+    }
+
+    .slide-content {
+      padding: 22px 30px 28px;
+      flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
-      text-align: center;
-      background: linear-gradient(145deg, #e8fafa 0%, #fff 60%);
+      justify-content: center;
     }
 
     .slide h3 {
-      font-size: 1.5rem;
+      font-size: 1.45rem;
       color: var(--ink);
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       font-weight: 800;
     }
 
     .slide p {
       color: #444;
       max-width: 620px;
-      font-size: 1.05rem;
+      font-size: 1rem;
     }
 
     .slide a {
@@ -655,14 +680,20 @@
     }
 
     .grade-card-body {
-      padding: 0 22px 28px;
-      text-align: center;
+      padding: 0 18px 26px;
+      text-align: left;
     }
 
     .grade-card-body p {
-      color: #555;
-      margin-bottom: 20px;
-      font-size: 0.98rem;
+      color: #444;
+      margin-bottom: 18px;
+      font-size: 0.88rem;
+      line-height: 1.55;
+      text-align: justify;
+    }
+
+    .grade-card-body .btn-wrap {
+      text-align: center;
     }
 
     .btn-grade {
@@ -755,8 +786,10 @@
     }
 
     .post-item a {
-      font-weight: 600;
+      font-weight: 700;
+      font-size: 1.02rem;
       color: var(--ink);
+      display: block;
     }
 
     .post-item a:hover {
@@ -764,16 +797,16 @@
     }
 
     .post-item .date {
-      font-size: 0.8rem;
-      color: #888;
+      font-size: 0.82rem;
+      color: #666;
       display: block;
-      margin-top: 2px;
+      margin-top: 3px;
+      font-weight: 500;
     }
 
     /* ========== BÌNH LUẬN ========== */
     .comments-bar {
       background: linear-gradient(90deg, var(--ink-mid), #0a3a5c);
-      color: #90CAF9;
       overflow: hidden;
       white-space: nowrap;
       padding: 14px 0;
@@ -785,6 +818,8 @@
       animation: marquee-right 55s linear infinite;
       font-size: 0.98rem;
       padding-left: 100%;
+      color: #1B5E20;
+      font-weight: 600;
     }
 
     @keyframes marquee-right {
@@ -1186,7 +1221,10 @@
       <img src="assets/LOGO1.png" alt="WEBH2T Logo" />
       <div class="site-title">WEBH2T | <span>Informatics Engineering</span></div>
     </div>
-    <div class="clock" id="vnClock">Đang tải thời gian...</div>
+    <div class="clock" id="vnClock">
+        <div class="date-line">Đang tải...</div>
+        <div class="time-line">--:--:--</div>
+      </div>
   </header>
 
   <!-- ========== KHỐI 2: DANH NGÔN ========== -->
@@ -1289,29 +1327,44 @@
       <button class="slider-btn prev" onclick="moveSlide(-1)" aria-label="Previous"><i class="fas fa-chevron-left"></i></button>
       <div class="slider-track" id="sliderTrack">
         <div class="slide">
-          <h3>Tin học 10 – Bài 1: Thông tin và dữ liệu</h3>
-          <p>Khám phá khái niệm thông tin, dữ liệu và cách máy tính xử lý thông tin trong đời sống số.</p>
-          <a href="tin10.html">Xem bài giảng →</a>
+          <img class="slide-img" src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=1200&q=80" alt="Tin học 10" loading="lazy" />
+          <div class="slide-content">
+            <h3>Tin học 10 – Bài 1: Thông tin và dữ liệu</h3>
+            <p>Khám phá khái niệm thông tin, dữ liệu và cách máy tính xử lý thông tin trong đời sống số.</p>
+            <a href="tin10.html">Xem bài giảng →</a>
+          </div>
         </div>
         <div class="slide">
-          <h3>Tin học 11 – Lập trình Python cơ bản</h3>
-          <p>Bắt đầu hành trình coding với Python – ngôn ngữ mạnh mẽ và thân thiện với người mới học.</p>
-          <a href="tin11.html">Xem bài giảng →</a>
+          <img class="slide-img" src="https://images.unsplash.com/photo-1526379095098-d400fd0bf935?w=1200&q=80" alt="Tin học 11 Python" loading="lazy" />
+          <div class="slide-content">
+            <h3>Tin học 11 – Lập trình Python cơ bản</h3>
+            <p>Bắt đầu hành trình coding với Python – ngôn ngữ mạnh mẽ và thân thiện với người mới học.</p>
+            <a href="tin11.html">Xem bài giảng →</a>
+          </div>
         </div>
         <div class="slide">
-          <h3>Tin học 12 – Cơ sở dữ liệu & SQL</h3>
-          <p>Học cách thiết kế và truy vấn cơ sở dữ liệu – kỹ năng quan trọng của kỷ nguyên dữ liệu.</p>
-          <a href="tin12.html">Xem bài giảng →</a>
+          <img class="slide-img" src="https://images.unsplash.com/photo-1544383835-bda2bc66a55d?w=1200&q=80" alt="Tin học 12 SQL" loading="lazy" />
+          <div class="slide-content">
+            <h3>Tin học 12 – Cơ sở dữ liệu & SQL</h3>
+            <p>Học cách thiết kế và truy vấn cơ sở dữ liệu – kỹ năng quan trọng của kỷ nguyên dữ liệu.</p>
+            <a href="tin12.html">Xem bài giảng →</a>
+          </div>
         </div>
         <div class="slide">
-          <h3>Chuyên đề: Trí tuệ nhân tạo trong giáo dục</h3>
-          <p>Ứng dụng AI Chatbox hỗ trợ học tập cá nhân hóa từ năm học 2026.</p>
-          <a href="chuyende.html">Khám phá →</a>
+          <img class="slide-img" src="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=1200&q=80" alt="Chuyên đề AI" loading="lazy" />
+          <div class="slide-content">
+            <h3>Chuyên đề: Trí tuệ nhân tạo trong giáo dục</h3>
+            <p>Ứng dụng AI Chatbox hỗ trợ học tập cá nhân hóa từ năm học 2026.</p>
+            <a href="chuyende.html">Khám phá →</a>
+          </div>
         </div>
         <div class="slide">
-          <h3>Ngân hàng đề thi Tin học THPT</h3>
-          <p>Tổng hợp đề kiểm tra 15 phút, 1 tiết, học kỳ và đề thi thử tốt nghiệp.</p>
-          <a href="exam.html">Làm bài ngay →</a>
+          <img class="slide-img" src="https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200&q=80" alt="Ngân hàng đề thi" loading="lazy" />
+          <div class="slide-content">
+            <h3>Ngân hàng đề thi Tin học THPT</h3>
+            <p>Tổng hợp đề kiểm tra 15 phút, 1 tiết, học kỳ và đề thi thử tốt nghiệp.</p>
+            <a href="exam.html">Làm bài ngay →</a>
+          </div>
         </div>
       </div>
       <button class="slider-btn next" onclick="moveSlide(1)" aria-label="Next"><i class="fas fa-chevron-right"></i></button>
@@ -1322,7 +1375,6 @@
   <section class="schedule-section fade-in" id="schedule">
     <div class="section-title">
       <h2>Lịch biểu / Thời khóa biểu</h2>
-      <p style="color:#b0d4e8">Có thể cập nhật dễ dàng từ Google Sheets / Excel</p>
     </div>
     <div class="schedule-wrapper">
       <table class="schedule">
@@ -1395,10 +1447,6 @@
         </tbody>
       </table>
     </div>
-    <p class="note-schedule">
-      📌 Để cập nhật lịch biểu: Tạo Google Sheet công khai → Nhúng iframe hoặc copy dữ liệu vào bảng trên.<br>
-      <a href="https://docs.google.com/spreadsheets/" target="_blank" rel="noopener">Mở Google Sheets →</a>
-    </p>
   </section>
 
   <!-- ========== 3 CỘT LỚP ========== -->
@@ -1414,8 +1462,8 @@
           <h3>TIN HỌC 10</h3>
         </div>
         <div class="grade-card-body">
-          <p>Thông tin – Dữ liệu – Hệ thống số – Mạng máy tính – An toàn thông tin cơ bản.</p>
-          <a href="tin10.html" class="btn-grade">Vào học →</a>
+          <p>Tìm hiểu về thông tin, quá trình xử lý thông tin và vai trò của các thiết bị thông minh đối với xã hội. Làm quen với các kiểu dữ liệu (văn bản, âm thanh, hình ảnh), hệ nhị phân và dữ liệu số nguyên, cùng với dữ liệu logic. Khám phá mạng máy tính trong cuộc sống hiện đại và các dịch vụ trực tuyến. Làm quen với thuật toán, ngôn ngữ lập trình bậc cao (như Python hoặc C++) để xây dựng chương trình giải quyết các bài toán thực tế.</p>
+          <div class="btn-wrap"><a href="tin10.html" class="btn-grade">Vào học →</a></div>
         </div>
       </div>
       <div class="grade-card tin11">
@@ -1424,8 +1472,8 @@
           <h3>TIN HỌC 11</h3>
         </div>
         <div class="grade-card-body">
-          <p>Lập trình Python – Thuật toán – Cấu trúc dữ liệu – Ứng dụng thực tế.</p>
-          <a href="tin11.html" class="btn-grade">Vào học →</a>
+          <p>Vai trò của thiết bị thông minh và tin học trong phát triển kinh tế - xã hội. Hợp tác trong môi trường số và đạo đức, pháp luật trong sử dụng công nghệ. Mạng máy tính, Internet, điện toán đám mây và internet vạn vật (IoT). Tìm kiếm, đánh giá và bảo mật thông tin trên mạng. Cơ sở dữ liệu (CSDL), mô hình quan hệ, hệ quản trị CSDL MySQL hoặc MS Access.</p>
+          <div class="btn-wrap"><a href="tin11.html" class="btn-grade">Vào học →</a></div>
         </div>
       </div>
       <div class="grade-card tin12">
@@ -1434,8 +1482,8 @@
           <h3>TIN HỌC 12</h3>
         </div>
         <div class="grade-card-body">
-          <p>Cơ sở dữ liệu – SQL – Phân tích dữ liệu – Định hướng nghề nghiệp CNTT.</p>
-          <a href="tin12.html" class="btn-grade">Vào học →</a>
+          <p>Trí tuệ nhân tạo AI trong khoa học và đời sống. Sử dụng phần mềm thiết kế, xử lý dữ liệu và truyền thông đa phương tiện. Kết nối, thiết bị mạng và các dịch vụ Internet.</p>
+          <div class="btn-wrap"><a href="tin12.html" class="btn-grade">Vào học →</a></div>
         </div>
       </div>
     </div>
@@ -1593,11 +1641,11 @@
       </div>
       <div class="stat-item">
         <div class="num" id="memberCount">128</div>
-        <div class="label">Thành viên đăng ký</div>
+        <div class="label"><a href="tin10.html" style="color:inherit;font-weight:600">Thành viên đăng ký</a></div>
       </div>
       <div class="stat-item">
         <div class="num" id="postCount">86</div>
-        <div class="label">Bài viết + Đề thi</div>
+        <div class="label"><a href="knowledge.html" style="color:inherit;font-weight:600">Bài viết</a> + <a href="exam.html" style="color:inherit;font-weight:600">Đề thi</a></div>
       </div>
     </div>
 
@@ -1657,7 +1705,7 @@
        Model đang dùng: gemini-2.0-flash  (nhanh + miễn phí)
        Có thể đổi sang: gemini-1.5-flash / gemini-2.0-flash-lite
        ============================================================ */
-    const GEMINI_API_KEY = "YOUR_GEMINI_API_KEY_HERE";  // ← DÁN KEY VÀO ĐÂY
+    const GEMINI_API_KEY = "AQ.Ab8RN6JsxfnIN_JkhOGNqwx1UhD5nEOoKMz-5X36BtXRcqnwvg";
     const GEMINI_MODEL   = "gemini-2.0-flash";          // Model mặc định
 
     // ========== PARTICLES EFFECT ==========
@@ -1725,15 +1773,15 @@
       animate();
     })();
 
-    // ========== ĐỒNG HỒ VIỆT NAM ==========
+    // ========== ĐỒNG HỒ VIỆT NAM (2 hàng) ==========
     function updateClock() {
       const now = new Date();
       const options = {
         timeZone: 'Asia/Ho_Chi_Minh',
         weekday: 'long',
         year: 'numeric',
-        month: 'long',
-        day: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
@@ -1743,8 +1791,20 @@
       const parts = formatter.formatToParts(now);
       const get = (type) => parts.find(p => p.type === type)?.value || '';
 
-      document.getElementById('vnClock').textContent =
-        `Hôm nay, ${get('weekday')} ngày ${get('day')} tháng ${get('month')} năm ${get('year')}: ${get('hour')}:${get('minute')}:${get('second')}`;
+      // Format: Hôm nay, Thứ Bảy ngày 05/09/2026
+      const weekday = get('weekday');
+      const day = get('day');
+      const month = get('month');
+      const year = get('year');
+      const hour = get('hour');
+      const minute = get('minute');
+      const second = get('second');
+
+      const clockEl = document.getElementById('vnClock');
+      clockEl.querySelector('.date-line').textContent =
+        `Hôm nay, ${weekday} ngày ${day}/${month}/${year}`;
+      clockEl.querySelector('.time-line').textContent =
+        `${hour}:${minute}:${second}`;
     }
     updateClock();
     setInterval(updateClock, 1000);
@@ -1785,7 +1845,26 @@
 
     const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
     const todayQuote = quotes[dayOfYear % quotes.length];
-    document.getElementById('quoteTrack').textContent = todayQuote + '   •   ' + todayQuote + '   •   ' + todayQuote;
+    const quoteTrack = document.getElementById('quoteTrack');
+    quoteTrack.textContent = todayQuote + '   •   ' + todayQuote + '   •   ' + todayQuote;
+
+    // Chạy 1 lần → dừng 15 giây → lặp lại
+    function runQuoteMarquee() {
+      quoteTrack.style.transition = 'none';
+      quoteTrack.style.transform = 'translateX(0)';
+      // Force reflow
+      void quoteTrack.offsetWidth;
+      // Thời gian chạy phụ thuộc độ dài câu (khoảng 25-35s)
+      const duration = 28;
+      quoteTrack.style.transition = `transform ${duration}s linear`;
+      quoteTrack.style.transform = 'translateX(-100%)';
+      setTimeout(() => {
+        // Dừng 15 giây rồi chạy lại
+        setTimeout(runQuoteMarquee, 15000);
+      }, duration * 1000);
+    }
+    // Bắt đầu sau 1 giây
+    setTimeout(runQuoteMarquee, 1000);
 
     // ========== SLIDER ==========
     let currentSlide = 0;
@@ -1842,12 +1921,8 @@
 
     async function callGemini(userText) {
       // Kiểm tra key
-      if (!GEMINI_API_KEY || GEMINI_API_KEY === "YOUR_GEMINI_API_KEY_HERE") {
-        return `<strong>⚠️ Chưa cấu hình API Key</strong><br><br>
-        1. Vào <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color:#008C8C">aistudio.google.com/app/apikey</a><br>
-        2. Tạo key mới (đặt tên WEBH2T)<br>
-        3. Mở file index.html → tìm <code>GEMINI_API_KEY</code> → dán key vào<br>
-        4. (Khuyến nghị) Hạn chế key theo domain GitHub Pages của bạn.`;
+      if (!GEMINI_API_KEY || GEMINI_API_KEY.length < 20) {
+        return `<strong>⚠️ API Key chưa hợp lệ</strong><br>Vui lòng kiểm tra lại key trong file index.html.`;
       }
 
       // System prompt giúp AI trả lời đúng ngữ cảnh giáo dục
