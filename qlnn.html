@@ -33,11 +33,21 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 .cream-panel{background:#fef9e7;color:#1e293b;border-radius:.75rem;padding:1rem}
 .cream-panel input,.cream-panel select{background:#fff!important;color:#0f172a!important;border:1px solid #d4a373;font-size:1rem}
 .cream-panel label{color:#334155;font-weight:600;font-size:1rem}
-.btn-upload-green{background:#16a34a;color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 4px 14px rgba(22,163,74,.45);font-weight:600}
-.btn-upload-green:hover{background:#15803d}
+.btn-upload-green{background:#0d9488;color:#fff;padding:.5rem 1rem;border-radius:.5rem;box-shadow:0 4px 14px rgba(13,148,136,.5);font-weight:600}
+.btn-upload-green:hover{background:#0f766e}
 .btn-del-purple{color:#c084fc;font-weight:600;text-shadow:0 0 8px rgba(168,85,247,.5)}
 .pts-bonus{color:#15803d!important;font-weight:700}
 .pts-viol{color:#b91c1c!important;font-weight:700}
+
+.gold-text,.input-field,label,.cream-panel label{color:#f5d76e!important}
+.input-field{border-color:#b8860b!important}
+.input-field:focus{border-color:#ffd700!important;box-shadow:0 0 0 2px rgba(255,215,0,.25)}
+.input-field option{background:#1e293b;color:#f5d76e}
+.text-slate-300,.text-slate-400{color:#e8c547!important}
+.bg-slate-800 .text-sm,.bg-slate-800 label,.bg-slate-900 label{color:#f0d060!important}
+#authModal label,#parentReportModal label{color:#ffd700!important;font-weight:600}
+#authModal .text-slate-300,#authModal .text-slate-400,#parentReportModal .text-slate-400{color:#f5d76e!important}
+
 
 
 .subtab-active{background:#0ea5e9!important;color:#fff!important}
@@ -73,7 +83,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <p class="text-sm text-slate-400">Quản lý nề nếp tác phong trường học</p>
 </div>
 </div>
-<div class="flex gap-2 mb-4">
+<div class="flex gap-2 mb-4" id="authTabBar">
 <button type="button" id="tabLoginBtn" onclick="showAuthTab('login')" class="flex-1 py-2 rounded-lg text-sm font-medium tab-active">Đăng nhập</button>
 <button type="button" id="tabRegBtn" onclick="showAuthTab('register')" class="flex-1 py-2 rounded-lg text-sm font-medium bg-slate-700">Đăng ký GVCN</button>
 </div>
@@ -91,8 +101,9 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 <div id="loginError" class="text-red-400 text-sm hidden"></div>
 <button onclick="doLogin()" class="btn-primary w-full py-2.5">Đăng nhập</button>
+<button type="button" onclick="forgotPassword()" class="w-full py-2 mt-2 text-sm font-semibold text-amber-300 hover:text-yellow-300 underline">Quên mật khẩu? — Báo Admin WEBH2T cấp lại</button>
 </div>
-<p class="mt-4 text-sm text-slate-400 leading-relaxed">Khu vực dùng đăng nhập cho <strong class="text-sky-400">GVCN</strong>, <strong class="text-sky-400">Nhập thi đua</strong> và <strong class="text-sky-400">ID PH/HS xem báo cáo</strong>.</p>
+<p class="mt-4 text-sm leading-relaxed" style="color:#f5d76e">Khu vực đăng nhập: <strong style="color:#ffd700">GVCN</strong>, <strong style="color:#ffd700">Nhập thi đua</strong>, <strong style="color:#ffd700">PH/HS xem báo cáo</strong>.</p>
 </div>
 
 <!-- REGISTER GVCN -->
@@ -201,7 +212,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div class="flex flex-wrap justify-center gap-3 mb-10">
 <button onclick="showAuth('register')" class="btn-primary px-6 py-3">ĐĂNG KÝ GVCN</button>
 <button onclick="showAuth('login')" class="btn-ocean px-6 py-3">ĐĂNG NHẬP</button>
-<button onclick="showParentReportLogin()" class="btn-secondary px-6 py-3">Xem báo cáo thi đua<br/><span class="text-xs font-normal opacity-80">PH / HS</span></button>
+<button onclick="showParentReportLogin()" class="btn-secondary px-6 py-3">XEM BÁO CÁO PH-HS</button>
 </div>
 
 <div class="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-left text-sm">
@@ -244,7 +255,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 <div>
 <label class="block text-sm text-slate-300 mb-1 font-medium">📤 UPLOAD Excel đã nhập</label>
-<label class="btn-upload-green text-sm cursor-pointer inline-flex items-center justify-center w-full py-2.5">Chọn file .xlsx
+<label class="btn-upload-green text-sm cursor-pointer inline-flex items-center justify-center w-full py-2.5" style="background:#0d9488;box-shadow:0 4px 14px rgba(13,148,136,.45)">Chọn file .xlsx
 <input type="file" accept=".xlsx,.xls" class="hidden" onchange="importEntriesExcel(event)"/>
 </label>
 </div>
@@ -265,8 +276,10 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <p id="fWeekRangeHint" class="text-xs text-sky-400 mt-1"></p>
 </div>
 <div>
-<label class="text-slate-300 text-sm">Ngày</label>
-<input type="date" id="fDate" class="input-field text-base py-2" required onchange="autoWeekday()"/>
+<label class="text-slate-300 text-sm">Ngày (trong tuần)</label>
+<select id="fDate" class="input-field text-base py-2" required onchange="autoWeekday()">
+<option value="">— Chọn tuần trước —</option>
+</select>
 </div>
 <div>
 <label class="text-slate-300 text-sm">Thứ</label>
@@ -310,11 +323,11 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div>
 <label class="block text-sm mb-2 text-slate-300 font-medium">Loại nội dung</label>
 <div class="grid grid-cols-2 gap-3 mb-3">
-<button type="button" id="btnBonusBig" onclick="pickClassify('bonus')" class="py-3.5 rounded-xl text-base font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-600/30 transition">⭐ ƯU ĐIỂM</button>
-<button type="button" id="btnViolBig" onclick="pickClassify('violation')" class="py-3.5 rounded-xl text-base font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition">⚠️ VI PHẠM</button>
+<button type="button" id="btnBonusBig" onclick="pickClassify('bonus')" class="py-3.5 rounded-xl text-base font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-600/30 transition">⭐ ƯU ĐIỂM (u)</button>
+<button type="button" id="btnViolBig" onclick="pickClassify('violation')" class="py-3.5 rounded-xl text-base font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition">⚠️ VI PHẠM (v)</button>
 </div>
 <div class="mb-2 flex flex-wrap gap-2 items-center">
-<input type="text" id="fCodeSearch" class="input-field flex-1 min-w-[140px]" placeholder="Gõ mã nhanh (05, A1, V05…)" oninput="searchContentCode()"/>
+<input type="text" id="fCodeSearch" class="input-field flex-1 min-w-[140px]" placeholder="Gõ mã nhanh (u01, v01, p01…)" oninput="searchContentCode()"/>
 <span id="fContentLabel" class="text-sm text-sky-400 font-medium"></span>
 </div>
 <div id="catalogGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[320px] overflow-y-auto p-2 rounded-xl border border-slate-600 bg-slate-900/50"></div>
@@ -327,7 +340,12 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 <div>
 <label class="block text-sm mb-1 text-slate-300">Số lần</label>
-<input type="number" id="fTimes" class="input-field" value="1" min="1" max="20" required/>
+<select id="fTimes" class="input-field" required>
+<option value="1">1</option><option value="2">2</option><option value="3">3</option>
+<option value="4">4</option><option value="5">5</option><option value="6">6</option>
+<option value="7">7</option><option value="8">8</option><option value="9">9</option>
+<option value="10">10</option>
+</select>
 </div>
 </div>
 
@@ -467,7 +485,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <button data-sub="accounts" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Tài khoản</button>
 <button data-sub="teams" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Phân tổ</button>
 <button data-sub="catalogs" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Danh mục điểm</button>
-<button data-sub="deadline" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Hạn chót</button>
+<button data-sub="deadline" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Dữ liệu</button>
 <button data-sub="pending" id="subPendingBtn" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700 hidden">Chờ duyệt GVCN</button>
 </div>
 
@@ -565,17 +583,29 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 
 <div id="sub-deadline" class="admin-sub hidden">
-<div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
-<h3 class="font-bold text-yellow-400 mb-3">Hạn nhập & hình phạt</h3>
-<p class="text-sm text-slate-400 mb-4">GVCN tự quy định người nhập, tuần và thời hạn.</p>
+<div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-4">
+<h3 class="font-bold text-yellow-400 mb-2">Dữ liệu · Làm mới trang nhập thi đua</h3>
+<p class="text-sm mb-4" style="color:#f5d76e">Chỉ <strong style="color:#ffd700">làm mới giao diện NHẬP THI ĐUA</strong> (form + bản ghi gần đây theo tuần đang chọn). <strong style="color:#4ade80">Không xóa</strong> dữ liệu đã lưu — PH/HS vẫn xem đầy đủ báo cáo lịch sử.</p>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 <div>
-<label class="text-sm text-slate-300">Người nhập (tài khoản)</label>
-<select id="dlPerson" class="input-field"><option value="">— Tất cả tổ trưởng/phó —</option></select>
+<label class="text-sm font-medium">Chọn tuần để làm mới khung nhập</label>
+<select id="delWeek" class="input-field text-base py-2.5"></select>
+</div>
+</div>
+<button type="button" onclick="refreshInputPage()" class="px-5 py-2.5 rounded-lg font-bold text-slate-900 bg-yellow-400 hover:bg-yellow-300 shadow-lg">🔄 LÀM MỚI TRANG NHẬP DỮ LIỆU</button>
+<div id="delDataMsg" class="mt-3 text-sm hidden"></div>
+</div>
+<div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
+<h3 class="font-bold text-sky-400 mb-2">Hạn nhập (tuỳ chọn)</h3>
+<p class="text-sm text-slate-400 mb-3">Quy định hạn nhập cho tổ trưởng / tổ phó.</p>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+<div>
+<label class="text-sm text-slate-300">Người nhập</label>
+<select id="dlPerson" class="input-field"><option value="">— Tất cả —</option></select>
 </div>
 <div>
-<label class="text-sm text-slate-300">Tuần thực hiện (1–40)</label>
-<input type="number" id="dlWeek" class="input-field" min="1" max="40" placeholder="VD: 5"/>
+<label class="text-sm text-slate-300">Tuần</label>
+<input type="text" id="dlWeek" class="input-field" placeholder="VD: 1"/>
 </div>
 <div>
 <label class="text-sm text-slate-300">Ngày hạn trong tuần</label>
@@ -587,17 +617,17 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </select>
 </div>
 <div>
-<label class="text-sm text-slate-300">Giờ hạn (0–23)</label>
+<label class="text-sm text-slate-300">Giờ hạn</label>
 <input type="number" id="dlHour" class="input-field" value="10" min="0" max="23"/>
 </div>
 <div class="md:col-span-2">
-<label class="text-sm text-slate-300">Hình phạt khi trễ hạn</label>
-<textarea id="dlPenalty" class="input-field h-24" placeholder="Mô tả hình phạt..."></textarea>
+<label class="text-sm text-slate-300">Hình phạt trễ hạn</label>
+<textarea id="dlPenalty" class="input-field h-20" placeholder="Mô tả..."></textarea>
 </div>
 </div>
-<button onclick="saveDeadline()" class="btn-ocean">KẾT NỐI · Lưu quy định hạn chót</button>
-<div id="dlMsg" class="mt-3 text-sm text-green-400 hidden"></div>
-<div id="deadlineStatus" class="mt-4 text-sm space-y-2"></div>
+<button onclick="saveDeadline()" class="btn-ocean">KẾT NỐI · Lưu hạn chót</button>
+<div id="dlMsg" class="mt-2 text-sm text-green-400 hidden"></div>
+<div id="deadlineStatus" class="mt-3 text-sm"></div>
 </div>
 </div>
 
@@ -840,32 +870,42 @@ function parseVNDate(s) {
 }
 
 const DEFAULT_BONUSES = [
-  { code: "A1", text: "Kiểm tra điểm 7", points: 3 },
-  { code: "A2", text: "Kiểm tra điểm 8", points: 5 },
-  { code: "A3", text: "Kiểm tra điểm 9", points: 8 },
-  { code: "A4", text: "Kiểm tra điểm 10", points: 10 },
-  { code: "A9", text: "Giơ tay phát biểu", points: 5 },
-  { code: "A10", text: "Hoạt động nhóm tích cực", points: 5 }
+  { code: "u01", text: "Kiểm tra điểm 7", points: 3 },
+  { code: "u02", text: "Kiểm tra điểm 8", points: 5 },
+  { code: "u03", text: "Kiểm tra điểm 9", points: 8 },
+  { code: "u04", text: "Kiểm tra điểm 10", points: 10 },
+  { code: "u05", text: "Giơ tay phát biểu", points: 5 },
+  { code: "u06", text: "Hoạt động nhóm tích cực", points: 5 }
 ];
 const DEFAULT_VIOLATIONS = [
-  { code: "V05", text: "Dùng điện thoại giờ học", points: -20 },
-  { code: "V06", text: "Vắng không phép", points: -20 },
-  { code: "V22", text: "Không nhập điểm thi đua", points: -20 },
-  { code: "V44", text: "Nói chuyện giờ học", points: -10 },
-  { code: "V74", text: "Không đeo bảng tên", points: -5 },
-  { code: "V98", text: "Đi học trễ", points: -3 },
-  { code: "V108", text: "Không đem sách/vở", points: -1 }
+  { code: "v01", text: "Dùng điện thoại giờ học", points: -20 },
+  { code: "v02", text: "Vắng không phép", points: -20 },
+  { code: "v03", text: "Không nhập điểm thi đua", points: -20 },
+  { code: "v04", text: "Nói chuyện giờ học", points: -10 },
+  { code: "v05", text: "Không đeo bảng tên", points: -5 },
+  { code: "v06", text: "Đi học trễ", points: -3 },
+  { code: "v07", text: "Không đem sách/vở", points: -1 }
 ];
 const DEFAULT_PENALTIES = [
-  "Video ngồi im như tượng",
-  "Video 5h sáng tập thể dục",
-  "Video đọc sách + cảm nghĩ",
-  "Trực nhật lớp 1 tuần",
-  "Trực nhật cầu thang 1 tuần",
-  "Thư xin lỗi cha/mẹ",
-  "Lần 2: tăng hình phạt ×3",
-  "Lần 3: tường trình có chữ ký PH"
+  { code: "p01", text: "Video ngồi im như tượng", points: 0 },
+  { code: "p02", text: "Video 5h sáng tập thể dục", points: 0 },
+  { code: "p03", text: "Video đọc sách + cảm nghĩ", points: 0 },
+  { code: "p04", text: "Trực nhật lớp 1 tuần", points: 0 },
+  { code: "p05", text: "Trực nhật cầu thang 1 tuần", points: 0 },
+  { code: "p06", text: "Thư xin lỗi cha/mẹ", points: 0 },
+  { code: "p07", text: "Lần 2: tăng hình phạt ×3", points: 0 },
+  { code: "p08", text: "Lần 3: tường trình có chữ ký PH", points: 0 }
 ];
+function penaltyTextList() {
+  return penalties.map(p => typeof p === "string" ? p : (p.code + ". " + p.text));
+}
+function normalizePenalties(arr) {
+  if (!arr || !arr.length) return JSON.parse(JSON.stringify(DEFAULT_PENALTIES));
+  return arr.map((p, i) => {
+    if (typeof p === "string") return { code: "p" + String(i+1).padStart(2,"0"), text: p, points: 0 };
+    return { code: p.code || ("p" + String(i+1).padStart(2,"0")), text: p.text || p.name || "", points: p.points || 0 };
+  });
+}
 
 let currentUser = null;
 let entries = [];
@@ -898,7 +938,7 @@ function loadAll() {
   // class-scoped loaded after login
   bonuses = JSON.parse(JSON.stringify(DEFAULT_BONUSES));
   violations = JSON.parse(JSON.stringify(DEFAULT_VIOLATIONS));
-  penalties = JSON.parse(JSON.stringify(DEFAULT_PENALTIES));
+  penalties = normalizePenalties(DEFAULT_PENALTIES);
   students = [];
   entries = [];
   penaltyAssigns = [];
@@ -911,7 +951,16 @@ function loadClassData() {
   entries = JSON.parse(localStorage.getItem("qlnn_entries_" + cid) || "[]");
   bonuses = JSON.parse(localStorage.getItem("qlnn_bonuses_" + cid) || "null") || JSON.parse(JSON.stringify(DEFAULT_BONUSES));
   violations = JSON.parse(localStorage.getItem("qlnn_violations_" + cid) || "null") || JSON.parse(JSON.stringify(DEFAULT_VIOLATIONS));
-  penalties = JSON.parse(localStorage.getItem("qlnn_penalties_" + cid) || "null") || JSON.parse(JSON.stringify(DEFAULT_PENALTIES));
+  penalties = normalizePenalties(JSON.parse(localStorage.getItem("qlnn_penalties_" + cid) || "null") || DEFAULT_PENALTIES);
+  // Chuẩn hóa mã u/v/p nếu còn mã cũ
+  if (bonuses.length && !String(bonuses[0].code||"").toLowerCase().startsWith("u")) {
+    bonuses = JSON.parse(JSON.stringify(DEFAULT_BONUSES));
+    violations = JSON.parse(JSON.stringify(DEFAULT_VIOLATIONS));
+    penalties = normalizePenalties(DEFAULT_PENALTIES);
+    localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses));
+    localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations));
+    localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
+  }
   penaltyAssigns = JSON.parse(localStorage.getItem("qlnn_penAssign_" + cid) || "[]");
   deadlineCfg = JSON.parse(localStorage.getItem("qlnn_deadline_" + cid) || "null") || { day: 0, hour: 10, penaltyText: "" };
 }
@@ -989,24 +1038,33 @@ function onWeekSelect() {
   const hint = document.getElementById("fWeekRangeHint");
   const fromEl = document.getElementById("fWeekFrom");
   const toEl = document.getElementById("fWeekTo");
+  const fd = document.getElementById("fDate");
   if (!sw) {
     if (fromEl) fromEl.value = "";
     if (toEl) toEl.value = "";
     if (hint) hint.textContent = "";
+    if (fd && fd.tagName === "SELECT") fd.innerHTML = '<option value="">— Chọn tuần trước —</option>';
     return;
   }
   if (fromEl) fromEl.value = sw.from;
   if (toEl) toEl.value = sw.to;
-  if (hint) {
-    const f = sw.from.slice(8,10) + "/" + sw.from.slice(5,7) + "/" + sw.from.slice(0,4);
-    const to = sw.to.slice(8,10) + "/" + sw.to.slice(5,7) + "/" + sw.to.slice(0,4);
-    hint.textContent = "Từ " + f + " đến " + to;
+  const f = sw.from.slice(8,10) + "/" + sw.from.slice(5,7) + "/" + sw.from.slice(0,4);
+  const to = sw.to.slice(8,10) + "/" + sw.to.slice(5,7) + "/" + sw.to.slice(0,4);
+  if (hint) hint.textContent = "Từ " + f + " đến " + to;
+  // Fill date options only within week range
+  if (fd && fd.tagName === "SELECT") {
+    const map = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+    let html = '<option value="">— Chọn ngày —</option>';
+    const start = new Date(sw.from + "T12:00:00");
+    const end = new Date(sw.to + "T12:00:00");
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const iso = d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+      const label = String(d.getDate()).padStart(2,"0") + "/" + String(d.getMonth()+1).padStart(2,"0") + "/" + d.getFullYear() + " (" + map[d.getDay()] + ")";
+      html += '<option value="' + iso + '">' + label + "</option>";
+    }
+    fd.innerHTML = html;
   }
-  const fd = document.getElementById("fDate");
-  if (fd && !fd.value) {
-    fd.value = sw.from;
-    autoWeekday();
-  }
+  autoWeekday();
   renderRecent();
 }
 function onReportPeriodChange() {
@@ -1039,13 +1097,32 @@ function showAuth(tab) {
   showAuthTab(tab || "login");
   document.getElementById("loginError").classList.add("hidden");
   document.getElementById("regMsg").classList.add("hidden");
+  // Đăng nhập pure: ẩn tab đăng ký
+  const tabBar = document.getElementById("authTabBar");
+  if (tab === "login") {
+    if (tabBar) tabBar.classList.add("hidden");
+    document.getElementById("authRegister").classList.add("hidden");
+    document.getElementById("authLogin").classList.remove("hidden");
+  } else if (tab === "register") {
+    if (tabBar) tabBar.classList.remove("hidden");
+    showAuthTab("register");
+  }
 }
 function hideAuth() { document.getElementById("authModal").classList.add("hidden"); }
 function showAuthTab(tab) {
   document.getElementById("authLogin").classList.toggle("hidden", tab !== "login");
   document.getElementById("authRegister").classList.toggle("hidden", tab !== "register");
-  document.getElementById("tabLoginBtn").className = "flex-1 py-2 rounded-lg text-sm font-medium " + (tab === "login" ? "tab-active" : "bg-slate-700");
-  document.getElementById("tabRegBtn").className = "flex-1 py-2 rounded-lg text-sm font-medium " + (tab === "register" ? "tab-active" : "bg-slate-700");
+  const lb = document.getElementById("tabLoginBtn");
+  const rb = document.getElementById("tabRegBtn");
+  if (lb) lb.className = "flex-1 py-2 rounded-lg text-sm font-medium " + (tab === "login" ? "tab-active" : "bg-slate-700");
+  if (rb) rb.className = "flex-1 py-2 rounded-lg text-sm font-medium " + (tab === "register" ? "tab-active" : "bg-slate-700");
+}
+function forgotPassword() {
+  const id = (document.getElementById("loginId").value || "").trim();
+  const msg = "Yêu cầu cấp lại mật khẩu" + (id ? " cho tài khoản: " + id : "") +
+    "\n\nGửi tin nhắn tới Admin WEBH2T:\n• Telegram: https://t.me/webh2t\n• Email: websiteh2t@gmail.com\n\nGhi rõ: Họ tên, Trường, Lớp, ID quên mật khẩu.";
+  alert(msg);
+  window.open("https://t.me/webh2t", "_blank");
 }
 
 function submitRegister() {
@@ -1478,7 +1555,7 @@ function switchAdminSub(name) {
     else b.classList.remove("subtab-active");
   });
   if (name === "pending") renderPending();
-  if (name === "deadline") { fillDeadlinePersons(); checkDeadlineStatus(); }
+  if (name === "deadline") { fillDeadlinePersons(); checkDeadlineStatus(); fillDelWeekSelect(); onDelScopeChange(); }
 }
 
 function renderOverview() {
@@ -1611,24 +1688,19 @@ function pickClassify(type) {
   document.getElementById("fContent").value = "";
   document.getElementById("fPoints").value = "";
   document.getElementById("fContentLabel").textContent = "";
+  const base = "py-3.5 rounded-xl text-base font-bold text-white shadow-lg transition ";
   const bb = document.getElementById("btnBonusBig");
   const bv = document.getElementById("btnViolBig");
-  if (bb) {
-    bb.className = type === "bonus"
-      ? "py-3.5 rounded-xl text-base font-bold bg-green-500 text-white shadow-lg shadow-green-500/40 ring-2 ring-green-300"
-      : "py-3.5 rounded-xl text-base font-bold bg-green-600 hover:bg-green-500 text-white shadow-lg shadow-green-600/30 transition";
-  }
-  if (bv) {
-    bv.className = type === "violation"
-      ? "py-3.5 rounded-xl text-base font-bold bg-red-500 text-white shadow-lg shadow-red-500/40 ring-2 ring-red-300"
-      : "py-3.5 rounded-xl text-base font-bold bg-red-600 hover:bg-red-500 text-white shadow-lg shadow-red-600/30 transition";
-  }
+  const bp = document.getElementById("btnPenBig");
+  if (bb) bb.className = base + (type === "bonus" ? "bg-green-500 shadow-green-500/40 ring-2 ring-green-300" : "bg-green-600 hover:bg-green-500 shadow-green-600/30");
+  if (bv) bv.className = base + (type === "violation" ? "bg-red-500 shadow-red-500/40 ring-2 ring-red-300" : "bg-red-600 hover:bg-red-500 shadow-red-600/30");
+  if (bp) bp.className = base + (type === "penalty" ? "bg-amber-500 shadow-amber-500/40 ring-2 ring-amber-300" : "bg-amber-600 hover:bg-amber-500 shadow-amber-600/30");
   renderCatalogGrid(type);
 }
 function renderCatalogGrid(type, filterText) {
   const grid = document.getElementById("catalogGrid");
   if (!grid) return;
-  const list = type === "bonus" ? bonuses : type === "violation" ? violations : [];
+  const list = type === "bonus" ? bonuses : type === "violation" ? violations : type === "penalty" ? normalizePenalties(penalties) : [];
   let items = list;
   const raw = (filterText != null ? filterText : (document.getElementById("fCodeSearch") || {}).value || "").trim().toUpperCase();
   if (raw) {
@@ -1642,7 +1714,7 @@ function renderCatalogGrid(type, filterText) {
     });
   }
   if (!type) {
-    grid.innerHTML = '<p class="text-slate-500 text-sm col-span-full p-3">Chọn <strong class="text-green-400">ƯU ĐIỂM</strong> hoặc <strong class="text-red-400">VI PHẠM</strong> để hiện danh mục.</p>';
+    grid.innerHTML = '<p class="text-slate-500 text-sm col-span-full p-3">Chọn <strong class="text-green-400">ƯU ĐIỂM (u)</strong> hoặc <strong class="text-red-400">VI PHẠM (v)</strong>.</p>';
     return;
   }
   if (!items.length) {
@@ -1651,8 +1723,10 @@ function renderCatalogGrid(type, filterText) {
   }
   const colorCls = type === "bonus"
     ? "border-sky-500/50 bg-sky-500/10 hover:bg-sky-500/25 text-sky-300"
+    : type === "penalty"
+    ? "border-amber-500/50 bg-amber-500/10 hover:bg-amber-500/25 text-amber-200"
     : "border-orange-600/50 bg-orange-600/15 hover:bg-orange-600/30 text-orange-300";
-  const ptsCls = type === "bonus" ? "text-green-400" : "text-red-400";
+  const ptsCls = type === "bonus" ? "text-green-400" : type === "penalty" ? "text-amber-400" : "text-red-400";
   grid.innerHTML = items.map(i => {
     const pts = (i.points > 0 ? "+" : "") + i.points;
     return '<button type="button" class="text-left p-2.5 rounded-lg border text-sm transition ' + colorCls +
@@ -1686,11 +1760,6 @@ function searchContentCode() {
 function autoFillPoints() {
   /* grid selection handles points */
 }
-
-function autoFillPoints() {
-  const o = document.getElementById("fContent").selectedOptions[0];
-  document.getElementById("fPoints").value = o ? o.dataset.points : "";
-}
 function resetForm() {
   document.getElementById("entryForm").reset();
   const _fc = document.getElementById("fClass"); if (_fc && currentUser.className) _fc.value = currentUser.className;
@@ -1718,7 +1787,18 @@ document.getElementById("entryForm").addEventListener("submit", function (e) {
   const pts = +document.getElementById("fPoints").value;
   const times = +document.getElementById("fTimes").value;
   if (!document.getElementById("fType").value || !contentCode) {
-    alert("Chọn Ưu điểm hoặc Vi phạm và một nội dung trong danh mục");
+    alert("Chọn Ưu điểm / Vi phạm / Hình phạt và một nội dung trong danh mục");
+    return;
+  }
+  const weekVal = document.getElementById("fWeekNo").value;
+  const dateVal = document.getElementById("fDate").value;
+  const swCheck = SCHOOL_WEEKS.find(x => String(x.w) === String(weekVal));
+  if (!weekVal || !swCheck) {
+    alert("Chọn tuần NH");
+    return;
+  }
+  if (!dateVal || dateVal < swCheck.from || dateVal > swCheck.to) {
+    alert("NHẬP SAI NGÀY CỦA TUẦN");
     return;
   }
   const contentText = (document.getElementById("fContentLabel").textContent || contentCode).replace(/^Đã chọn:\s*/, "");
@@ -1833,23 +1913,52 @@ function renderRecent() {
 }
 
 function downloadEntriesTemplate() {
-  const rows = [
-    ["Ngày", "Môn", "Tổ", "ID hoặc Tên HS", "Loại (Ưu điểm/Vi phạm)", "Mã hoặc Nội dung", "Số lần"],
-    ["07/09/2026", "TOÁN", "1", "b901", "Ưu điểm", "A1", "1"],
-    ["08/09/2026", "VĂN", "1", "Nguyễn Văn A", "Vi phạm", "05", "1"],
-    ["09/09/2026", "ANH", "2", "b902", "Vi phạm", "V44", "1"]
-  ];
+  const cls = (currentUser && currentUser.className) || "11B9";
+  const year = (currentUser && currentUser.year) || "2026 – 2027";
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Mau nhap thi dua");
-  // sheet 2: catalog reference
+  // Sheet hướng dẫn
+  const guide = [
+    ["NHẬP THI ĐUA LỚP " + cls, "", "NĂM HỌC " + year],
+    ["Bật Enable Editing khi mở file trên Excel / WPS"],
+    [],
+    ["Cột bắt buộc:", "Tuần | Ngày | Thứ | Môn | Tổ | Họ tên HS | Loại | Mã | Số lần"],
+    ["Tuần:", "Chọn 1–35 hoặc 18' theo lịch năm học"],
+    ["Ngày:", "Phải nằm trong khoảng tuần (VD tuần 1: 07/09/2026–12/09/2026)"],
+    ["Loại:", "Ưu điểm / Vi phạm / Hình phạt"],
+    ["Mã:", "u01… (ưu điểm) | v01… (vi phạm) | p01… (hình phạt)"],
+    ["Số lần:", "1 đến 10"]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), "Huong dan");
+  // Sheet nhập
+  const rows = [
+    ["NHẬP THI ĐUA LỚP " + cls + " — NĂM HỌC " + year],
+    ["Tuần", "Ngày (dd/mm/yyyy)", "Thứ", "Môn", "Tổ", "Họ tên học sinh", "Loại", "Mã", "Số lần"],
+    ["1", "07/09/2026", "Thứ 2", "TOÁN", "1", "Nguyễn Văn A", "Ưu điểm", "u01", "1"],
+    ["1", "08/09/2026", "Thứ 3", "VĂN", "1", "Nguyễn Văn A", "Vi phạm", "v01", "1"],
+    ["1", "09/09/2026", "Thứ 4", "ANH", "1", "Nguyễn Văn A", "Hình phạt", "p01", "1"]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Nhap lieu");
+  // Tuần
+  const weeks = [["Tuần", "Từ ngày", "Đến ngày"]];
+  SCHOOL_WEEKS.forEach(w => {
+    weeks.push([w.w, w.from.slice(8,10)+"/"+w.from.slice(5,7)+"/"+w.from.slice(0,4), w.to.slice(8,10)+"/"+w.to.slice(5,7)+"/"+w.to.slice(0,4)]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(weeks), "Lich tuan");
+  // HS theo tổ
+  const hs = [["Tổ", "ID", "Họ tên"]];
+  students.forEach(s => hs.push([s.team, s.id, s.name]));
+  if (hs.length === 1) hs.push([1, "b901", "Nguyễn Văn A"]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hs), "Hoc sinh");
+  // Danh mục
   const cat = [["Loại", "Mã", "Nội dung", "Điểm"]];
   bonuses.forEach(i => cat.push(["Ưu điểm", i.code, i.text, i.points]));
   violations.forEach(i => cat.push(["Vi phạm", i.code, i.text, i.points]));
+  normalizePenalties(penalties).forEach(i => cat.push(["Hình phạt", i.code, i.text, i.points || 0]));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cat), "Danh muc");
+  // Môn
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Môn"],["TOÁN"],["VĂN"],["ANH"],["LÝ"],["TIN"],["HÓA"],["SINH"],["CÔNG NGHỆ"],["SỬ"],["ĐỊA"],["KTPL"],["GDĐP"],["HĐTN"],["THỂ DỤC"],["QUỐC PHÒNG"]]), "Mon");
   XLSX.writeFile(wb, "QLNN_Mau_Nhap_Thi_Dua.xlsx");
 }
-
-
 function updateMissingAssigned() {
   const el = document.getElementById("missingAssigned");
   if (!el || currentUser.role !== "leader") { if (el) el.innerHTML = ""; return; }
@@ -1907,8 +2016,13 @@ function importEntriesExcel(ev) {
         const contentKey = String(r[5] || "").trim();
         const times = Math.max(1, +(r[6] || 1));
         let type = "violation";
-        if (typeRaw.includes("ưu") || typeRaw.includes("bonus") || typeRaw === "a") type = "bonus";
-        if (typeRaw.includes("vi") || typeRaw.includes("viol") || typeRaw === "v") type = "violation";
+        if (typeRaw.includes("ưu") || typeRaw.includes("bonus") || typeRaw.includes("ud") || typeRaw === "a") type = "bonus";
+        else if (typeRaw.includes("hình") || typeRaw.includes("phạt") || typeRaw.includes("pen") || typeRaw.includes("hp")) type = "penalty";
+        else if (typeRaw.includes("vi") || typeRaw.includes("viol") || typeRaw.includes("vp") || typeRaw === "v") type = "violation";
+        const ck = String(contentKey).toLowerCase();
+        if (ck.startsWith("u") || ck.startsWith("ud")) type = "bonus";
+        if (ck.startsWith("v") && !ck.startsWith("u") || ck.startsWith("vp")) type = "violation";
+        if (ck.startsWith("p") || ck.startsWith("hp")) type = "penalty";
         // Find student
         let student = students.find(s => String(s.id) === hsKey || s.name === hsKey);
         if (!student) student = students.find(s => s.name.toLowerCase().includes(hsKey.toLowerCase()));
@@ -1919,7 +2033,7 @@ function importEntriesExcel(ev) {
           if (!pool.some(s => String(s.id) === String(student.id))) continue;
         }
         // Catalog
-        const catalog = type === "bonus" ? bonuses : violations;
+        const catalog = type === "bonus" ? bonuses : type === "penalty" ? normalizePenalties(penalties) : violations;
         let item = catalog.find(c => c.code.toUpperCase() === contentKey.toUpperCase());
         if (!item) item = catalog.find(c => (c.text || "").toLowerCase().includes(contentKey.toLowerCase()));
         if (!item && !isNaN(+contentKey)) {
@@ -1998,7 +2112,7 @@ function openPenaltyForStudent(btn) {
     return;
   }
   ps.innerHTML = '<option value="' + sid + '">' + sname + "</option>";
-  pc.innerHTML = penalties.map((p, i) => '<option value="' + i + '">' + p + "</option>").join("");
+  pc.innerHTML = normalizePenalties(penalties).map((p, i) => '<option value="' + i + '">' + p.code + ". " + p.text + "</option>").join("");
   if (pn) pn.value = "Tuần " + week;
   // store week on modal
   document.getElementById("penaltyModal").dataset.week = week;
@@ -2024,7 +2138,7 @@ function savePenaltyAssign() {
   const week = (modal && modal.dataset.week) || (note.match(/Tuần\s*(\S+)/) || [])[1] || "";
   penaltyAssigns.push({
     studentId: sid, studentName: st ? st.name : (document.getElementById("penStudent").selectedOptions[0] || {}).text || "",
-    penalty: penalties[pi] || "", note,
+    penalty: (normalizePenalties(penalties)[pi] ? (normalizePenalties(penalties)[pi].code + ". " + normalizePenalties(penalties)[pi].text) : ""), note,
     week: week, by: currentUser.id, at: new Date().toISOString()
   });
   saveClassData();
@@ -2833,9 +2947,12 @@ function renderCatalogs() {
     '<input class="input-field text-sm w-20 pts-viol" type="number" value="' + item.points + '" data-i="' + i + '" data-k="points" data-t="violation"/>' +
     '<button type="button" class="btn-del-purple text-sm px-2" data-t="violation" data-i="' + i + '">× Xóa</button></div>'
   ).join("");
-  document.getElementById("penaltyList").innerHTML = penalties.map((p, i) =>
-    '<div class="flex gap-2 items-center p-2 bg-white/80 rounded-lg border border-amber-200">' +
-    '<input class="input-field text-sm flex-1" value="' + p.replace(/"/g, "&quot;") + '" data-pi="' + i + '"/>' +
+  const pens = normalizePenalties(penalties);
+  penalties = pens;
+  document.getElementById("penaltyList").innerHTML = pens.map((p, i) =>
+    '<div class="flex flex-wrap gap-2 items-center p-2 bg-white/80 rounded-lg border border-amber-200">' +
+    '<input class="input-field text-sm w-20" value="' + (p.code||"") + '" data-pi="' + i + '" data-pk="code"/>' +
+    '<input class="input-field text-sm flex-1 min-w-[160px]" value="' + String(p.text||"").replace(/"/g, "&quot;") + '" data-pi="' + i + '" data-pk="text"/>' +
     '<button type="button" class="btn-del-purple text-sm px-2 del-pen" data-i="' + i + '">× Xóa</button></div>'
   ).join("");
   document.querySelectorAll("#bonusCatalogList button, #violCatalogList button").forEach(btn => {
@@ -2846,12 +2963,13 @@ function renderCatalogs() {
   });
 }
 function addCatalogItem(type) {
-  if (type === "bonus") bonuses.push({ code: "A" + (bonuses.length + 1), text: "Nội dung mới", points: 5 });
-  else violations.push({ code: "V" + (violations.length + 1), text: "Nội dung mới", points: -5 });
+  if (type === "bonus") bonuses.push({ code: "u" + String(bonuses.length + 1).padStart(2,"0"), text: "Nội dung mới", points: 5 });
+  else violations.push({ code: "v" + String(violations.length + 1).padStart(2,"0"), text: "Nội dung mới", points: -5 });
   renderCatalogs();
 }
 function addPenaltyLine() {
-  penalties.push("Hình phạt mới");
+  const n = normalizePenalties(penalties).length + 1;
+  penalties.push({ code: "p" + String(n).padStart(2,"0"), text: "Hình phạt mới", points: 0 });
   renderCatalogs();
 }
 function removeCatalog(type, i) {
@@ -2871,18 +2989,34 @@ function saveCatalogs() {
     if (violations[i] && k) violations[i][k] = k === "points" ? +inp.value : inp.value;
   });
   document.querySelectorAll("[data-pi]").forEach(inp => {
-    penalties[+inp.dataset.pi] = inp.value;
+    const i = +inp.dataset.pi;
+    if (!penalties[i] || typeof penalties[i] === "string") penalties[i] = { code: "p"+String(i+1).padStart(2,"0"), text: "", points: 0 };
+    if (inp.dataset.pk === "code") penalties[i].code = inp.value;
+    else if (inp.dataset.pk === "text") penalties[i].text = inp.value;
+    else penalties[i].text = inp.value;
   });
+  penalties = normalizePenalties(penalties);
   saveClassData();
   alert("Đã lưu danh mục");
 }
 function exportCatalogsExcel() {
-  const rows = [["Loại", "Mã", "Nội dung", "Điểm"]];
-  bonuses.forEach(i => rows.push(["Ưu điểm", i.code, i.text, i.points]));
-  violations.forEach(i => rows.push(["Vi phạm", i.code, i.text, i.points]));
-  penalties.forEach(p => rows.push(["Hình phạt", "", p, ""]));
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Danh muc");
+  const ud = [["Mã", "Nội dung ưu điểm", "Điểm"]];
+  bonuses.forEach(i => ud.push([i.code || "u01", i.text, i.points]));
+  const vp = [["Mã", "Nội dung vi phạm", "Điểm"]];
+  violations.forEach(i => vp.push([i.code || "v01", i.text, i.points]));
+  const hp = [["Mã", "Nội dung hình phạt", "Điểm"]];
+  normalizePenalties(penalties).forEach(p => hp.push([p.code || "p01", p.text, p.points || 0]));
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ud), "ƯU ĐIỂM");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(vp), "VI PHẠM");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hp), "HÌNH PHẠT");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ["Quy tắc mã"],
+    ["Ưu điểm: bắt đầu bằng u (VD u01)"],
+    ["Vi phạm: bắt đầu bằng v (VD v01)"],
+    ["Hình phạt: bắt đầu bằng p (VD p01)"],
+    ["Mỗi loại một sheet — nhập thêm dòng rồi Upload lại"]
+  ]), "Hướng dẫn");
   XLSX.writeFile(wb, "QLNN_Danhmuc.xlsx");
 }
 function importCatalogsExcel(ev) {
@@ -2891,26 +3025,89 @@ function importCatalogsExcel(ev) {
   const reader = new FileReader();
   reader.onload = e => {
     const wb = XLSX.read(e.target.result, { type: "array" });
-    const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
     const b = [], v = [], p = [];
-    data.slice(1).forEach(r => {
-      const loai = String(r[0] || "");
-      if (loai.includes("Ưu") || loai.toLowerCase().includes("bonus")) b.push({ code: String(r[1] || ""), text: String(r[2] || ""), points: +r[3] || 0 });
-      else if (loai.includes("Vi") || loai.toLowerCase().includes("viol")) v.push({ code: String(r[1] || ""), text: String(r[2] || ""), points: +r[3] || 0 });
-      else if (loai.includes("Hình") || loai.toLowerCase().includes("pen")) p.push(String(r[2] || r[1] || ""));
-    });
+    const readSheet = (name, target, prefix) => {
+      const sn = wb.SheetNames.find(n => n.toLowerCase().includes(name));
+      if (!sn) return;
+      const data = XLSX.utils.sheet_to_json(wb.Sheets[sn], { header: 1 });
+      data.slice(1).forEach((r, i) => {
+        if (!r[0] && !r[1]) return;
+        // format: Mã | Nội dung | Điểm  OR Loại | Mã | Nội dung | Điểm
+        if (r.length >= 3 && (String(r[0]).match(/^[uvpUVP]/) || !isNaN(+r[2]))) {
+          target.push({ code: String(r[0] || (prefix + String(i+1).padStart(2,"0"))), text: String(r[1] || ""), points: +r[2] || 0 });
+        } else {
+          target.push({ code: String(r[1] || (prefix + String(i+1).padStart(2,"0"))), text: String(r[2] || r[1] || ""), points: +r[3] || 0 });
+        }
+      });
+    };
+    readSheet("ưu", b, "u");
+    readSheet("vi", v, "v");
+    readSheet("hình", p, "p");
+    readSheet("phạt", p, "p");
+    // fallback sheet 0 combined
+    if (!b.length && !v.length && wb.SheetNames[0]) {
+      const data = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+      data.slice(1).forEach(r => {
+        const loai = String(r[0] || "").toLowerCase();
+        const code = String(r[1] || r[0] || "");
+        if (loai.includes("ưu") || code.toLowerCase().startsWith("u")) b.push({ code: code, text: String(r[2] || r[1] || ""), points: +r[3] || +r[2] || 0 });
+        else if (loai.includes("vi") || code.toLowerCase().startsWith("v")) v.push({ code: code, text: String(r[2] || ""), points: +r[3] || 0 });
+        else if (loai.includes("hình") || loai.includes("phạt") || code.toLowerCase().startsWith("p")) p.push({ code: code, text: String(r[2] || ""), points: +r[3] || 0 });
+      });
+    }
     if (b.length) bonuses = b;
     if (v.length) violations = v;
-    if (p.length) penalties = p;
+    if (p.length) penalties = normalizePenalties(p);
     saveClassData();
     renderCatalogs();
-    alert("Đã import danh mục");
+    alert("Đã import danh mục (ƯĐ " + bonuses.length + " · VP " + violations.length + " · HP " + normalizePenalties(penalties).length + ")");
   };
   reader.readAsArrayBuffer(file);
   ev.target.value = "";
 }
 
 /* ===== DEADLINE ===== */
+
+function onDelScopeChange() {
+  const s = document.getElementById("delScope").value;
+  document.getElementById("delWeekWrap").classList.toggle("hidden", s !== "week");
+  document.getElementById("delMonthWrap").classList.toggle("hidden", s !== "month");
+  document.getElementById("delYearWrap").classList.toggle("hidden", s !== "year");
+}
+function fillDelWeekSelect() {
+  const sel = document.getElementById("delWeek");
+  if (!sel) return;
+  sel.innerHTML = SCHOOL_WEEKS.map(w => {
+    const f = w.from.slice(8,10)+"/"+w.from.slice(5,7)+"/"+w.from.slice(0,4);
+    const to = w.to.slice(8,10)+"/"+w.to.slice(5,7)+"/"+w.to.slice(0,4);
+    return '<option value="'+w.w+'">Tuần '+w.w+' | '+f+' – '+to+'</option>';
+  }).join("");
+}
+function refreshInputPage() {
+  const w = (document.getElementById("delWeek") || {}).value || "";
+  const fw = document.getElementById("fWeekNo");
+  if (fw && w) {
+    fw.value = w;
+    onWeekSelect();
+  }
+  try { resetForm(); } catch (e) {}
+  if (fw && w) { fw.value = w; onWeekSelect(); }
+  renderRecent();
+  updateMissingAssigned();
+  const el = document.getElementById("delDataMsg");
+  if (el) {
+    el.className = "mt-3 text-sm text-green-400";
+    el.textContent = "✅ Đã làm mới trang nhập tuần " + (w || "hiện tại") + ". Dữ liệu lịch sử vẫn giữ nguyên cho PH/HS xem báo cáo.";
+    el.classList.remove("hidden");
+  }
+  switchTab("input");
+}
+function clearEntriesData() {
+  // Không xóa dữ liệu — chuyển sang làm mới trang nhập
+  refreshInputPage();
+}
+
+
 function saveDeadline() {
   deadlineCfg = {
     day: +document.getElementById("dlDay").value,
