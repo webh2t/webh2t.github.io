@@ -87,6 +87,12 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 .subtab-active{background:#0ea5e9!important;color:#fff!important}
 @media print{header,.no-print,footer{display:none!important}}
 
+
+.btn-upload-blue,.btn-sample-orange,.btn-save-green,.btn-upload-green,
+label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
+#tab-input label.btn-upload-green,#tab-input button{color:#fffdd0!important}
+#tab-overview .btn-upload-blue,#tab-overview .btn-sample-orange,#tab-overview .btn-save-green{color:#fff!important}
+
 #tab-input button, #tab-input .btn-secondary, #tab-input .btn-ocean,
 #tab-input .btn-upload-green, #tab-input label.btn-upload-green {
   color: #fffdd0 !important; /* trắng kem */
@@ -147,7 +153,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <input id="loginPass" type="password" class="input-field text-base py-3" placeholder="••••••••" autocomplete="current-password" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();doLogin();}"/>
 </div>
 <div id="loginError" class="text-red-400 text-sm hidden"></div>
-<button type="button" id="btnDoLogin" onclick="doLogin()" class="btn-primary w-full py-3.5 text-base touch-manipulation">Đăng nhập</button>
+<button type="button" id="btnDoLogin" onclick="doLogin()" class="w-full py-3.5 text-base font-bold rounded-lg shadow-lg touch-manipulation" style="background:#fef08a;color:aquamarine">ĐĂNG NHẬP</button>
 <button type="button" onclick="forgotPassword()" class="w-full py-3 mt-2 text-sm font-semibold text-amber-300 hover:text-yellow-300 underline touch-manipulation">Quên mật khẩu? — Báo Admin WEBH2T cấp lại</button>
 </div>
 <p class="mt-4 text-sm leading-relaxed" style="color:#fff">Khu vực đăng nhập: <strong style="color:#fff">GVCN</strong>, <strong style="color:#fff">Nhập thi đua</strong>, <strong style="color:#fff">PH/HS xem báo cáo</strong>.</p>
@@ -202,8 +208,8 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <div class="p-4 bg-slate-900/80 rounded-lg border border-slate-600 text-sm text-slate-300 space-y-2">
 <p class="font-semibold text-amber-400 text-base">Xác nhận & cấp tài khoản</p>
 <ul class="list-disc list-inside space-y-1.5">
-<li>Telegram: <a href="https://t.me/webh2t" target="_blank" class="underline" style="color:#fff">t.me/webh2t</a></li>
-<li>Email: <a href="mailto:websiteh2t@gmail.com" class="underline" style="color:#fff">websiteh2t@gmail.com</a></li>
+<li style="color:aquamarine">Telegram: <a href="https://t.me/webh2t" target="_blank" class="underline" style="color:aquamarine">t.me/webh2t</a></li>
+<li>Email: <a href="mailto:websiteh2t@gmail.com" class="underline" style="color:aquamarine">websiteh2t@gmail.com</a></li>
 </ul>
 <p class="text-slate-500 text-sm">Admin duyệt → cấp ID + mật khẩu (12 tháng).</p>
 </div>
@@ -228,10 +234,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 </div>
 <div class="space-y-4">
 <div>
-<label class="block text-sm mb-1.5 text-slate-200 font-medium">GVCN – Lớp – Năm học</label>
-<select id="parentClassSelect" class="input-field text-base py-3">
-<option value="">— Chọn lớp —</option>
-</select>
+<input type="hidden" id="parentClassSelect" value=""/>
 </div>
 <div>
 <label class="block text-sm mb-1.5 text-slate-200 font-medium">ID xem lớp (do GVCN cấp)</label>
@@ -257,8 +260,8 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <p class="text-lg mb-8"><span style="color:#fff">NĂM HỌC:</span> <span class="hero-year">2026 – 2027</span></p>
 
 <div class="flex flex-wrap justify-center gap-3 mb-10">
-<button onclick="showAuth('register')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#facc15;color:#b91c1c">ĐĂNG KÝ GVCN</button>
-<button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#0284c7;color:#fef3c7">ĐĂNG NHẬP</button>
+<button onclick="showAuth('register')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#fef08a;color:#991b1b">ĐĂNG KÝ GVCN</button>
+<button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#fef08a;color:aquamarine">ĐĂNG NHẬP</button>
 <button onclick="showParentReportLogin()" class="btn-secondary px-6 py-3">XEM BÁO CÁO PH-HS</button>
 </div>
 
@@ -296,7 +299,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <div>
 <label class="block text-sm text-slate-300 mb-1 font-medium">📷 OCR ảnh sổ đầu bài</label>
 <input type="file" id="ocrFile" accept="image/*" class="text-sm text-sky-400 w-full"/>
-<button type="button" onclick="runOCR()" class="btn-secondary text-sm mt-2 w-full">Đọc ảnh</button>
+<button type="button" onclick="runOCR()" class="btn-secondary text-sm mt-2 w-full" style="color:#fff">Đọc ảnh</button>
 <span id="ocrStatus" class="text-xs text-slate-400 block mt-1"></span>
 <pre id="ocrResult" class="mt-2 text-xs text-sky-300 bg-slate-950 p-2 rounded max-h-20 overflow-auto hidden whitespace-pre-wrap"></pre>
 </div>
@@ -308,8 +311,8 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 </div>
 <div>
 <label class="block text-sm text-slate-300 mb-1 font-medium">📥 File mẫu Excel</label>
-<button type="button" onclick="downloadEntriesTemplate()" class="w-full py-2.5 rounded-lg text-sm font-bold text-white" style="background:orange;color:#fff;box-shadow:0 4px 14px rgba(255,165,0,.45)">FILE MẪU</button>
-<p class="text-xs text-slate-500 mt-1">Ngày | Môn | Tổ | HS | Loại | Mã | Số lần</p>
+<button type="button" onclick="downloadEntriesTemplate()" class="w-full py-2.5 rounded-lg text-sm font-bold text-white" style="background:orange;color:#fff!important;box-shadow:0 4px 14px rgba(255,165,0,.45)">FILE MẪU</button>
+
 </div>
 </div>
 
@@ -397,7 +400,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 </div>
 
 <div class="flex flex-wrap gap-3">
-<button type="submit" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:aquamarine;color:#134e4a">💾 Lưu bản ghi</button>
+<button type="submit" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:aquamarine;color:#fff">💾 Lưu bản ghi</button>
 <button type="button" onclick="resetForm()" class="btn-secondary">Làm mới</button>
 </div>
 </form>
@@ -541,7 +544,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <div class="flex flex-wrap justify-between gap-3 mb-4">
 <h3 class="font-bold text-yellow-400">Tài khoản lớp</h3>
 <div class="flex flex-wrap gap-2">
-<button onclick="openAccountModal()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm</button>
+<button onclick="openAccountModal()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm</button>
 <label class="btn-secondary text-sm cursor-pointer">Upload Excel
 <input type="file" accept=".xlsx,.xls" class="hidden" onchange="importAccountsExcel(event)"/>
 </label>
@@ -606,7 +609,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-green-700 text-lg">Ưu điểm (điểm cộng)</h4>
-<button onclick="addCatalogItem('bonus')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm mới</button>
+<button onclick="addCatalogItem('bonus')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm mới</button>
 </div>
 <div id="bonusCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -614,7 +617,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-red-700 text-lg">Vi phạm (điểm trừ)</h4>
-<button onclick="addCatalogItem('violation')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm mới</button>
+<button onclick="addCatalogItem('violation')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm mới</button>
 </div>
 <div id="violCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -622,7 +625,7 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 <div>
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-amber-800 text-lg">Hình phạt</h4>
-<button onclick="addPenaltyLine()" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm mới</button>
+<button onclick="addPenaltyLine()" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm mới</button>
 </div>
 <div id="penaltyList" class="flex flex-col gap-2"></div>
 </div>
@@ -838,12 +841,33 @@ const FIREBASE_CONFIG = {
 };
 let firebaseReady = false, db = null;
 function initFirebase() {
-  if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.projectId) return;
+  if (!FIREBASE_CONFIG.apiKey || !FIREBASE_CONFIG.projectId) {
+    console.info("[QLNN] Firebase config trống — dùng localStorage");
+    return;
+  }
   try {
+    if (typeof firebase === "undefined") {
+      console.warn("[QLNN] Firebase SDK chưa tải (mạng/adblock). Dùng localStorage.");
+      return;
+    }
+    if (firebase.apps && firebase.apps.length) {
+      db = firebase.firestore();
+      firebaseReady = true;
+      return;
+    }
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
+    try {
+      // settings optional
+      if (db && db.settings) { /* ok */ }
+    } catch (e2) {}
     firebaseReady = true;
-  } catch (e) { console.warn(e); }
+    console.info("[QLNN] Firebase sẵn sàng:", FIREBASE_CONFIG.projectId);
+  } catch (e) {
+    console.warn("[QLNN] Firebase init lỗi, fallback localStorage:", e);
+    firebaseReady = false;
+    db = null;
+  }
 }
 initFirebase();
 
@@ -1000,21 +1024,36 @@ function loadAll() {
 
 
 function pullFirebaseThen(cb) {
-  if (!firebaseReady || !db) { if (cb) cb(); return; }
+  var done = false;
+  function finish() {
+    if (done) return;
+    done = true;
+    if (cb) try { cb(); } catch (e) { console.warn(e); }
+  }
+  if (!firebaseReady || !db) { finish(); return; }
+  // Timeout 5s — mobile mạng chậm không kẹt đăng nhập
+  var to = setTimeout(finish, 5000);
   Promise.all([
     db.collection("qlnn_meta").doc("accounts").get(),
     db.collection("qlnn_meta").doc("pending").get()
   ]).then(function(snaps) {
-    if (snaps[0].exists && snaps[0].data().data) {
-      accounts = snaps[0].data().data;
-      localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
-    }
-    if (snaps[1].exists && snaps[1].data().data) {
-      pendingRegs = snaps[1].data().data;
-      localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs));
-    }
-    if (cb) cb();
-  }).catch(function(e){ console.warn(e); if (cb) cb(); });
+    try {
+      if (snaps[0].exists && snaps[0].data().data) {
+        accounts = snaps[0].data().data;
+        localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
+      }
+      if (snaps[1].exists && snaps[1].data().data) {
+        pendingRegs = snaps[1].data().data;
+        localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs));
+      }
+    } catch (e) { console.warn(e); }
+    clearTimeout(to);
+    finish();
+  }).catch(function(e){
+    console.warn("[QLNN] pull Firebase:", e);
+    clearTimeout(to);
+    finish();
+  });
 }
 function loadClassDataFromCloud(cid, cb) {
   if (!firebaseReady || !db || !cid) { if (cb) cb(); return; }
@@ -1275,6 +1314,12 @@ function doLogin() {
     return;
   }
 
+  // Đồng bộ accounts từ Firebase trước (quan trọng trên mobile)
+  pullFirebaseThen(function() {
+    doLoginAfterSync(id, pass, err);
+  });
+}
+function doLoginAfterSync(id, pass, err) {
   // Super admin — chỉ từ SUPER_ADMIN, không lấy từ accounts
   if ((id === SUPER_ADMIN.id || id === SUPER_ADMIN.email || id === "websiteh2t") && pass === SUPER_ADMIN.pass) {
     currentUser = { id: SUPER_ADMIN.id, email: SUPER_ADMIN.email, role: "super", name: SUPER_ADMIN.name, classId: null };
@@ -1453,92 +1498,92 @@ function saveSuperEdit() {
 
 
 function showParentReportLogin() {
-  const sel = document.getElementById("parentClassSelect");
-  const gvcns = listApprovedGvcn();
-  sel.innerHTML = '<option value="">— Chọn GVCN · Lớp · Năm học —</option>' +
-    gvcns.map(([gid, a]) => '<option value="' + gid + '" data-classid="' + (a.classId || "") + '">' +
-      (a.name || gid) + " – Lớp " + (a.className || "?") + " – " + (a.year || "2026-2027") +
-      (a.school ? " (" + a.school + ")" : "") + "</option>").join("");
-  document.getElementById("parentLoginId").value = "";
-  document.getElementById("parentLoginPass").value = "";
-  document.getElementById("parentLoginError").classList.add("hidden");
   document.getElementById("parentReportModal").classList.remove("hidden");
-}
-function doParentReportLogin() {
-  const gid = document.getElementById("parentClassSelect").value;
-  const id = (document.getElementById("parentLoginId").value || "").trim().toLowerCase();
-  const pass = document.getElementById("parentLoginPass").value;
-  const err = document.getElementById("parentLoginError");
-  if (!gid || !accounts[gid]) {
-    err.textContent = "Chọn GVCN – Lớp – Năm học";
-    err.classList.remove("hidden");
-    return;
-  }
-  const g = accounts[gid];
-  if (!g.classId) {
-    // đảm bảo có classId
-    g.classId = (g.school + "_" + g.className).toLowerCase().replace(/\s+/g, "_");
-    accounts[gid] = g;
-    saveAccounts();
-  }
-  const acc = accounts[id];
-  // Cho phép: viewer đúng lớp, hoặc bất kỳ account cùng classId/parentId, hoặc ID xem lớp khớp suffix
-  let ok = false;
-  if (acc && acc.pass === pass) {
-    if (!acc.classId || acc.classId === g.classId) ok = true;
-    if (acc.parentId === gid) ok = true;
-    if (acc.role === "viewer") ok = true;
-  }
-  // Fallback: mật khẩu xem lớp lưu trên GVCN (viewPass) — tuỳ chọn
-  if (!ok && g.viewId && g.viewId === id && g.viewPass === pass) ok = true;
-  if (!ok) {
-    err.textContent = "Sai ID/mật khẩu hoặc tài khoản không thuộc lớp đã chọn. Liên hệ GVCN cấp ID xem lớp.";
-    err.classList.remove("hidden");
-    return;
-  }
-  const base = acc || {
-    role: "viewer",
-    name: "PH/HS xem lớp " + (g.className || ""),
-    classId: g.classId,
-    className: g.className,
-    school: g.school,
-    parentId: gid,
-    year: g.year || "2026-2027"
-  };
-  currentUser = {
-    id: id || ("xem_" + g.classId),
-    role: "viewer",
-    name: base.name || ("Xem lớp " + (g.className || "")),
-    classId: g.classId,
-    className: g.className || base.className,
-    school: g.school || base.school,
-    parentId: gid,
-    year: g.year || base.year || "2026-2027",
-    pass: pass
-  };
-  guestMode = false;
-  localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
-  loadClassData();
-  // Nếu chưa có HS trong classId, thử quét mọi key students cùng className
-  if (!students.length) {
-    Object.keys(localStorage).forEach(k => {
-      if (!k.startsWith("qlnn_students_")) return;
-      try {
-        const arr = JSON.parse(localStorage.getItem(k) || "[]");
-        if (arr.length && arr.some(s => (s.className || "") === (g.className || ""))) {
-          students = arr;
-          const cid = k.replace("qlnn_students_", "");
-          currentUser.classId = cid;
-          entries = JSON.parse(localStorage.getItem("qlnn_entries_" + cid) || "[]");
-          penaltyAssigns = JSON.parse(localStorage.getItem("qlnn_penAssign_" + cid) || "[]");
-        }
-      } catch (e) {}
-    });
-  }
-  document.getElementById("parentReportModal").classList.add("hidden");
-  renderApp();
+  document.getElementById("parentLoginError").classList.add("hidden");
+  // Kéo accounts từ Firebase (mobile) trước khi user đăng nhập
+  pullFirebaseThen(function(){});
 }
 
+function doParentReportLogin() {
+  const id = (document.getElementById("parentLoginId").value || "").trim().toLowerCase();
+  const pass = (document.getElementById("parentLoginPass").value || "").trim();
+  const err = document.getElementById("parentLoginError");
+  if (!id || !pass) {
+    err.textContent = "Nhập ID và mật khẩu xem lớp do GVCN cấp";
+    err.classList.remove("hidden");
+    return;
+  }
+  function finishLogin(acc) {
+    // Resolve class from account or parent GVCN
+    let classId = acc.classId;
+    let className = acc.className || "";
+    let school = acc.school || "";
+    let year = acc.year || "2026-2027";
+    if (acc.parentId && accounts[acc.parentId]) {
+      const g = accounts[acc.parentId];
+      classId = classId || g.classId;
+      className = className || g.className;
+      school = school || g.school;
+      year = year || g.year || "2026-2027";
+    }
+    if (!classId && className) {
+      classId = ((school || "") + "_" + className).toLowerCase().replace(/\s+/g, "_");
+    }
+    currentUser = {
+      id: id,
+      role: "viewer",
+      name: acc.name || ("Xem lớp " + className),
+      classId: classId,
+      className: className,
+      school: school,
+      parentId: acc.parentId || null,
+      year: year,
+      pass: pass
+    };
+    guestMode = false;
+    localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
+    loadClassData();
+    if (!students.length) {
+      Object.keys(localStorage).forEach(function(k) {
+        if (!k.startsWith("qlnn_students_")) return;
+        try {
+          const arr = JSON.parse(localStorage.getItem(k) || "[]");
+          if (arr.length && className && arr.some(function(s){ return (s.className || "") === className; })) {
+            students = arr;
+            currentUser.classId = k.replace("qlnn_students_", "");
+            entries = JSON.parse(localStorage.getItem("qlnn_entries_" + currentUser.classId) || "[]");
+            penaltyAssigns = JSON.parse(localStorage.getItem("qlnn_penAssign_" + currentUser.classId) || "[]");
+          }
+        } catch (e) {}
+      });
+    }
+    document.getElementById("parentReportModal").classList.add("hidden");
+    loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
+  }
+  function tryLocal() {
+    const acc = accounts[id];
+    if (acc && String(acc.pass) === String(pass)) {
+      finishLogin(acc);
+      return true;
+    }
+    // Match any viewer with same pass id
+    for (const k in accounts) {
+      const a = accounts[k];
+      if (!a) continue;
+      if ((a.role === "viewer" || (a.id && a.id === id)) && String(a.pass) === String(pass) && (k === id || (a.id && a.id.toLowerCase() === id))) {
+        finishLogin(Object.assign({ id: k }, a));
+        return true;
+      }
+    }
+    return false;
+  }
+  // Pull accounts from cloud first (mobile), then login
+  pullFirebaseThen(function() {
+    if (tryLocal()) return;
+    err.textContent = "Sai ID/mật khẩu xem lớp. Liên hệ GVCN cấp ID (vd xemb9). Nếu dùng máy mới, đợi Firebase đồng bộ hoặc mở đúng link trang.";
+    err.classList.remove("hidden");
+  });
+}
 
 function loadSession() {
   const s = localStorage.getItem("qlnn_session_v2");
