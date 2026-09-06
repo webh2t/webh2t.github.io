@@ -2,7 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"/>
 <title>QLNN · Quản lý Nề nếp Tác phong | WEBH2T</title>
 <link rel="icon" href="https://webh2t.github.io/favicon.ico"/>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -16,7 +16,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 .glass{background:rgba(30,41,59,.92);backdrop-filter:blur(12px)}
-.btn-primary{background:#facc15;color:#0f172a;font-weight:600;padding:.5rem 1rem;border-radius:.5rem}
+.btn-primary{background:#facc15;color:#0f172a;font-weight:600;padding:.5rem 1rem;border-radius:.5rem;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .btn-primary:hover{background:#fde047}
 .btn-secondary{background:#475569;color:#fff;padding:.5rem 1rem;border-radius:.5rem}
 .btn-secondary:hover{background:#64748b}
@@ -46,12 +46,59 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 .text-slate-300,.text-slate-400{color:#e8c547!important}
 .bg-slate-800 .text-sm,.bg-slate-800 label,.bg-slate-900 label{color:#f0d060!important}
 #authModal label,#parentReportModal label{color:#ffd700!important;font-weight:600}
-#authModal .text-slate-300,#authModal .text-slate-400,#parentReportModal .text-slate-400{color:#f5d76e!important}
+#authModal .text-slate-300,#authModal .text-slate-400,#parentReportModal .text-slate-400{color:#1e40af!important}
+
+/* === Theme colors theo mục === */
+.hero-app-title{color:cyan!important;font-weight:700;text-shadow:0 0 12px rgba(0,255,255,.35)}
+.hero-year{color:aqua!important;font-weight:700}
+.clock-sky{color:aquamarine!important;font-weight:600}
+.name-gvcn{color:#ffffff!important;font-weight:800;font-size:1.75rem!important;line-height:1.25}
+.meta-gvcn{color:#9d174d!important} /* hồng đậm */
+.expire-red{color:#dc2626!important;font-weight:600}
+.btn-upload-blue{background:#2563eb!important;color:#fff!important;box-shadow:0 4px 14px rgba(37,99,235,.4)}
+.btn-upload-blue:hover{background:#1d4ed8!important}
+.btn-sample-orange{background:orange!important;color:#fff!important;font-weight:700;box-shadow:0 4px 14px rgba(255,165,0,.45)}
+.btn-save-green{background:#16a34a!important;color:#fff!important;font-weight:700}
+.btn-search-brown{background:#78716c!important;color:#fff!important}
+.btn-filter-teal{background:#0d9488!important;color:#fff!important}
+.hs-name{color:#f8fafc!important;font-weight:600}
+.hs-dob{color:#15803d!important}
+.hs-team{color:deepskyblue!important;font-weight:700}
+.hs-contact{color:#f1f5f9!important}
+.title-main{color:#fef3c7!important;text-transform:uppercase;font-weight:700;letter-spacing:.02em}
+.title-sub{color:#facc15!important;text-transform:uppercase;font-weight:600}
+.frame-text,.frame-text label,.bg-slate-800 label,.bg-slate-900 label,
+.bg-slate-800 .text-slate-300,.bg-slate-800 .text-slate-400,
+.cream-panel label,.gold-text{color:springgreen!important}
+#authLogin label,#authModal label{color:#fff!important;font-weight:600}
+#authLogin .input-field,#authModal #loginId,#authModal #loginPass{color:#fff!important}
+.btn-primary,.btn-secondary,.btn-ocean,.btn-upload-green,.btn-upload-blue,
+.btn-sample-orange,.btn-save-green,.btn-filter-teal,.btn-search-brown,
+button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
+.btn-primary{color:#fff!important;font-weight:700}
+.btn-sample-orange{background:orange!important;color:#fff!important;font-weight:700}
+
+
+
+
 
 
 
 .subtab-active{background:#0ea5e9!important;color:#fff!important}
 @media print{header,.no-print,footer{display:none!important}}
+
+#tab-input button, #tab-input .btn-secondary, #tab-input .btn-ocean,
+#tab-input .btn-upload-green, #tab-input label.btn-upload-green {
+  color: #fffdd0 !important; /* trắng kem */
+}
+#tab-input button[type="submit"] {
+  color: #134e4a !important;
+}
+
+@supports(padding:max(0px)){
+  #authModal,#parentReportModal{padding-top:max(0.5rem,env(safe-area-inset-top));padding-bottom:max(0.5rem,env(safe-area-inset-bottom))}
+}
+
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
@@ -66,7 +113,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 </a>
 <div class="flex items-center gap-3 text-sm">
-<span id="clock" class="text-yellow-400 font-mono hidden sm:inline"></span>
+<span id="clock" class="clock-sky font-mono hidden sm:inline"></span>
 <span id="userBadge" class="hidden px-3 py-1 rounded-full bg-slate-700 text-xs"></span>
 <button id="btnLogout" class="hidden btn-secondary text-sm py-1.5" onclick="logout()">Đăng xuất</button>
 </div>
@@ -74,8 +121,8 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </header>
 
 <!-- AUTH MODAL -->
-<div id="authModal" class="fixed inset-0 z-[100] bg-black/75 flex items-center justify-center p-4 hidden overflow-y-auto">
-<div class="bg-slate-800 rounded-2xl p-6 md:p-10 w-full max-w-4xl border border-slate-600 my-4 shadow-2xl text-base">
+<div id="authModal" class="fixed inset-0 z-[100] bg-black/75 flex items-start sm:items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+<div class="bg-slate-800 rounded-2xl p-4 sm:p-6 md:p-8 w-full max-w-4xl border border-slate-600 my-2 sm:my-6 shadow-2xl text-base max-h-[92vh] overflow-y-auto">
 <div class="flex items-center gap-3 mb-4">
 <img src="https://webh2t.github.io/assets/LOGO1.png" class="w-12 h-12 rounded-full" onerror="this.style.display='none'"/>
 <div>
@@ -92,18 +139,18 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div id="authLogin">
 <div class="space-y-3">
 <div>
-<label class="block text-sm mb-1 text-slate-300">Tài khoản</label>
-<input id="loginId" class="input-field" placeholder="ID hoặc email" autocomplete="username"/>
+<label class="block text-sm mb-1 font-semibold" style="color:#fff">Tài khoản (ID)</label>
+<input id="loginId" class="input-field text-base py-3" placeholder="ID hoặc email" autocomplete="username" enterkeyhint="next"/>
 </div>
 <div>
-<label class="block text-sm mb-1 text-slate-300">Mật khẩu</label>
-<input id="loginPass" type="password" class="input-field" placeholder="••••••••" autocomplete="current-password"/>
+<label class="block text-sm mb-1 font-semibold" style="color:#fff">Mật khẩu</label>
+<input id="loginPass" type="password" class="input-field text-base py-3" placeholder="••••••••" autocomplete="current-password" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();doLogin();}"/>
 </div>
 <div id="loginError" class="text-red-400 text-sm hidden"></div>
-<button onclick="doLogin()" class="btn-primary w-full py-2.5">Đăng nhập</button>
-<button type="button" onclick="forgotPassword()" class="w-full py-2 mt-2 text-sm font-semibold text-amber-300 hover:text-yellow-300 underline">Quên mật khẩu? — Báo Admin WEBH2T cấp lại</button>
+<button type="button" id="btnDoLogin" onclick="doLogin()" class="btn-primary w-full py-3.5 text-base touch-manipulation">Đăng nhập</button>
+<button type="button" onclick="forgotPassword()" class="w-full py-3 mt-2 text-sm font-semibold text-amber-300 hover:text-yellow-300 underline touch-manipulation">Quên mật khẩu? — Báo Admin WEBH2T cấp lại</button>
 </div>
-<p class="mt-4 text-sm leading-relaxed" style="color:#f5d76e">Khu vực đăng nhập: <strong style="color:#ffd700">GVCN</strong>, <strong style="color:#ffd700">Nhập thi đua</strong>, <strong style="color:#ffd700">PH/HS xem báo cáo</strong>.</p>
+<p class="mt-4 text-sm leading-relaxed" style="color:#fff">Khu vực đăng nhập: <strong style="color:#fff">GVCN</strong>, <strong style="color:#fff">Nhập thi đua</strong>, <strong style="color:#fff">PH/HS xem báo cáo</strong>.</p>
 </div>
 
 <!-- REGISTER GVCN -->
@@ -150,13 +197,13 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div class="p-4 bg-slate-900 rounded-xl border border-yellow-500/40 text-center">
 <p class="text-base font-semibold text-yellow-400 mb-3">Quét QR · 100.000 VNĐ<br/>(12 tháng)</p>
 <img src="https://webh2t.github.io/assets/qrdonate.jpg" alt="QR Donate" class="mx-auto w-full max-w-[220px] rounded-lg border border-slate-600" onerror="this.alt='QR chưa tải được'"/>
-<p class="text-sm text-slate-400 mt-3">Sau chuyển khoản, chụp biên lai gửi xác nhận.</p>
+<p class="text-sm mt-3" style="color:#fff">Sau chuyển khoản, chụp biên lai gửi xác nhận.</p>
 </div>
 <div class="p-4 bg-slate-900/80 rounded-lg border border-slate-600 text-sm text-slate-300 space-y-2">
 <p class="font-semibold text-amber-400 text-base">Xác nhận & cấp tài khoản</p>
 <ul class="list-disc list-inside space-y-1.5">
-<li>Telegram: <a href="https://t.me/webh2t" target="_blank" class="text-sky-400 underline">t.me/webh2t</a></li>
-<li>Email: <a href="mailto:websiteh2t@gmail.com" class="text-sky-400 underline">websiteh2t@gmail.com</a></li>
+<li>Telegram: <a href="https://t.me/webh2t" target="_blank" class="underline" style="color:#fff">t.me/webh2t</a></li>
+<li>Email: <a href="mailto:websiteh2t@gmail.com" class="underline" style="color:#fff">websiteh2t@gmail.com</a></li>
 </ul>
 <p class="text-slate-500 text-sm">Admin duyệt → cấp ID + mật khẩu (12 tháng).</p>
 </div>
@@ -170,8 +217,8 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 
 
 <!-- Parent / HS report login (no register) -->
-<div id="parentReportModal" class="fixed inset-0 z-[100] bg-black/75 flex items-center justify-center p-4 hidden overflow-y-auto">
-<div class="bg-slate-800 rounded-2xl p-6 md:p-8 w-full max-w-md border border-slate-600 my-6 shadow-2xl">
+<div id="parentReportModal" class="fixed inset-0 z-[100] bg-black/75 flex items-start sm:items-center justify-center p-3 sm:p-4 hidden overflow-y-auto">
+<div class="bg-slate-800 rounded-2xl p-4 sm:p-6 md:p-8 w-full max-w-md border border-slate-600 my-2 sm:my-6 shadow-2xl max-h-[92vh] overflow-y-auto">
 <div class="flex items-center gap-3 mb-4">
 <img src="https://webh2t.github.io/assets/LOGO1.png" class="w-12 h-12 rounded-full" onerror="this.style.display='none'"/>
 <div>
@@ -195,7 +242,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <input id="parentLoginPass" type="password" class="input-field text-base py-3" placeholder="••••••••"/>
 </div>
 <div id="parentLoginError" class="text-red-400 text-sm hidden"></div>
-<button type="button" onclick="doParentReportLogin()" class="btn-primary w-full py-3 text-base">Xem báo cáo</button>
+<button type="button" onclick="doParentReportLogin()" class="btn-primary w-full py-3.5 text-base touch-manipulation">Xem báo cáo</button>
 <button type="button" onclick="document.getElementById('parentReportModal').classList.add('hidden')" class="btn-secondary w-full py-2.5">Đóng</button>
 </div>
 </div>
@@ -205,13 +252,13 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <!-- HOME (not logged in) -->
 <div id="welcomeSection" class="text-center py-10">
 <img src="https://webh2t.github.io/assets/LOGO1.png" class="w-24 h-24 mx-auto rounded-full mb-6 border-2 border-yellow-400/40 object-cover" onerror="this.style.display='none'"/>
-<p class="text-sky-400 text-sm font-semibold tracking-widest mb-2">ỨNG DỤNG QUẢN LÝ</p>
+<p class="hero-app-title text-sm font-semibold tracking-widest mb-2">ỨNG DỤNG QUẢN LÝ</p>
 <h1 class="text-3xl md:text-5xl font-bold text-yellow-400 mb-3 leading-tight">NỀ NẾP TÁC PHONG<br class="sm:hidden"/> TRƯỜNG HỌC</h1>
-<p class="text-slate-300 text-lg mb-8">NĂM HỌC: <span class="text-yellow-400 font-semibold">2026 – 2027</span></p>
+<p class="text-lg mb-8"><span style="color:#fff">NĂM HỌC:</span> <span class="hero-year">2026 – 2027</span></p>
 
 <div class="flex flex-wrap justify-center gap-3 mb-10">
-<button onclick="showAuth('register')" class="btn-primary px-6 py-3">ĐĂNG KÝ GVCN</button>
-<button onclick="showAuth('login')" class="btn-ocean px-6 py-3">ĐĂNG NHẬP</button>
+<button onclick="showAuth('register')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#facc15;color:#b91c1c">ĐĂNG KÝ GVCN</button>
+<button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#0284c7;color:#fef3c7">ĐĂNG NHẬP</button>
 <button onclick="showParentReportLogin()" class="btn-secondary px-6 py-3">XEM BÁO CÁO PH-HS</button>
 </div>
 
@@ -261,7 +308,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 <div>
 <label class="block text-sm text-slate-300 mb-1 font-medium">📥 File mẫu Excel</label>
-<button type="button" onclick="downloadEntriesTemplate()" class="w-full py-2.5 rounded-lg text-sm font-bold text-white" style="background:#ea580c;box-shadow:0 4px 14px rgba(234,88,12,.45)">FILE MẪU</button>
+<button type="button" onclick="downloadEntriesTemplate()" class="w-full py-2.5 rounded-lg text-sm font-bold text-white" style="background:orange;color:#fff;box-shadow:0 4px 14px rgba(255,165,0,.45)">FILE MẪU</button>
 <p class="text-xs text-slate-500 mt-1">Ngày | Môn | Tổ | HS | Loại | Mã | Số lần</p>
 </div>
 </div>
@@ -350,7 +397,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </div>
 
 <div class="flex flex-wrap gap-3">
-<button type="submit" class="btn-primary px-6 py-2.5">💾 Lưu bản ghi</button>
+<button type="submit" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:aquamarine;color:#134e4a">💾 Lưu bản ghi</button>
 <button type="button" onclick="resetForm()" class="btn-secondary">Làm mới</button>
 </div>
 </form>
@@ -427,8 +474,8 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <input type="hidden" id="rSearch" value=""/>
 <div id="reportStudentProfile" class="hidden mb-4 p-4 bg-slate-900 rounded-xl border border-sky-500/40"></div>
 <div class="flex flex-wrap gap-2 no-print">
-<button onclick="renderReport()" class="btn-primary text-sm">🔍 Lọc & Xem</button>
-<button id="btnExportExcel" onclick="exportExcel()" class="btn-secondary text-sm">📥 Excel</button>
+<button type="button" onclick="renderReport()" class="btn-filter-teal text-sm px-4 py-2.5 rounded-lg font-semibold">🔍 Lọc & Xem</button>
+<button type="button" id="btnExportExcel" onclick="exportExcel()" class="btn-search-brown text-sm px-4 py-2.5 rounded-lg">📥 Excel</button>
 <button id="btnPrint" onclick="window.print()" class="btn-secondary text-sm">🖨️ In</button>
 </div>
 <div id="deadlineAlert" class="mt-3 hidden text-sm p-3 rounded-lg border"></div>
@@ -494,7 +541,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div class="flex flex-wrap justify-between gap-3 mb-4">
 <h3 class="font-bold text-yellow-400">Tài khoản lớp</h3>
 <div class="flex flex-wrap gap-2">
-<button onclick="openAccountModal()" class="btn-primary text-sm">+ Thêm</button>
+<button onclick="openAccountModal()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm</button>
 <label class="btn-secondary text-sm cursor-pointer">Upload Excel
 <input type="file" accept=".xlsx,.xls" class="hidden" onchange="importAccountsExcel(event)"/>
 </label>
@@ -559,7 +606,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-green-700 text-lg">Ưu điểm (điểm cộng)</h4>
-<button onclick="addCatalogItem('bonus')" class="btn-primary text-xs">+ Thêm mới</button>
+<button onclick="addCatalogItem('bonus')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm mới</button>
 </div>
 <div id="bonusCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -567,7 +614,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-red-700 text-lg">Vi phạm (điểm trừ)</h4>
-<button onclick="addCatalogItem('violation')" class="btn-primary text-xs">+ Thêm mới</button>
+<button onclick="addCatalogItem('violation')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm mới</button>
 </div>
 <div id="violCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -575,7 +622,7 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 <div>
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-amber-800 text-lg">Hình phạt</h4>
-<button onclick="addPenaltyLine()" class="btn-primary text-xs">+ Thêm mới</button>
+<button onclick="addPenaltyLine()" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#134e4a">+ Thêm mới</button>
 </div>
 <div id="penaltyList" class="flex flex-col gap-2"></div>
 </div>
@@ -768,20 +815,26 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 </footer>
 
 <script>
-/* ========== FIREBASE (điền config để bật realtime) ==========
-1. console.firebase.google.com → tạo project
-2. Firestore + (tuỳ chọn) Auth Email
-3. Project settings → Web app → copy config vào dưới
-4. Rules dev: allow read,write on qlnn_* collections
-Khi trống → dùng localStorage
+/* ========== FIREBASE_CONFIG — đồng bộ nhiều thiết bị ==========
+HƯỚNG DẪN NHANH:
+1) https://console.firebase.google.com → Add project (vd webh2t-qlnn)
+2) Build/Search → Firestore Database → Create (test mode) → location asia-southeast1
+3) Project Overview → + Add app → Web </> → nickname "qlnn" → Register
+4) Copy firebaseConfig (apiKey, authDomain, projectId, ...) dán vào object dưới
+5) Firestore → Rules (test có hạn hoặc request.auth) → Publish
+6) Lưu qlnn.html → upload GitHub Pages → mở cùng URL trên mọi thiết bị
+
+Khi apiKey + projectId có giá trị: app ghi/đọc Firestore (accounts, pending, entries…).
+Khi để trống: chỉ localStorage (không chia sẻ laptop ↔ điện thoại).
 ============================================================= */
 const FIREBASE_CONFIG = {
-  apiKey: "",
-  authDomain: "",
-  projectId: "",
-  storageBucket: "",
-  messagingSenderId: "",
-  appId: ""
+  apiKey: "AIzaSyAilx-c6669fbSHumNZcfApja-bdqFagA8",
+  authDomain: "webh2t-qlnn-61eaf.firebaseapp.com",
+  projectId: "webh2t-qlnn-61eaf",
+  storageBucket: "webh2t-qlnn-61eaf.firebasestorage.app",
+  messagingSenderId: "456875506885",
+  appId: "1:456875506885:web:4e1f0af0f17becb73084ac",
+  measurementId: "G-076HN2R98P"
 };
 let firebaseReady = false, db = null;
 function initFirebase() {
@@ -945,6 +998,41 @@ function loadAll() {
   deadlineCfg = { day: 0, hour: 10, penaltyText: "" };
 }
 
+
+function pullFirebaseThen(cb) {
+  if (!firebaseReady || !db) { if (cb) cb(); return; }
+  Promise.all([
+    db.collection("qlnn_meta").doc("accounts").get(),
+    db.collection("qlnn_meta").doc("pending").get()
+  ]).then(function(snaps) {
+    if (snaps[0].exists && snaps[0].data().data) {
+      accounts = snaps[0].data().data;
+      localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
+    }
+    if (snaps[1].exists && snaps[1].data().data) {
+      pendingRegs = snaps[1].data().data;
+      localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs));
+    }
+    if (cb) cb();
+  }).catch(function(e){ console.warn(e); if (cb) cb(); });
+}
+function loadClassDataFromCloud(cid, cb) {
+  if (!firebaseReady || !db || !cid) { if (cb) cb(); return; }
+  db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
+    if (snap.exists) {
+      const d = snap.data();
+      if (d.students) { students = d.students; localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students)); }
+      if (d.entries) { entries = d.entries; localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); }
+      if (d.bonuses) { bonuses = d.bonuses; localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses)); }
+      if (d.violations) { violations = d.violations; localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations)); }
+      if (d.penalties) { penalties = normalizePenalties(d.penalties); localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties)); }
+      if (d.penaltyAssigns) { penaltyAssigns = d.penaltyAssigns; localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns)); }
+      if (d.deadlineCfg) { deadlineCfg = d.deadlineCfg; localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg)); }
+    }
+    if (cb) cb();
+  }).catch(function(e){ console.warn(e); if (cb) cb(); });
+}
+
 function loadClassData() {
   const cid = currentUser && currentUser.classId ? currentUser.classId : "default";
   students = JSON.parse(localStorage.getItem("qlnn_students_" + cid) || "[]");
@@ -965,8 +1053,18 @@ function loadClassData() {
   deadlineCfg = JSON.parse(localStorage.getItem("qlnn_deadline_" + cid) || "null") || { day: 0, hour: 10, penaltyText: "" };
 }
 
-function saveAccounts() { localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts)); }
-function savePending() { localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs)); }
+function saveAccounts() {
+  localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
+  if (firebaseReady && db) {
+    db.collection("qlnn_meta").doc("accounts").set({ data: accounts, updatedAt: new Date().toISOString() }).catch(function(e){ console.warn(e); });
+  }
+}
+function savePending() {
+  localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs));
+  if (firebaseReady && db) {
+    db.collection("qlnn_meta").doc("pending").set({ data: pendingRegs, updatedAt: new Date().toISOString() }).catch(function(e){ console.warn(e); });
+  }
+}
 function saveClassData() {
   if (!currentUser || !currentUser.classId) return;
   const cid = currentUser.classId;
@@ -977,6 +1075,13 @@ function saveClassData() {
   localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
   localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns));
   localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg));
+  if (firebaseReady && db) {
+    db.collection("qlnn_classes").doc(cid).set({
+      students: students, entries: entries, bonuses: bonuses, violations: violations,
+      penalties: penalties, penaltyAssigns: penaltyAssigns, deadlineCfg: deadlineCfg,
+      updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(function(e){ console.warn(e); });
+  }
 }
 
 loadAll();
@@ -1159,23 +1264,29 @@ function submitRegister() {
 }
 
 function doLogin() {
-  const id = (document.getElementById("loginId").value || "").trim().toLowerCase();
-  const pass = document.getElementById("loginPass").value;
+  const idEl = document.getElementById("loginId");
+  const passEl = document.getElementById("loginPass");
+  const id = (idEl && idEl.value || "").trim().toLowerCase();
+  const pass = (passEl && passEl.value || "").trim();
   const err = document.getElementById("loginError");
   guestMode = false;
+  if (!id || !pass) {
+    if (err) { err.textContent = "Nhập đủ ID và mật khẩu"; err.classList.remove("hidden"); }
+    return;
+  }
 
   // Super admin — chỉ từ SUPER_ADMIN, không lấy từ accounts
   if ((id === SUPER_ADMIN.id || id === SUPER_ADMIN.email || id === "websiteh2t") && pass === SUPER_ADMIN.pass) {
     currentUser = { id: SUPER_ADMIN.id, email: SUPER_ADMIN.email, role: "super", name: SUPER_ADMIN.name, classId: null };
     localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
     hideAuth();
-    renderApp();
+    pullFirebaseThen(function(){ renderApp(); });
     return;
   }
 
   const acc = accounts[id];
   if (!acc || acc.pass !== pass) {
-    err.textContent = "Sai tài khoản hoặc mật khẩu. PH/HS dùng ID xem lớp do GVCN cấp (vd xemb9).";
+    err.textContent = "Sai ID/mật khẩu, hoặc tài khoản chưa có trên thiết bị này (localStorage không đồng bộ máy tính ↔ điện thoại). Cần điền FIREBASE_CONFIG hoặc duyệt/tạo lại tài khoản trên thiết bị đang dùng.";
     err.classList.remove("hidden");
     return;
   }
@@ -1200,7 +1311,7 @@ function doLogin() {
   localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
   loadClassData();
   hideAuth();
-  renderApp();
+  loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
 }
 
 function logout() {
@@ -1587,30 +1698,30 @@ function renderOverview() {
     const stuRows = students.length ? (
       '<div class="overflow-x-auto min-h-[50vh]"><table class="w-full text-sm"><thead class="text-slate-400 border-b border-slate-600 sticky top-0 bg-slate-900"><tr>' +
       '<th class="text-left py-2">ID</th><th class="text-left">Họ tên</th><th class="text-left">Ngày sinh</th><th class="text-center">Tổ</th><th class="text-left">SĐT</th><th class="text-left">Địa chỉ</th></tr></thead><tbody>' +
-      students.map(s => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono text-sky-400">' + s.id + '</td><td class="font-medium">' + s.name +
-      '</td><td class="text-xs">' + (s.dob || "—") + '</td><td class="text-center">' + (s.team || "—") + '</td><td class="text-xs">' + (s.phone || "—") +
-      '</td><td class="text-xs max-w-[140px] truncate">' + (s.address || "—") + '</td></tr>').join("") +
+      students.map(s => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono hs-contact">' + s.id + '</td><td class="hs-name">' + s.name +
+      '</td><td class="text-xs hs-dob">' + (s.dob || "—") + '</td><td class="text-center hs-team">' + (s.team || "—") + '</td><td class="text-xs hs-contact">' + (s.phone || "—") +
+      '</td><td class="text-xs hs-contact max-w-[140px] truncate">' + (s.address || "—") + '</td></tr>').join("") +
       '</tbody></table></div>'
     ) : '<p class="text-amber-300 text-sm">Chưa có học sinh — Upload Excel rồi bấm Lưu.</p>';
     box.innerHTML = '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700">' +
       '<div class="flex flex-wrap gap-6 mb-4"><div class="w-24 h-24 rounded-full bg-slate-700 border-2 border-yellow-400/50 flex items-center justify-center text-4xl">👨‍🏫</div>' +
-      '<div class="flex-1 min-w-[200px]"><h2 class="text-xl font-bold text-yellow-400">' + (currentUser.name || "") + '</h2>' +
-      '<p class="text-slate-400 text-sm">GVCN · Năm học ' + (currentUser.year || "2026-2027") + '</p></div></div>' +
+      '<div class="flex-1 min-w-[200px]"><h2 class="text-xl name-gvcn">' + (currentUser.name || "") + '</h2>' +
+      '<p class="meta-gvcn text-sm">GVCN ' + (currentUser.className || "") + ' · Năm học ' + (currentUser.year || "2026-2027") + '</p></div></div>' +
       '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm mb-6">' +
       '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Họ và tên GVCN</div><div class="font-semibold text-yellow-400 text-base">' + (currentUser.name || "—") + '</div></div>' +
       '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Trường học</div><div class="font-semibold text-sky-400">' + (currentUser.school || "—") + '</div></div>' +
       '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Lớp chủ nhiệm</div><div class="font-semibold text-sky-400">' + (currentUser.className || "—") + '</div></div>' +
       '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Sĩ số</div><div class="font-semibold text-sky-400">' + (students.length || currentUser.size || "—") + '</div></div>' +
       '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Năm học</div><div class="font-semibold text-sky-400">' + (currentUser.year || "2026-2027") + '</div></div>' +
-      '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Ngày hết hạn</div><div class="font-semibold text-amber-400">' + (currentUser.expiresAt ? new Date(currentUser.expiresAt).toLocaleDateString("vi-VN") : "—") + '</div></div>' +
+      '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs title-sub">Ngày hết hạn</div><div class="expire-red">' + (currentUser.expiresAt ? new Date(currentUser.expiresAt).toLocaleDateString("vi-VN") : "—") + '</div></div>' +
       '</div><div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6" id="overviewStats"></div>' +
       '<div class="p-4 bg-slate-900/60 rounded-xl border border-slate-600">' +
       '<h3 class="font-semibold text-sky-400 mb-2">Danh sách học sinh</h3>' +
-      '<p class="text-xs text-slate-400 mb-2">Excel: ID | Họ tên | Ngày sinh | Lớp | Tổ | Điện thoại | Địa chỉ</p>' +
+      '' +
       '<div class="flex flex-wrap gap-2 mb-3">' +
-      '<label class="btn-secondary text-sm cursor-pointer">Upload Excel<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importStudentsExcel(event)"/></label>' +
-      '<button type="button" onclick="exportStudentsExcel()" class="btn-secondary text-sm">Tải mẫu</button>' +
-      '<button type="button" onclick="saveClassData();renderOverview();alert(\'Đã lưu danh sách\')" class="btn-primary text-sm">Lưu</button>' +
+      '<label class="btn-upload-blue text-sm cursor-pointer inline-flex items-center px-3 py-2 rounded-lg">Upload Excel<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importStudentsExcel(event)"/></label>' +
+      '<button type="button" onclick="exportStudentsExcel()" class="btn-sample-orange text-sm px-3 py-2 rounded-lg">Tải mẫu</button>' +
+      '<button type="button" onclick="saveClassData();renderOverview();alert(\'Đã lưu danh sách\')" class="btn-save-green text-sm px-3 py-2 rounded-lg">Lưu</button>' +
       '</div>' + stuRows + '</div></div>';
     updateOverviewStats();
     return;
@@ -3230,7 +3341,13 @@ function updateClock() {
 }
 
 loadSession();
-renderApp();
+pullFirebaseThen(function() {
+  if (currentUser && currentUser.classId) {
+    loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
+  } else {
+    renderApp();
+  }
+});
 updateClock();
 setInterval(updateClock, 1000);
 const fd = document.getElementById("fDate");
