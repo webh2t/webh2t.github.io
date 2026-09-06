@@ -55,10 +55,17 @@ body{font-family:Inter,system-ui,sans-serif;font-size:16px}
 .name-gvcn{color:#ffffff!important;font-weight:800;font-size:1.75rem!important;line-height:1.25}
 .meta-gvcn{color:#9d174d!important} /* hồng đậm */
 .expire-red{color:#dc2626!important;font-weight:600}
+
+#tab-overview, #overviewContent { color: #e2e8f0; }
+#overviewContent h2, #overviewContent .name-gvcn { color: #fff !important; font-size: 1.75rem !important; }
+#overviewContent .meta-gvcn { color: #f9a8d4 !important; }
+#tab-admin .admin-sub:not(.hidden) { display: block !important; }
+
+#btnLogout{color:#ff0000!important;background:#450a0a!important;border:1px solid #ff0000!important;font-weight:700}
 .btn-upload-blue{background:#2563eb!important;color:#fff!important;box-shadow:0 4px 14px rgba(37,99,235,.4)}
 .btn-upload-blue:hover{background:#1d4ed8!important}
 .btn-sample-orange{background:orange!important;color:#fff!important;font-weight:700;box-shadow:0 4px 14px rgba(255,165,0,.45)}
-.btn-save-green{background:#16a34a!important;color:#fff!important;font-weight:700}
+.btn-save-green{background:#fff!important;color:#5c4033!important;font-weight:700;border:1px solid #a8a29e}
 .btn-search-brown{background:#78716c!important;color:#fff!important}
 .btn-filter-teal{background:#0d9488!important;color:#fff!important}
 .hs-name{color:#f8fafc!important;font-weight:600}
@@ -121,7 +128,7 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 <div class="flex items-center gap-3 text-sm">
 <span id="clock" class="clock-sky font-mono hidden sm:inline"></span>
 <span id="userBadge" class="hidden px-3 py-1 rounded-full bg-slate-700 text-xs"></span>
-<button id="btnLogout" class="hidden btn-secondary text-sm py-1.5" onclick="logout()">Đăng xuất</button>
+<button id="btnLogout" class="hidden text-sm font-bold px-3 py-1.5 rounded-lg" style="background:#450a0a;color:#ff0000;border:1px solid #ff0000" onclick="logout()">Đăng xuất</button>
 </div>
 </div>
 </header>
@@ -153,7 +160,7 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 <input id="loginPass" type="password" class="input-field text-base py-3" placeholder="••••••••" autocomplete="current-password" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();doLogin();}"/>
 </div>
 <div id="loginError" class="text-red-400 text-sm hidden"></div>
-<button type="button" id="btnDoLogin" onclick="doLogin()" class="w-full py-3.5 text-base font-bold rounded-lg shadow-lg touch-manipulation" style="background:#fef08a;color:aquamarine">ĐĂNG NHẬP</button>
+<button type="button" id="btnDoLogin" onclick="doLogin()" class="w-full py-3.5 text-base font-bold rounded-lg shadow-lg touch-manipulation" style="background:#7c3aed;color:#eab308;font-weight:800">ĐĂNG NHẬP</button>
 <button type="button" onclick="forgotPassword()" class="w-full py-3 mt-2 text-sm font-semibold text-amber-300 hover:text-yellow-300 underline touch-manipulation">Quên mật khẩu? — Báo Admin WEBH2T cấp lại</button>
 </div>
 <p class="mt-4 text-sm leading-relaxed" style="color:#fff">Khu vực đăng nhập: <strong style="color:#fff">GVCN</strong>, <strong style="color:#fff">Nhập thi đua</strong>, <strong style="color:#fff">PH/HS xem báo cáo</strong>.</p>
@@ -260,9 +267,9 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 <p class="text-lg mb-8"><span style="color:#fff">NĂM HỌC:</span> <span class="hero-year">2026 – 2027</span></p>
 
 <div class="flex flex-wrap justify-center gap-3 mb-10">
-<button onclick="showAuth('register')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#fef08a;color:#991b1b">ĐĂNG KÝ GVCN</button>
-<button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg" style="background:#fef08a;color:aquamarine">ĐĂNG NHẬP</button>
-<button onclick="showParentReportLogin()" class="btn-secondary px-6 py-3">XEM BÁO CÁO PH-HS</button>
+<button onclick="showAuth('register')" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#fef08a;color:#991b1b;min-width:12.5rem;width:12.5rem">ĐĂNG KÝ GVCN</button>
+<button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#7c3aed;color:#eab308;min-width:12.5rem;width:12.5rem;font-weight:800">ĐĂNG NHẬP</button>
+<button onclick="showParentReportLogin()" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#d4a017;color:#5c4033;min-width:12.5rem;width:12.5rem">XEM BÁO CÁO PH-HS</button>
 </div>
 
 <div class="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-left text-sm">
@@ -400,7 +407,7 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 </div>
 
 <div class="flex flex-wrap gap-3">
-<button type="submit" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:aquamarine;color:#fff">💾 Lưu bản ghi</button>
+<button type="submit" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">💾 Lưu bản ghi</button>
 <button type="button" onclick="resetForm()" class="btn-secondary">Làm mới</button>
 </div>
 </form>
@@ -544,7 +551,7 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 <div class="flex flex-wrap justify-between gap-3 mb-4">
 <h3 class="font-bold text-yellow-400">Tài khoản lớp</h3>
 <div class="flex flex-wrap gap-2">
-<button onclick="openAccountModal()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm</button>
+<button onclick="openAccountModal()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#fff;color:#1e3a8a">+ Thêm</button>
 <label class="btn-secondary text-sm cursor-pointer">Upload Excel
 <input type="file" accept=".xlsx,.xls" class="hidden" onchange="importAccountsExcel(event)"/>
 </label>
@@ -609,7 +616,7 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-green-700 text-lg">Ưu điểm (điểm cộng)</h4>
-<button onclick="addCatalogItem('bonus')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm mới</button>
+<button onclick="addCatalogItem('bonus')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:#fff;color:#1e3a8a;border:1px solid #1e3a8a">+ Thêm mới</button>
 </div>
 <div id="bonusCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -617,7 +624,7 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-red-700 text-lg">Vi phạm (điểm trừ)</h4>
-<button onclick="addCatalogItem('violation')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm mới</button>
+<button onclick="addCatalogItem('violation')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:#fff;color:#1e3a8a;border:1px solid #1e3a8a">+ Thêm mới</button>
 </div>
 <div id="violCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -625,7 +632,7 @@ label.btn-upload-green,label.btn-upload-blue{color:#fff!important}
 <div>
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-amber-800 text-lg">Hình phạt</h4>
-<button onclick="addPenaltyLine()" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:aquamarine;color:#fff">+ Thêm mới</button>
+<button onclick="addPenaltyLine()" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:#fff;color:#1e3a8a;border:1px solid #1e3a8a">+ Thêm mới</button>
 </div>
 <div id="penaltyList" class="flex flex-col gap-2"></div>
 </div>
@@ -863,6 +870,10 @@ function initFirebase() {
     } catch (e2) {}
     firebaseReady = true;
     console.info("[QLNN] Firebase sẵn sàng:", FIREBASE_CONFIG.projectId);
+    try {
+      var el = document.getElementById("fbStatus");
+      if (el) el.textContent = "Cloud: " + FIREBASE_CONFIG.projectId;
+    } catch (e3) {}
   } catch (e) {
     console.warn("[QLNN] Firebase init lỗi, fallback localStorage:", e);
     firebaseReady = false;
@@ -1030,17 +1041,31 @@ function pullFirebaseThen(cb) {
     done = true;
     if (cb) try { cb(); } catch (e) { console.warn(e); }
   }
-  if (!firebaseReady || !db) { finish(); return; }
-  // Timeout 5s — mobile mạng chậm không kẹt đăng nhập
-  var to = setTimeout(finish, 5000);
+  if (!firebaseReady || !db) {
+    console.warn("[QLNN] pull bỏ qua — firebaseReady=", firebaseReady);
+    finish();
+    return;
+  }
+  var to = setTimeout(function(){
+    console.warn("[QLNN] pull timeout 8s");
+    finish();
+  }, 8000);
   Promise.all([
     db.collection("qlnn_meta").doc("accounts").get(),
     db.collection("qlnn_meta").doc("pending").get()
   ]).then(function(snaps) {
     try {
-      if (snaps[0].exists && snaps[0].data().data) {
-        accounts = snaps[0].data().data;
+      if (snaps[0].exists) {
+        var remote = snaps[0].data().data || {};
+        // Gộp: cloud ưu tiên, giữ local nếu cloud thiếu key
+        var merged = Object.assign({}, accounts, remote);
+        accounts = Object.assign({}, remote, accounts);
+        // Cloud ghi đè khi có cùng key
+        Object.keys(remote).forEach(function(k){ accounts[k] = remote[k]; });
         localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
+        console.info("[QLNN] accounts từ cloud:", Object.keys(accounts).length);
+      } else {
+        console.info("[QLNN] Chưa có doc accounts trên Firestore — sẽ đẩy local nếu đăng nhập Admin");
       }
       if (snaps[1].exists && snaps[1].data().data) {
         pendingRegs = snaps[1].data().data;
@@ -1050,7 +1075,7 @@ function pullFirebaseThen(cb) {
     clearTimeout(to);
     finish();
   }).catch(function(e){
-    console.warn("[QLNN] pull Firebase:", e);
+    console.warn("[QLNN] pull Firebase lỗi:", e && e.message ? e.message : e);
     clearTimeout(to);
     finish();
   });
@@ -1059,14 +1084,36 @@ function loadClassDataFromCloud(cid, cb) {
   if (!firebaseReady || !db || !cid) { if (cb) cb(); return; }
   db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
     if (snap.exists) {
-      const d = snap.data();
-      if (d.students) { students = d.students; localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students)); }
-      if (d.entries) { entries = d.entries; localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); }
-      if (d.bonuses) { bonuses = d.bonuses; localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses)); }
-      if (d.violations) { violations = d.violations; localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations)); }
-      if (d.penalties) { penalties = normalizePenalties(d.penalties); localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties)); }
-      if (d.penaltyAssigns) { penaltyAssigns = d.penaltyAssigns; localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns)); }
-      if (d.deadlineCfg) { deadlineCfg = d.deadlineCfg; localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg)); }
+      const d = snap.data() || {};
+      // Chỉ ghi đè khi cloud CÓ dữ liệu (tránh xóa trắng Tổng quan / Quản trị)
+      if (Array.isArray(d.students) && d.students.length) {
+        students = d.students;
+        localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
+      }
+      if (Array.isArray(d.entries) && d.entries.length) {
+        entries = d.entries;
+        localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
+      }
+      if (Array.isArray(d.bonuses) && d.bonuses.length) {
+        bonuses = d.bonuses;
+        localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses));
+      }
+      if (Array.isArray(d.violations) && d.violations.length) {
+        violations = d.violations;
+        localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations));
+      }
+      if (d.penalties && (Array.isArray(d.penalties) ? d.penalties.length : true)) {
+        penalties = normalizePenalties(d.penalties);
+        localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
+      }
+      if (Array.isArray(d.penaltyAssigns) && d.penaltyAssigns.length) {
+        penaltyAssigns = d.penaltyAssigns;
+        localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns));
+      }
+      if (d.deadlineCfg) {
+        deadlineCfg = d.deadlineCfg;
+        localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg));
+      }
     }
     if (cb) cb();
   }).catch(function(e){ console.warn(e); if (cb) cb(); });
@@ -1095,8 +1142,21 @@ function loadClassData() {
 function saveAccounts() {
   localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
   if (firebaseReady && db) {
-    db.collection("qlnn_meta").doc("accounts").set({ data: accounts, updatedAt: new Date().toISOString() }).catch(function(e){ console.warn(e); });
+    db.collection("qlnn_meta").doc("accounts").set({ data: accounts, updatedAt: new Date().toISOString() })
+      .then(function(){ console.info("[QLNN] Đã đẩy accounts lên Firestore"); })
+      .catch(function(e){ console.warn("[QLNN] Lỗi ghi accounts:", e); });
   }
+}
+function pushAllLocalToCloud() {
+  if (!firebaseReady || !db) return Promise.resolve(false);
+  return db.collection("qlnn_meta").doc("accounts").set({
+    data: accounts, updatedAt: new Date().toISOString()
+  }).then(function(){
+    return db.collection("qlnn_meta").doc("pending").set({
+      data: pendingRegs, updatedAt: new Date().toISOString()
+    });
+  }).then(function(){ return true; })
+  .catch(function(e){ console.warn(e); return false; });
 }
 function savePending() {
   localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs));
@@ -1325,13 +1385,15 @@ function doLoginAfterSync(id, pass, err) {
     currentUser = { id: SUPER_ADMIN.id, email: SUPER_ADMIN.email, role: "super", name: SUPER_ADMIN.name, classId: null };
     localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
     hideAuth();
-    pullFirebaseThen(function(){ renderApp(); });
+    pushAllLocalToCloud().then(function(){
+      pullFirebaseThen(function(){ renderApp(); });
+    });
     return;
   }
 
   const acc = accounts[id];
   if (!acc || acc.pass !== pass) {
-    err.textContent = "Sai ID/mật khẩu, hoặc tài khoản chưa có trên thiết bị này (localStorage không đồng bộ máy tính ↔ điện thoại). Cần điền FIREBASE_CONFIG hoặc duyệt/tạo lại tài khoản trên thiết bị đang dùng.";
+    err.textContent = "Sai ID hoặc mật khẩu – liên hệ admin WEBH2T";
     err.classList.remove("hidden");
     return;
   }
@@ -1346,17 +1408,24 @@ function doLoginAfterSync(id, pass, err) {
     return;
   }
   currentUser = { id, ...acc };
-  // Đảm bảo classId từ parent GVCN
+  if (currentUser.role === "gvcn" && !currentUser.classId) {
+    currentUser.classId = ((currentUser.school || "") + "_" + (currentUser.className || id)).toLowerCase().replace(/\s+/g, "_");
+  }
   if (currentUser.role === "viewer" && currentUser.parentId && accounts[currentUser.parentId]) {
     const pg = accounts[currentUser.parentId];
     currentUser.classId = currentUser.classId || pg.classId;
     currentUser.className = currentUser.className || pg.className;
     currentUser.school = currentUser.school || pg.school;
   }
+  if ((currentUser.role === "leader" || currentUser.role === "viewer") && !currentUser.classId && currentUser.parentId && accounts[currentUser.parentId]) {
+    currentUser.classId = accounts[currentUser.parentId].classId;
+  }
   localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
   loadClassData();
   hideAuth();
-  loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
+  pushAllLocalToCloud().then(function(){
+    loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
+  });
 }
 
 function logout() {
@@ -1710,12 +1779,28 @@ function switchAdminSub(name) {
     if (b.dataset.sub === name) b.classList.add("subtab-active");
     else b.classList.remove("subtab-active");
   });
-  if (name === "pending") renderPending();
-  if (name === "deadline") { fillDeadlinePersons(); checkDeadlineStatus(); fillDelWeekSelect(); onDelScopeChange(); }
+  try {
+    if (name === "accounts") renderAccountsTable();
+    if (name === "teams") renderTeamAssign();
+    if (name === "catalogs") renderCatalogs();
+    if (name === "pending") renderPending();
+    if (name === "deadline") {
+      fillDeadlinePersons();
+      checkDeadlineStatus();
+      fillDelWeekSelect();
+      if (typeof onDelScopeChange === "function") onDelScopeChange();
+    }
+  } catch (e) { console.warn("[QLNN] admin sub:", e); }
 }
 
 function renderOverview() {
   const box = document.getElementById("overviewContent");
+  if (!box) return;
+  if (!currentUser) {
+    box.innerHTML = '<p class="text-slate-400">Chưa đăng nhập</p>';
+    return;
+  }
+  try {
   if (currentUser.role === "super") {
     const pending = pendingRegs.filter(p => p.status === "pending").length;
     const gvcns = Object.values(accounts).filter(a => a.role === "gvcn");
@@ -1766,7 +1851,7 @@ function renderOverview() {
       '<div class="flex flex-wrap gap-2 mb-3">' +
       '<label class="btn-upload-blue text-sm cursor-pointer inline-flex items-center px-3 py-2 rounded-lg">Upload Excel<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importStudentsExcel(event)"/></label>' +
       '<button type="button" onclick="exportStudentsExcel()" class="btn-sample-orange text-sm px-3 py-2 rounded-lg">Tải mẫu</button>' +
-      '<button type="button" onclick="saveClassData();renderOverview();alert(\'Đã lưu danh sách\')" class="btn-save-green text-sm px-3 py-2 rounded-lg">Lưu</button>' +
+      '<button type="button" onclick="saveClassData();renderOverview();alert(\'Đã lưu danh sách\')" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">Lưu</button>' +
       '</div>' + stuRows + '</div></div>';
     updateOverviewStats();
     return;
@@ -1788,6 +1873,7 @@ if (currentUser.role === "leader") {
     return;
   }
   box.innerHTML = '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700 text-center"><p class="text-slate-300">Chế độ xem báo cáo lớp ' + (currentUser.className || "") + '</p></div>';
+} catch (e) { console.warn(e); box.innerHTML = '<p class="text-red-400">Lỗi tải Tổng quan: ' + e.message + '</p>'; }
 }
 
 function updateOverviewStats() {
@@ -2733,14 +2819,20 @@ function exportExcel() {
 function classAccounts() {
   if (currentUser.role === "super") return accounts;
   const out = {};
+  const cid = currentUser.classId;
+  const cname = currentUser.className;
   Object.entries(accounts).forEach(([id, a]) => {
-    if (a.role === "super") return;
-    if (a.classId === currentUser.classId || a.parentId === currentUser.id) out[id] = a;
+    if (!a || a.role === "super") return;
+    if (a.parentId === currentUser.id) { out[id] = a; return; }
+    if (cid && a.classId && a.classId === cid) { out[id] = a; return; }
+    if (cname && a.className && a.className === cname) { out[id] = a; return; }
+    if (currentUser.role === "gvcn" && id === currentUser.id) { out[id] = a; return; }
   });
   return out;
 }
 function renderAccountsTable() {
   const body = document.getElementById("accountsBody");
+  if (!body) return;
   const list = classAccounts();
   const roleLabel = function(r) {
     return ({ gvcn: "GVCN (Quản trị lớp)", leader: "Tổ trưởng/phó", viewer: "Xem (PH/HS)" })[r] || r;
@@ -2880,10 +2972,8 @@ function saveAccount() {
     alert("Không được đặt ID trùng Admin WEBH2T");
     return;
   }
-  if (pass && pass === SUPER_ADMIN.pass) {
-    alert("Không được đặt mật khẩu trùng Admin WEBH2T");
-    return;
-  }
+  // MK được phép trùng Admin / tài khoản khác
+
   // Không trùng ID / MK tài khoản khác (trừ chính mình khi sửa)
   for (const [oid, a] of Object.entries(accounts)) {
     if (edit && oid === edit) continue;
@@ -2891,10 +2981,8 @@ function saveAccount() {
       alert("ID đã được người khác dùng");
       return;
     }
-    if (pass && a.pass === pass) {
-      alert("Mật khẩu đã trùng với tài khoản khác — hãy chọn mật khẩu khác");
-      return;
-    }
+    // MK được phép trùng
+
   }
   const roleDetail = document.getElementById("accRoleDetail").value;
   const role = roleDetail === "viewer" ? "viewer" : "leader";
@@ -3089,14 +3177,18 @@ function importStudentsExcel(ev) {
 
 /* ===== CATALOGS ===== */
 function renderCatalogs() {
-  document.getElementById("bonusCatalogList").innerHTML = bonuses.map((item, i) =>
+  const bEl = document.getElementById("bonusCatalogList");
+  const vEl = document.getElementById("violCatalogList");
+  const pEl = document.getElementById("penaltyList");
+  if (!bEl || !vEl) return;
+  bEl.innerHTML = bonuses.map((item, i) =>
     '<div class="flex flex-wrap gap-2 items-center p-2 bg-white/80 rounded-lg border border-amber-200">' +
     '<input class="input-field text-sm w-16" value="' + item.code + '" data-i="' + i + '" data-k="code" data-t="bonus"/>' +
     '<input class="input-field text-sm flex-1 min-w-[180px]" value="' + item.text + '" data-i="' + i + '" data-k="text" data-t="bonus"/>' +
     '<input class="input-field text-sm w-20 pts-bonus" type="number" value="' + item.points + '" data-i="' + i + '" data-k="points" data-t="bonus"/>' +
     '<button type="button" class="btn-del-purple text-sm px-2" data-t="bonus" data-i="' + i + '">× Xóa</button></div>'
   ).join("");
-  document.getElementById("violCatalogList").innerHTML = violations.map((item, i) =>
+  vEl.innerHTML = violations.map((item, i) =>
     '<div class="flex flex-wrap gap-2 items-center p-2 bg-white/80 rounded-lg border border-amber-200">' +
     '<input class="input-field text-sm w-16" value="' + item.code + '" data-i="' + i + '" data-k="code" data-t="violation"/>' +
     '<input class="input-field text-sm flex-1 min-w-[180px]" value="' + item.text + '" data-i="' + i + '" data-k="text" data-t="violation"/>' +
@@ -3387,6 +3479,14 @@ function updateClock() {
 
 loadSession();
 pullFirebaseThen(function() {
+  try {
+    var el = document.getElementById("fbStatus");
+    if (el) {
+      el.textContent = firebaseReady
+        ? ("Cloud OK · " + FIREBASE_CONFIG.projectId + " · " + Object.keys(accounts).length + " tài khoản")
+        : "Cloud chưa kết nối — chỉ localStorage";
+    }
+  } catch (e) {}
   if (currentUser && currentUser.classId) {
     loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
   } else {
