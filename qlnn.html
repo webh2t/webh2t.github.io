@@ -589,29 +589,16 @@ button[onclick="showAuth('login')"] {
 
 <div id="sub-teams" class="admin-sub hidden">
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
-<div class="flex flex-wrap justify-between gap-3 mb-3">
-<h3 class="font-bold text-yellow-400">Phân tổ · Học sinh</h3>
+<div class="flex flex-wrap justify-between gap-3 mb-3 items-center">
+<h3 class="font-bold text-yellow-400 text-lg">Phân tổ · 4 tổ</h3>
 <div class="flex flex-wrap gap-2">
-<label class="btn-secondary text-sm cursor-pointer">Upload Excel
-<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importStudentsExcel(event)"/>
-</label>
-<button onclick="exportStudentsExcel()" class="btn-secondary text-sm">Tải mẫu / Xuất</button>
-<button onclick="saveStudents()" class="btn-primary text-sm">💾 Lưu</button>
+<button type="button" onclick="autoAssignInputBy()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#0d9488;color:#fff">⚡ Tự động chọn người nhập (không trùng)</button>
+<button type="button" onclick="saveTeamAssign()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">💾 Lưu phân tổ</button>
 </div>
 </div>
-<p class="text-xs text-slate-400 mb-3">Cột: STT | Họ tên | Tổ | Giới tính | Điện thoại | Người nhập (ID) | Vai trò người nhập</p>
-<div class="overflow-x-auto max-h-96 overflow-y-auto">
-<table class="w-full text-sm">
-<thead class="text-slate-400 border-b border-slate-600 sticky top-0 bg-slate-800">
-<tr>
-<th class="text-left py-2">STT</th><th class="text-left">Họ tên</th><th class="text-center">Tổ</th>
-<th class="text-center">GT</th><th class="text-left">SĐT</th><th class="text-left">Người nhập</th>
-</tr>
-</thead>
-<tbody id="teamAssignBody"></tbody>
-</table>
-</div>
-<div id="teamMsg" class="mt-2 text-sm text-green-400 hidden"></div>
+<p class="text-sm mb-4" style="color:springgreen">Danh sách lấy từ Tổng quan (file Excel đã upload). Chọn Tổ trưởng / Tổ phó · Người nhập không được trùng với chính học sinh đó.</p>
+<div id="teamAssignPanels" class="space-y-4"></div>
+<div id="teamMsg" class="mt-3 text-sm hidden"></div>
 </div>
 </div>
 
@@ -631,7 +618,7 @@ button[onclick="showAuth('login')"] {
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-green-700 text-lg">Ưu điểm (điểm cộng)</h4>
-<button onclick="addCatalogItem('bonus')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:#6b7280;color:#a16207;font-weight:800">+ Thêm mới</button>
+<button onclick="addCatalogItem('bonus')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:transparent;border:none;box-shadow:none;color:#16a34a">+ Thêm mới</button>
 </div>
 <div id="bonusCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -639,7 +626,7 @@ button[onclick="showAuth('login')"] {
 <div class="mb-6">
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-red-700 text-lg">Vi phạm (điểm trừ)</h4>
-<button onclick="addCatalogItem('violation')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:#6b7280;color:#a16207;font-weight:800">+ Thêm mới</button>
+<button onclick="addCatalogItem('violation')" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:transparent;border:none;box-shadow:none;color:#dc2626">+ Thêm mới</button>
 </div>
 <div id="violCatalogList" class="flex flex-col gap-2"></div>
 </div>
@@ -647,7 +634,7 @@ button[onclick="showAuth('login')"] {
 <div>
 <div class="flex justify-between items-center mb-2">
 <h4 class="font-semibold text-amber-800 text-lg">Hình phạt</h4>
-<button onclick="addPenaltyLine()" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:#6b7280;color:#a16207;font-weight:800">+ Thêm mới</button>
+<button onclick="addPenaltyLine()" class="text-xs px-2 py-1 rounded-lg font-bold" style="background:transparent;border:none;box-shadow:none;color:#7c3aed">+ Thêm mới</button>
 </div>
 <div id="penaltyList" class="flex flex-col gap-2"></div>
 </div>
@@ -1856,10 +1843,9 @@ function renderOverview() {
     const female = students.filter(s => s.gender === "Nữ").length;
     const stuRows = students.length ? (
       '<div class="overflow-x-auto min-h-[50vh]"><table class="w-full text-sm"><thead class="text-slate-400 border-b border-slate-600 sticky top-0 bg-slate-900"><tr>' +
-      '<th class="text-left py-2">ID</th><th class="text-left">Họ tên</th><th class="text-left">Ngày sinh</th><th class="text-center">Tổ</th><th class="text-left">SĐT</th><th class="text-left">Địa chỉ</th></tr></thead><tbody>' +
+      '<th class="text-left py-2">ID</th><th class="text-left">Họ và tên</th><th class="text-left">Ngày sinh</th><th class="text-center">GT</th><th class="text-left">Dân tộc</th><th class="text-center">Tổ</th><th class="text-left">Địa chỉ</th><th class="text-left">Ghi chú</th></tr></thead><tbody>' +
       students.map(s => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono hs-contact">' + s.id + '</td><td class="hs-name">' + s.name +
-      '</td><td class="text-xs hs-dob">' + (s.dob || "—") + '</td><td class="text-center hs-team">' + (s.team || "—") + '</td><td class="text-xs hs-contact">' + (s.phone || "—") +
-      '</td><td class="text-xs hs-contact max-w-[140px] truncate">' + (s.address || "—") + '</td></tr>').join("") +
+      '</td><td class="text-xs hs-dob">' + (s.dob || "—") + '</td><td class="text-center text-xs">' + (s.gender || "—") + '</td><td class="text-xs">' + (s.ethnicity || "—") + '</td><td class="text-center hs-team">' + (s.team || "—") + '</td><td class="text-xs hs-contact max-w-[120px] truncate">' + (s.address || "—") + '</td><td class="text-xs text-slate-400">' + (s.note || "—") + '</td></tr>').join("") +
       '</tbody></table></div>'
     ) : '<p class="text-amber-300 text-sm">Chưa có học sinh — Upload Excel rồi bấm Lưu.</p>';
     box.innerHTML = '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700">' +
@@ -3165,27 +3151,156 @@ function importAccountsExcel(ev) {
 
 /* ===== STUDENTS / TEAMS ===== */
 function renderTeamAssign() {
-  const body = document.getElementById("teamAssignBody");
-  const leaderOpts = Object.entries(classAccounts()).filter(([, a]) => a.role === "leader")
-    .map(([id, a]) => '<option value="' + id + '">' + (a.name || id) + '</option>').join("");
+  const box = document.getElementById("teamAssignPanels");
+  if (!box) return;
   if (!students.length) {
-    body.innerHTML = '<tr><td colspan="6" class="py-4 text-center text-slate-500">Chưa có HS — Upload Excel hoặc thêm tay</td></tr>';
+    box.innerHTML = '<p class="text-amber-300">Chưa có học sinh — vào <strong>Tổng quan</strong> Upload file Excel danh sách lớp trước.</p>';
     return;
   }
-  body.innerHTML = students.map(s =>
-    '<tr class="border-b border-slate-700/40"><td class="py-1">' + s.id + '</td><td>' + s.name +
-    '</td><td class="text-center"><select data-sid="' + s.id + '" class="team-sel input-field text-xs py-1" style="width:4rem">' +
-    [1, 2, 3, 4].map(t => '<option value="' + t + '"' + (String(s.team) === String(t) ? " selected" : "") + '>' + t + '</option>').join("") +
-    '</select></td><td class="text-center"><select data-sid="' + s.id + '" class="gender-sel input-field text-xs py-1" style="width:4rem">' +
-    '<option value="Nam"' + (s.gender === "Nam" ? " selected" : "") + '>Nam</option><option value="Nữ"' + (s.gender === "Nữ" ? " selected" : "") + '>Nữ</option></select></td>' +
-    '<td><input data-sid="' + s.id + '" class="phone-inp input-field text-xs py-1" value="' + (s.phone || "") + '"/></td>' +
-    '<td><select data-sid="' + s.id + '" class="inputby-sel input-field text-xs py-1"><option value="">—</option>' + leaderOpts + '</select></td></tr>'
-  ).join("");
-  body.querySelectorAll(".inputby-sel").forEach(sel => {
-    const st = students.find(x => String(x.id) === String(sel.dataset.sid));
-    if (st && st.inputBy) sel.value = st.inputBy;
+  const leaders = Object.entries(classAccounts()).filter(([, a]) => a.role === "leader");
+  let html = "";
+  for (let team = 1; team <= 4; team++) {
+    const members = students.filter(s => String(s.team) === String(team));
+    if (!members.length && students.every(s => s.team)) {
+      // still show empty team box
+    }
+    const leaderOpts = leaders.filter(([, a]) => !a.team || String(a.team) === String(team))
+      .map(([id, a]) => '<option value="' + id + '">' + (a.name || id) + " (" + id + ")</option>").join("");
+    const allLeaderOpts = leaders.map(([id, a]) => '<option value="' + id + '">' + (a.name || id) + " (" + id + ")</option>").join("");
+    // current roles
+    const truong = leaders.find(([, a]) => a.roleDetail === "truong" && String(a.team) === String(team));
+    const pho1 = leaders.find(([, a]) => a.roleDetail === "pho1" && String(a.team) === String(team));
+    const pho2 = leaders.find(([, a]) => a.roleDetail === "pho2" && String(a.team) === String(team));
+    html += '<div class="p-4 rounded-xl border border-slate-600 bg-slate-900/70">' +
+      '<h4 class="font-bold text-sky-400 mb-3 text-base">Tổ ' + team + ' <span class="text-slate-400 font-normal text-sm">(' + members.length + ' HS)</span></h4>' +
+      '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 text-sm">' +
+      '<div><label class="text-xs text-slate-400">Tổ trưởng</label><select class="input-field text-sm team-role-sel" data-team="' + team + '" data-rd="truong">' +
+      '<option value="">— Chọn —</option>' + allLeaderOpts + '</select></div>' +
+      '<div><label class="text-xs text-slate-400">Tổ phó 1</label><select class="input-field text-sm team-role-sel" data-team="' + team + '" data-rd="pho1">' +
+      '<option value="">— Chọn —</option>' + allLeaderOpts + '</select></div>' +
+      '<div><label class="text-xs text-slate-400">Tổ phó 2</label><select class="input-field text-sm team-role-sel" data-team="' + team + '" data-rd="pho2">' +
+      '<option value="">— Chọn —</option>' + allLeaderOpts + '</select></div>' +
+      '</div>';
+    if (!members.length) {
+      html += '<p class="text-slate-500 text-sm">Chưa có HS thuộc tổ ' + team + ' (cập nhật cột Tổ trong Excel Tổng quan).</p></div>';
+      continue;
+    }
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-slate-400 border-b border-slate-600"><tr>' +
+      '<th class="text-left py-1">ID</th><th class="text-left">Họ và tên</th><th class="text-left">Người nhập thi đua</th></tr></thead><tbody>';
+    members.forEach(s => {
+      // options: leaders of same team preferred, exclude self-by name match to student linked accounts
+      let opts = '<option value="">— Chọn người nhập —</option>';
+      leaders.forEach(([lid, la]) => {
+        // Không cho người nhập chính mình: nếu account gắn studentId === s.id hoặc tên trùng
+        if (la.studentId && String(la.studentId) === String(s.id)) return;
+        if (la.name && s.name && la.name.trim().toLowerCase() === s.name.trim().toLowerCase()) return;
+        const sel = s.inputBy === lid ? " selected" : "";
+        opts += '<option value="' + lid + '"' + sel + '>' + (la.name || lid) + " (" + lid + ")</option>";
+      });
+      html += '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono text-sky-400">' + s.id + '</td><td class="text-white font-medium">' + s.name +
+        '</td><td><select class="input-field text-sm input-by-sel" data-sid="' + s.id + '">' + opts + '</select></td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+  }
+  box.innerHTML = html;
+  // set current role selects
+  document.querySelectorAll(".team-role-sel").forEach(sel => {
+    const team = sel.dataset.team;
+    const rd = sel.dataset.rd;
+    const found = leaders.find(([, a]) => a.roleDetail === rd && String(a.team) === String(team));
+    if (found) sel.value = found[0];
   });
 }
+function saveTeamAssign() {
+  // Update leader roles/teams
+  document.querySelectorAll(".team-role-sel").forEach(sel => {
+    const lid = sel.value;
+    const team = +sel.dataset.team;
+    const rd = sel.dataset.rd;
+    if (!lid || !accounts[lid]) return;
+    // clear others with same roleDetail+team
+    Object.keys(accounts).forEach(k => {
+      if (accounts[k].role === "leader" && accounts[k].roleDetail === rd && String(accounts[k].team) === String(team) && k !== lid) {
+        // keep team but could clear roleDetail
+      }
+    });
+    accounts[lid].role = "leader";
+    accounts[lid].roleDetail = rd;
+    accounts[lid].team = team;
+  });
+  // Update inputBy — không trùng bản thân
+  let err = "";
+  document.querySelectorAll(".input-by-sel").forEach(sel => {
+    const sid = sel.dataset.sid;
+    const st = students.find(s => String(s.id) === String(sid));
+    if (!st) return;
+    const lid = sel.value || null;
+    if (lid && accounts[lid]) {
+      const la = accounts[lid];
+      if (la.studentId && String(la.studentId) === String(sid)) {
+        err = "Không thể chọn " + (la.name || lid) + " nhập cho chính mình (" + st.name + ")";
+        return;
+      }
+      if (la.name && st.name && la.name.trim().toLowerCase() === st.name.trim().toLowerCase()) {
+        err = "Không thể chọn " + la.name + " nhập cho chính mình";
+        return;
+      }
+    }
+    st.inputBy = lid;
+  });
+  if (err) {
+    alert(err);
+    return;
+  }
+  saveAccounts();
+  saveClassData();
+  const msg = document.getElementById("teamMsg");
+  if (msg) {
+    msg.className = "mt-3 text-sm text-green-400";
+    msg.textContent = "✅ Đã lưu phân tổ và người nhập.";
+    msg.classList.remove("hidden");
+  }
+  renderTeamAssign();
+}
+function autoAssignInputBy() {
+  const leaders = Object.entries(classAccounts()).filter(([, a]) => a.role === "leader");
+  if (!leaders.length) {
+    alert("Chưa có tài khoản Tổ trưởng/phó. Vào Quản trị → Tài khoản để thêm trước.");
+    return;
+  }
+  // Group leaders by team
+  for (let team = 1; team <= 4; team++) {
+    const members = students.filter(s => String(s.team) === String(team));
+    let teamLeaders = leaders.filter(([, a]) => String(a.team) === String(team));
+    if (!teamLeaders.length) teamLeaders = leaders;
+    if (!teamLeaders.length) continue;
+    let idx = 0;
+    members.forEach(s => {
+      // pick leader who is not self
+      let tries = 0;
+      let chosen = null;
+      while (tries < teamLeaders.length) {
+        const [lid, la] = teamLeaders[idx % teamLeaders.length];
+        idx++;
+        tries++;
+        if (la.studentId && String(la.studentId) === String(s.id)) continue;
+        if (la.name && s.name && la.name.trim().toLowerCase() === s.name.trim().toLowerCase()) continue;
+        chosen = lid;
+        break;
+      }
+      if (chosen) s.inputBy = chosen;
+    });
+  }
+  saveClassData();
+  renderTeamAssign();
+  const msg = document.getElementById("teamMsg");
+  if (msg) {
+    msg.className = "mt-3 text-sm text-green-400";
+    msg.textContent = "✅ Đã tự động gán người nhập (không trùng bản thân). Bấm Lưu phân tổ để xác nhận.";
+    msg.classList.remove("hidden");
+  }
+}
+
 function saveStudents() {
   document.querySelectorAll(".team-sel").forEach(sel => {
     const s = students.find(x => String(x.id) === String(sel.dataset.sid));
