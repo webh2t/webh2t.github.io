@@ -92,7 +92,39 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 
 
 .subtab-active{background:#0ea5e9!important;color:#fff!important}
-@media print{header,.no-print,footer{display:none!important}}
+
+#tab-report label { color: #111 !important; }
+#tab-report label[style*="991b1b"] { color: #991b1b !important; }
+#missingBox { /* ẩn khi in */ }
+@media print {
+  header, .no-print, footer, #mainTabs, #btnLogout, #userBadge,
+  #deadlineAlert, #missingBox, .btn-filter-teal, #btnExportExcel, #btnPrint,
+  #reportPeriodStats, #reportHighlights, #rankChart, canvas,
+  #reportStudentProfile, #parentStudentPanel,
+  #tab-report .grid.grid-cols-1.md\:grid-cols-12,
+  #tab-report h2#reportTitle { display: none !important; }
+  body, #appSection, #tab-report { background: #fff !important; color: #000 !important; }
+  #tab-report, #tab-report * { visibility: visible; }
+  #reportWeekBoard { display: block !important; visibility: visible !important; }
+  #reportWeekBoard.hidden { display: block !important; }
+  .week-board {
+    background: #fff !important;
+    border: 2px solid #0284c7 !important;
+    color: #000 !important;
+    box-shadow: none !important;
+    page-break-inside: avoid;
+    margin-bottom: 1rem;
+  }
+  .week-board table th { background: #e0f2fe !important; color: #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .week-board td, .week-board th { border-color: #64748b !important; color: #000 !important; }
+  .legend-box { border: 1px solid #64748b !important; background: #fff !important; color: #000 !important; }
+  .rank-xs { color: #b45309 !important; }
+  .rank-tot { color: #15803d !important; }
+  .rank-htt { color: #0369a1 !important; }
+  .rank-ccg { color: #c2410c !important; }
+  .rank-ht { color: #b91c1c !important; }
+}
+
 
 
 .btn-upload-blue,.btn-sample-orange,.btn-save-green,.btn-upload-green,
@@ -131,6 +163,23 @@ button[onclick="showAuth('login')"] {
 #authModal p[style*="aquamarine"], #authModal .text-sm {
   /* keep */
 }
+
+
+.rank-xs{color:#fbbf24;font-weight:800}
+.rank-tot{color:#22c55e;font-weight:700}
+.rank-htt{color:#38bdf8;font-weight:700}
+.rank-ccg{color:#f59e0b;font-weight:700}
+.rank-ht{color:#ef4444;font-weight:700}
+.rank-kha,.rank-dat,.rank-chua{font-weight:600}
+.week-board{background:linear-gradient(180deg,#fefce8 0%,#fff 40%,#f0f9ff 100%);color:#1e293b;border-radius:1rem;padding:1.25rem;border:3px solid #38bdf8}
+.week-board h2{color:#0369a1;font-weight:800}
+.week-board table{width:100%;border-collapse:collapse;font-size:0.8rem}
+.week-board th,.week-board td{border:1px solid #94a3b8;padding:0.35rem 0.4rem;text-align:center}
+.week-board th{background:#e0f2fe;color:#0c4a6e;font-weight:700}
+.week-board .name-col{text-align:left;font-weight:600}
+.week-board .score-plus{color:#16a34a;font-weight:700}
+.week-board .score-minus{color:#dc2626;font-weight:700}
+.legend-box{background:#fff;border:2px solid #c4b5fd;border-radius:0.75rem;padding:0.75rem}
 
 </style>
 </head>
@@ -462,7 +511,7 @@ button[onclick="showAuth('login')"] {
 <h2 class="text-xl font-bold text-yellow-400 mb-4" id="reportTitle">📊 Báo cáo thi đua</h2>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 items-end">
 <div class="md:col-span-2">
-<label class="text-sm text-slate-300 font-medium mb-1 block">Thời gian</label>
+<label class="text-sm font-medium mb-1 block" style="color:#991b1b">Thời gian</label>
 <select id="rPeriod" class="input-field text-base py-3" onchange="onReportPeriodChange()">
 <option value="year">Cả năm</option>
 <option value="week">Theo tuần</option>
@@ -472,7 +521,7 @@ button[onclick="showAuth('login')"] {
 </select>
 </div>
 <div class="md:col-span-2" id="rMonthWrap">
-<label class="text-sm text-slate-300 font-medium mb-1 block">Tháng</label>
+<label class="text-sm font-medium mb-1 block" style="color:#991b1b">Tháng</label>
 <select id="rMonth" class="input-field text-base py-3">
 <option value="">—</option>
 <option value="9">9</option><option value="10">10</option><option value="11">11</option><option value="12">12</option>
@@ -480,26 +529,26 @@ button[onclick="showAuth('login')"] {
 </select>
 </div>
 <div class="md:col-span-3" id="rWeekWrap">
-<label class="text-sm text-slate-300 font-medium mb-1 block">Tuần NH</label>
+<label class="text-sm font-medium mb-1 block" style="color:#111">Tuần NH</label>
 <select id="rWeek" class="input-field text-base py-3 w-full" style="min-width:260px">
 <option value="">Tất cả tuần</option>
 </select>
 </div>
 <div class="md:col-span-3">
-<label class="text-sm text-slate-300 font-medium mb-1 block">Họ và tên học sinh</label>
+<label class="text-sm font-medium mb-1 block" style="color:#111">Họ và tên học sinh</label>
 <select id="rStudent" class="input-field text-base py-3" onchange="renderReport()">
 <option value="">— Tất cả HS —</option>
 </select>
 </div>
 <div class="md:col-span-1">
-<label class="text-sm text-slate-300 font-medium mb-1 block">Tổ</label>
+<label class="text-sm font-medium mb-1 block" style="color:#111">Tổ</label>
 <select id="rTeam" class="input-field text-base py-3">
 <option value="">All</option>
 <option>1</option><option>2</option><option>3</option><option>4</option>
 </select>
 </div>
 <div class="md:col-span-1">
-<label class="text-sm text-slate-300 font-medium mb-1 block">Lớp</label>
+<label class="text-sm font-medium mb-1 block" style="color:#111">Lớp</label>
 <input type="text" id="rClass" class="input-field text-base py-3" placeholder="Lớp"/>
 </div>
 </div>
@@ -508,7 +557,7 @@ button[onclick="showAuth('login')"] {
 <div class="flex flex-wrap gap-2 no-print">
 <button type="button" onclick="renderReport()" class="btn-filter-teal text-sm px-4 py-2.5 rounded-lg font-semibold">🔍 Lọc & Xem</button>
 <button type="button" id="btnExportExcel" onclick="exportExcel()" class="btn-search-brown text-sm px-4 py-2.5 rounded-lg">📥 Excel</button>
-<button id="btnPrint" onclick="window.print()" class="btn-secondary text-sm">🖨️ In</button>
+<button id="btnPrint" onclick="printReport()" class="btn-secondary text-sm">🖨️ In</button>
 </div>
 <div id="deadlineAlert" class="mt-3 hidden text-sm p-3 rounded-lg border"></div>
 </div>
@@ -519,6 +568,7 @@ button[onclick="showAuth('login')"] {
 </div>
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700" id="reportHighlights"></div>
 </div>
+<div id="reportWeekBoard" class="mb-4 hidden"></div>
 <div id="reportPeriodStats" class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-4"></div>
 
 <div id="parentStudentPanel" class="bg-slate-800 rounded-xl p-5 border border-sky-500/40 mb-4 hidden">
@@ -555,7 +605,7 @@ button[onclick="showAuth('login')"] {
 <tbody id="reportBody"></tbody>
 </table>
 </div>
-<div id="missingBox" class="bg-slate-800 rounded-xl p-5 border border-amber-600/40 hidden">
+<div id="missingBox" class="bg-slate-800 rounded-xl p-5 border border-amber-600/40 hidden no-print">
 <h3 class="font-semibold text-amber-400 mb-2">⚠️ Học sinh chưa có bản ghi (trong phạm vi được giao)</h3>
 <div id="missingList" class="text-sm"></div>
 </div>
@@ -1205,10 +1255,16 @@ function getWeekNumber(d) {
   return Math.ceil((((d - y) / 86400000) + 1) / 7);
 }
 function rankClass(s) {
-  if (s >= 110) return { label: "TỐT", cls: "rank-tot" };
-  if (s >= 80) return { label: "KHÁ", cls: "rank-kha" };
-  if (s >= 50) return { label: "ĐẠT", cls: "rank-dat" };
-  return { label: "CHƯA ĐẠT", cls: "rank-chua" };
+  // Thang điểm cuối tuần (theo mẫu thi đua tổ)
+  if (s >= 120) return { label: "XUẤT SẮC", cls: "rank-xs", stars: "★★★★★" };
+  if (s >= 110) return { label: "TỐT", cls: "rank-tot", stars: "★★★" };
+  if (s >= 100) return { label: "HOÀN THÀNH TỐT", cls: "rank-htt", stars: "★★" };
+  if (s >= 90) return { label: "CẦN CỐ GẮNG", cls: "rank-ccg", stars: "★" };
+  return { label: "CẦN HỖ TRỢ GĐ", cls: "rank-ht", stars: "" };
+}
+function rankClassMonth(avg) {
+  // Xếp loại tháng theo điểm trung bình tuần (= tổng điểm tháng / số tuần)
+  return rankClass(avg);
 }
 function formatDate(iso) {
   if (!iso) return "";
@@ -2756,6 +2812,200 @@ function renderReportStudentProfile(list) {
       : '<p class="text-slate-500 text-sm">Chưa có bản ghi vi phạm trong phạm vi lọc.</p>');
 }
 
+
+function renderWeekMonthBoards(list, agg) {
+  const box = document.getElementById("reportWeekBoard");
+  if (!box) return;
+  const period = (document.getElementById("rPeriod") || {}).value || "year";
+  const teamFilter = (document.getElementById("rTeam") || {}).value || "";
+  const gvcnName = (currentUser && (currentUser.role === "gvcn" ? currentUser.name : currentUser.name)) || "";
+  // Find GVCN name from accounts
+  let gvcnLabel = gvcnName;
+  Object.values(accounts).forEach(a => {
+    if (a.role === "gvcn" && a.classId === (currentUser && currentUser.classId)) gvcnLabel = a.name || gvcnLabel;
+  });
+  const clsName = (currentUser && currentUser.className) || "";
+
+  if (period === "week") {
+    const weekNo = (document.getElementById("rWeek") || {}).value || (currentSchoolWeek() || {}).w || "";
+    const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(weekNo));
+    const from = sw ? formatDate(sw.from) : "";
+    const to = sw ? formatDate(sw.to) : "";
+    // Group by team
+    const teams = teamFilter ? [+teamFilter] : [1, 2, 3, 4];
+    let html = "";
+    teams.forEach(team => {
+      const members = students.filter(s => String(s.team) === String(team));
+      if (!members.length) return;
+      const leaderAcc = Object.entries(accounts).find(([, a]) => a.role === "leader" && a.roleDetail === "truong" && String(a.team) === String(team));
+      const leaderName = leaderAcc ? (leaderAcc[1].name || leaderAcc[0]) : "—";
+      // 12 criteria from bonuses+violations codes (top 12 unique content)
+      const criteria = [];
+      const seen = {};
+      list.forEach(e => {
+        if (String(e.team) !== String(team) && e.team != null) return;
+        const key = e.contentCode || e.contentText;
+        if (key && !seen[key]) { seen[key] = true; criteria.push({ code: e.contentCode, text: e.contentText, type: e.type }); }
+      });
+      while (criteria.length < 12) criteria.push({ code: "", text: "", type: "" });
+      criteria.splice(12);
+
+      html += '<div class="week-board mb-6 shadow-lg">';
+      html += '<div class="text-center mb-2">';
+      html += '<div style="font-size:0.7rem;color:#0369a1;font-weight:700;letter-spacing:0.05em">BẢNG THEO DÕI THI ĐUA</div>';
+      html += '<div style="font-size:1.35rem;font-weight:800;color:#0c4a6e;line-height:1.2">CÁC THÀNH VIÊN TRONG TỔ</div>';
+      html += '<div style="font-size:0.85rem;margin-top:0.35rem;color:#334155">Tuần ' + (weekNo || "—") + ' · Tổ ' + team + ' · Lớp ' + clsName + '</div></div>';
+      html += '<div class="flex flex-wrap gap-3 text-sm mb-3 justify-between border border-sky-300 rounded-lg p-2 bg-white/80">';
+      html += '<span><b>GVCN:</b> ' + (gvcnLabel || "—") + '</span>';
+      html += '<span><b>Lớp:</b> ' + clsName + '</span>';
+      html += '<span><b>Tổ trưởng:</b> ' + leaderName + '</span>';
+      html += '<span><b>Tuần:</b> ' + (weekNo || "—") + (from ? ' · ' + from + ' → ' + to : '') + '</span></div>';
+
+      html += '<div class="overflow-x-auto"><table><thead><tr><th rowspan="2">STT</th><th rowspan="2" class="name-col">HỌ VÀ TÊN THÀNH VIÊN</th>';
+      html += '<th colspan="12">12 TIÊU CHÍ THI ĐUA (mã / nội dung ghi nhận trong tuần)</th>';
+      html += '<th rowspan="2">ĐIỂM<br/>CỘNG (+)</th><th rowspan="2">ĐIỂM<br/>TRỪ (−)</th><th rowspan="2">ĐIỂM<br/>CUỐI TUẦN</th><th rowspan="2">XẾP LOẠI</th></tr><tr>';
+      for (let i = 0; i < 12; i++) html += '<th title="' + (criteria[i].text || "") + '">' + (i + 1) + '</th>';
+      html += '</tr></thead><tbody>';
+
+      members.forEach((s, idx) => {
+        const stEntries = list.filter(e => String(e.studentId) === String(s.id));
+        let plus = 0, minus = 0;
+        const marks = criteria.map(c => {
+          const hit = stEntries.filter(e => (e.contentCode || e.contentText) === (c.code || c.text));
+          if (!hit.length) return "";
+          const tsum = hit.reduce((a, e) => a + (e.total != null ? e.total : e.points * e.times), 0);
+          if (tsum > 0) { plus += tsum; return "+" + tsum; }
+          if (tsum < 0) { minus += tsum; return String(tsum); }
+          return hit.length ? "•" : "";
+        });
+        // also count entries not in criteria slots
+        stEntries.forEach(e => {
+          const key = e.contentCode || e.contentText;
+          if (!criteria.some(c => (c.code || c.text) === key)) {
+            const tt = e.total != null ? e.total : e.points * e.times;
+            if (tt > 0) plus += tt; else minus += tt;
+          }
+        });
+        const score = 100 + plus + minus;
+        const rk = rankClass(score);
+        html += '<tr><td>' + (idx + 1) + '</td><td class="name-col">' + s.name + '</td>';
+        marks.forEach(m => html += '<td>' + m + '</td>');
+        html += '<td class="score-plus">' + (plus ? "+" + plus : "0") + '</td>';
+        html += '<td class="score-minus">' + (minus || "0") + '</td>';
+        html += '<td style="font-weight:800">' + score + '</td>';
+        html += '<td class="' + rk.cls + '">' + rk.label + '<br/><span style="color:#eab308">' + (rk.stars || "") + '</span></td></tr>';
+      });
+      html += '</tbody></table></div>';
+
+      // legend + formula
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4">';
+      html += '<div class="legend-box text-sm"><b>THANG ĐIỂM – XẾP LOẠI CÁ NHÂN</b><table class="mt-2 w-full text-xs"><tr><th>Điểm cuối tuần</th><th>Xếp loại</th><th>Biểu tượng</th></tr>';
+      html += '<tr><td>≥ 120</td><td class="rank-xs">XUẤT SẮC</td><td>★★★★★</td></tr>';
+      html += '<tr><td>110 – 119</td><td class="rank-tot">TỐT</td><td>★★★</td></tr>';
+      html += '<tr><td>100 – 109</td><td class="rank-htt">HOÀN THÀNH TỐT</td><td>★★</td></tr>';
+      html += '<tr><td>90 – 99</td><td class="rank-ccg">CẦN CỐ GẮNG</td><td>★</td></tr>';
+      html += '<tr><td>&lt; 90</td><td class="rank-ht">CẦN HỖ TRỢ GĐ</td><td></td></tr></table></div>';
+      html += '<div class="legend-box text-sm"><b>CÔNG THỨC</b><p class="mt-2">Điểm cuối tuần = <b>100</b> + Tổng điểm cộng − |Tổng điểm trừ|</p>';
+      html += '<p class="text-xs mt-1 text-slate-600">Ví dụ: 100 + 15 − 6 = 109 → HOÀN THÀNH TỐT ★★</p></div></div>';
+
+      // outstanding / need support
+      const scored = members.map(s => {
+        const stEntries = list.filter(e => String(e.studentId) === String(s.id));
+        let b = 0, v = 0;
+        stEntries.forEach(e => {
+          const tt = e.total != null ? e.total : e.points * e.times;
+          if (tt > 0) b += tt; else v += tt;
+        });
+        return { name: s.name, score: 100 + b + v };
+      }).sort((a, b) => b.score - a.score);
+      const top = scored.filter(x => x.score >= 110).slice(0, 3);
+      const low = scored.filter(x => x.score < 90);
+      html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 text-sm">';
+      html += '<div class="legend-box"><b class="text-violet-700">TIẾN BỘ NỔI BẬT TRONG TUẦN</b><ol class="mt-1 list-decimal ml-4">';
+      (top.length ? top : scored.slice(0, 3)).forEach(x => { html += '<li>' + x.name + ' (' + x.score + 'đ · ' + rankClass(x.score).label + ')</li>'; });
+      html += '</ol></div>';
+      html += '<div class="legend-box"><b class="text-rose-700">HS CẦN ĐƯỢC HỖ TRỢ</b><ul class="mt-1 ml-4 list-disc">';
+      if (low.length) low.forEach(x => { html += '<li>' + x.name + ' (' + x.score + 'đ)</li>'; });
+      else html += '<li class="text-slate-500">Không có</li>';
+      html += '</ul></div></div></div>';
+    });
+    box.innerHTML = html || '<p class="text-slate-400">Chọn tuần và (tuỳ chọn) tổ để xem bảng theo dõi.</p>';
+    box.classList.remove("hidden");
+  } else if (period === "month") {
+    const month = +(document.getElementById("rMonth") || {}).value || 0;
+    // Weeks overlapping this month
+    const weeksInMonth = SCHOOL_WEEKS.filter(w => {
+      const fm = +w.from.slice(5, 7), tm = +w.to.slice(5, 7);
+      return fm === month || tm === month;
+    });
+    const nW = weeksInMonth.length || 4;
+    let pool = students;
+    if (teamFilter) pool = students.filter(s => String(s.team) === String(teamFilter));
+    let html = '<div class="week-board mb-4">';
+    html += '<div class="text-center mb-2"><div style="font-size:0.7rem;color:#0369a1;font-weight:700">BẢNG TỔNG HỢP THI ĐUA</div>';
+    html += '<div style="font-size:1.25rem;font-weight:800;color:#0c4a6e">BÁO CÁO THEO THÁNG ' + (month || "—") + '</div>';
+    html += '<div style="font-size:0.85rem;color:#334155">Lớp ' + clsName + ' · GVCN: ' + (gvcnLabel || "—") + '</div></div>';
+    html += '<p class="text-center text-sm mb-3" style="color:#111">Tổng hợp ' + nW + ' tuần · Tổng điểm tháng = Σ điểm tuần · Xếp loại = (tổng ÷ ' + nW + ') theo thang điểm</p>';
+    html += '<div class="overflow-x-auto"><table><thead><tr><th>STT</th><th class="name-col">Họ và tên</th><th>Tổ</th>';
+    weeksInMonth.forEach(w => { html += '<th>Tuần ' + w.w + '</th>'; });
+    html += '<th>Tổng điểm tháng</th><th>Điểm TB (÷' + nW + ')</th><th>Xếp loại tháng</th></tr></thead><tbody>';
+    pool.forEach((s, idx) => {
+      let sum = 0;
+      const weekScores = weeksInMonth.map(w => {
+        const we = list.filter(e => String(e.studentId) === String(s.id) && (String(e.weekNo) === String(w.w) || (e.date >= w.from && e.date <= w.to)));
+        let b = 0, v = 0;
+        we.forEach(e => {
+          const tt = e.total != null ? e.total : e.points * e.times;
+          if (tt > 0) b += tt; else v += tt;
+        });
+        // Nếu không có bản ghi tuần, vẫn tính 100 gốc khi có ít nhất 1 tuần có dữ liệu lớp? User: tổng 4 tuần — HS không có dữ liệu = 100 mỗi tuần trống
+        const sc = 100 + b + v;
+        sum += sc;
+        return sc;
+      });
+      // User: xếp loại tháng = tổng điểm tháng / 4 (or nW)
+      const avg = sum / nW;
+      const rk = rankClassMonth(avg);
+      html += '<tr><td>' + (idx + 1) + '</td><td class="name-col">' + s.name + '</td><td>' + (s.team || "") + '</td>';
+      weekScores.forEach(sc => { html += '<td>' + sc + '</td>'; });
+      html += '<td style="font-weight:800">' + sum + '</td><td>' + avg.toFixed(1) + '</td>';
+      html += '<td class="' + rk.cls + '">' + rk.label + ' ' + (rk.stars || "") + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+    html += '<div class="legend-box mt-3 text-sm"><b>Thang xếp loại tháng</b> (theo điểm trung bình tuần): ≥120 Xuất sắc · 110–119 Tốt · 100–109 Hoàn thành tốt · 90–99 Cần cố gắng · &lt;90 Cần hỗ trợ GĐ</div></div>';
+    box.innerHTML = html;
+    box.classList.remove("hidden");
+  } else if (period === "hk1" || period === "hk2" || period === "year") {
+    // summary table with rank scale
+    let pool = agg.slice().sort((a, b) => b.score - a.score);
+    let html = '<div class="week-board mb-4">';
+    html += '<div class="text-center mb-2"><div style="font-size:0.7rem;color:#0369a1;font-weight:700">BẢNG XẾP LOẠI THI ĐUA</div>';
+    html += '<div style="font-size:1.2rem;font-weight:800;color:#0c4a6e">' + ({ hk1: "BÁO CÁO HỌC KỲ 1 (Tháng 9 – 12)", hk2: "BÁO CÁO HỌC KỲ 2 (Tháng 1 – 4)", year: "BÁO CÁO CẢ NĂM HỌC" })[period] + '</div>';
+    html += '<div style="font-size:0.85rem;color:#334155">Lớp ' + clsName + ' · GVCN: ' + (gvcnLabel || "—") + '</div></div>';
+    html += '<p class="text-center text-xs mb-2" style="color:#111">Điểm = 100 + cộng − trừ · Thang: ≥120 Xuất sắc · 110–119 Tốt · 100–109 Hoàn thành tốt · 90–99 Cần cố gắng · &lt;90 Cần hỗ trợ GĐ</p>';
+    html += '<div class="overflow-x-auto"><table><thead><tr><th>STT</th><th class="name-col">Họ tên</th><th>Tổ</th><th>Cộng</th><th>Trừ</th><th>Điểm</th><th>Xếp loại</th></tr></thead><tbody>';
+    pool.forEach((s, i) => {
+      const rk = rankClass(s.score);
+      html += '<tr><td>' + (i + 1) + '</td><td class="name-col">' + s.name + '</td><td>' + (s.team || "") + '</td><td class="score-plus">+' + s.bonus + '</td><td class="score-minus">' + s.violation + '</td><td style="font-weight:800">' + s.score + '</td><td class="' + rk.cls + '">' + rk.label + ' ' + (rk.stars || "") + '</td></tr>';
+    });
+    html += '</tbody></table></div></div>';
+    box.innerHTML = html;
+    box.classList.remove("hidden");
+  } else {
+    box.innerHTML = "";
+    box.classList.add("hidden");
+  }
+}
+
+function printReport() {
+  renderReport();
+  const board = document.getElementById("reportWeekBoard");
+  if (board) board.classList.remove("hidden");
+  // Ẩn missing trước khi in
+  const mb = document.getElementById("missingBox");
+  if (mb) mb.classList.add("hidden");
+  setTimeout(function(){ window.print(); }, 200);
+}
 function renderReport() {
   const rt = document.getElementById("reportTitle");
   if (rt) {
@@ -2784,6 +3034,7 @@ function renderReport() {
   renderReportStudentProfile(list);
   
   const agg = aggregateByStudent(list);
+  try { renderWeekMonthBoards(list, agg); } catch (err) { console.warn(err); }
   // Thống kê tổng hợp theo phạm vi lọc
   const statsBox = document.getElementById("reportPeriodStats");
   if (statsBox) {
@@ -2850,8 +3101,8 @@ function renderReport() {
     '<div class="p-2 bg-red-500/10 rounded border border-red-500/30"><div class="text-xs text-slate-400">Vi phạm nhiều</div><div class="font-semibold text-red-400">' +
     (most && most.violationCount ? most.name + " · " + most.violationCount + " lần" : "—") + '</div></div></div>';
 
-  const counts = { TỐT: 0, KHÁ: 0, ĐẠT: 0, "CHƯA ĐẠT": 0 };
-  agg.forEach(s => counts[s.rank.label]++);
+  const counts = { "XUẤT SẮC": 0, "TỐT": 0, "HOÀN THÀNH TỐT": 0, "CẦN CỐ GẮNG": 0, "CẦN HỖ TRỢ GĐ": 0 };
+  agg.forEach(s => { if (counts[s.rank.label] != null) counts[s.rank.label]++; });
   const ctx = document.getElementById("rankChart");
   if (rankChart) rankChart.destroy();
   rankChart = new Chart(ctx, {
@@ -2859,7 +3110,7 @@ function renderReport() {
     data: {
       labels: ["TỐT", "KHÁ", "ĐẠT", "CHƯA ĐẠT"],
       datasets: [{ data: [counts.TỐT, counts.KHÁ, counts.ĐẠT, counts["CHƯA ĐẠT"]],
-        backgroundColor: ["#22c55e88", "#3b82f688", "#f9731688", "#ef444488"],
+        backgroundColor: ["#fbbf24","#22c55e","#38bdf8","#f59e0b","#ef4444"],
         borderColor: ["#22c55e", "#3b82f6", "#f97316", "#ef4444"], borderWidth: 1 }]
     },
     options: {
@@ -2908,7 +3159,7 @@ function renderReport() {
       pool = students.filter(s => s.inputBy === currentUser.id);
     const have = new Set(agg.map(s => String(s.id)));
     const missing = pool.filter(s => !have.has(String(s.id)));
-    if (missing.length && currentUser && currentUser.role !== "viewer" && !guestMode) {
+    if (missing.length && currentUser && currentUser.role !== "viewer" && currentUser.role !== "super" && !guestMode) {
       mBox.classList.remove("hidden");
       if (mTitle) mTitle.textContent = "Học sinh chưa có bản ghi (phạm vi được giao)";
       document.getElementById("missingList").innerHTML =
