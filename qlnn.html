@@ -203,6 +203,12 @@ button[onclick="showAuth('login')"] {
 .week-board .score-minus{color:#dc2626;font-weight:700}
 .legend-box{background:#fff;border:2px solid #c4b5fd;border-radius:0.75rem;padding:0.75rem}
 
+
+@media print {
+  .student-sheet { page-break-inside: avoid; font-size: 10pt !important; }
+  #reportWeekBoard:not(.force-print) { display: none !important; }
+}
+
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen">
@@ -531,6 +537,10 @@ button[onclick="showAuth('login')"] {
 <section id="tab-report" class="tab-content hidden">
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-4">
 <h2 class="text-xl font-bold text-yellow-400 mb-4" id="reportTitle">📊 Báo cáo thi đua</h2>
+<div id="superGvcnReportWrap" class="mb-3 hidden no-print">
+<label class="text-sm font-medium" style="color:#991b1b">Chọn GVCN để xem báo cáo</label>
+<select id="rGvcnSelect" class="input-field text-base py-2.5 max-w-lg" onchange="onSuperGvcnReportChange()"></select>
+</div>
 <div class="grid grid-cols-1 md:grid-cols-12 gap-4 mb-4 items-end">
 <div class="md:col-span-2">
 <label class="text-sm font-medium mb-1 block" style="color:#991b1b">Thời gian</label>
@@ -979,6 +989,19 @@ const SUPER_ADMIN = {
   const s = JSON.parse(localStorage.getItem("qlnn_super_v2")||"null");
   if (s) { if (s.id) SUPER_ADMIN.id = s.id; if (s.pass) SUPER_ADMIN.pass = s.pass; if (s.name) SUPER_ADMIN.name = s.name; }
 } catch(e){} })();
+function pullSuperAdmin(cb) {
+  if (!firebaseReady || !db) { if (cb) cb(); return; }
+  db.collection("qlnn_meta").doc("super_admin").get().then(function(snap) {
+    if (snap.exists) {
+      const d = snap.data() || {};
+      if (d.id) SUPER_ADMIN.id = d.id;
+      if (d.pass) SUPER_ADMIN.pass = d.pass;
+      if (d.name) SUPER_ADMIN.name = d.name;
+      try { localStorage.setItem("qlnn_super_v2", JSON.stringify({ id: SUPER_ADMIN.id, pass: SUPER_ADMIN.pass, name: SUPER_ADMIN.name, email: SUPER_ADMIN.email })); } catch (e) {}
+    }
+    if (cb) cb();
+  }).catch(function(){ if (cb) cb(); });
+}
 
 
 /** Lịch tuần năm học 2026–2027 (Thứ 2 → Thứ 7) */
@@ -1120,6 +1143,9 @@ function loadAll() {
 
 
 function pullFirebaseThen(cb) {
+  // luôn kéo super admin nếu có
+  try { pullSuperAdmin(function(){}); } catch (e) {}
+
   var done = false;
   function finish() {
     if (done) return;
@@ -1633,24 +1659,42 @@ function saveSuperEdit() {
   const newId = document.getElementById("seId").value.trim().toLowerCase();
   const pass = document.getElementById("sePass").value;
   // Admin WEBH2T — tuyệt đối không ghi vào accounts
-  if (oldId === "super") {
-    const next = {
-      id: newId || SUPER_ADMIN.id,
-      pass: pass || SUPER_ADMIN.pass,
-      name: document.getElementById("seName").value || SUPER_ADMIN.name,
-      email: SUPER_ADMIN.email
-    };
-    // Cập nhật object runtime
-    SUPER_ADMIN.id = next.id;
-    SUPER_ADMIN.pass = next.pass;
-    SUPER_ADMIN.name = next.name;
-    localStorage.setItem("qlnn_super_v2", JSON.stringify(next));
-    // Xóa nhầm nếu từng lưu super vào accounts
+  if (oldId === "super" || oldId === SUPER_ADMIN.id || oldId === "websiteh2t") {
+    const nid = (newId || SUPER_ADMIN.id || "websiteh2t").trim().toLowerCase();
+    const np = (pass != null && String(pass).length) ? String(pass) : SUPER_ADMIN.pass;
+    const nn = (document.getElementById("seName") && document.getElementById("seName").value.trim()) || SUPER_ADMIN.name;
+    if (!nid) { alert("ID không được trống"); return; }
+    if (!np) { alert("Mật khẩu không được trống"); return; }
+    // Không trùng ID với GVCN / leader / viewer
+    if (accounts[nid] && accounts[nid].role !== "super") {
+      alert("ID đã được tài khoản khác sử dụng");
+      return;
+    }
+    SUPER_ADMIN.id = nid;
+    SUPER_ADMIN.pass = np;
+    SUPER_ADMIN.name = nn;
+    const next = { id: nid, pass: np, name: nn, email: SUPER_ADMIN.email || "websiteh2t@gmail.com" };
+    try {
+      localStorage.setItem("qlnn_super_v2", JSON.stringify(next));
+    } catch (e) { console.warn(e); }
+    // Đồng bộ cloud meta admin (không vào accounts)
+    if (firebaseReady && db) {
+      db.collection("qlnn_meta").doc("super_admin").set(next).catch(function(e){ console.warn(e); });
+    }
     Object.keys(accounts).forEach(k => {
       if (accounts[k] && accounts[k].role === "super") delete accounts[k];
     });
     saveAccounts();
-    alert("Đã cập nhật Admin WEBH2T (không ảnh hưởng tài khoản GVCN). Đăng nhập lại nếu đổi ID.");
+    // Cập nhật session nếu đang đăng nhập super
+    if (currentUser && currentUser.role === "super") {
+      currentUser.id = nid;
+      currentUser.name = nn;
+      localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
+    }
+    document.getElementById("superEditModal").classList.add("hidden");
+    alert("Đã lưu ID/mật khẩu Admin WEBH2T.\nID: " + nid + "\nHãy dùng ID/MK mới khi đăng nhập lại.");
+    renderOverview();
+    return;
   } else {
     // Chỉ sửa GVCN / tài khoản con trong accounts
     if (newId === SUPER_ADMIN.id || newId === "websiteh2t" || newId === SUPER_ADMIN.email) {
@@ -2808,69 +2852,84 @@ function renderReportStudentProfile(list) {
     box.innerHTML = '<p class="text-amber-300">Không tìm thấy HS trong danh sách lớp.</p>';
     return;
   }
-  // Người nhập: từ phân công + từ bản ghi
-  const inputorIds = new Set();
-  if (st.inputBy) inputorIds.add(st.inputBy);
-  list.filter(e => String(e.studentId) === String(rStuVal)).forEach(e => {
-    if (e.inputBy) inputorIds.add(e.inputBy);
-  });
-  const inputorNames = [...inputorIds].map(id => {
-    const a = accounts[id];
-    return a ? (a.name || id) : id;
-  }).join(", ") || "—";
+  // Tuần hiện tại (hoặc tuần đang chọn trên báo cáo)
+  let weekNo = (document.getElementById("rWeek") || {}).value || "";
+  const period = (document.getElementById("rPeriod") || {}).value || "";
+  if (!weekNo || period !== "week") {
+    const cur = currentSchoolWeek();
+    if (cur) weekNo = cur.w;
+  }
+  const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(weekNo));
+  const from = sw ? formatDate(sw.from) : "";
+  const to = sw ? formatDate(sw.to) : "";
 
-  const stuEntries = list.filter(e => String(e.studentId) === String(rStuVal))
-    .sort((a, b) => (a.createdAt || a.date) < (b.createdAt || b.date) ? 1 : -1);
-  let bonus = 0, viol = 0, bonusTimes = 0, violTimes = 0;
-  const bonusRows = [], violRows = [];
-  stuEntries.forEach(e => {
-    if (e.type === "bonus") { bonus += e.total; bonusTimes += e.times; bonusRows.push(e); }
-    else { viol += e.total; violTimes += e.times; violRows.push(e); }
-  });
+  const weekEntries = entries.filter(e => String(e.studentId) === String(st.id) && (
+    String(e.weekNo) === String(weekNo) || (sw && e.date >= sw.from && e.date <= sw.to)
+  ));
+  const bonusRows = weekEntries.filter(e => e.type === "bonus");
+  const violRows = weekEntries.filter(e => e.type === "violation");
+  let bonus = 0, viol = 0;
+  bonusRows.forEach(e => { bonus += (e.total != null ? e.total : e.points * e.times); });
+  violRows.forEach(e => { viol += (e.total != null ? e.total : e.points * e.times); });
   const score = 100 + bonus + viol;
   const rk = rankClass(score);
-  const pad = n => String(n).padStart(2, "0");
-  const fmtDT = iso => {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (isNaN(d.getTime())) return iso;
-    return pad(d.getDate()) + "/" + pad(d.getMonth()+1) + "/" + d.getFullYear() + ":" + pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
-  };
-  const rowE = e => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono text-xs text-sky-300">' + fmtDT(e.createdAt || e.date) +
-    '</td><td class="text-xs">' + (e.weekday || "") + '</td><td class="text-xs">' + (e.subject || "") +
-    '</td><td>' + (e.contentText || e.contentCode) + '</td><td class="text-right ' + (e.points > 0 ? "text-green-400" : "text-red-400") + '">' +
-    (e.points > 0 ? "+" : "") + e.points + " ×" + e.times + '</td><td class="text-xs text-amber-300">' + (e.inputByName || e.inputBy || "—") + "</td></tr>";
 
+  // Vị thứ cả lớp (điểm tuần)
+  const classScores = students.map(s => {
+    const we = entries.filter(e => String(e.studentId) === String(s.id) && (
+      String(e.weekNo) === String(weekNo) || (sw && e.date >= sw.from && e.date <= sw.to)
+    ));
+    let b = 0, v = 0;
+    we.forEach(e => {
+      const tt = e.total != null ? e.total : e.points * e.times;
+      if (tt > 0) b += tt; else v += tt;
+    });
+    return { id: s.id, name: s.name, score: 100 + b + v };
+  }).sort((a, b) => b.score - a.score || sortByIdAsc(a, b));
+  const classRank = classScores.findIndex(x => String(x.id) === String(st.id)) + 1;
+
+  // Xếp loại / vị thứ trong tổ
+  const teamScores = classScores.filter(x => {
+    const s = students.find(ss => String(ss.id) === String(x.id));
+    return s && String(s.team) === String(st.team);
+  });
+  const teamRank = teamScores.findIndex(x => String(x.id) === String(st.id)) + 1;
+
+  const school = (currentUser && currentUser.school) || "";
+  const gvcn = (currentUser && currentUser.name) || "";
+  const cls = (currentUser && currentUser.className) || st.className || "";
+  const year = (currentUser && currentUser.year) || "2026 - 2027";
+
+  let html = '<div class="student-sheet week-board" style="max-width:800px;margin:0 auto">';
+  html += reportHeaderHtml(gvcn, cls, school, year);
+  html += '<div class="text-center mb-2"><div style="font-size:0.75rem;color:#0369a1;font-weight:700">PHIẾU TỔNG HỢP CÁ NHÂN</div>';
+  html += '<div style="font-size:1rem;font-weight:800;color:#0c4a6e">Tuần ' + (weekNo || "—") + (from ? ': ' + from + ' – ' + to : '') + '</div></div>';
+  html += '<table style="width:100%;font-size:0.9rem;margin-bottom:0.5rem"><tbody>';
+  html += '<tr><td><b>Họ và tên</b></td><td colspan="3" style="font-weight:800;color:#1e3a8a">' + st.name + '</td></tr>';
+  html += '<tr><td><b>Ngày sinh</b></td><td>' + (st.dob || "—") + '</td><td><b>Giới tính</b></td><td>' + (st.gender || "—") + '</td></tr>';
+  html += '<tr><td><b>Tổ</b></td><td>' + (st.team || "—") + '</td><td><b>Điểm tuần</b></td><td style="font-weight:800">' + score + '</td></tr>';
+  html += '<tr><td><b>Xếp loại tuần</b></td><td class="' + rk.cls + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+  html += '<td><b>Vị thứ tổ</b></td><td>' + (teamRank || "—") + '/' + teamScores.length + '</td></tr>';
+  html += '<tr><td><b>Vị thứ lớp</b></td><td colspan="3" style="font-weight:800;color:#9f1239">' + (classRank || "—") + '/' + classScores.length + '</td></tr>';
+  html += '</tbody></table>';
+  html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">';
+  html += '<div class="legend-box"><b style="color:#15803d">ƯU ĐIỂM (tuần)</b><ul class="mt-1 ml-4 list-disc">';
+  if (bonusRows.length) bonusRows.forEach(e => {
+    html += '<li>' + (e.contentCode ? e.contentCode + " · " : "") + (e.contentText || "") + ' <b class="text-green-700">(+' + (e.total != null ? e.total : e.points * e.times) + ')</b></li>';
+  });
+  else html += '<li class="text-slate-500">Không có</li>';
+  html += '</ul></div>';
+  html += '<div class="legend-box"><b style="color:#b91c1c">VI PHẠM (tuần)</b><ul class="mt-1 ml-4 list-disc">';
+  if (violRows.length) violRows.forEach(e => {
+    html += '<li>' + (e.contentCode ? e.contentCode + " · " : "") + (e.contentText || "") + ' <b class="text-red-700">(' + (e.total != null ? e.total : e.points * e.times) + ')</b></li>';
+  });
+  else html += '<li class="text-slate-500">Không có</li>';
+  html += '</ul></div></div>';
+  html += '<p class="text-xs mt-2 text-slate-600">Công thức: 100 + cộng − trừ = ' + score + ' · In A4: chỉ phiếu này (chọn HS → In).</p>';
+  html += '</div>';
+  box.innerHTML = html;
   box.classList.remove("hidden");
-  box.innerHTML =
-    '<h3 class="text-lg font-bold text-yellow-400 mb-3">Hồ sơ học sinh (danh sách lớp)</h3>' +
-    '<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 text-sm mb-4">' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Họ tên</div><div class="font-semibold text-yellow-400">' + st.name + '</div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Lớp</div><div class="font-semibold text-sky-400">' + (st.className || currentUser.className || "—") + '</div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Tổ</div><div class="font-semibold text-sky-400">' + (st.team || "—") + '</div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Ngày sinh</div><div class="font-semibold text-sky-400">' + (st.dob || "—") + '</div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Giới tính</div><div class="font-semibold text-sky-400">' + (st.gender || "—") + '</div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Địa chỉ</div><div class="font-semibold text-sky-400 text-xs">' + (st.address || "—") + '</div></div>' +
-    '</div>' +
-    '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Người nhập thi đua</div><div class="font-semibold text-amber-300">' + inputorNames + '</div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Điểm tuần (phạm vi lọc)</div><div class="font-bold text-yellow-400 text-lg">' + score + ' <span class="' + rk.cls + '">' + rk.label + '</span></div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Số lần ưu điểm</div><div class="font-semibold text-green-400">' + bonusTimes + " · +" + bonus + '</div></div>' +
-    '<div class="p-3 bg-slate-800 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Số lần vi phạm</div><div class="font-semibold text-red-400">' + violTimes + " · " + viol + '</div></div>' +
-    '</div>' +
-    '<h4 class="font-semibold text-green-400 mb-2">Ưu điểm (từ bản ghi nhập thi đua)</h4>' +
-    (bonusRows.length
-      ? '<div class="overflow-x-auto mb-4"><table class="w-full text-sm"><thead class="text-slate-400"><tr><th class="text-left py-1">Ngày giờ</th><th>Thứ</th><th>Môn</th><th class="text-left">Nội dung</th><th class="text-right">Điểm</th><th class="text-left">Người nhập</th></tr></thead><tbody>' +
-        bonusRows.map(rowE).join("") + "</tbody></table></div>"
-      : '<p class="text-slate-500 text-sm mb-4">Chưa có bản ghi ưu điểm trong phạm vi lọc.</p>') +
-    '<h4 class="font-semibold text-red-400 mb-2">Vi phạm (từ bản ghi nhập thi đua)</h4>' +
-    (violRows.length
-      ? '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-slate-400"><tr><th class="text-left py-1">Ngày giờ</th><th>Thứ</th><th>Môn</th><th class="text-left">Nội dung</th><th class="text-right">Điểm</th><th class="text-left">Người nhập</th></tr></thead><tbody>' +
-        violRows.map(rowE).join("") + "</tbody></table></div>"
-      : '<p class="text-slate-500 text-sm">Chưa có bản ghi vi phạm trong phạm vi lọc.</p>');
 }
-
-
 
 function reportHeaderHtml(gvcnLabel, clsName, school, year) {
   const sch = (school || "").toUpperCase() || "TRƯỜNG";
@@ -3247,19 +3306,61 @@ function renderWeekMonthBoards(list, agg) {
 function printReport() {
   renderReport();
   const board = document.getElementById("reportWeekBoard");
-  if (board) board.classList.remove("hidden");
-  // Ẩn missing trước khi in
+  const prof = document.getElementById("reportStudentProfile");
+  const rStu = (document.getElementById("rStudent") || {}).value || "";
   const mb = document.getElementById("missingBox");
   if (mb) mb.classList.add("hidden");
-  setTimeout(function(){ window.print(); }, 200);
+  if (rStu && prof && !prof.classList.contains("hidden")) {
+    // In phiếu cá nhân 1 trang A4
+    if (board) board.classList.add("hidden");
+  } else {
+    if (board) board.classList.remove("hidden");
+  }
+  setTimeout(function(){ window.print(); }, 250);
 }
+
+function onSuperGvcnReportChange() {
+  const gid = (document.getElementById("rGvcnSelect") || {}).value || "";
+  if (!gid || !accounts[gid]) return;
+  const g = accounts[gid];
+  // Tạm thời nạp dữ liệu lớp GVCN để xem báo cáo
+  window._superViewGvcn = gid;
+  const cid = g.classId || ((g.school || "") + "_" + (g.className || "")).toLowerCase().replace(/\s+/g, "_");
+  currentUser.classId = cid;
+  currentUser.className = g.className;
+  currentUser.school = g.school;
+  currentUser.year = g.year || "2026-2027";
+  currentUser._viewingGvcn = g.name;
+  loadClassData();
+  loadClassDataFromCloud(cid, function() {
+    renderReport();
+  });
+}
+
 function renderReport() {
   const rt = document.getElementById("reportTitle");
-  if (rt) {
-    if (currentUser && currentUser.role === "viewer") {
-      rt.textContent = "📊 Báo cáo thống kê nề nếp thi đua lớp " + (currentUser.className || "");
-    } else {
-      rt.textContent = "📊 Báo cáo thi đua";
+  const wrap = document.getElementById("superGvcnReportWrap");
+  if (currentUser && currentUser.role === "super") {
+    if (wrap) {
+      wrap.classList.remove("hidden");
+      const sel = document.getElementById("rGvcnSelect");
+      if (sel) {
+        const cur = sel.value;
+        const gvcns = Object.entries(accounts).filter(([, a]) => a && a.role === "gvcn");
+        sel.innerHTML = '<option value="">— Chọn GVCN / Lớp —</option>' +
+          gvcns.map(([id, a]) => '<option value="' + id + '">' + (a.name || id) + " · " + (a.className || "") + " · " + (a.school || "") + "</option>").join("");
+        if (cur) sel.value = cur;
+      }
+    }
+    if (rt) rt.textContent = "📊 Báo cáo Admin · chọn GVCN bên dưới";
+  } else {
+    if (wrap) wrap.classList.add("hidden");
+    if (rt) {
+      if (currentUser && currentUser.role === "viewer") {
+        rt.textContent = "📊 Báo cáo thống kê nề nếp thi đua lớp " + (currentUser.className || "");
+      } else {
+        rt.textContent = "📊 Báo cáo thi đua";
+      }
     }
   }
 
@@ -3477,7 +3578,23 @@ function exportExcel() {
 
 /* ===== ADMIN ACCOUNTS ===== */
 function classAccounts() {
-  if (currentUser.role === "super") return accounts;
+  if (currentUser.role === "super") {
+    // Chỉ GVCN + tài khoản xem PH/HS (và leader) thuộc từng GVCN
+    const out = {};
+    const gvcnIds = Object.keys(accounts).filter(id => accounts[id] && accounts[id].role === "gvcn");
+    gvcnIds.forEach(gid => { out[gid] = accounts[gid]; });
+    Object.entries(accounts).forEach(([id, a]) => {
+      if (!a || a.role === "super" || a.role === "gvcn") return;
+      // viewer / leader thuộc GVCN
+      if (a.parentId && gvcnIds.indexOf(a.parentId) >= 0) out[id] = a;
+      else if (a.role === "viewer" || a.role === "leader") {
+        // khớp classId với một GVCN
+        const pg = gvcnIds.find(gid => accounts[gid].classId && accounts[gid].classId === a.classId);
+        if (pg) out[id] = a;
+      }
+    });
+    return out;
+  }
   const out = {};
   const cid = currentUser.classId;
   const cname = currentUser.className;
