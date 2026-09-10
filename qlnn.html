@@ -191,6 +191,13 @@ button[onclick="showAuth('login')"] {
 }
 
 
+
+.rank-xs, .rank-xs * { color: #ca8a04 !important; font-weight: 900 !important; text-shadow: 0 0 8px rgba(250,204,21,0.55); }
+.rank-tot, .rank-tot * { color: #16a34a !important; font-weight: 900 !important; text-shadow: 0 0 8px rgba(34,197,94,0.45); }
+.rank-htt { color: #0284c7 !important; font-weight: 800 !important; }
+.rank-ccg { color: #ea580c !important; font-weight: 700 !important; }
+.rank-ht { color: #dc2626 !important; font-weight: 700 !important; }
+
 .rank-xs{color:#fbbf24;font-weight:800}
 .rank-tot{color:#22c55e;font-weight:700}
 .rank-htt{color:#38bdf8;font-weight:700}
@@ -2049,7 +2056,8 @@ function renderOverview() {
     box.innerHTML = '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700"><div class="flex flex-wrap justify-between gap-3">' +
       '<div><h2 class="text-2xl font-bold text-yellow-400">Admin WEBH2T</h2>' +
       '<p class="text-slate-400 text-sm mt-1">websiteh2t@gmail.com · Duyệt / gia hạn GVCN</p></div>' +
-      '<button type="button" onclick="openSuperSelfEdit()" class="btn-ocean text-sm">Đổi ID / mật khẩu Admin</button></div>' +
+      '<div class="flex flex-wrap gap-2"><button type="button" onclick="openSuperSelfEdit()" class="btn-ocean text-sm">Đổi ID / mật khẩu Admin</button>' +
+      '<button type="button" onclick="dedupeGvcnAccounts()" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:#f59e0b;color:#111">Gộp GVCN trùng</button></div></div>' +
       '<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 text-sm">' +
       '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">Chờ duyệt</div><div class="text-xl font-bold text-amber-400">' + pending + '</div></div>' +
       '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">GVCN đang hoạt động</div><div class="text-xl font-bold text-sky-400">' + gvcns.length + '</div></div>' +
@@ -2978,16 +2986,28 @@ function renderReportStudentProfile(list) {
   box.classList.remove("hidden");
 }
 function printStudentSheet() {
-  const prof = document.getElementById("reportStudentProfile");
-  const board = document.getElementById("reportWeekBoard");
-  if (board) board.classList.add("hidden");
-  if (prof) prof.classList.remove("hidden");
-  setTimeout(function(){ window.print(); }, 200);
+  const el = document.querySelector("#reportStudentProfile .student-sheet");
+  if (!el) { alert("Chọn học sinh để xem phiếu trước"); return; }
+  openPrintWindow(el.innerHTML, "Phiếu tổng hợp cá nhân");
 }
 function downloadStudentPdf() {
   const el = document.querySelector("#reportStudentProfile .student-sheet");
   if (!el) { alert("Chưa có phiếu — chọn học sinh trước"); return; }
+  // Thử html2pdf; fallback cửa sổ in → Lưu PDF
   exportElementPdf(el, "Phieu_HS.pdf");
+}
+function openPrintWindow(innerHtml, title) {
+  const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=1200");
+  if (!w) { alert("Trình duyệt chặn cửa sổ in — cho phép pop-up"); return; }
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + (title || "In") + "</title>");
+  w.document.write("<style>body{font-family:system-ui,sans-serif;color:#000;background:#fff;padding:12mm;font-size:11pt}");
+  w.document.write("table{border-collapse:collapse;width:100%} th,td{border:1px solid #333;padding:4px 6px} .name-col{text-align:left}");
+  w.document.write(".rank-xs{color:#a16207;font-weight:900}.rank-tot{color:#15803d;font-weight:900}.rank-htt{color:#0369a1;font-weight:800}");
+  w.document.write("@media print{body{padding:0}}<\/style></head><body>");
+  w.document.write(innerHtml);
+  w.document.write("</body></html>");
+  w.document.close();
+  setTimeout(function(){ try { w.focus(); w.print(); } catch(e) {} }, 300);
 }
 
 function reportHeaderHtml(gvcnLabel, clsName, school, year) {
@@ -4702,30 +4722,94 @@ function renderPending() {
   });
   el.querySelectorAll(".ren").forEach(b => b.onclick = () => renewGvcn(b.dataset.id));
 }
+
+function dedupeGvcnAccounts() {
+  const byKey = {};
+  Object.entries(accounts).forEach(([id, a]) => {
+    if (!a || a.role !== "gvcn") return;
+    const key = (a.classId || ((a.school||"") + "_" + (a.className||""))).toLowerCase();
+    if (!byKey[key]) byKey[key] = [];
+    byKey[key].push(id);
+  });
+  let removed = 0;
+  Object.values(byKey).forEach(ids => {
+    if (ids.length < 2) return;
+    // giữ ID có expiresAt mới nhất hoặc id ngắn
+    ids.sort((a, b) => {
+      const ea = accounts[a].expiresAt || "";
+      const eb = accounts[b].expiresAt || "";
+      return eb.localeCompare(ea);
+    });
+    const keep = ids[0];
+    ids.slice(1).forEach(rid => {
+      // chuyển viewer/leader parentId
+      Object.keys(accounts).forEach(k => {
+        if (accounts[k].parentId === rid) accounts[k].parentId = keep;
+      });
+      delete accounts[rid];
+      removed++;
+    });
+  });
+  if (removed) {
+    saveAccounts();
+    alert("Đã gộp " + removed + " tài khoản GVCN trùng lớp.");
+  } else {
+    alert("Không có GVCN trùng lớp.");
+  }
+  renderOverview();
+  if (typeof renderAccountsTable === "function") renderAccountsTable();
+}
+
 function approveGvcn(id) {
   const item = pendingRegs.find(p => p.id === id);
   if (!item) return;
-  let base = (item.email.split("@")[0] || "gvcn").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10);
-  let uid = base;
-  let n = 1;
-  while (accounts[uid]) { uid = base + n; n++; }
-  const pass = "Hn" + Math.random().toString(36).slice(2, 8);
   const classId = (item.school + "_" + item.className).toLowerCase().replace(/\s+/g, "_");
+  // Tái sử dụng GVCN cùng lớp/trường nếu đã có (tránh nhân bản)
+  let uid = null;
+  Object.entries(accounts).forEach(([aid, a]) => {
+    if (!a || a.role !== "gvcn") return;
+    if (a.classId === classId || (a.className === item.className && a.school === item.school)) {
+      uid = aid;
+    }
+    if (item.email && a.email && a.email.toLowerCase() === item.email.toLowerCase()) uid = aid;
+  });
+  let pass;
   const exp = new Date();
   exp.setMonth(exp.getMonth() + 12);
-  accounts[uid] = {
-    pass, role: "gvcn", name: item.name, school: item.school,
-    className: item.className, size: item.size, email: item.email, phone: item.phone,
-    classId, expiresAt: exp.toISOString()
-  };
-  // default view account
-  const viewId = "xem" + item.className.toLowerCase().replace(/[^a-z0-9]/g, "");
-  if (!accounts[viewId]) {
+  if (uid && accounts[uid]) {
+    // Gia hạn / cập nhật thông tin — không tạo ID mới
+    pass = accounts[uid].pass;
+    accounts[uid].name = item.name || accounts[uid].name;
+    accounts[uid].school = item.school || accounts[uid].school;
+    accounts[uid].className = item.className || accounts[uid].className;
+    accounts[uid].size = item.size || accounts[uid].size;
+    accounts[uid].email = item.email || accounts[uid].email;
+    accounts[uid].phone = item.phone || accounts[uid].phone;
+    accounts[uid].classId = classId;
+    accounts[uid].expiresAt = exp.toISOString();
+    accounts[uid].role = "gvcn";
+  } else {
+    let base = ((item.email || "").split("@")[0] || "gvcn").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 10) || "gvcn";
+    uid = base;
+    let n = 1;
+    while (accounts[uid] || uid === SUPER_ADMIN.id) { uid = base + n; n++; }
+    pass = "Hn" + Math.random().toString(36).slice(2, 8);
+    accounts[uid] = {
+      pass, role: "gvcn", name: item.name, school: item.school,
+      className: item.className, size: item.size, email: item.email, phone: item.phone,
+      classId, expiresAt: exp.toISOString()
+    };
+  }
+  const viewId = "xem" + (item.className || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (viewId && !accounts[viewId]) {
     accounts[viewId] = {
-      pass: item.className.toLowerCase().replace(/[^a-z0-9]/g, "") + "123456",
+      pass: (item.className || "lop").toLowerCase().replace(/[^a-z0-9]/g, "") + "123456",
       role: "viewer", name: "Xem lớp " + item.className,
       classId, className: item.className, school: item.school, parentId: uid
     };
+  } else if (viewId && accounts[viewId]) {
+    accounts[viewId].parentId = uid;
+    accounts[viewId].classId = classId;
   }
   item.status = "approved";
   item.assignedId = uid;
@@ -4734,9 +4818,10 @@ function approveGvcn(id) {
   saveAccounts();
   savePending();
   renderPending();
-  alert("Đã duyệt GVCN\nID: " + uid + "\nMK: " + pass + "\nHết hạn: " + exp.toLocaleDateString("vi-VN") +
-    "\n\nTài khoản xem lớp: " + viewId + "\nGửi thông tin qua Telegram/email.");
+  if (typeof renderOverview === "function") renderOverview();
+  alert("Đã duyệt / cập nhật GVCN\nID: " + uid + "\nMK: " + pass + "\nHết hạn: " + exp.toLocaleDateString("vi-VN"));
 }
+
 function renewGvcn(id) {
   const item = pendingRegs.find(p => p.id === id);
   if (!item || !item.assignedId) return;
