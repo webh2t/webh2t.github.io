@@ -9,6 +9,7 @@
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -242,6 +243,20 @@ button[onclick="showAuth('login')"] {
 }
 #selfAssessSheet, #selfAssessSheet * {
   color: #000 !important;
+}
+
+
+#tab-notebook .input-field,
+#tab-notebook input.input-field,
+#tab-notebook select.input-field {
+  color: #fff !important;
+  background: #1e293b !important;
+}
+#tab-notebook input::placeholder {
+  color: #94a3b8 !important;
+}
+#tab-notebook label.text-xs {
+  color: #e2e8f0 !important;
 }
 
 </style>
@@ -685,6 +700,7 @@ button[onclick="showAuth('login')"] {
 <button type="button" data-nb="week" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-sky-600 text-white" onclick="switchNotebook('week')">Báo cáo tuần</button>
 <button type="button" data-nb="month" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700" onclick="switchNotebook('month')">Báo cáo tháng</button>
 <button type="button" data-nb="hk" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700" onclick="switchNotebook('hk')">Báo cáo học kỳ</button>
+<button type="button" data-nb="finance" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700" onclick="switchNotebook('finance')">Thu chi tháng</button>
 </div>
 <div id="notebookContent"></div>
 </div>
@@ -1158,6 +1174,7 @@ let bonuses = [];
 let violations = [];
 let penalties = [];
 let penaltyAssigns = [];
+let financeRows = []; // {id,type:'in'|'out',date,content,amount,qty,month,classId}
 let pendingRegs = [];
 let deadlineCfg = { day: 0, hour: 10, penaltyText: "" };
 let rankChart = null;
@@ -2904,43 +2921,80 @@ function renderReportStudentProfile(list) {
     box.innerHTML = '<p class="text-amber-300">Không tìm thấy HS trong danh sách lớp.</p>';
     return;
   }
-  // Tuần hiện tại (hoặc tuần đang chọn trên báo cáo)
-  let weekNo = (document.getElementById("rWeek") || {}).value || "";
-  const period = (document.getElementById("rPeriod") || {}).value || "";
-  if (!weekNo || period !== "week") {
-    const cur = currentSchoolWeek();
-    if (cur) weekNo = cur.w;
-  }
-  const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(weekNo));
-  const from = sw ? formatDate(sw.from) : "";
-  const to = sw ? formatDate(sw.to) : "";
+  const period = (document.getElementById("rPeriod") || {}).value || "week";
+  const cur = currentSchoolWeek() || { w: "1", from: "2026-09-07", to: "2026-09-12" };
+  let weekNos = [], scopeLabel = "", dateNote = "", nW = 1;
 
-  const weekEntries = entries.filter(e => String(e.studentId) === String(st.id) && (
-    String(e.weekNo) === String(weekNo) || (sw && e.date >= sw.from && e.date <= sw.to)
-  ));
+  if (period === "week") {
+    let weekNo = (document.getElementById("rWeek") || {}).value || cur.w;
+    weekNos = [String(weekNo)];
+    const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(weekNo));
+    scopeLabel = "TUẦN " + weekNo;
+    dateNote = sw ? (formatDate(sw.from) + " – " + formatDate(sw.to)) : "";
+    nW = 1;
+  } else if (period === "month") {
+    let mon = +(document.getElementById("rMonth") || {}).value || (new Date().getMonth() + 1);
+    if (mon >= 5 && mon <= 8) mon = 9;
+    weekNos = weeksForMonth(mon);
+    nW = weekNos.length || 1;
+    scopeLabel = "THÁNG " + mon;
+    dateNote = monthDateRange(mon) || ("Tuần " + weekNos.join(", "));
+  } else if (period === "hk1" || period === "hk2") {
+    const months = period === "hk1" ? [9,10,11,12] : [1,2,3,4];
+    months.forEach(m => { weekNos = weekNos.concat(weeksForMonth(m)); });
+    nW = weekNos.length || 1;
+    scopeLabel = period === "hk1" ? "HỌC KỲ 1 (T9–T12)" : "HỌC KỲ 2 (T1–T4)";
+    dateNote = period === "hk1" ? "Từ tháng 9 đến tháng 12" : "Từ tháng 1 đến tháng 4";
+  } else {
+    // year: default current week sheet
+    weekNos = [String(cur.w)];
+    nW = 1;
+    scopeLabel = "TUẦN " + cur.w + " (mặc định)";
+    const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(cur.w));
+    dateNote = sw ? (formatDate(sw.from) + " – " + formatDate(sw.to)) : "";
+  }
+
+  const weekEntries = entries.filter(e => {
+    if (String(e.studentId) !== String(st.id)) return false;
+    if (weekNos.indexOf(String(e.weekNo)) >= 0) return true;
+    return weekNos.some(wn => {
+      const w = SCHOOL_WEEKS.find(x => String(x.w) === String(wn));
+      return w && e.date >= w.from && e.date <= w.to;
+    });
+  });
   const bonusRows = weekEntries.filter(e => e.type === "bonus");
   const violRows = weekEntries.filter(e => e.type === "violation");
   let bonus = 0, viol = 0;
   bonusRows.forEach(e => { bonus += (e.total != null ? e.total : e.points * e.times); });
   violRows.forEach(e => { viol += (e.total != null ? e.total : e.points * e.times); });
-  const score = 100 + bonus + viol;
-  const rk = rankClass(score);
+  // Điểm: tuần = 100+b+v; tháng/HK = tổng các tuần (mỗi tuần nền 100)
+  let score;
+  if (period === "week" || period === "year") {
+    score = 100 + bonus + viol;
+  } else {
+    score = studentWeekScoreInWeeks(st.id, weekNos);
+  }
+  const rk = (period === "week" || period === "year") ? rankClass(score) : rankClassScaled(score, nW);
 
-  // Vị thứ cả lớp (điểm tuần)
+  // Vị thứ lớp
   const classScores = students.map(s => {
-    const we = entries.filter(e => String(e.studentId) === String(s.id) && (
-      String(e.weekNo) === String(weekNo) || (sw && e.date >= sw.from && e.date <= sw.to)
-    ));
-    let b = 0, v = 0;
-    we.forEach(e => {
-      const tt = e.total != null ? e.total : e.points * e.times;
-      if (tt > 0) b += tt; else v += tt;
-    });
-    return { id: s.id, name: s.name, score: 100 + b + v };
+    let sc;
+    if (period === "week" || period === "year") {
+      const we = entries.filter(e => String(e.studentId) === String(s.id) && (
+        weekNos.indexOf(String(e.weekNo)) >= 0 || weekNos.some(wn => {
+          const w = SCHOOL_WEEKS.find(x => String(x.w) === String(wn));
+          return w && e.date >= w.from && e.date <= w.to;
+        })
+      ));
+      let b = 0, v = 0;
+      we.forEach(e => { const tt = e.total != null ? e.total : e.points * e.times; if (tt > 0) b += tt; else v += tt; });
+      sc = 100 + b + v;
+    } else {
+      sc = studentWeekScoreInWeeks(s.id, weekNos);
+    }
+    return { id: s.id, name: s.name, score: sc };
   }).sort((a, b) => b.score - a.score || sortByIdAsc(a, b));
   const classRank = classScores.findIndex(x => String(x.id) === String(st.id)) + 1;
-
-  // Xếp loại / vị thứ trong tổ
   const teamScores = classScores.filter(x => {
     const s = students.find(ss => String(ss.id) === String(x.id));
     return s && String(s.team) === String(st.team);
@@ -2948,36 +3002,37 @@ function renderReportStudentProfile(list) {
   const teamRank = teamScores.findIndex(x => String(x.id) === String(st.id)) + 1;
 
   const school = (currentUser && currentUser.school) || "";
-  const gvcn = (currentUser && currentUser.name) || "";
+  const gvcn = (currentUser && (currentUser._viewingGvcn || currentUser.name)) || "";
   const cls = (currentUser && currentUser.className) || st.className || "";
   const year = (currentUser && currentUser.year) || "2026 - 2027";
 
-  let html = '<div class="student-sheet week-board" style="max-width:800px;margin:0 auto">';
+  let html = '<div class="student-sheet week-board" style="max-width:800px;margin:0 auto;background:#fff;color:#000">';
   html += reportHeaderHtml(gvcn, cls, school, year);
   html += '<div class="text-center mb-2"><div style="font-size:0.75rem;color:#0369a1;font-weight:700">PHIẾU TỔNG HỢP CÁ NHÂN</div>';
-  html += '<div style="font-size:1rem;font-weight:800;color:#0c4a6e">Tuần ' + (weekNo || "—") + (from ? ': ' + from + ' – ' + to : '') + '</div></div>';
-  html += '<table style="width:100%;font-size:0.9rem;margin-bottom:0.5rem"><tbody>';
+  html += '<div style="font-size:1.05rem;font-weight:800;color:#0c4a6e">' + scopeLabel + '</div>';
+  if (dateNote) html += '<div style="font-size:0.85rem;color:#9f1239;font-weight:700">' + dateNote + '</div>';
+  html += '</div>';
+  html += '<table style="width:100%;font-size:0.9rem;margin-bottom:0.5rem;color:#000"><tbody>';
   html += '<tr><td><b>Họ và tên</b></td><td colspan="3" style="font-weight:800;color:#1e3a8a">' + st.name + '</td></tr>';
   html += '<tr><td><b>Ngày sinh</b></td><td>' + (st.dob || "—") + '</td><td><b>Giới tính</b></td><td>' + (st.gender || "—") + '</td></tr>';
-  html += '<tr><td><b>Tổ</b></td><td>' + (st.team || "—") + '</td><td><b>Điểm tuần</b></td><td style="font-weight:800">' + score + '</td></tr>';
-  html += '<tr><td><b>Xếp loại tuần</b></td><td class="' + rk.cls + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+  html += '<tr><td><b>Tổ</b></td><td>' + (st.team || "—") + '</td><td><b>Điểm ' + (period === "month" ? "tháng" : period === "hk1" || period === "hk2" ? "HK" : "tuần") + '</b></td><td style="font-weight:800">' + score + '</td></tr>';
+  html += '<tr><td><b>Xếp loại</b></td><td class="' + rk.cls + '" style="font-weight:900">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
   html += '<td><b>Vị thứ tổ</b></td><td>' + (teamRank || "—") + '/' + teamScores.length + '</td></tr>';
   html += '<tr><td><b>Vị thứ lớp</b></td><td colspan="3" style="font-weight:800;color:#9f1239">' + (classRank || "—") + '/' + classScores.length + '</td></tr>';
   html += '</tbody></table>';
-  html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">';
-  html += '<div class="legend-box"><b style="color:#15803d">ƯU ĐIỂM (tuần)</b><ul class="mt-1 ml-4 list-disc">';
+  html += '<div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm" style="color:#000">';
+  html += '<div class="legend-box" style="color:#000"><b style="color:#15803d">ƯU ĐIỂM</b><ul class="mt-1 ml-4 list-disc">';
   if (bonusRows.length) bonusRows.forEach(e => {
-    html += '<li>' + (e.contentCode ? e.contentCode + " · " : "") + (e.contentText || "") + ' <b class="text-green-700">(+' + (e.total != null ? e.total : e.points * e.times) + ')</b></li>';
+    html += '<li style="color:#000">' + (e.contentText || e.contentCode || "") + ' <b>(+' + (e.total != null ? e.total : e.points * e.times) + ')</b></li>';
   });
-  else html += '<li class="text-slate-500">Không có</li>';
+  else html += '<li style="color:#000">Không có</li>';
   html += '</ul></div>';
-  html += '<div class="legend-box"><b style="color:#b91c1c">VI PHẠM (tuần)</b><ul class="mt-1 ml-4 list-disc">';
+  html += '<div class="legend-box" style="color:#000"><b style="color:#b91c1c">VI PHẠM</b><ul class="mt-1 ml-4 list-disc">';
   if (violRows.length) violRows.forEach(e => {
-    html += '<li>' + (e.contentCode ? e.contentCode + " · " : "") + (e.contentText || "") + ' <b class="text-red-700">(' + (e.total != null ? e.total : e.points * e.times) + ')</b></li>';
+    html += '<li style="color:#000">' + (e.contentText || e.contentCode || "") + ' <b>(' + (e.total != null ? e.total : e.points * e.times) + ')</b></li>';
   });
-  else html += '<li class="text-slate-500">Không có</li>';
+  else html += '<li style="color:#000">Không có</li>';
   html += '</ul></div></div>';
-  html += '<p class="text-xs mt-2 text-slate-600">Công thức: 100 + cộng − trừ = ' + score + '</p>';
   html += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
   html += '<button type="button" onclick="printStudentSheet()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#0ea5e9;color:#fff">🖨️ In phiếu</button>';
   html += '<button type="button" onclick="downloadStudentPdf()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
@@ -2998,16 +3053,64 @@ function downloadStudentPdf() {
 }
 function openPrintWindow(innerHtml, title) {
   const w = window.open("", "_blank", "noopener,noreferrer,width=900,height=1200");
-  if (!w) { alert("Trình duyệt chặn cửa sổ in — cho phép pop-up"); return; }
-  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>' + (title || "In") + "</title>");
-  w.document.write("<style>body{font-family:system-ui,sans-serif;color:#000;background:#fff;padding:12mm;font-size:11pt}");
-  w.document.write("table{border-collapse:collapse;width:100%} th,td{border:1px solid #333;padding:4px 6px} .name-col{text-align:left}");
-  w.document.write(".rank-xs{color:#a16207;font-weight:900}.rank-tot{color:#15803d;font-weight:900}.rank-htt{color:#0369a1;font-weight:800}");
-  w.document.write("@media print{body{padding:0}}<\/style></head><body>");
-  w.document.write(innerHtml);
-  w.document.write("</body></html>");
-  w.document.close();
-  setTimeout(function(){ try { w.focus(); w.print(); } catch(e) {} }, 300);
+  if (!w) { alert("Trình duyệt chặn cửa sổ in — hãy cho phép pop-up cho trang này"); return; }
+  const doc = w.document;
+  doc.open();
+  doc.write("<!DOCTYPE html><html><head><meta charset=\"utf-8\"><title>" + (title || "In") + "</title>");
+  doc.write("<style>");
+  doc.write("*{box-sizing:border-box} body{font-family:system-ui,sans-serif;color:#000!important;background:#fff!important;padding:12mm;font-size:11pt;margin:0}");
+  doc.write("table{border-collapse:collapse;width:100%;color:#000!important} th,td{border:1px solid #333;padding:5px 6px;color:#000!important}");
+  doc.write(".no-print{display:none!important} h3{color:#000!important}");
+  doc.write(".rank-xs{color:#a16207;font-weight:900}.rank-tot{color:#15803d;font-weight:900}.rank-htt{color:#0369a1;font-weight:800}");
+  doc.write("@media print{body{padding:8mm} @page{margin:10mm}}");
+  doc.write("<\/style></head><body>");
+  doc.write(innerHtml || "<p>Không có nội dung in</p>");
+  doc.write("</body></html>");
+  doc.close();
+  setTimeout(function(){ try { w.focus(); w.print(); } catch(e) { console.warn(e); } }, 400);
+}
+
+function exportElementPdf(el, filename) {
+  if (!el) { alert("Không có nội dung để tải PDF"); return; }
+  const html = el.innerHTML || el.outerHTML;
+  if (typeof html2pdf !== "undefined") {
+    const wrap = document.createElement("div");
+    wrap.id = "pdfExportWrap";
+    wrap.style.cssText = "position:fixed;left:0;top:0;width:190mm;background:#fff;color:#000;z-index:99999;padding:10px;";
+    const clone = el.cloneNode(true);
+    clone.style.cssText = "background:#fff;color:#000;width:100%;";
+    clone.querySelectorAll("*").forEach(function(n) { try { n.style.color = "#000"; } catch (e) {} });
+    wrap.appendChild(clone);
+    document.body.appendChild(wrap);
+    html2pdf().set({
+      margin: [8, 8, 8, 8],
+      filename: filename || "phieu.pdf",
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff" },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+    }).from(clone).save().then(function() {
+      const w = document.getElementById("pdfExportWrap"); if (w) w.remove();
+    }).catch(function(err) {
+      console.warn(err);
+      const w = document.getElementById("pdfExportWrap"); if (w) w.remove();
+      openPrintWindow(html, filename);
+    });
+  } else {
+    openPrintWindow(html, filename);
+  }
+}
+function downloadElementJpg(el, filename) {
+  if (!el) return;
+  if (typeof html2canvas === "undefined") {
+    alert("Không tải được ảnh — dùng In / PDF");
+    return;
+  }
+  html2canvas(el, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/jpeg", 0.92);
+    a.download = filename || "phieu.jpg";
+    a.click();
+  });
 }
 
 function reportHeaderHtml(gvcnLabel, clsName, school, year) {
@@ -3384,17 +3487,16 @@ function renderWeekMonthBoards(list, agg) {
 
 function printReport() {
   renderReport();
-  const board = document.getElementById("reportWeekBoard");
-  const prof = document.getElementById("reportStudentProfile");
   const rStu = (document.getElementById("rStudent") || {}).value || "";
+  const profEl = document.querySelector("#reportStudentProfile .student-sheet");
+  if (rStu && profEl) {
+    openPrintWindow(profEl.innerHTML, "Phieu tong hop ca nhan");
+    return;
+  }
+  const board = document.getElementById("reportWeekBoard");
+  if (board) board.classList.remove("hidden");
   const mb = document.getElementById("missingBox");
   if (mb) mb.classList.add("hidden");
-  if (rStu && prof && !prof.classList.contains("hidden")) {
-    // In phiếu cá nhân 1 trang A4
-    if (board) board.classList.add("hidden");
-  } else {
-    if (board) board.classList.remove("hidden");
-  }
   setTimeout(function(){ window.print(); }, 250);
 }
 
@@ -3417,6 +3519,305 @@ function onSuperGvcnReportChange() {
 }
 
 
+
+function loadFinanceRows() {
+  try {
+    const cid = currentUser && currentUser.classId;
+    if (!cid) return;
+    const raw = localStorage.getItem("qlnn_finance_" + cid);
+    financeRows = raw ? JSON.parse(raw) : (financeRows || []);
+  } catch (e) { financeRows = financeRows || []; }
+}
+function saveFinanceRows() {
+  try {
+    const cid = currentUser && currentUser.classId;
+    if (!cid) return;
+    localStorage.setItem("qlnn_finance_" + cid, JSON.stringify(financeRows || []));
+    if (firebaseReady && db) {
+      db.collection("qlnn_finance").doc(cid).set({ rows: financeRows, updatedAt: new Date().toISOString() }).catch(function(){});
+    }
+  } catch (e) {}
+}
+function formatDateVN(iso) {
+  if (!iso) return "";
+  const s = String(iso).slice(0, 10);
+  const p = s.split("-");
+  if (p.length === 3) return p[2] + "/" + p[1] + "/" + p[0];
+  return iso;
+}
+function renderFinancePanel() {
+  loadFinanceRows();
+  const box = document.getElementById("notebookContent");
+  if (!box) return;
+  const cls = (currentUser && currentUser.className) || "";
+  const year = (currentUser && currentUser.year) || "2026 - 2027";
+  const school = (currentUser && currentUser.school) || "";
+  let mon = window._finMonth || (new Date().getMonth() + 1);
+  if (mon >= 5 && mon <= 8) mon = 9;
+  window._finMonth = mon;
+  const rows = (financeRows || []).filter(r => +r.month === +mon);
+  const ins = rows.filter(r => r.type === "in");
+  const outs = rows.filter(r => r.type === "out");
+  const sumIn = ins.reduce((s, r) => s + (+r.amount || 0) * (+r.qty || 1), 0);
+  const sumOut = outs.reduce((s, r) => s + (+r.amount || 0) * (+r.qty || 1), 0);
+  const remain = sumIn - sumOut;
+  const nowStr = new Date().toLocaleString("vi-VN");
+
+  let html = "";
+  // Form controls outside print area (dark theme readable)
+  html += '<div class="no-print mb-4 p-4 rounded-xl border border-slate-600 bg-slate-900">';
+  html += '<div class="flex flex-wrap gap-3 items-end mb-3">';
+  html += '<div><label class="text-xs font-bold text-white block mb-1">Tháng</label>';
+  html += '<select id="finMonth" class="input-field text-sm text-white bg-slate-800" style="color:#fff!important" onchange="window._finMonth=+this.value;renderFinancePanel()">';
+  [9,10,11,12,1,2,3,4,5].forEach(m => {
+    html += '<option value="' + m + '"' + (m === mon ? " selected" : "") + ' style="color:#000">Tháng ' + m + '</option>';
+  });
+  html += '</select></div>';
+  html += '<label class="px-3 py-2 rounded-lg text-sm font-bold cursor-pointer" style="background:#0d9488;color:#fff">📷 OCR ảnh phiếu<input type="file" accept="image/*" class="hidden" onchange="ocrFinanceImage(event)"/></label>';
+  html += '</div>';
+
+  // THU form
+  html += '<h3 class="font-bold text-green-400 mb-2">KHOẢN THU</h3>';
+  html += '<div class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-3 text-sm">';
+  html += '<div><label class="text-xs text-white">Ngày thu (dd/mm/yyyy)</label><input id="finInDate" type="date" class="input-field w-full" style="color:#fff!important;background:#1e293b;color-scheme:dark"/></div>';
+  html += '<div class="md:col-span-2"><label class="text-xs text-white">Nội dung thu</label><input id="finInContent" class="input-field w-full" style="color:#fff!important;background:#1e293b" placeholder="Nội dung thu"/></div>';
+  html += '<div><label class="text-xs text-white">Số tiền</label><input id="finInAmount" type="number" class="input-field w-full" style="color:#fff!important;background:#1e293b" placeholder="Số tiền"/></div>';
+  html += '<div><label class="text-xs text-white">Số lượng</label><input id="finInQty" type="number" class="input-field w-full" style="color:#fff!important;background:#1e293b" value="1" min="1"/></div>';
+  html += '<div class="flex items-end"><button type="button" onclick="addFinanceRow(\'in\')" class="w-full px-2 py-2 rounded font-bold text-sm" style="background:#16a34a;color:#fff">+ Thu</button></div></div>';
+
+  // CHI form
+  html += '<h3 class="font-bold text-red-400 mb-2">KHOẢN CHI</h3>';
+  html += '<div class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-2 text-sm">';
+  html += '<div><label class="text-xs text-white">Ngày chi (dd/mm/yyyy)</label><input id="finOutDate" type="date" class="input-field w-full" style="color:#fff!important;background:#1e293b;color-scheme:dark"/></div>';
+  html += '<div class="md:col-span-2"><label class="text-xs text-white">Nội dung chi</label><input id="finOutContent" class="input-field w-full" style="color:#fff!important;background:#1e293b" placeholder="Nội dung chi"/></div>';
+  html += '<div><label class="text-xs text-white">Số tiền</label><input id="finOutAmount" type="number" class="input-field w-full" style="color:#fff!important;background:#1e293b" placeholder="Số tiền"/></div>';
+  html += '<div><label class="text-xs text-white">Số lượng</label><input id="finOutQty" type="number" class="input-field w-full" style="color:#fff!important;background:#1e293b" value="1" min="1"/></div>';
+  html += '<div class="flex items-end"><button type="button" onclick="addFinanceRow(\'out\')" class="w-full px-2 py-2 rounded font-bold text-sm" style="background:#dc2626;color:#fff">+ Chi</button></div></div>';
+  html += '</div>';
+
+  // PRINT AREA — pure white, full content
+  html += '<div id="financePrintArea" style="background:#ffffff;color:#000000;padding:16px;border-radius:12px">';
+  html += '<div style="text-align:center;margin-bottom:14px">';
+  html += '<div style="font-size:1.3rem;font-weight:900;color:#7f1d1d">BẢNG THU CHI THÁNG ' + mon + ' LỚP ' + (cls || "…") + '</div>';
+  html += '<div style="font-size:0.95rem;font-weight:800;color:#9f1239">Năm học ' + year + (school ? " · " + school : "") + '</div>';
+  html += '</div>';
+
+  html += '<h3 style="color:#14532d;font-weight:800;margin:8px 0">KHOẢN THU</h3>';
+  html += '<table style="width:100%;border-collapse:collapse;color:#000;font-size:13px"><thead><tr>';
+  ["STT","Ngày thu","Nội dung thu","Số tiền","Số lượng","Tổng tiền thu","Thao tác"].forEach(h => {
+    html += '<th style="border:1px solid #333;padding:6px;background:#e0f2fe;color:#000">' + h + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  if (!ins.length) {
+    html += '<tr><td colspan="7" style="border:1px solid #333;padding:8px;text-align:center;color:#000">Chưa có khoản thu</td></tr>';
+  }
+  ins.forEach((r, i) => {
+    const tot = (+r.amount || 0) * (+r.qty || 1);
+    html += '<tr>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:center;color:#000">' + (i+1) + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;color:#000">' + formatDateVN(r.date) + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;color:#000">' + (r.content || "") + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:right;color:#000">' + Number(r.amount||0).toLocaleString("vi-VN") + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:center;color:#000">' + (r.qty || 1) + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:right;font-weight:700;color:#000">' + tot.toLocaleString("vi-VN") + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:center" class="no-print">';
+    html += '<button type="button" onclick="editFinanceRow(\'' + r.id + '\')" style="color:#0369a1;font-size:12px;margin-right:6px">Sửa</button>';
+    html += '<button type="button" onclick="delFinanceRow(\'' + r.id + '\')" style="color:#dc2626;font-size:12px">Xóa</button>';
+    html += '</td></tr>';
+  });
+  html += '<tr><td colspan="5" style="border:1px solid #333;padding:6px;text-align:right;font-weight:800;color:#000">TỔNG THU</td>';
+  html += '<td style="border:1px solid #333;padding:6px;font-weight:800;text-align:right;color:#000">' + sumIn.toLocaleString("vi-VN") + '</td><td class="no-print" style="border:1px solid #333"></td></tr>';
+  html += '</tbody></table>';
+
+  html += '<h3 style="color:#7f1d1d;font-weight:800;margin:16px 0 8px">KHOẢN CHI</h3>';
+  html += '<table style="width:100%;border-collapse:collapse;color:#000;font-size:13px"><thead><tr>';
+  ["STT","Ngày chi","Nội dung chi","Số tiền","Số lượng","Tiền chi","Thao tác"].forEach(h => {
+    html += '<th style="border:1px solid #333;padding:6px;background:#fee2e2;color:#000">' + h + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  if (!outs.length) {
+    html += '<tr><td colspan="7" style="border:1px solid #333;padding:8px;text-align:center;color:#000">Chưa có khoản chi</td></tr>';
+  }
+  outs.forEach((r, i) => {
+    const tot = (+r.amount || 0) * (+r.qty || 1);
+    html += '<tr>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:center;color:#000">' + (i+1) + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;color:#000">' + formatDateVN(r.date) + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;color:#000">' + (r.content || "") + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:right;color:#000">' + Number(r.amount||0).toLocaleString("vi-VN") + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:center;color:#000">' + (r.qty || 1) + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:right;font-weight:700;color:#000">' + tot.toLocaleString("vi-VN") + '</td>';
+    html += '<td style="border:1px solid #333;padding:5px;text-align:center" class="no-print">';
+    html += '<button type="button" onclick="editFinanceRow(\'' + r.id + '\')" style="color:#0369a1;font-size:12px;margin-right:6px">Sửa</button>';
+    html += '<button type="button" onclick="delFinanceRow(\'' + r.id + '\')" style="color:#dc2626;font-size:12px">Xóa</button>';
+    html += '</td></tr>';
+  });
+  html += '<tr><td colspan="5" style="border:1px solid #333;padding:6px;text-align:right;font-weight:800;color:#000">TỔNG CHI</td>';
+  html += '<td style="border:1px solid #333;padding:6px;font-weight:800;text-align:right;color:#000">' + sumOut.toLocaleString("vi-VN") + '</td><td class="no-print" style="border:1px solid #333"></td></tr>';
+  html += '</tbody></table>';
+
+  html += '<div style="margin-top:14px;padding:12px;border:2px solid #7f1d1d;border-radius:8px;font-weight:800;color:#7f1d1d;font-size:1.05rem">';
+  html += 'THÁNG ' + mon + ' · LỚP ' + (cls || "…") + ' · còn dư <span style="color:#14532d">' + remain.toLocaleString("vi-VN") + ' đ</span>';
+  html += '<div style="font-size:0.8rem;font-weight:600;color:#334155;margin-top:4px">' + nowStr + '</div></div>';
+  html += '</div>'; // end financePrintArea
+
+  html += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
+  html += '<button type="button" onclick="printFinance()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#0ea5e9;color:#fff">🖨️ In phiếu</button>';
+  html += '<button type="button" onclick="downloadFinancePdf()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
+  html += '<button type="button" onclick="downloadFinanceJpg()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#a16207;color:#fff">🖼️ Tải JPG</button>';
+  html += '<button type="button" onclick="saveFinanceRows();alert(\'Đã lưu thu chi\')" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#16a34a;color:#fff">💾 Lưu</button>';
+  html += '</div>';
+
+  box.innerHTML = html;
+}
+function addFinanceRow(type) {
+  const prefix = type === "in" ? "finIn" : "finOut";
+  const date = (document.getElementById(prefix + "Date") || {}).value || "";
+  const content = ((document.getElementById(prefix + "Content") || {}).value || "").trim();
+  const amount = +(document.getElementById(prefix + "Amount") || {}).value || 0;
+  const qty = +(document.getElementById(prefix + "Qty") || {}).value || 1;
+  if (!content || !amount) { alert("Nhập nội dung và số tiền"); return; }
+  const mon = window._finMonth || (new Date().getMonth() + 1);
+  if (window._finEditId) {
+    const idx = financeRows.findIndex(r => r.id === window._finEditId);
+    if (idx >= 0) {
+      financeRows[idx] = { ...financeRows[idx], type, date, content, amount, qty, month: mon };
+    }
+    window._finEditId = null;
+  } else {
+    financeRows.push({
+      id: "f" + Date.now() + Math.random().toString(36).slice(2, 6),
+      type, date, content, amount, qty, month: mon,
+      classId: currentUser && currentUser.classId
+    });
+  }
+  saveFinanceRows();
+  renderFinancePanel();
+}
+function editFinanceRow(id) {
+  const r = (financeRows || []).find(x => x.id === id);
+  if (!r) return;
+  window._finEditId = id;
+  window._finMonth = +r.month;
+  const prefix = r.type === "in" ? "finIn" : "finOut";
+  renderFinancePanel();
+  setTimeout(function() {
+    const d = document.getElementById(prefix + "Date");
+    const c = document.getElementById(prefix + "Content");
+    const a = document.getElementById(prefix + "Amount");
+    const q = document.getElementById(prefix + "Qty");
+    if (d) d.value = r.date || "";
+    if (c) c.value = r.content || "";
+    if (a) a.value = r.amount || "";
+    if (q) q.value = r.qty || 1;
+    alert("Đã nạp dòng để sửa — chỉnh xong bấm + Thu / + Chi để cập nhật");
+  }, 50);
+}
+function delFinanceRow(id) {
+  if (!confirm("Xóa dòng này?")) return;
+  financeRows = (financeRows || []).filter(r => r.id !== id);
+  saveFinanceRows();
+  renderFinancePanel();
+}
+function printFinance() {
+  const el = document.getElementById("financePrintArea");
+  if (!el) { alert("Chưa có bảng thu chi"); return; }
+  // Clone and strip no-print for clean print
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(n => n.remove());
+  openPrintWindow(clone.innerHTML, "Bang thu chi thang");
+}
+function downloadFinancePdf() {
+  const el = document.getElementById("financePrintArea");
+  if (!el) { alert("Chưa có bảng thu chi"); return; }
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(n => n.remove());
+  // full height export wrapper
+  const wrap = document.createElement("div");
+  wrap.id = "pdfExportWrap";
+  wrap.style.cssText = "position:fixed;left:0;top:0;width:210mm;min-height:297mm;background:#fff;color:#000;z-index:99999;padding:12mm;box-sizing:border-box;overflow:visible;";
+  wrap.appendChild(clone);
+  document.body.appendChild(wrap);
+  if (typeof html2pdf === "undefined") {
+    openPrintWindow(clone.innerHTML, "Thu chi");
+    wrap.remove();
+    return;
+  }
+  html2pdf().set({
+    margin: [10, 10, 10, 10],
+    filename: "Thu_chi_thang.pdf",
+    image: { type: "jpeg", quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true, backgroundColor: "#ffffff", height: clone.scrollHeight, windowHeight: clone.scrollHeight + 100 },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+    pagebreak: { mode: ["css", "legacy"] }
+  }).from(clone).save().then(function() {
+    const w = document.getElementById("pdfExportWrap"); if (w) w.remove();
+  }).catch(function(err) {
+    console.warn(err);
+    const w = document.getElementById("pdfExportWrap"); if (w) w.remove();
+    openPrintWindow(clone.innerHTML, "Thu chi");
+  });
+}
+function downloadFinanceJpg() {
+  const el = document.getElementById("financePrintArea");
+  if (!el) return;
+  const clone = el.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(n => n.remove());
+  const wrap = document.createElement("div");
+  wrap.style.cssText = "position:fixed;left:0;top:0;width:900px;background:#fff;padding:20px;z-index:99999;";
+  wrap.appendChild(clone);
+  document.body.appendChild(wrap);
+  const done = function() { wrap.remove(); };
+  if (typeof html2canvas === "undefined") {
+    alert("Dùng Tải PDF hoặc In");
+    done();
+    return;
+  }
+  html2canvas(clone, { scale: 2, backgroundColor: "#ffffff", height: clone.scrollHeight, windowHeight: clone.scrollHeight + 80 }).then(function(canvas) {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/jpeg", 0.92);
+    a.download = "Thu_chi_thang.jpg";
+    a.click();
+    done();
+  }).catch(function() { done(); alert("Lỗi tạo JPG"); });
+}
+
+async function ocrFinanceImage(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (typeof Tesseract === "undefined") { alert("OCR chưa sẵn sàng"); return; }
+  alert("Đang đọc ảnh…");
+  try {
+    const res = await Tesseract.recognize(file, "vie+eng");
+    const text = (res && res.data && res.data.text) || "";
+    // heuristic: lines with numbers
+    const lines = text.split(/\\n/).map(l => l.trim()).filter(Boolean);
+    let added = 0;
+    const mon = window._finMonth || (new Date().getMonth() + 1);
+    lines.forEach(line => {
+      const m = line.match(/(\\d{1,3}(?:[.,]\\d{3})*|\\d+)\\s*(?:đ|dong|vnđ)?/i);
+      if (!m) return;
+      const amount = parseInt(m[1].replace(/[.,]/g, ""), 10);
+      if (!amount || amount < 1000) return;
+      const content = line.replace(m[0], "").trim() || "Khoản từ OCR";
+      financeRows.push({
+        id: "f" + Date.now() + Math.random().toString(36).slice(2, 5),
+        type: /chi|mua|nộp quỹ|đóng/i.test(line) ? "out" : "in",
+        date: new Date().toISOString().slice(0, 10),
+        content, amount, qty: 1, month: mon,
+        classId: currentUser && currentUser.classId
+      });
+      added++;
+    });
+    saveFinanceRows();
+    renderFinancePanel();
+    alert(added ? ("Đã thêm ~" + added + " dòng từ OCR — hãy kiểm tra lại") : "Không nhận được số tiền rõ — nhập tay giúp");
+  } catch (e) {
+    alert("OCR lỗi: " + (e.message || e));
+  }
+  ev.target.value = "";
+}
+
 function switchNotebook(scope) {
   window._nbScope = scope || "week";
   document.querySelectorAll(".nb-tab").forEach(b => {
@@ -3428,7 +3829,8 @@ function switchNotebook(scope) {
       b.classList.add("bg-slate-700");
     }
   });
-  renderNotebook();
+  if (window._nbScope === "finance") renderFinancePanel();
+  else renderNotebook();
 }
 function notebookContext() {
   const cur = currentSchoolWeek() || { w: "1", from: "2026-09-07", to: "2026-09-12" };
