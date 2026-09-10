@@ -8,6 +8,7 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -97,6 +98,9 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
 #tab-report label { color: #111 !important; }
 #tab-report label[style*="991b1b"] { color: #991b1b !important; }
 @media print {
+  #tab-notebook:not(.hidden) #notebookContent { display: block !important; }
+  #nbPrintArea, #selfAssessSheet { display: block !important; }
+
   @page { size: A4 portrait; margin: 8mm 6mm; }
   html, body { width: 210mm; height: 297mm; }
   header, .no-print, footer, #mainTabs, #btnLogout, #userBadge,
@@ -205,8 +209,32 @@ button[onclick="showAuth('login')"] {
 
 
 @media print {
+  #tab-notebook:not(.hidden) #notebookContent { display: block !important; }
+  #nbPrintArea, #selfAssessSheet { display: block !important; }
+
   .student-sheet { page-break-inside: avoid; font-size: 10pt !important; }
   #reportWeekBoard:not(.force-print) { display: none !important; }
+}
+
+
+#tab-notebook .week-board,
+#tab-notebook .week-board * {
+  color: #111 !important;
+}
+#tab-notebook .week-board h3,
+#tab-notebook .week-board b {
+  color: #111 !important;
+}
+#tab-notebook .text-slate-500,
+#tab-notebook .text-red-700,
+#tab-notebook .text-sky-800 {
+  color: #111 !important;
+}
+#nbPrintArea, #nbPrintArea table, #nbPrintArea td, #nbPrintArea th {
+  color: #000 !important;
+}
+#selfAssessSheet, #selfAssessSheet * {
+  color: #000 !important;
 }
 
 </style>
@@ -640,6 +668,18 @@ button[onclick="showAuth('login')"] {
 <div id="missingBox" class="bg-slate-800 rounded-xl p-5 border border-amber-600/40 hidden no-print">
 <h3 class="font-semibold text-amber-400 mb-2">⚠️ Học sinh chưa có bản ghi (trong phạm vi được giao)</h3>
 <div id="missingList" class="text-sm"></div>
+</div>
+</section>
+
+<section id="tab-notebook" class="tab-content hidden">
+<div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-4">
+<h2 class="text-xl font-bold text-yellow-400 mb-3">📒 Sổ chủ nhiệm</h2>
+<div class="flex flex-wrap gap-2 mb-4">
+<button type="button" data-nb="week" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-sky-600 text-white" onclick="switchNotebook('week')">Báo cáo tuần</button>
+<button type="button" data-nb="month" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700" onclick="switchNotebook('month')">Báo cáo tháng</button>
+<button type="button" data-nb="hk" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700" onclick="switchNotebook('hk')">Báo cáo học kỳ</button>
+</div>
+<div id="notebookContent"></div>
 </div>
 </section>
 
@@ -1881,6 +1921,9 @@ function renderApp() {
       html += '<button data-tab="input" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Nhập thi đua</button>';
     }
     html += '<button data-tab="report" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Báo cáo</button>';
+    if (currentUser.role === "gvcn") {
+      html += '<button data-tab="notebook" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Sổ chủ nhiệm</button>';
+    }
     if (currentUser.role === "gvcn" || currentUser.role === "super") {
       html += '<button data-tab="admin" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm bg-slate-700">Quản trị</button>';
     }
@@ -1938,6 +1981,7 @@ function switchTab(name) {
   if (name === "report") renderReport();
   if (name === "admin") switchAdminSub(currentUser.role === "super" ? "pending" : "accounts");
   if (name === "overview") renderOverview();
+  if (name === "notebook") switchNotebook(window._nbScope || "week");
   if (name === "input") {
     fillWeekSelects();
     filterStudentsByTeam();
@@ -2925,10 +2969,25 @@ function renderReportStudentProfile(list) {
   });
   else html += '<li class="text-slate-500">Không có</li>';
   html += '</ul></div></div>';
-  html += '<p class="text-xs mt-2 text-slate-600">Công thức: 100 + cộng − trừ = ' + score + ' · In A4: chỉ phiếu này (chọn HS → In).</p>';
-  html += '</div>';
+  html += '<p class="text-xs mt-2 text-slate-600">Công thức: 100 + cộng − trừ = ' + score + '</p>';
+  html += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
+  html += '<button type="button" onclick="printStudentSheet()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#0ea5e9;color:#fff">🖨️ In phiếu</button>';
+  html += '<button type="button" onclick="downloadStudentPdf()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
+  html += '</div></div>';
   box.innerHTML = html;
   box.classList.remove("hidden");
+}
+function printStudentSheet() {
+  const prof = document.getElementById("reportStudentProfile");
+  const board = document.getElementById("reportWeekBoard");
+  if (board) board.classList.add("hidden");
+  if (prof) prof.classList.remove("hidden");
+  setTimeout(function(){ window.print(); }, 200);
+}
+function downloadStudentPdf() {
+  const el = document.querySelector("#reportStudentProfile .student-sheet");
+  if (!el) { alert("Chưa có phiếu — chọn học sinh trước"); return; }
+  exportElementPdf(el, "Phieu_HS.pdf");
 }
 
 function reportHeaderHtml(gvcnLabel, clsName, school, year) {
@@ -3335,6 +3394,269 @@ function onSuperGvcnReportChange() {
   loadClassDataFromCloud(cid, function() {
     renderReport();
   });
+}
+
+
+function switchNotebook(scope) {
+  window._nbScope = scope || "week";
+  document.querySelectorAll(".nb-tab").forEach(b => {
+    if (b.dataset.nb === window._nbScope) {
+      b.classList.add("bg-sky-600", "text-white");
+      b.classList.remove("bg-slate-700");
+    } else {
+      b.classList.remove("bg-sky-600", "text-white");
+      b.classList.add("bg-slate-700");
+    }
+  });
+  renderNotebook();
+}
+function notebookContext() {
+  const cur = currentSchoolWeek() || { w: "1", from: "2026-09-07", to: "2026-09-12" };
+  const now = new Date();
+  let mon = now.getMonth() + 1;
+  if (mon >= 5 && mon <= 8) mon = 9;
+  const hk = (mon >= 9 && mon <= 12) ? "hk1" : "hk2";
+  return { cur, mon, hk };
+}
+function entriesInWeeks(weekNos) {
+  return entries.filter(e => {
+    if (weekNos.indexOf(String(e.weekNo)) >= 0) return true;
+    return weekNos.some(wn => {
+      const w = SCHOOL_WEEKS.find(x => String(x.w) === String(wn));
+      return w && e.date >= w.from && e.date <= w.to;
+    });
+  });
+}
+function studentWeekScoreInWeeks(sid, weekNos) {
+  let sum = 0;
+  weekNos.forEach(wn => {
+    const w = SCHOOL_WEEKS.find(x => String(x.w) === String(wn));
+    const we = entries.filter(e => String(e.studentId) === String(sid) && (
+      String(e.weekNo) === String(wn) || (w && e.date >= w.from && e.date <= w.to)
+    ));
+    let b = 0, v = 0;
+    we.forEach(e => {
+      const tt = e.total != null ? e.total : e.points * e.times;
+      if (tt > 0) b += tt; else v += tt;
+    });
+    sum += 100 + b + v;
+  });
+  return sum;
+}
+function renderNotebook() {
+  const box = document.getElementById("notebookContent");
+  if (!box || !currentUser || currentUser.role !== "gvcn") return;
+  const scope = window._nbScope || "week";
+  const { cur, mon, hk } = notebookContext();
+  const school = currentUser.school || "";
+  const gvcn = currentUser.name || "";
+  const cls = currentUser.className || "";
+  const year = currentUser.year || "2026 - 2027";
+  let weekNos = [], title = "", dateNote = "";
+  if (scope === "week") {
+    weekNos = [String(cur.w)];
+    title = "BÁO CÁO TUẦN " + cur.w;
+    dateNote = formatDate(cur.from) + " – " + formatDate(cur.to);
+  } else if (scope === "month") {
+    weekNos = weeksForMonth(mon);
+    title = "BÁO CÁO THÁNG " + mon;
+    dateNote = monthDateRange(mon) || ("Tuần " + weekNos.join(", "));
+  } else {
+    const months = hk === "hk1" ? [9,10,11,12] : [1,2,3,4];
+    months.forEach(m => { weekNos = weekNos.concat(weeksForMonth(m)); });
+    title = hk === "hk1" ? "BÁO CÁO HỌC KỲ 1 (T9–T12)" : "BÁO CÁO HỌC KỲ 2 (T1–T4)";
+    dateNote = hk === "hk1" ? "Từ tháng 9 đến tháng 12" : "Từ tháng 1 đến tháng 4";
+  }
+  const nW = weekNos.length || 1;
+  const list = entriesInWeeks(weekNos);
+  const viols = list.filter(e => e.type === "violation");
+
+  let html = '<div class="week-board mb-4" id="nbPrintArea">';
+  html += reportHeaderHtml(gvcn, cls, school, year);
+  html += '<div class="text-center mb-3"><div style="font-size:1.2rem;font-weight:800;color:#0c4a6e">' + title + '</div>';
+  html += '<div style="font-size:0.85rem;color:#9f1239;font-weight:700">' + dateNote + '</div></div>';
+
+  // Violations by team
+  html += '<h3 class="font-bold text-red-700 mb-2">1. Danh sách học sinh vi phạm theo tổ</h3>';
+  for (let team = 1; team <= 4; team++) {
+    const tv = viols.filter(e => {
+      const s = students.find(x => String(x.id) === String(e.studentId));
+      return s && String(s.team) === String(team);
+    });
+    html += '<div class="mb-3"><b style="color:#000">Tổ ' + team + '</b>';
+    if (!tv.length) {
+      html += '<p class="text-sm ml-2" style="color:#000">Không có vi phạm</p></div>';
+      continue;
+    }
+    html += '<table class="w-full text-sm mt-1" style="color:#000"><thead><tr><th class="text-left" style="color:#000">Họ và tên</th><th class="text-left" style="color:#000">Nội dung</th><th style="color:#000">Số lần</th></tr></thead><tbody>';
+    const map = {};
+    tv.forEach(e => {
+      const key = e.studentId + "||" + (e.contentText || e.contentCode || "");
+      if (!map[key]) map[key] = { name: e.studentName, text: e.contentText || e.contentCode || "", times: 0 };
+      map[key].times += (e.times || 1);
+    });
+    Object.values(map).sort((a,b) => a.name.localeCompare(b.name, "vi")).forEach(r => {
+      html += '<tr><td class="name-col" style="color:#000">' + r.name + '</td><td style="color:#000">' + r.text + '</td><td class="text-center font-bold" style="color:#000">' + r.times + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  }
+
+  // Team scores ranking
+  html += '<h3 class="font-bold text-sky-800 mb-2 mt-4">2. Tổng điểm & xếp hạng tổ</h3>';
+  const teamRows = [];
+  for (let team = 1; team <= 4; team++) {
+    const members = students.filter(s => String(s.team) === String(team)).slice().sort(sortByIdAsc);
+    if (!members.length) continue;
+    let teamSum = 0;
+    const memberScores = members.map(s => {
+      const sc = studentWeekScoreInWeeks(s.id, weekNos);
+      teamSum += sc;
+      const rk = scope === "week" ? rankClass(sc) : rankClassScaled(sc, nW);
+      return { name: s.name, score: sc, rk };
+    });
+    teamRows.push({ team, teamSum, members: memberScores, avg: members.length ? teamSum / members.length : 0 });
+  }
+  teamRows.sort((a, b) => b.teamSum - a.teamSum);
+  teamRows.forEach((tr, idx) => {
+    html += '<div class="mb-3 p-2 border border-slate-300 rounded-lg">';
+    html += '<div class="font-bold" style="color:#000">Hạng ' + (idx + 1) + ' · Tổ ' + tr.team + ' · Tổng tổ: <b>' + tr.teamSum + '</b> · TB: ' + tr.avg.toFixed(1) + '</div>';
+    html += '<table class="w-full text-sm mt-1" style="color:#000"><thead><tr><th style="color:#000">STT</th><th class="text-left" style="color:#000">Họ và tên</th><th style="color:#000">Điểm</th><th style="color:#000">Xếp loại</th></tr></thead><tbody>';
+    tr.members.slice().sort((a,b) => b.score - a.score).forEach((m, i) => {
+      html += '<tr><td style="color:#000">' + (i+1) + '</td><td class="name-col" style="color:#000">' + m.name + '</td><td style="font-weight:700;color:#000">' + m.score + '</td><td style="color:#000;font-weight:700">' + m.rk.label + '</td></tr>';
+    });
+    html += '</tbody></table></div>';
+  });
+
+  html += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
+  html += '<button type="button" onclick="printNotebook()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#0ea5e9;color:#fff">🖨️ In báo cáo sổ</button>';
+  html += '<button type="button" onclick="downloadNotebookPdf()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 PDF báo cáo</button>';
+  html += '</div></div>';
+
+  // Self assessment for month / hk
+  if (scope === "month" || scope === "hk") {
+    html += renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, school, year);
+  }
+
+  box.innerHTML = html;
+}
+function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, school, year) {
+  const periodLabel = scope === "month"
+    ? ("THÁNG " + mon + " HỌC KỲ " + (mon >= 9 || mon <= 4 ? (mon >= 9 ? "1" : "2") : "") + " NĂM HỌC " + year)
+    : ((hk === "hk1" ? "HỌC KỲ 1" : "HỌC KỲ 2") + " NĂM HỌC " + year);
+  const monthNum = scope === "month" ? mon : "";
+  let h = '<div class="mt-6">';
+  h += '<h3 class="font-bold text-yellow-400 mb-2 text-lg">BẢN TỰ ĐÁNH GIÁ CÁ NHÂN THEO ' + (scope === "month" ? "THÁNG" : "HỌC KỲ") + '</h3>';
+  h += '<p class="text-sm text-slate-300 mb-3">Tự động điền mục 1–3 từ dữ liệu thi đua · Mục 4–5 để trống cho HS/PH điền · Chọn HS rồi Lưu / Tải</p>';
+  h += '<div class="mb-3 no-print"><label class="text-sm text-slate-300">Chọn học sinh</label>';
+  h += '<select id="nbSelfStudent" class="input-field text-base py-2" onchange="fillSelfAssessment()">' +
+    '<option value="">— Chọn HS —</option>' +
+    students.slice().sort(sortByIdAsc).map(s => '<option value="' + s.id + '">' + s.name + " (Tổ " + (s.team||"?") + ")</option>").join("") +
+    '</select></div>';
+  h += '<div id="nbSelfForm" class="week-board bg-white text-slate-900"></div>';
+  h += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
+  h += '<button type="button" onclick="fillSelfAssessment()" class="px-3 py-2 rounded-lg bg-slate-600 text-white text-sm">Làm mới phiếu</button>';
+  h += '<button type="button" onclick="downloadSelfDoc()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#2563eb;color:#fff">📝 Tải Word (.doc)</button>';
+  h += '<button type="button" onclick="downloadSelfPdf()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
+  h += '</div></div>';
+  // store context
+  window._nbSelfCtx = { scope, mon, hk, weekNos, nW, gvcn, cls, school, year, periodLabel, monthNum };
+  setTimeout(fillSelfAssessment, 50);
+  return h;
+}
+function fillSelfAssessment() {
+  const box = document.getElementById("nbSelfForm");
+  if (!box || !window._nbSelfCtx) return;
+  const ctx = window._nbSelfCtx;
+  const sid = (document.getElementById("nbSelfStudent") || {}).value || "";
+  const st = students.find(s => String(s.id) === String(sid));
+  const list = entriesInWeeks(ctx.weekNos);
+  let bonusLines = [], violLines = [];
+  let sumScore = ctx.weekNos.length * 100;
+  if (st) {
+    sumScore = studentWeekScoreInWeeks(st.id, ctx.weekNos);
+    list.filter(e => String(e.studentId) === String(st.id)).forEach(e => {
+      const line = (e.contentCode ? e.contentCode + " · " : "") + (e.contentText || "") +
+        " (" + (e.total != null ? e.total : e.points * e.times) + ", " + (e.times || 1) + " lần)";
+      if (e.type === "bonus") bonusLines.push(line);
+      else if (e.type === "violation") violLines.push(line);
+    });
+  }
+  const rk = ctx.scope === "week" ? rankClass(sumScore) : rankClassScaled(sumScore, ctx.nW);
+  const monthTxt = ctx.scope === "month" ? String(ctx.mon) : "…";
+  let html = '<div id="selfAssessSheet" style="font-family:Times New Roman,serif;font-size:12pt;color:#000;padding:12px">';
+  html += '<div style="text-align:center;font-weight:bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br/>Độc lập - Tự do - Hạnh phúc<br/>---------------</div>';
+  html += '<div style="text-align:center;margin-top:10px;font-weight:bold">' + (ctx.school || "TRƯỜNG").toUpperCase() + '</div>';
+  html += '<div style="text-align:center;font-weight:bold;margin-top:8px">BẢN TỰ NHẬN XÉT CÁ NHÂN LỚP ' + (ctx.cls || "") + '</div>';
+  html += '<div style="text-align:center;font-weight:bold">' + ctx.periodLabel + '</div>';
+  html += '<p style="margin-top:12px"><b>Kính gửi:</b> <i>BGH nhà trường, GV chủ nhiệm lớp</i> <b>' + (ctx.cls || "") + '</b></p>';
+  html += '<p>Họ và tên học sinh: <b>' + (st ? st.name : ".................................................") + '</b>';
+  html += '&nbsp;&nbsp;Ngày sinh: <b>' + (st && st.dob ? st.dob : "……………") + '</b></p>';
+  html += '<p>Trong ' + (ctx.scope === "month" ? ("tháng " + monthTxt) : "học kỳ") + ', năm học ' + ctx.year + ' vừa qua em tự nhận thấy bản thân có những ưu, khuyết điểm như sau:</p>';
+  html += '<p><b>1. Ưu điểm:</b></p><p style="min-height:48px;border-bottom:1px dotted #999">';
+  html += bonusLines.length ? bonusLines.map(l => "• " + l).join("<br/>") : ".....................................................................................................................................";
+  html += '</p>';
+  html += '<p><b>2. Khuyết điểm:</b></p><p style="min-height:64px;border-bottom:1px dotted #999">';
+  html += violLines.length ? violLines.map(l => "• " + l).join("<br/>") : ".....................................................................................................................................";
+  html += '</p>';
+  html += '<p><b>3. Em tự nhận xét về kết quả xếp loại rèn luyện, học tập của ' + (ctx.scope === "month" ? ("tháng " + monthTxt) : "học kỳ") + ' :</b></p>';
+  html += '<ul><li><b>TỔNG ĐIỂM ' + (ctx.scope === "month" ? "THÁNG" : "HỌC KỲ") + ' : ' + (st ? sumScore : "……………….") + '</b></li>';
+  html += '<li><b>Rèn luyện XẾP LOẠI : ' + (st ? rk.label : "…………………") + '</b></li></ul>';
+  html += '<p><b>4. Ý kiến cá nhân HS và mục tiêu học tập cho ' + (ctx.scope === "month" ? "tháng kế tiếp" : "học kỳ kế tiếp") + ' :</b></p>';
+  html += '<p>.....................................................................................................................................</p>';
+  html += '<p>.....................................................................................................................................</p>';
+  html += '<p>.....................................................................................................................................</p>';
+  html += '<p><b>5. Ý kiến của phụ huynh :</b></p>';
+  html += '<p>.....................................................................................................................................</p>';
+  html += '<p>.....................................................................................................................................</p>';
+  html += '<p style="text-align:right;margin-top:12px"><i>Tây Nha Trang, ngày…… tháng…… năm 2026</i></p>';
+  html += '<table style="width:100%;margin-top:8px"><tr>';
+  html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Phụ huynh</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
+  html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Tổ trưởng/ phó</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
+  html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Học sinh</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
+  html += '</tr></table></div>';
+  box.innerHTML = html;
+}
+function printNotebook() {
+  const area = document.getElementById("nbPrintArea");
+  if (!area) return;
+  const prof = document.getElementById("reportStudentProfile");
+  if (prof) prof.classList.add("hidden");
+  window.print();
+}
+function downloadNotebookPdf() {
+  const el = document.getElementById("nbPrintArea");
+  if (!el || typeof html2pdf === "undefined") { printNotebook(); return; }
+  html2pdf().set({
+    margin: 8, filename: "So_Chu_Nhiem_" + (window._nbScope || "bc") + ".pdf",
+    image: { type: "jpeg", quality: 0.95 },
+    html2canvas: { scale: 2 },
+    jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  }).from(el).save();
+}
+function downloadSelfPdf() {
+  const el = document.getElementById("selfAssessSheet");
+  if (!el) { alert("Chọn học sinh và làm mới phiếu"); return; }
+  if (typeof html2pdf === "undefined") { window.print(); return; }
+  const st = (document.getElementById("nbSelfStudent") || {}).selectedOptions;
+  const fn = "Tu_Danh_Gia_" + (st && st[0] ? st[0].text.replace(/\\s+/g, "_") : "HS") + ".pdf";
+  html2pdf().set({
+    margin: 10, filename: fn, image: { type: "jpeg", quality: 0.95 },
+    html2canvas: { scale: 2 }, jsPDF: { unit: "mm", format: "a4", orientation: "portrait" }
+  }).from(el).save();
+}
+function downloadSelfDoc() {
+  fillSelfAssessment();
+  const el = document.getElementById("selfAssessSheet");
+  if (!el) { alert("Chọn học sinh và làm mới phiếu"); return; }
+  const html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Tu danh gia</title></head><body>' + el.innerHTML + '</body></html>';
+  const blob = new Blob(['\ufeff', html], { type: "application/msword" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const st = (document.getElementById("nbSelfStudent") || {}).selectedOptions;
+  a.href = url;
+  a.download = "Tu_Danh_Gia_" + (st && st[0] ? st[0].text.replace(/\\s+/g, "_") : "HS") + ".doc";
+  a.click();
+  URL.revokeObjectURL(url);
 }
 
 function renderReport() {
