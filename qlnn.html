@@ -16,8 +16,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-body{font-family:Inter,system-ui,sans-serif;font-size:16px}
-.glass{background:rgba(30,41,59,.92);backdrop-filter:blur(12px)}
+body{font-family:Inter,system-ui,sans-serif;font-size:17px}
+.glass{background:rgba(255,255,255,.96);backdrop-filter:blur(12px);border:1px solid #e2e8f0}
 .btn-primary{background:#facc15;color:#0f172a;font-weight:600;padding:.5rem 1rem;border-radius:.5rem;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
 .btn-primary:hover{background:#fde047}
 .btn-secondary{background:#475569;color:#fff;padding:.5rem 1rem;border-radius:.5rem}
@@ -246,22 +246,400 @@ button[onclick="showAuth('login')"] {
 }
 
 
-#tab-notebook .input-field,
-#tab-notebook input.input-field,
-#tab-notebook select.input-field {
+/* notebook inputs handled by theme-light */
+
+
+/* ========== THEME SÁNG · HIỆN ĐẠI · DỄ ĐỌC ========== */
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --card-border: #e2e8f0;
+  --text: #0f172a;
+  --text-muted: #475569;
+  --text-soft: #64748b;
+  --primary: #0369a1;
+  --accent: #0ea5e9;
+  --success: #15803d;
+  --danger: #b91c1c;
+  --warn: #c2410c;
+  --header: #0f172a;
+}
+body.theme-light, body.bg-slate-50 {
+  background: var(--bg) !important;
+  color: var(--text) !important;
+  font-size: 17px !important;
+  line-height: 1.55 !important;
+}
+body.theme-light header,
+body.theme-light #appHeader,
+body.theme-light .glass {
+  background: #ffffff !important;
+  color: var(--text) !important;
+  border-bottom: 1px solid var(--card-border) !important;
+  box-shadow: 0 1px 3px rgba(15,23,42,.06) !important;
+  backdrop-filter: none !important;
+}
+body.theme-light header *,
+body.theme-light #userBadge {
+  color: var(--text) !important;
+}
+body.theme-light #clockDisplay { color: var(--primary) !important; font-weight: 600; }
+
+/* Cards & panels */
+body.theme-light .bg-slate-800,
+body.theme-light .bg-slate-900,
+body.theme-light .bg-slate-900\/70,
+body.theme-light .bg-slate-900\/80,
+body.theme-light [class*="bg-slate-8"],
+body.theme-light [class*="bg-slate-9"] {
+  background: var(--card) !important;
+  color: var(--text) !important;
+  border-color: var(--card-border) !important;
+  box-shadow: 0 4px 16px rgba(15,23,42,.06) !important;
+}
+body.theme-light .border-slate-600,
+body.theme-light .border-slate-700,
+body.theme-light .border-slate-700\/40,
+body.theme-light .border-slate-700\/50 {
+  border-color: var(--card-border) !important;
+}
+
+/* Text on light */
+body.theme-light .text-slate-100,
+body.theme-light .text-slate-200,
+body.theme-light .text-slate-300,
+body.theme-light .text-slate-400,
+body.theme-light .text-white {
+  color: var(--text) !important;
+}
+body.theme-light .text-slate-400,
+body.theme-light .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+body.theme-light .text-yellow-400,
+body.theme-light h1.text-yellow-400,
+body.theme-light h2.text-yellow-400,
+body.theme-light .font-bold.text-yellow-400 {
+  color: #a16207 !important;
+}
+body.theme-light .text-sky-400,
+body.theme-light .text-sky-300 {
+  color: var(--primary) !important;
+}
+body.theme-light .text-amber-300,
+body.theme-light .text-amber-400 {
+  color: var(--warn) !important;
+}
+body.theme-light .text-green-400 { color: var(--success) !important; }
+body.theme-light .text-red-400 { color: var(--danger) !important; }
+body.theme-light .hs-name { color: #0f172a !important; font-weight: 700; font-size: 1.05rem; }
+body.theme-light .hs-dob { color: #166534 !important; }
+body.theme-light .hs-team { color: #7e22ce !important; font-weight: 700; }
+body.theme-light .hs-contact { color: #334155 !important; }
+
+/* Tabs */
+body.theme-light .tab-btn {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  padding: 0.55rem 1rem !important;
+}
+body.theme-light .tab-btn.tab-active,
+body.theme-light .tab-btn.bg-yellow-500 {
+  background: #0284c7 !important;
   color: #fff !important;
+}
+body.theme-light .nb-tab {
+  font-size: 0.95rem !important;
+  padding: 0.5rem 1rem !important;
+}
+
+/* Inputs */
+body.theme-light .input-field,
+body.theme-light input,
+body.theme-light select,
+body.theme-light textarea {
+  background: #ffffff !important;
+  color: #0f172a !important;
+  border: 1.5px solid #cbd5e1 !important;
+  font-size: 1rem !important;
+  min-height: 2.75rem !important;
+  border-radius: 0.6rem !important;
+}
+body.theme-light .input-field:focus,
+body.theme-light input:focus,
+body.theme-light select:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(14,165,233,.2) !important;
+  outline: none !important;
+}
+body.theme-light input::placeholder { color: #94a3b8 !important; }
+
+/* Labels */
+body.theme-light label,
+body.theme-light .text-sm {
+  color: #334155 !important;
+  font-size: 0.95rem !important;
+}
+
+/* Tables */
+body.theme-light table { color: #0f172a !important; font-size: 0.95rem !important; }
+body.theme-light th {
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  font-size: 0.9rem !important;
+}
+body.theme-light td { color: #0f172a !important; border-color: #e2e8f0 !important; }
+body.theme-light tr:hover td { background: #f8fafc !important; }
+
+/* Buttons keep brand colors, larger touch */
+body.theme-light button,
+body.theme-light .btn-primary,
+body.theme-light .btn-secondary {
+  font-size: 0.95rem !important;
+  min-height: 2.6rem !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 0.6rem !important;
+}
+body.theme-light .btn-secondary {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+/* Welcome / hero */
+body.theme-light #welcomeSection h1 {
+  color: #0c4a6e !important;
+  font-size: clamp(1.75rem, 4vw, 2.75rem) !important;
+}
+body.theme-light .hero-app-title { color: #0d9488 !important; font-size: 0.95rem !important; }
+body.theme-light .hero-year, body.theme-light #welcomeSection .hero-year, #welcomeSection p { color: #991b1b !important; font-weight: 800 !important; }
+
+/* Auth modal */
+body.theme-light #authModal .bg-slate-800,
+body.theme-light #authModal > div,
+body.theme-light #parentReportModal .bg-slate-800 {
+  background: #fff !important;
+  color: #0f172a !important;
+  border: 1px solid #e2e8f0 !important;
+}
+body.theme-light #authModal input,
+body.theme-light #parentReportModal input {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+/* Week board / report already light — reinforce */
+body.theme-light .week-board {
+  background: #fff !important;
+  color: #0f172a !important;
+  border: 2px solid #bae6fd !important;
+  box-shadow: 0 8px 24px rgba(14,165,233,.08) !important;
+}
+body.theme-light .legend-box {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Rank colors still vivid on white */
+body.theme-light .rank-xs { color: #a16207 !important; font-weight: 900 !important; }
+body.theme-light .rank-tot { color: #15803d !important; font-weight: 900 !important; }
+body.theme-light .rank-htt { color: #0369a1 !important; font-weight: 800 !important; }
+body.theme-light .rank-ccg { color: #c2410c !important; font-weight: 700 !important; }
+body.theme-light .rank-ht { color: #b91c1c !important; font-weight: 700 !important; }
+
+/* Notebook finance forms on light */
+body.theme-light #tab-notebook .input-field,
+body.theme-light #tab-notebook input.input-field,
+body.theme-light #tab-notebook select.input-field {
+  color: #0f172a !important;
+  background: #fff !important;
+}
+body.theme-light #tab-notebook .bg-slate-900 {
+  background: #f1f5f9 !important;
+}
+body.theme-light #tab-notebook label.text-xs,
+body.theme-light #tab-notebook .text-white {
+  color: #334155 !important;
+}
+
+/* Logout still red */
+body.theme-light button[onclick*="logout"],
+body.theme-light #btnLogout {
+  color: #dc2626 !important;
+  font-weight: 700 !important;
+}
+
+/* Footer */
+body.theme-light footer {
+  background: #fff !important;
+  color: var(--text-soft) !important;
+  border-top: 1px solid var(--card-border) !important;
+}
+
+/* Mobile larger touch */
+@media (max-width: 640px) {
+  body.theme-light { font-size: 16px !important; }
+  body.theme-light .tab-btn { font-size: 0.9rem !important; padding: 0.6rem 0.75rem !important; }
+  body.theme-light .input-field,
+  body.theme-light input,
+  body.theme-light select {
+    font-size: 16px !important; /* tránh zoom iOS */
+    min-height: 3rem !important;
+  }
+  body.theme-light button { min-height: 2.85rem !important; font-size: 0.95rem !important; }
+}
+
+/* Admin / overview headings */
+body.theme-light h2, body.theme-light h3 {
+  color: #0c4a6e !important;
+}
+body.theme-light .text-2xl { font-size: 1.6rem !important; }
+body.theme-light .text-xl { font-size: 1.35rem !important; }
+body.theme-light .text-lg { font-size: 1.15rem !important; }
+
+/* sticky header readable */
+body.theme-light header a, body.theme-light header span {
+  color: #0f172a !important;
+}
+
+
+/* === Theme refresh 18px / green cards === */
+body.theme-light { font-size: 18px !important; }
+body.theme-light .bg-slate-800,
+body.theme-light .bg-slate-900,
+body.theme-light [class*="bg-slate-8"],
+body.theme-light [class*="bg-slate-9"] {
+  background: #ecfdf5 !important;
+  border: 2px solid #16a34a !important;
+  box-shadow: none !important;
+  color: #000 !important;
+}
+body.theme-light .bg-slate-900\/70,
+body.theme-light .bg-slate-900\/80 {
+  background: #dcfce7 !important;
+  border: 2px solid #16a34a !important;
+  box-shadow: none !important;
+}
+/* khung nội dung đậm: nền đen chữ vàng chanh */
+body.theme-light .card-invert,
+body.theme-light #catalogGrid {
+  background: #0f172a !important;
+  color: #f7fee7 !important;
+  border: 2px solid #16a34a !important;
+}
+body.theme-light #catalogGrid button {
   background: #1e293b !important;
+  color: #f7fee7 !important;
+  border-color: #334155 !important;
 }
-#tab-notebook input::placeholder {
-  color: #94a3b8 !important;
+body.theme-light #catalogGrid button span { color: inherit !important; }
+body.theme-light .clock-box { line-height: 1.2; }
+body.theme-light .clock-date { font-size: 0.95rem; color: #0f172a; font-weight: 600; }
+body.theme-light .clock-time { font-size: 1.35rem; color: #0369a1; font-weight: 800; font-variant-numeric: tabular-nums; }
+body.theme-light .hero-year, body.theme-light .hero-app-title { color: #000 !important; }
+body.theme-light .input-field,
+body.theme-light input,
+body.theme-light select {
+  background: #eff6ff !important;
+  border: 2px solid #16a34a !important;
+  color: #000 !important;
+  font-size: 18px !important;
 }
-#tab-notebook label.text-xs {
-  color: #e2e8f0 !important;
+body.theme-light .input-field:focus,
+body.theme-light input:focus,
+body.theme-light select:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2,132,199,.25) !important;
+}
+body.theme-light th { background: #f8fafc !important; color: #0f172a !important; }
+body.theme-light td { color: #0f172a !important; }
+body.theme-light h1, body.theme-light h2, body.theme-light h3 {
+  color: #1e3a5f !important;
+}
+body.theme-light .text-yellow-400 { color: #92400e !important; }
+body.theme-light #headerRegBar {
+  background: #fff;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 0.4rem 1rem;
+  text-align: center;
+}
+
+
+.hero-app-title { color: #991b1b !important; font-weight: 800 !important; }
+body.theme-light .hero-year { color: #991b1b !important; }
+body.theme-light #welcomeSection span[style*="color:#000"] { color: #1d4ed8 !important; }
+#btnLogin, button[onclick*="showAuth('login')"] {
+  background: #fef9c3 !important;
+  color: #1e3a8a !important;
+  font-weight: 800 !important;
+}
+#authModal label, #loginForm label { color: #dc2626 !important; font-weight: 700 !important; }
+#authModal input, #loginForm input, #authPassword, #loginPass, input[type="password"] {
+  color: #000 !important;
+  background: #fff !important;
+}
+#userBadge, #userBadge * { color: #0f766e !important; font-weight: 800 !important; }
+#btnLogout, button[onclick*="logout"] {
+  background: #bae6fd !important;
+  color: #0c4a6e !important;
+  font-weight: 700 !important;
+  padding: 0.35rem 0.75rem !important;
+  border-radius: 0.5rem !important;
+}
+.nb-tab, button[data-nb] {
+  background: #fef9c3 !important;
+  color: #713f12 !important;
+  font-weight: 700 !important;
+}
+.nb-tab.bg-sky-600, button[data-nb].bg-sky-600 {
+  background: #0284c7 !important;
+  color: #fff !important;
+}
+.clock-date { font-size: 1rem !important; color: #0f172a !important; font-weight: 700 !important; }
+.clock-time { font-size: 1.5rem !important; color: #0369a1 !important; font-weight: 900 !important; }
+#inputToolsRow { display: none; } /* ẩn mặc định; JS hiện cho gvcn */
+
+
+#authModal input, #loginForm input, input#loginId, input#loginPass, input[name="password"], #authModal input[type="text"], #authModal input[type="password"] {
+  color: #000000 !important;
+  background: #ffffff !important;
+  -webkit-text-fill-color: #000 !important;
+}
+#userBadge {
+  background: #fef9c3 !important;
+  color: #991b1b !important;
+  font-weight: 800 !important;
+  border: 1px solid #fde68a !important;
+}
+#userBadge * { color: #991b1b !important; }
+.leader-name-overview, #overviewLeaderName, .text-leader-name {
+  color: #991b1b !important;
+  font-weight: 800 !important;
+}
+
+
+.hero-year, #welcomeSection .hero-year { color: #991b1b !important; font-weight: 800 !important; }
+#welcomeSection p span { color: #991b1b !important; }
+button[onclick*="showParentReport"], button[onclick*="parentReport"], #btnParentReport, .btn-xem-bao-cao {
+  background: #bae6fd !important;
+  color: #0c4a6e !important;
+  font-weight: 700 !important;
+}
+
+
+#headerRegBtn {
+  background: #fef08a !important;
+  color: #1e3a8a !important;
+  font-weight: 800 !important;
+  border: 1px solid #1e3a8a !important;
 }
 
 </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen">
+<body class="bg-slate-50 text-slate-900 min-h-screen theme-light">
 
 <header class="sticky top-0 z-50 glass border-b border-slate-700">
 <div class="max-w-[1400px] mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
@@ -272,8 +650,9 @@ button[onclick="showAuth('login')"] {
 <div class="text-xs text-slate-400">QLNN · Nề nếp tác phong</div>
 </div>
 </a>
-<div class="flex items-center gap-3 text-sm">
-<span id="clock" class="clock-sky font-mono hidden sm:inline"></span>
+<div class="flex items-center gap-3 text-sm flex-wrap justify-end">
+<div id="clock" class="clock-box"></div>
+<button type="button" id="headerRegBtn" onclick="showAuth('register')" class="text-sm font-bold px-3 py-1.5 rounded-lg" style="background:#fef08a;color:#1e3a8a;border:1px solid #1e3a8a">ĐĂNG KÝ GVCN</button>
 <span id="userBadge" class="hidden px-3 py-1 rounded-full bg-slate-700 text-xs"></span>
 <button id="btnLogout" class="hidden text-sm font-bold px-3 py-1.5 rounded-lg" style="background:#450a0a;color:#ff0000;border:1px solid #ff0000" onclick="logout()">Đăng xuất</button>
 </div>
@@ -287,12 +666,11 @@ button[onclick="showAuth('login')"] {
 <img src="https://webh2t.github.io/assets/LOGO1.png" class="w-12 h-12 rounded-full" onerror="this.style.display='none'"/>
 <div>
 <h2 class="text-xl font-bold text-yellow-400">QLNN · WEBH2T</h2>
-<p class="text-sm" style="color:aquamarine">Quản lý nề nếp tác phong trường học</p>
+<p class="text-sm" style="color:#0e7490">Quản lý nề nếp tác phong trường học</p>
 </div>
 </div>
-<div class="flex gap-2 mb-4" id="authTabBar">
+<div class="flex gap-2 mb-4 hidden" id="authTabBar" style="display:none!important">
 <button type="button" id="tabLoginBtn" onclick="showAuthTab('login')" class="flex-1 py-2 rounded-lg text-sm font-medium tab-active">Đăng nhập</button>
-<button type="button" id="tabRegBtn" onclick="showAuthTab('register')" class="flex-1 py-2 rounded-lg text-sm font-medium bg-slate-700">Đăng ký GVCN</button>
 </div>
 
 <!-- LOGIN -->
@@ -362,8 +740,8 @@ button[onclick="showAuth('login')"] {
 <div class="p-4 bg-slate-900/80 rounded-lg border border-slate-600 text-sm text-slate-300 space-y-2">
 <p class="font-semibold text-amber-400 text-base">Xác nhận & cấp tài khoản</p>
 <ul class="list-disc list-inside space-y-1.5">
-<li style="color:aquamarine">Telegram: <a href="https://t.me/webh2t" target="_blank" class="underline" style="color:aquamarine">t.me/webh2t</a></li>
-<li>Email: <a href="mailto:websiteh2t@gmail.com" class="underline" style="color:aquamarine">websiteh2t@gmail.com</a></li>
+<li style="color:#0e7490">Telegram: <a href="https://t.me/webh2t" target="_blank" class="underline" style="color:#0e7490">t.me/webh2t</a></li>
+<li>Email: <a href="mailto:websiteh2t@gmail.com" class="underline" style="color:#0e7490">websiteh2t@gmail.com</a></li>
 </ul>
 <p class="text-slate-500 text-sm">Admin duyệt → cấp ID + mật khẩu (12 tháng).</p>
 </div>
@@ -411,12 +789,11 @@ button[onclick="showAuth('login')"] {
 <img src="https://webh2t.github.io/assets/LOGO1.png" class="w-24 h-24 mx-auto rounded-full mb-6 border-2 border-yellow-400/40 object-cover" onerror="this.style.display='none'"/>
 <p class="hero-app-title text-sm font-semibold tracking-widest mb-2">ỨNG DỤNG QUẢN LÝ</p>
 <h1 class="text-3xl md:text-5xl font-bold text-yellow-400 mb-3 leading-tight">NỀ NẾP TÁC PHONG<br class="sm:hidden"/> TRƯỜNG HỌC</h1>
-<p class="text-lg mb-8"><span style="color:#fff">NĂM HỌC:</span> <span class="hero-year">2026 – 2027</span></p>
+<p class="text-lg mb-6"><span style="color:#991b1b;font-weight:800">NĂM HỌC:</span> <span class="hero-year" style="color:#991b1b;font-weight:800">2026 – 2027</span></p>
 
 <div class="flex flex-wrap justify-center gap-3 mb-10">
-<button onclick="showAuth('register')" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#fef08a;color:#991b1b;min-width:12.5rem;width:12.5rem">ĐĂNG KÝ GVCN</button>
 <button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#6b7280!important;color:#1e3a8a!important;min-width:12.5rem;width:12.5rem;font-weight:800">ĐĂNG NHẬP</button>
-<button onclick="showParentReportLogin()" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#d4a017;color:#5c4033;min-width:12.5rem;width:12.5rem">XEM BÁO CÁO PH-HS</button>
+<button onclick="showParentReportLogin()" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#bae6fd!important;color:#0c4a6e!important;font-weight:700;min-width:12.5rem">XEM BÁO CÁO PH-HS</button>
 </div>
 
 <div class="max-w-2xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-4 text-left text-sm">
@@ -481,7 +858,7 @@ button[onclick="showAuth('login')"] {
 </div>
 <div>
 <label class="text-slate-300 text-sm">Ngày (trong tuần)</label>
-<select id="fDate" class="input-field text-base py-2" required onchange="autoWeekday()">
+<select id="fDate" class="input-field text-base py-2" onchange="autoWeekday()">
 <option value="">— Chọn tuần trước —</option>
 </select>
 </div>
@@ -493,14 +870,18 @@ button[onclick="showAuth('login')"] {
 <input type="hidden" id="fWeekFrom" value=""/>
 <input type="hidden" id="fWeekTo" value=""/>
 
-<form id="entryForm" class="space-y-4">
+<form id="entryForm" class="space-y-4" novalidate>
 <input type="hidden" id="fClass" value=""/>
 <!-- HÀNG 3: MÔN / TỔ / HỌ TÊN -->
 <div class="grid grid-cols-1 md:grid-cols-12 gap-3">
 <div class="md:col-span-4">
 <label class="block text-sm mb-1 text-slate-300 font-medium">Môn</label>
-<select id="fSubject" class="input-field" required>
+<select id="fSubject" class="input-field" onchange="onSubjectChange()">
 <option value="">-- Chọn môn --</option>
+<option value="IM LẶNG">IM LẶNG</option>
+<option>Sinh hoạt 15'</option><option>Chào cờ</option>
+<option>GDTC- cầu lông</option><option>GDTC- bóng chuyền</option>
+<option>GDTC- bóng rổ</option><option>GDTC- bóng đá</option>
 <option>TOÁN</option><option>VĂN</option><option>ANH</option><option>LÝ</option><option>TIN</option>
 <option>HÓA</option><option>SINH</option><option>CÔNG NGHỆ</option><option>SỬ</option><option>ĐỊA</option>
 <option>KTPL</option><option>GDĐP</option><option>HĐTN</option><option>THỂ DỤC</option><option>QUỐC PHÒNG</option>
@@ -508,14 +889,14 @@ button[onclick="showAuth('login')"] {
 </div>
 <div class="md:col-span-2" id="fTeamWrap">
 <label class="block text-sm mb-1 text-slate-300 font-medium">Tổ</label>
-<select id="fTeam" class="input-field" required onchange="filterStudentsByTeam()">
+<select id="fTeam" class="input-field" onchange="filterStudentsByTeam()">
 <option value="">--</option>
 <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option>
 </select>
 </div>
 <div class="md:col-span-6">
 <label class="block text-sm mb-1 text-slate-300 font-medium">Họ và tên học sinh</label>
-<select id="fStudent" class="input-field text-base py-2.5 font-semibold" required onchange="onStudentSelected()">
+<select id="fStudent" class="input-field text-base py-2.5 font-semibold" onchange="onStudentSelected()">
 <option value="">-- Chọn học sinh --</option>
 </select>
 </div>
@@ -544,7 +925,7 @@ button[onclick="showAuth('login')"] {
 </div>
 <div>
 <label class="block text-sm mb-1 text-slate-300">Số lần</label>
-<select id="fTimes" class="input-field" required>
+<select id="fTimes" class="input-field">
 <option value="1">1</option><option value="2">2</option><option value="3">3</option>
 <option value="4">4</option><option value="5">5</option><option value="6">6</option>
 <option value="7">7</option><option value="8">8</option><option value="9">9</option>
@@ -554,8 +935,8 @@ button[onclick="showAuth('login')"] {
 </div>
 
 <div class="flex flex-wrap gap-3">
-<button type="submit" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">💾 Lưu bản ghi</button>
-<button type="button" onclick="resetForm()" class="btn-secondary">Làm mới</button>
+<button type="submit" onclick="return saveEntryFromForm(event)" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:#16a34a;color:#fff;border:none">💾 Lưu bản ghi</button>
+<button type="button" onclick="resetForm()" class="px-4 py-2 rounded-lg font-semibold" style="background:#78350f;color:#fff">Làm mới</button>
 </div>
 </form>
 <div id="formMsg" class="mt-3 text-sm hidden"></div>
@@ -751,7 +1132,7 @@ button[onclick="showAuth('login')"] {
 <button type="button" onclick="saveTeamAssign()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">💾 Lưu phân tổ</button>
 </div>
 </div>
-<p class="text-sm mb-4" style="color:springgreen">Danh sách lấy từ Tổng quan (file Excel đã upload). Chọn Tổ trưởng / Tổ phó · Người nhập không được trùng với chính học sinh đó.</p>
+<p class="text-sm mb-4" style="color:#15803d">Danh sách lấy từ Tổng quan (file Excel đã upload). Chọn Tổ trưởng / Tổ phó · Người nhập không được trùng với chính học sinh đó.</p>
 <div id="teamAssignPanels" class="space-y-4"></div>
 <div id="teamMsg" class="mt-3 text-sm hidden"></div>
 </div>
@@ -1340,22 +1721,44 @@ function savePending() {
   }
 }
 function saveClassData() {
-  if (!currentUser || !currentUser.classId) return;
+  if (!currentUser) return;
+  if (!currentUser.classId) {
+    ensureUserClassId(currentUser);
+  }
+  if (!currentUser.classId) {
+    console.warn("saveClassData: thiếu classId", currentUser);
+    return false;
+  }
   const cid = currentUser.classId;
-  localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
-  localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
-  localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses));
-  localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations));
-  localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
-  localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns));
-  localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg));
+  try {
+    localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
+    localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
+    localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses));
+    localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations));
+    localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
+    localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns));
+    localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg));
+  } catch (e) {
+    console.warn("localStorage full?", e);
+    alert("Không lưu được trên máy (bộ nhớ đầy?). Thử trình duyệt khác.");
+    return false;
+  }
   if (firebaseReady && db) {
-    db.collection("qlnn_classes").doc(cid).set({
+    const payload = {
       students: students, entries: entries, bonuses: bonuses, violations: violations,
       penalties: penalties, penaltyAssigns: penaltyAssigns, deadlineCfg: deadlineCfg,
       updatedAt: new Date().toISOString()
-    }, { merge: true }).catch(function(e){ console.warn(e); });
+    };
+    db.collection("qlnn_classes").doc(cid).set(payload, { merge: true }).then(function() {
+      console.log("Firestore OK", cid, "entries", entries.length);
+    }).catch(function(e){
+      console.warn("Firestore save error", e);
+      alert("Đã lưu trên máy nhưng chưa đồng bộ cloud: " + (e.message || e) + "\nKiểm tra mạng / Rules Firestore.");
+    });
+  } else {
+    console.warn("Firebase chưa sẵn sàng — chỉ localStorage");
   }
+  return true;
 }
 
 loadAll();
@@ -1646,6 +2049,9 @@ function doLoginAfterSync(id, pass, err) {
 }
 
 function logout() {
+  const hregOut = document.getElementById("headerRegBtn");
+  if (hregOut) { hregOut.classList.remove("hidden"); hregOut.style.display = ""; }
+
   currentUser = null;
   guestMode = false;
   localStorage.removeItem("qlnn_session_v2");
@@ -1658,8 +2064,10 @@ function enterGuestReport() {
   document.getElementById("welcomeSection").classList.add("hidden");
   document.getElementById("appSection").classList.remove("hidden");
   document.getElementById("btnLogout").classList.remove("hidden");
+  const hreg = document.getElementById("headerRegBtn");
+  if (hreg) { hreg.classList.add("hidden"); hreg.style.display = "none"; }
   document.getElementById("userBadge").classList.remove("hidden");
-  document.getElementById("userBadge").textContent = "Xem báo cáo";
+  (function(){ var ub=document.getElementById("userBadge"); if(ub){ ub.textContent="Xem báo cáo"; ub.style.background="#fef9c3"; ub.style.color="#991b1b"; ub.style.fontWeight="800"; } })();
   document.getElementById("mainTabs").innerHTML =
     '<button data-tab="report" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm tab-active">Báo cáo</button>';
   document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
@@ -2018,10 +2426,20 @@ function switchTab(name) {
     const tools = document.getElementById("inputToolsRow");
     const teamW = document.getElementById("fTeamWrap");
     if (currentUser && currentUser.role === "leader") {
-      if (tools) tools.classList.add("hidden");
-      if (teamW) teamW.classList.add("hidden");
+      ensureUserClassId(currentUser);
+      if (tools) { tools.classList.add("hidden"); tools.style.display = "none"; }
+      if (teamW) { teamW.classList.add("hidden"); teamW.style.display = "none"; }
       if (document.getElementById("fTeam") && currentUser.team) {
-        document.getElementById("fTeam").value = currentUser.team;
+        document.getElementById("fTeam").value = String(currentUser.team);
+      }
+      // load lại dữ liệu lớp nếu danh sách trống (mobile lần đầu)
+      if (!students.length && currentUser.classId) {
+        loadClassData();
+        loadClassDataFromCloud(currentUser.classId, function() {
+          filterStudentsByTeam();
+          renderRecent();
+        });
+      } else {
         filterStudentsByTeam();
       }
     } else {
@@ -2142,7 +2560,7 @@ if (currentUser.role === "leader") {
       '<div class="w-20 h-20 rounded-full bg-slate-700 border-2 border-sky-400/50 flex items-center justify-center text-3xl">👤</div>' +
       '<div><h2 class="text-2xl font-bold text-white">' + (currentUser.name || currentUser.id) + '</h2>' +
       '<p class="text-pink-300 text-sm font-semibold">Tổ trưởng / Tổ phó · Tổ ' + (currentUser.team || "—") + '</p>' +
-      '<p class="text-sm mt-1" style="color:aquamarine">Lớp ' + (currentUser.className || "—") + ' · ' + (currentUser.school || "") + ' · NH ' + (currentUser.year || "2026-2027") + '</p></div></div>' +
+      '<p class="text-sm mt-1" style="color:#0e7490">Lớp ' + (currentUser.className || "—") + ' · ' + (currentUser.school || "") + ' · NH ' + (currentUser.year || "2026-2027") + '</p></div></div>' +
       '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4">' +
       '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">HS được giao nhập</div><div class="text-xl font-bold text-yellow-400">' + assigned.length + '</div></div>' +
       '<div class="p-3 bg-slate-900 rounded-lg border border-slate-600"><div class="text-xs text-slate-400">Nam / Nữ (được giao)</div><div class="text-lg font-bold text-sky-400">' + male + " / " + female + '</div></div>' +
@@ -2175,12 +2593,17 @@ function setClassify(type) { pickClassify(type); }
 
 function filterStudentsByTeam() {
   const teamEl = document.getElementById("fTeam");
-  const team = teamEl ? teamEl.value : "";
+  let team = teamEl ? teamEl.value : "";
+  // Mobile Leader: ô Tổ bị ẩn — lấy team từ tài khoản
+  if ((!team || team === "") && currentUser && currentUser.role === "leader" && currentUser.team) {
+    team = String(currentUser.team);
+    if (teamEl) teamEl.value = team;
+  }
   const sel = document.getElementById("fStudent");
   if (!sel) return;
+  const prev = sel.value;
   sel.innerHTML = '<option value="">-- Chọn học sinh --</option>';
   let list = students.slice();
-  // Leader: chỉ HS được phân công (inputBy) hoặc cùng tổ
   if (currentUser && currentUser.role === "leader") {
     const assigned = students.filter(s => s.inputBy === currentUser.id);
     if (assigned.length) {
@@ -2196,7 +2619,10 @@ function filterStudentsByTeam() {
   list.forEach(s => {
     sel.innerHTML += '<option value="' + s.id + '" data-team="' + (s.team || "") + '">' + s.id + '. ' + s.name + '</option>';
   });
-  updateMissingAssigned();
+  if (prev && list.some(s => String(s.id) === String(prev))) {
+    sel.value = prev;
+  }
+  try { updateMissingAssigned(); } catch (e) {}
 }
 function onStudentSelected() {
   const sel = document.getElementById("fStudent");
@@ -2208,20 +2634,82 @@ function onStudentSelected() {
     teamEl.value = String(team);
   }
 }
+function onSubjectChange() {
+  const sub = document.getElementById("fSubject");
+  if (sub && sub.value === "IM LẶNG") {
+    pickClassify("silent");
+  }
+}
 function pickClassify(type) {
-  document.getElementById("fType").value = type;
+  const fType = document.getElementById("fType");
+  if (fType) fType.value = type;
   document.getElementById("fContent").value = "";
   document.getElementById("fPoints").value = "";
   document.getElementById("fContentLabel").textContent = "";
-  const base = "py-3.5 rounded-xl text-base font-bold text-white shadow-lg transition ";
+  const base = "py-3.5 rounded-xl text-base font-bold transition ";
   const bb = document.getElementById("btnBonusBig");
   const bv = document.getElementById("btnViolBig");
-  const bp = document.getElementById("btnPenBig");
-  if (bb) bb.className = base + (type === "bonus" ? "bg-green-500 shadow-green-500/40 ring-2 ring-green-300" : "bg-green-600 hover:bg-green-500 shadow-green-600/30");
-  if (bv) bv.className = base + (type === "violation" ? "bg-red-500 shadow-red-500/40 ring-2 ring-red-300" : "bg-red-600 hover:bg-red-500 shadow-red-600/30");
-  if (bp) bp.className = base + (type === "penalty" ? "bg-amber-500 shadow-amber-500/40 ring-2 ring-amber-300" : "bg-amber-600 hover:bg-amber-500 shadow-amber-600/30");
-  renderCatalogGrid(type);
+  const bs = document.getElementById("btnSilentBig");
+  if (bb) bb.className = base + (type === "bonus" ? "bg-green-500 text-white ring-2 ring-green-300" : "bg-green-600 text-white");
+  if (bv) bv.className = base + (type === "violation" ? "bg-red-500 text-white ring-2 ring-red-300" : "bg-red-600 text-white");
+  if (bs) bs.className = base + (type === "silent" ? "bg-slate-800 text-yellow-300 ring-2 ring-yellow-300" : "bg-slate-700 text-yellow-200");
+  const grid = document.getElementById("catalogGrid");
+  if (type === "silent") {
+    document.getElementById("fContent").value = "SILENT";
+    document.getElementById("fPoints").value = "0";
+    document.getElementById("fTimes").value = "1";
+    document.getElementById("fContentLabel").textContent = "Đã chọn: Im lặng (điểm tuần 100)";
+    if (grid) grid.innerHTML = '<p class="col-span-full p-3 text-sm" style="color:#334155">🔇 Im lặng — chọn <b>Họ tên học sinh</b> rồi bấm <b>Lưu bản ghi</b>. Không bắt buộc môn/ngày (tự lấy tuần hiện tại).</p>';
+    return;
+  }
+  if (typeof renderCatalogGrid === "function") {
+    renderCatalogGrid(type);
+    // tô màu nền danh mục
+    if (grid) {
+      grid.querySelectorAll("button").forEach(function(btn) {
+        if (type === "bonus") {
+          btn.style.background = "#dcfce7";
+          btn.style.color = "#14532d";
+          btn.style.borderColor = "#16a34a";
+        } else {
+          btn.style.background = "#fef3c7";
+          btn.style.color = "#78350f";
+          btn.style.borderColor = "#d97706";
+        }
+      });
+    }
+  }
 }
+
+function selectCatalogItem(a, b, c, d) {
+  // Hỗ trợ: selectCatalogItem(buttonEl) hoặc selectCatalogItem(type, code, pts, label)
+  let type, code, pts, label;
+  if (a && a.nodeType === 1) {
+    const el = a;
+    code = el.getAttribute("data-code") || "";
+    pts = el.getAttribute("data-points");
+    label = el.getAttribute("data-text") || code;
+    type = document.getElementById("fType").value || "bonus";
+  } else {
+    type = a; code = b; pts = c; label = d;
+  }
+  pts = (pts === "" || pts == null) ? 0 : Number(pts);
+  const fType = document.getElementById("fType");
+  const fContent = document.getElementById("fContent");
+  const fPoints = document.getElementById("fPoints");
+  const fLabel = document.getElementById("fContentLabel");
+  if (fType && type) fType.value = type;
+  if (fContent) fContent.value = code;
+  if (fPoints) fPoints.value = String(pts);
+  if (fLabel) fLabel.textContent = "Đã chọn: " + (label || code) + " (" + (pts > 0 ? "+" : "") + pts + " điểm)";
+  // highlight selected
+  try {
+    document.querySelectorAll("#catalogGrid button").forEach(function(btn) {
+      btn.style.outline = (btn.getAttribute("data-code") === code) ? "3px solid #0284c7" : "";
+    });
+  } catch (e) {}
+}
+
 function renderCatalogGrid(type, filterText) {
   const grid = document.getElementById("catalogGrid");
   if (!grid) return;
@@ -2299,37 +2787,135 @@ function resetForm() {
   document.getElementById("formMsg").classList.add("hidden");
 }
 
-document.getElementById("entryForm").addEventListener("submit", function (e) {
-  e.preventDefault();
+
+function ensureUserClassId(u) {
+  if (!u) return null;
+  try {
+    if (u.role === "gvcn" && !u.classId) {
+      u.classId = ((u.school || "") + "_" + (u.className || u.id)).toLowerCase().replace(/\s+/g, "_");
+    }
+    if (u.role === "leader" || u.role === "viewer") {
+      if (!u.classId && u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
+        var pg = accounts[u.parentId];
+        u.classId = pg.classId || u.classId;
+        u.className = u.className || pg.className;
+        u.school = u.school || pg.school;
+      }
+      if (!u.classId && u.className && typeof accounts !== "undefined") {
+        Object.keys(accounts).forEach(function(k) {
+          var a = accounts[k];
+          if (a && a.role === "gvcn" && a.className === u.className) {
+            u.classId = a.classId || ((a.school || "") + "_" + a.className).toLowerCase().replace(/\s+/g, "_");
+            u.school = u.school || a.school;
+          }
+        });
+      }
+      if (!u.classId && u.className) {
+        u.classId = ((u.school || "") + "_" + u.className).toLowerCase().replace(/\s+/g, "_");
+      }
+    }
+  } catch (e) { console.warn(e); }
+  return u.classId || null;
+}
+
+function saveEntryFromForm(e) {
+  if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
+  try {
+  (function(){
+  if (!currentUser) { alert("Phiên đăng nhập hết hạn — hãy đăng nhập lại"); return; }
+  ensureUserClassId(currentUser);
+  if (!currentUser.classId) {
+    alert("Tài khoản chưa gắn lớp (classId). Báo GVCN kiểm tra phân tổ / tài khoản Leader (className, parentId).");
+    return;
+  }
+  // Leader: đảm bảo có team + danh sách HS
+  if (currentUser.role === "leader") {
+    const teamEl = document.getElementById("fTeam");
+    if (teamEl && currentUser.team && !teamEl.value) teamEl.value = String(currentUser.team);
+    // Không gọi filterStudentsByTeam() tại đây — sẽ xóa lựa chọn HS trên mobile
+  }
   const studentId = document.getElementById("fStudent").value;
   const student = students.find(s => String(s.id) === String(studentId));
-  if (!student) return;
-  if (currentUser.role === "leader" && String(student.team) !== String(currentUser.team)) {
-    alert("Chỉ nhập HS tổ mình!");
+  if (!studentId || !student) {
+    alert("Chọn học sinh trong danh sách (vuốt/chạm chọn trên điện thoại).");
     return;
   }
-  const contentCode = document.getElementById("fContent").value;
-  const pts = +document.getElementById("fPoints").value;
-  const times = +document.getElementById("fTimes").value;
-  if (!document.getElementById("fType").value || !contentCode) {
-    alert("Chọn Ưu điểm / Vi phạm / Hình phạt và một nội dung trong danh mục");
-    return;
+  if (currentUser.role === "leader") {
+    if (currentUser.team && String(student.team) !== String(currentUser.team)) {
+      alert("Chỉ nhập HS tổ mình!");
+      return;
+    }
+    // Nếu có phân công inputBy: chỉ HS được giao
+    const assigned = students.filter(s => s.inputBy === currentUser.id);
+    if (assigned.length && !assigned.some(s => String(s.id) === String(student.id))) {
+      alert("Học sinh này không thuộc phần bạn được phân công nhập.");
+      return;
+    }
+  }
+  const entryType = document.getElementById("fType").value;
+  let contentCode = document.getElementById("fContent").value;
+  let pts = +document.getElementById("fPoints").value;
+  let times = +document.getElementById("fTimes").value || 1;
+  if (entryType === "silent") {
+    contentCode = contentCode || "SILENT";
+    pts = 0;
+    times = 1;
+    document.getElementById("fContent").value = contentCode;
+    document.getElementById("fPoints").value = "0";
+  } else {
+    if (!entryType || !contentCode) {
+      alert("Chọn Ưu điểm / Vi phạm / Im lặng. Với ƯĐ-VP hãy chọn nội dung danh mục.");
+      return;
+    }
+    if (isNaN(pts)) {
+      alert("Thiếu điểm — chọn lại nội dung danh mục.");
+      return;
+    }
   }
   const weekVal = document.getElementById("fWeekNo").value;
-  const dateVal = document.getElementById("fDate").value;
+  let dateVal = document.getElementById("fDate").value;
+  // Mobile: đôi khi date select trả về label — chuẩn hóa yyyy-mm-dd
+  if (dateVal && dateVal.indexOf("/") >= 0) {
+    const p = dateVal.split("/");
+    if (p.length === 3) dateVal = p[2] + "-" + p[1].padStart(2,"0") + "-" + p[0].padStart(2,"0");
+  }
   const swCheck = SCHOOL_WEEKS.find(x => String(x.w) === String(weekVal));
   if (!weekVal || !swCheck) {
-    alert("Chọn tuần NH");
-    return;
+    // Im lặng: tự lấy tuần hiện tại
+    if (entryType === "silent") {
+      const cur = currentSchoolWeek();
+      if (cur) {
+        document.getElementById("fWeekNo").value = cur.w;
+        if (!dateVal) {
+          dateVal = cur.from;
+          try { document.getElementById("fDate").value = dateVal; } catch (e) {}
+        }
+      } else {
+        alert("Chọn tuần NH");
+        return;
+      }
+    } else {
+      alert("Chọn tuần NH");
+      return;
+    }
   }
-  if (!dateVal || dateVal < swCheck.from || dateVal > swCheck.to) {
-    alert("NHẬP SAI NGÀY CỦA TUẦN");
-    return;
+  const sw2 = SCHOOL_WEEKS.find(x => String(x.w) === String(document.getElementById("fWeekNo").value)) || swCheck;
+  if (entryType !== "silent") {
+    if (!dateVal || dateVal < sw2.from || dateVal > sw2.to) {
+      alert("NHẬP SAI NGÀY CỦA TUẦN\nTuần " + document.getElementById("fWeekNo").value + ": " + sw2.from + " → " + sw2.to);
+      return;
+    }
+  } else if (!dateVal && sw2) {
+    dateVal = sw2.from;
+    try { document.getElementById("fDate").value = dateVal; } catch (e) {}
   }
-  const contentText = (document.getElementById("fContentLabel").textContent || contentCode).replace(/^Đã chọn:\s*/, "");
+  // gán lại fDate đã chuẩn hóa
+  try { document.getElementById("fDate").value = dateVal; } catch (err) {}
+  let contentText = (document.getElementById("fContentLabel").textContent || contentCode).replace(/^Đã chọn:\s*/, "");
+  if (entryType === "silent") contentText = "Im lặng (không ưu điểm / không vi phạm)";
   const entry = {
     id: Date.now() + Math.random().toString(36).slice(2, 6),
-    date: document.getElementById("fDate").value,
+    date: dateVal || document.getElementById("fDate").value,
     weekday: document.getElementById("fWeekday").value,
     subject: document.getElementById("fSubject").value,
     class: document.getElementById("fClass").value,
@@ -2355,14 +2941,29 @@ document.getElementById("entryForm").addEventListener("submit", function (e) {
     window._editingEntryId = null;
   }
   entries.unshift(entry);
-  saveClassData();
-  document.getElementById("formMsg").textContent = "✅ Đã lưu bản ghi";
-  document.getElementById("formMsg").className = "mt-3 text-sm text-green-400";
-  document.getElementById("formMsg").classList.remove("hidden");
-  renderRecent();
-  updateMissingAssigned();
-  updateOverviewStats();
-});
+  const ok = saveClassData();
+  const msg = document.getElementById("formMsg");
+  if (msg) {
+    msg.textContent = ok
+      ? ("✅ Đã lưu: " + entry.studentName + " · " + entry.contentText + " · " + (entry.total > 0 ? "+" : "") + entry.total + (firebaseReady ? " (đồng bộ cloud)" : " (chỉ máy này)"))
+      : "⚠️ Lưu trên máy nhưng thiếu classId — báo GVCN";
+    msg.className = "mt-3 text-sm font-semibold " + (ok ? "text-green-700" : "text-amber-600");
+    msg.classList.remove("hidden");
+  }
+  try { renderRecent(); updateMissingAssigned(); updateOverviewStats(); } catch (err) { console.warn(err); }
+  // Mobile: cuộn tới bản ghi gần đây
+  try {
+    const recent = document.getElementById("recentBody");
+    if (recent) recent.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  } catch (err) {}
+  })();
+  } catch (err) {
+    console.error(err);
+    alert("Lỗi lưu: " + (err.message || err));
+  }
+  return false;
+}
+document.getElementById("entryForm").addEventListener("submit", saveEntryFromForm);
 
 function studentWeekScore(studentId) {
   const tw = getWeekNumber(new Date());
@@ -2413,9 +3014,10 @@ function renderRecent() {
   let html = mine.map(e => {
     const lineTotal = (e.total != null ? e.total : (e.points * e.times));
     const when = e.createdAt || (e.date + "T12:00:00");
-    const actions = isGvcn
-      ? '<button type="button" class="text-sky-400 text-xs underline mr-2" onclick="editEntry(\'' + e.id + '\')">Sửa</button>' +
-        '<button type="button" class="text-red-400 text-xs underline" onclick="deleteEntry(\'' + e.id + '\')">Xóa</button>'
+    const canEdit = currentUser && (currentUser.role === "gvcn" || currentUser.role === "leader" || currentUser.role === "super");
+    const actions = canEdit
+      ? '<button type="button" onclick="editEntry(\'' + e.id + '\')" class="px-2 py-1 rounded text-xs font-bold mr-1" style="background:#ffffff;color:#1d4ed8;border:1.5px solid #2563eb">Sửa</button>' +
+        '<button type="button" onclick="deleteEntry(\'' + e.id + '\')" class="px-2 py-1 rounded text-xs font-bold" style="background:#ffffff;color:#1d4ed8;border:1.5px solid #2563eb">Xóa</button>'
       : "";
     return '<tr class="border-b border-slate-700/50"><td class="py-2 font-mono text-xs text-sky-300">' + fmtDT(when) + '</td><td>' + e.studentName +
       '</td><td class="max-w-xs truncate">' + e.contentText + '</td><td class="text-right ' + (e.points > 0 ? "text-green-400" : "text-red-400") + '">' +
@@ -2432,6 +3034,7 @@ function renderRecent() {
     if (!summaryMap[key]) summaryMap[key] = { week: wk, name: e.studentName, id: e.studentId, bonusTimes: 0, violTimes: 0, bonus: 0, viol: 0 };
     if (e.type === "bonus") { summaryMap[key].bonusTimes += e.times; summaryMap[key].bonus += e.total; }
     else if (e.type === "violation") { summaryMap[key].violTimes += e.times; summaryMap[key].viol += e.total; }
+    /* silent giữ 100 */
   });
   const sums = Object.values(summaryMap);
   if (sums.length) {
@@ -2455,7 +3058,10 @@ function renderRecent() {
   body.innerHTML = html;
 }
 function deleteEntry(eid) {
-  if (!currentUser || currentUser.role !== "gvcn") { alert("Chỉ GVCN được xóa"); return; }
+  if (!currentUser) return;
+  const ent = entries.find(x => String(x.id) === String(eid));
+  const ok = currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader";
+  if (!ok) { alert("Không có quyền xóa bản ghi này"); return; }
   if (!confirm("Xóa bản ghi này?")) return;
   entries = entries.filter(e => String(e.id) !== String(eid));
   saveClassData();
@@ -2463,7 +3069,10 @@ function deleteEntry(eid) {
   updateMissingAssigned();
 }
 function editEntry(eid) {
-  if (!currentUser || currentUser.role !== "gvcn") { alert("Chỉ GVCN được sửa"); return; }
+  if (!currentUser) return;
+  const ent0 = entries.find(x => String(x.id) === String(eid));
+  const ok = currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader";
+  if (!ok) { alert("Không có quyền sửa bản ghi này"); return; }
   const e = entries.find(x => String(x.id) === String(eid));
   if (!e) return;
   // Điền form
@@ -2789,7 +3398,8 @@ function aggregateByStudent(list) {
   list.forEach(e => {
     if (!map[e.studentId]) map[e.studentId] = { id: e.studentId, name: e.studentName, team: e.team, bonus: 0, violation: 0, details: [], violationCount: 0 };
     if (e.type === "bonus") map[e.studentId].bonus += e.total;
-    else { map[e.studentId].violation += e.total; map[e.studentId].violationCount += e.times; }
+    else if (e.type === "violation") { map[e.studentId].violation += e.total; map[e.studentId].violationCount += e.times; }
+    /* silent: +0 */
     map[e.studentId].details.push(e);
   });
   return Object.values(map).map(s => {
@@ -3858,8 +4468,10 @@ function studentWeekScoreInWeeks(sid, weekNos) {
     ));
     let b = 0, v = 0;
     we.forEach(e => {
+      if (e.type === "silent") return;
       const tt = e.total != null ? e.total : e.points * e.times;
-      if (tt > 0) b += tt; else v += tt;
+      if (e.type === "bonus" || tt > 0) b += Math.abs(tt);
+      else if (e.type === "violation") v += (tt > 0 ? -tt : tt);
     });
     sum += 100 + b + v;
   });
@@ -5241,9 +5853,14 @@ function renewGvcn(id) {
 }
 
 function updateClock() {
+  const el = document.getElementById("clock");
+  if (!el) return;
   const n = new Date();
   const d = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-  document.getElementById("clock").textContent = d[n.getDay()] + ", " + n.toLocaleDateString("vi-VN") + " · " + n.toLocaleTimeString("vi-VN");
+  const pad = function(x) { return String(x).padStart(2, "0"); };
+  const dateStr = pad(n.getDate()) + "/" + pad(n.getMonth() + 1) + "/" + n.getFullYear();
+  const timeStr = pad(n.getHours()) + ":" + pad(n.getMinutes()) + ":" + pad(n.getSeconds());
+  el.innerHTML = '<div class="clock-date">' + d[n.getDay()] + ", " + dateStr + '</div><div class="clock-time">' + timeStr + '</div>';
 }
 
 loadSession();
@@ -5263,7 +5880,7 @@ pullFirebaseThen(function() {
   }
 });
 updateClock();
-setInterval(updateClock, 1000);
+updateClock(); setInterval(updateClock, 1000);;
 const fd = document.getElementById("fDate");
 if (fd) { fd.valueAsDate = new Date(); autoWeekday(); }
 </script>
