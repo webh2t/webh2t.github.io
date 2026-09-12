@@ -983,7 +983,9 @@ table.w-full.text-sm { font-size: 13px; }
 </div>
 
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
-<h3 class="font-semibold text-sky-400 mb-3">Bản ghi gần đây</h3>
+<h3 class="font-semibold text-sky-400 mb-3">Bản ghi gần đây
+<button type="button" onclick="downloadRecentEntriesXlsx()" class="ml-2 px-3 py-1 rounded text-xs font-bold" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>
+</h3>
 <div class="overflow-x-auto">
 <table class="w-full text-sm">
 <thead class="text-slate-400 border-b border-slate-600">
@@ -3278,6 +3280,71 @@ function renderLeaderMissingReport(activeWeek, activeFrom, activeTo) {
   el.innerHTML = html;
 }
 
+
+
+function downloadRecentEntriesXlsx() {
+  if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
+  if (!currentUser) { alert("Chưa đăng nhập"); return; }
+  let activeWeek = (document.getElementById("fWeekNo") || {}).value || "";
+  let activeFrom = "", activeTo = "";
+  if (!activeWeek) {
+    const cur = currentSchoolWeek();
+    if (cur) { activeWeek = cur.w; activeFrom = cur.from; activeTo = cur.to; }
+  } else {
+    const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(activeWeek));
+    if (sw) { activeFrom = sw.from; activeTo = sw.to; }
+  }
+  const normDate = function(d) {
+    if (!d) return "";
+    d = String(d).trim();
+    if (d.indexOf("/") >= 0) {
+      const p = d.split("/");
+      if (p.length === 3) return p[2] + "-" + String(p[1]).padStart(2,"0") + "-" + String(p[0]).padStart(2,"0");
+    }
+    return d.slice(0, 10);
+  };
+  const inWeek = function(e) {
+    const ed = normDate(e.date);
+    if (activeFrom && activeTo && ed && ed >= activeFrom && ed <= activeTo) return true;
+    if (activeWeek && String(e.weekNo) === String(activeWeek)) return true;
+    return false;
+  };
+  const isGvcn = currentUser.role === "gvcn" || currentUser.role === "super";
+  let list = (entries || []).filter(function(e) {
+    if (!inWeek(e)) return false;
+    if (isGvcn) return true;
+    return String(e.inputBy || "") === String(currentUser.id);
+  });
+  list.sort(function(a, b) {
+    return String(b.createdAt || b.date).localeCompare(String(a.createdAt || a.date));
+  });
+  if (!list.length) { alert("Không có bản ghi trong tuần để xuất"); return; }
+  const data = list.map(function(e) {
+    const total = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+    return {
+      "Tuần": e.weekNo || activeWeek || "",
+      "Ngày": e.date || "",
+      "Giờ lưu": e.createdAt || "",
+      "ID HS": e.studentId || "",
+      "Họ tên HS": e.studentName || "",
+      "Tổ": e.team || "",
+      "Môn": e.subject || "",
+      "Loại": e.type || "",
+      "Mã": e.contentCode || "",
+      "Nội dung": e.contentText || "",
+      "Điểm": e.points || 0,
+      "Số lần": e.times || 1,
+      "Tổng điểm dòng": total,
+      "Người nhập ID": e.inputBy || "",
+      "Người nhập": e.inputByName || ""
+    };
+  });
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "BanGhi");
+  const cls = (currentUser.className || "lop") + "_Tuan" + (activeWeek || "");
+  XLSX.writeFile(wb, "QLNN_BanGhi_" + cls + ".xlsx");
+}
 
 function downloadTongKetXlsx() {
   const rows = window._tongKetRows || [];
