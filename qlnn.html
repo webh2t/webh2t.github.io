@@ -1655,13 +1655,15 @@ function pullFirebaseThen(cb) {
     try {
       if (snaps[0].exists) {
         var remote = snaps[0].data().data || {};
-        // Gộp: cloud ưu tiên, giữ local nếu cloud thiếu key
-        var merged = Object.assign({}, accounts, remote);
-        accounts = Object.assign({}, remote, accounts);
-        // Cloud ghi đè khi có cùng key
+        var localSnap = Object.assign({}, accounts);
+        // Cloud ghi đè key trùng; giữ key chỉ có ở local
         Object.keys(remote).forEach(function(k){ accounts[k] = remote[k]; });
+        Object.keys(localSnap).forEach(function(k){ if (!accounts[k]) accounts[k] = localSnap[k]; });
         localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
         console.info("[QLNN] accounts từ cloud:", Object.keys(accounts).length);
+        if (Object.keys(accounts).length > Object.keys(remote).length) {
+          try { pushAllLocalToCloud(); } catch (e) {}
+        }
       } else {
         console.info("[QLNN] Chưa có doc accounts trên Firestore — sẽ đẩy local nếu đăng nhập Admin");
       }
@@ -2123,6 +2125,67 @@ function findAccountById(id) {
     if (String(keys[i]).toLowerCase() === low) return { key: keys[i], acc: accounts[keys[i]] };
   }
   return null;
+}
+
+
+/** Đẩy accounts + pending từ local lên Firestore qlnn_meta */
+function pushAllLocalToCloud() {
+  return new Promise(function(resolve) {
+    try {
+      // luôn ghi local trước
+      try { localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts || {})); } catch (e) {}
+      try { localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs || [])); } catch (e) {}
+      if (!firebaseReady || !db) {
+        console.warn("[QLNN] pushAllLocalToCloud: Firebase chưa sẵn sàng");
+        resolve(false);
+        return;
+      }
+      // Không đẩy super vào accounts
+      var clean = {};
+      Object.keys(accounts || {}).forEach(function(k) {
+        var a = accounts[k];
+        if (!a || a.role === "super") return;
+        clean[k] = a;
+      });
+      var tasks = [
+        db.collection("qlnn_meta").doc("accounts").set({
+          data: clean,
+          updatedAt: new Date().toISOString(),
+          count: Object.keys(clean).length
+        }, { merge: true }),
+        db.collection("qlnn_meta").doc("pending").set({
+          data: pendingRegs || [],
+          updatedAt: new Date().toISOString()
+        }, { merge: true })
+      ];
+      Promise.all(tasks).then(function() {
+        console.info("[QLNN] Đã đẩy accounts lên cloud:", Object.keys(clean).length);
+        if (typeof setSyncStatus === "function") {
+          setSyncStatus("✓ Đã đồng bộ " + Object.keys(clean).length + " tài khoản lên cloud", true);
+        }
+        resolve(true);
+      }).catch(function(err) {
+        console.warn("[QLNN] push accounts lỗi:", err);
+        if (typeof setSyncStatus === "function") {
+          setSyncStatus("Lỗi đẩy tài khoản lên cloud: " + (err.message || err), false);
+        }
+        resolve(false);
+      });
+    } catch (e) {
+      console.warn(e);
+      resolve(false);
+    }
+  });
+}
+
+/** Lưu accounts local + cloud (gọi sau thêm/sửa/xóa tài khoản) */
+function saveAccounts() {
+  try { localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts || {})); } catch (e) {}
+  return pushAllLocalToCloud();
+}
+function saveAccountsToCloud() {
+  try { localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts || {})); } catch (e) {}
+  return pushAllLocalToCloud();
 }
 
 function doLogin() {
