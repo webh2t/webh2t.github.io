@@ -637,6 +637,29 @@ button[onclick*="showParentReport"], button[onclick*="parentReport"], #btnParent
   border: 1px solid #1e3a8a !important;
 }
 
+
+/* Nút Sửa/Xóa bản ghi — chữ xanh dương, nền trắng (ưu tiên cao) */
+#recentBody button.btn-sua,
+#recentBody button.btn-xoa,
+button.btn-sua,
+button.btn-xoa {
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border: 1.5px solid #2563eb !important;
+  font-weight: 700 !important;
+  font-size: 0.8rem !important;
+  min-height: auto !important;
+  padding: 0.25rem 0.6rem !important;
+  border-radius: 0.4rem !important;
+  -webkit-text-fill-color: #1d4ed8 !important;
+  box-shadow: none !important;
+}
+#recentBody button.btn-sua:hover,
+#recentBody button.btn-xoa:hover {
+  background: #eff6ff !important;
+  color: #1e40af !important;
+}
+
 </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen theme-light">
@@ -3016,8 +3039,8 @@ function renderRecent() {
     const when = e.createdAt || (e.date + "T12:00:00");
     const canEdit = currentUser && (currentUser.role === "gvcn" || currentUser.role === "leader" || currentUser.role === "super");
     const actions = canEdit
-      ? '<button type="button" onclick="editEntry(\'' + e.id + '\')" class="px-2 py-1 rounded text-xs font-bold mr-1" style="background:#ffffff;color:#1d4ed8;border:1.5px solid #2563eb">Sửa</button>' +
-        '<button type="button" onclick="deleteEntry(\'' + e.id + '\')" class="px-2 py-1 rounded text-xs font-bold" style="background:#ffffff;color:#1d4ed8;border:1.5px solid #2563eb">Xóa</button>'
+      ? '<button type="button" class="btn-sua" onclick="editEntry(\'' + e.id + '\')">Sửa</button> '
+        + '<button type="button" class="btn-xoa" onclick="deleteEntry(\'' + e.id + '\')">Xóa</button>'
       : "";
     return '<tr class="border-b border-slate-700/50"><td class="py-2 font-mono text-xs text-sky-300">' + fmtDT(when) + '</td><td>' + e.studentName +
       '</td><td class="max-w-xs truncate">' + e.contentText + '</td><td class="text-right ' + (e.points > 0 ? "text-green-400" : "text-red-400") + '">' +
