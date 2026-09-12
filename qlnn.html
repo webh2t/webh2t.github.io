@@ -2111,71 +2111,145 @@ function submitRegister() {
   msg.classList.remove("hidden");
 }
 
+
+function findAccountById(id) {
+  if (!id || typeof accounts !== "object") return null;
+  var raw = String(id).trim();
+  if (accounts[raw]) return { key: raw, acc: accounts[raw] };
+  var low = raw.toLowerCase();
+  if (accounts[low]) return { key: low, acc: accounts[low] };
+  var keys = Object.keys(accounts);
+  for (var i = 0; i < keys.length; i++) {
+    if (String(keys[i]).toLowerCase() === low) return { key: keys[i], acc: accounts[keys[i]] };
+  }
+  return null;
+}
+
 function doLogin() {
-  const idEl = document.getElementById("loginId");
-  const passEl = document.getElementById("loginPass");
-  const id = (idEl && idEl.value || "").trim().toLowerCase();
-  const pass = (passEl && passEl.value || "").trim();
-  const err = document.getElementById("loginError");
-  guestMode = false;
-  if (!id || !pass) {
-    if (err) { err.textContent = "Nhập đủ ID và mật khẩu"; err.classList.remove("hidden"); }
-    return;
+  try {
+    var idEl = document.getElementById("loginId");
+    var passEl = document.getElementById("loginPass");
+    var id = (idEl && idEl.value || "").trim();
+    var pass = (passEl && passEl.value || "").trim();
+    var err = document.getElementById("loginError");
+    guestMode = false;
+    if (err) { err.classList.add("hidden"); err.textContent = ""; }
+    if (!id || !pass) {
+      if (err) { err.textContent = "Nhập đủ ID và mật khẩu"; err.classList.remove("hidden"); }
+      return;
+    }
+    // Không chờ cloud quá lâu — timeout 4s rồi đăng nhập bằng local
+    var finished = false;
+    function go() {
+      if (finished) return;
+      finished = true;
+      try { doLoginAfterSync(id, pass, err); }
+      catch (e) {
+        console.error(e);
+        if (err) { err.textContent = "Lỗi đăng nhập: " + (e.message || e); err.classList.remove("hidden"); }
+      }
+    }
+    setTimeout(go, 4000);
+    try {
+      pullFirebaseThen(function() { go(); });
+    } catch (e) {
+      console.warn(e);
+      go();
+    }
+  } catch (e) {
+    console.error(e);
+    alert("Lỗi form đăng nhập: " + (e.message || e));
   }
-
-  // Đồng bộ accounts từ Firebase trước (quan trọng trên mobile)
-  pullFirebaseThen(function() {
-    doLoginAfterSync(id, pass, err);
-  });
 }
+
 function doLoginAfterSync(id, pass, err) {
-  // Super admin — chỉ từ SUPER_ADMIN, không lấy từ accounts
-  if ((id === SUPER_ADMIN.id || id === SUPER_ADMIN.email || id === "websiteh2t") && pass === SUPER_ADMIN.pass) {
-    currentUser = { id: SUPER_ADMIN.id, email: SUPER_ADMIN.email, role: "super", name: SUPER_ADMIN.name, classId: null };
-    localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
-    hideAuth();
-    pushAllLocalToCloud().then(function(){
-      pullFirebaseThen(function(){ renderApp(); });
-    });
-    return;
-  }
+  try {
+    err = err || document.getElementById("loginError");
+    // Super admin
+    if ((id === SUPER_ADMIN.id || id === SUPER_ADMIN.email || id === "websiteh2t" ||
+         String(id).toLowerCase() === String(SUPER_ADMIN.id).toLowerCase()) && pass === SUPER_ADMIN.pass) {
+      currentUser = { id: SUPER_ADMIN.id, email: SUPER_ADMIN.email, role: "super", name: SUPER_ADMIN.name, classId: null };
+      try { localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser)); } catch (e) {}
+      hideAuth();
+      try {
+        pushAllLocalToCloud().then(function(){ pullFirebaseThen(function(){ renderApp(); }); }).catch(function(){ renderApp(); });
+      } catch (e) { renderApp(); }
+      return;
+    }
 
-  const acc = accounts[id];
-  if (!acc || acc.pass !== pass) {
-    err.textContent = "Sai ID hoặc mật khẩu – liên hệ admin WEBH2T";
-    err.classList.remove("hidden");
-    return;
+    var found = findAccountById(id);
+    if (!found || !found.acc) {
+      // thử load accounts local lần nữa
+      try {
+        var raw = localStorage.getItem("qlnn_accounts_v2");
+        if (raw) {
+          var localAcc = JSON.parse(raw);
+          if (localAcc && typeof localAcc === "object") {
+            accounts = Object.assign({}, accounts || {}, localAcc);
+            found = findAccountById(id);
+          }
+        }
+      } catch (e) {}
+    }
+    if (!found || !found.acc) {
+      if (err) {
+        err.textContent = "Sai ID hoặc mật khẩu – liên hệ admin WEBH2T";
+        err.classList.remove("hidden");
+      }
+      return;
+    }
+    var acc = found.acc;
+    var accId = found.key;
+    if (String(acc.pass) !== String(pass)) {
+      if (err) {
+        err.textContent = "Sai ID hoặc mật khẩu – liên hệ admin WEBH2T";
+        err.classList.remove("hidden");
+      }
+      return;
+    }
+    if (acc.role === "super") {
+      if (err) { err.textContent = "Tài khoản không hợp lệ."; err.classList.remove("hidden"); }
+      return;
+    }
+    if (acc.role === "gvcn" && acc.expiresAt && new Date(acc.expiresAt) < new Date()) {
+      if (err) {
+        err.textContent = "Tài khoản GVCN đã hết hạn. Liên hệ websiteh2t@gmail.com để gia hạn.";
+        err.classList.remove("hidden");
+      }
+      return;
+    }
+
+    currentUser = Object.assign({ id: accId }, acc);
+    try { ensureUserClassId(currentUser); } catch (e) { console.warn(e); }
+    if (currentUser.role === "leader" && !currentUser.team && accounts[accId] && accounts[accId].team) {
+      currentUser.team = accounts[accId].team;
+    }
+    try { localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser)); } catch (e) {}
+
+    try { loadClassData(); } catch (e) { console.warn(e); }
+    hideAuth();
+    renderApp();
+
+    // Đồng bộ nền — không chặn vào app
+    try {
+      pushAllLocalToCloud().catch(function(){});
+    } catch (e) {}
+    if (currentUser.classId) {
+      try {
+        loadClassDataFromCloud(currentUser.classId, function() {
+          try { renderApp(); } catch (e) {}
+        });
+      } catch (e) { console.warn(e); }
+    }
+  } catch (e) {
+    console.error("doLoginAfterSync", e);
+    if (err) {
+      err.textContent = "Lỗi: " + (e.message || e);
+      err.classList.remove("hidden");
+    }
   }
-  if (acc.role === "super") {
-    err.textContent = "Tài khoản không hợp lệ.";
-    err.classList.remove("hidden");
-    return;
-  }
-  if (acc.role === "gvcn" && acc.expiresAt && new Date(acc.expiresAt) < new Date()) {
-    err.textContent = "Tài khoản GVCN đã hết hạn 12 tháng. Liên hệ websiteh2t@gmail.com để gia hạn.";
-    err.classList.remove("hidden");
-    return;
-  }
-  currentUser = { id, ...acc };
-  if (currentUser.role === "gvcn" && !currentUser.classId) {
-    currentUser.classId = ((currentUser.school || "") + "_" + (currentUser.className || id)).toLowerCase().replace(/\s+/g, "_");
-  }
-  if (currentUser.role === "viewer" && currentUser.parentId && accounts[currentUser.parentId]) {
-    const pg = accounts[currentUser.parentId];
-    currentUser.classId = currentUser.classId || pg.classId;
-    currentUser.className = currentUser.className || pg.className;
-    currentUser.school = currentUser.school || pg.school;
-  }
-  if ((currentUser.role === "leader" || currentUser.role === "viewer") && !currentUser.classId && currentUser.parentId && accounts[currentUser.parentId]) {
-    currentUser.classId = accounts[currentUser.parentId].classId;
-  }
-  localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
-  loadClassData();
-  hideAuth();
-  pushAllLocalToCloud().then(function(){
-    loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
-  });
 }
+
 
 function logout() {
   const hregOut = document.getElementById("headerRegBtn");
@@ -2436,6 +2510,15 @@ function doParentReportLogin() {
     err.classList.remove("hidden");
   });
 }
+
+
+try {
+  var _accBoot = localStorage.getItem("qlnn_accounts_v2");
+  if (_accBoot) {
+    var _parsed = JSON.parse(_accBoot);
+    if (_parsed && typeof _parsed === "object") accounts = Object.assign({}, accounts || {}, _parsed);
+  }
+} catch (e) {}
 
 function loadSession() {
   const s = localStorage.getItem("qlnn_session_v2");
