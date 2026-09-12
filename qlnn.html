@@ -1682,110 +1682,150 @@ function mergeEntryLists(a, b) {
   const map = {};
   (a || []).concat(b || []).forEach(function(e) {
     if (!e) return;
-    const id = e.id || (e.studentId + "_" + e.date + "_" + e.contentCode + "_" + e.createdAt);
-    if (!id) return;
-    const prev = map[id];
+    var id = e.id;
+    if (!id) {
+      id = [e.studentId, e.date, e.contentCode, e.type, e.inputBy, e.createdAt].join("_");
+    }
+    id = String(id);
+    var prev = map[id];
     if (!prev) { map[id] = e; return; }
-    const ta = prev.createdAt || prev.date || "";
-    const tb = e.createdAt || e.date || "";
-    if (String(tb) >= String(ta)) map[id] = e;
+    var ta = String(prev.createdAt || prev.updatedAt || prev.date || "");
+    var tb = String(e.createdAt || e.updatedAt || e.date || "");
+    if (tb >= ta) map[id] = e;
   });
   return Object.values(map);
 }
+
+function normalizeClassId(u) {
+  if (!u) return "";
+  if (u.classId) return String(u.classId);
+  if (u.role === "gvcn") {
+    return ((u.school || "") + "_" + (u.className || u.id)).toLowerCase().replace(/\s+/g, "_");
+  }
+  // Leader/viewer: ưu tiên parent GVCN
+  if (u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
+    var pg = accounts[u.parentId];
+    if (pg.classId) return String(pg.classId);
+    return ((pg.school || "") + "_" + (pg.className || pg.id)).toLowerCase().replace(/\s+/g, "_");
+  }
+  if (u.className) {
+    if (typeof accounts !== "undefined") {
+      var keys = Object.keys(accounts);
+      for (var i = 0; i < keys.length; i++) {
+        var a = accounts[keys[i]];
+        if (a && a.role === "gvcn" && String(a.className) === String(u.className)) {
+          if (a.classId) return String(a.classId);
+          return ((a.school || "") + "_" + a.className).toLowerCase().replace(/\s+/g, "_");
+        }
+      }
+    }
+    return ((u.school || "") + "_" + u.className).toLowerCase().replace(/\s+/g, "_");
+  }
+  return "";
+}
+
+function setSyncStatus(msg, ok) {
+  var el = document.getElementById("syncStatusBar");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "syncStatusBar";
+    el.style.cssText = "position:fixed;bottom:8px;left:8px;right:8px;z-index:9999;padding:8px 12px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;pointer-events:none;max-width:480px;margin:auto;";
+    document.body.appendChild(el);
+  }
+  el.style.background = ok === false ? "#fef2f2" : (ok ? "#ecfdf5" : "#eff6ff");
+  el.style.color = ok === false ? "#991b1b" : (ok ? "#14532d" : "#1e3a8a");
+  el.style.border = "1px solid " + (ok === false ? "#fecaca" : (ok ? "#bbf7d0" : "#bfdbfe"));
+  el.textContent = msg;
+  clearTimeout(window._syncStatusTimer);
+  window._syncStatusTimer = setTimeout(function(){ el.style.display = "none"; }, ok === false ? 8000 : 4000);
+  el.style.display = "block";
+}
+
+var _classUnsub = null;
+function subscribeClassData(cid) {
+  if (!firebaseReady || !db || !cid) return;
+  if (_classUnsub) { try { _classUnsub(); } catch(e) {} _classUnsub = null; }
+  _classUnsub = db.collection("qlnn_classes").doc(cid).onSnapshot(function(snap) {
+    if (!snap.exists) return;
+    var d = snap.data() || {};
+    var changed = false;
+    if (Array.isArray(d.entries)) {
+      var merged = mergeEntryLists(entries, d.entries);
+      if (merged.length !== entries.length) changed = true;
+      entries = merged;
+      try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
+    }
+    if (Array.isArray(d.students) && d.students.length) {
+      students = d.students;
+      try { localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students)); } catch(e) {}
+      changed = true;
+    }
+    if (changed) {
+      try {
+        if (document.getElementById("recentBody")) renderRecent();
+        if (typeof updateMissingAssigned === "function") updateMissingAssigned();
+      } catch(e) {}
+      setSyncStatus("☁ Đã đồng bộ cloud · " + entries.length + " bản ghi", true);
+    }
+  }, function(err) {
+    console.warn("onSnapshot", err);
+    setSyncStatus("☁ Mất kết nối realtime: " + (err.message || err), false);
+  });
+}
+
 function loadClassDataFromCloud(cid, cb) {
-  if (!firebaseReady || !db || !cid) { if (cb) cb(); return; }
+  if (!cid) { if (cb) cb(); return; }
+  // luôn nạp local trước
+  try {
+    var ls = localStorage.getItem("qlnn_entries_" + cid);
+    if (ls) {
+      var localE = JSON.parse(ls);
+      if (Array.isArray(localE)) entries = mergeEntryLists(entries, localE);
+    }
+    var lss = localStorage.getItem("qlnn_students_" + cid);
+    if (lss) {
+      var localS = JSON.parse(lss);
+      if (Array.isArray(localS) && localS.length) students = localS;
+    }
+  } catch(e) {}
+  if (!firebaseReady || !db) { if (cb) cb(); return; }
   db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
     if (snap.exists) {
-      const d = snap.data() || {};
-      // Chỉ ghi đè khi cloud CÓ dữ liệu (tránh xóa trắng Tổng quan / Quản trị)
+      var d = snap.data() || {};
       if (Array.isArray(d.students) && d.students.length) {
         students = d.students;
-        localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
+        try { localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students)); } catch(e) {}
       }
       if (Array.isArray(d.entries)) {
         entries = mergeEntryLists(entries, d.entries);
-        localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
+        try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
       }
-      if (Array.isArray(d.bonuses) && d.bonuses.length) {
-        bonuses = d.bonuses;
-        localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses));
-      }
-      if (Array.isArray(d.violations) && d.violations.length) {
-        violations = d.violations;
-        localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations));
-      }
-      if (d.penalties && (Array.isArray(d.penalties) ? d.penalties.length : true)) {
-        penalties = normalizePenalties(d.penalties);
-        localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
-      }
-      if (Array.isArray(d.penaltyAssigns) && d.penaltyAssigns.length) {
-        penaltyAssigns = d.penaltyAssigns;
-        localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns));
-      }
-      if (d.deadlineCfg) {
-        deadlineCfg = d.deadlineCfg;
-        localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg));
-      }
+      if (Array.isArray(d.bonuses) && d.bonuses.length) bonuses = d.bonuses;
+      if (Array.isArray(d.violations) && d.violations.length) violations = d.violations;
+      if (Array.isArray(d.penalties) && d.penalties.length) penalties = d.penalties;
+      if (Array.isArray(d.penaltyAssigns)) penaltyAssigns = d.penaltyAssigns;
+      if (d.deadlineCfg) deadlineCfg = d.deadlineCfg;
     }
+    subscribeClassData(cid);
     if (cb) cb();
-  }).catch(function(e){ console.warn(e); if (cb) cb(); });
+  }).catch(function(err) {
+    console.warn("loadClassDataFromCloud", err);
+    setSyncStatus("Không tải được cloud — dùng dữ liệu máy", false);
+    if (cb) cb();
+  });
 }
 
-function loadClassData() {
-  const cid = currentUser && currentUser.classId ? currentUser.classId : "default";
-  students = JSON.parse(localStorage.getItem("qlnn_students_" + cid) || "[]");
-  entries = JSON.parse(localStorage.getItem("qlnn_entries_" + cid) || "[]");
-  bonuses = JSON.parse(localStorage.getItem("qlnn_bonuses_" + cid) || "null") || JSON.parse(JSON.stringify(DEFAULT_BONUSES));
-  violations = JSON.parse(localStorage.getItem("qlnn_violations_" + cid) || "null") || JSON.parse(JSON.stringify(DEFAULT_VIOLATIONS));
-  penalties = normalizePenalties(JSON.parse(localStorage.getItem("qlnn_penalties_" + cid) || "null") || DEFAULT_PENALTIES);
-  // Chuẩn hóa mã u/v/p nếu còn mã cũ
-  if (bonuses.length && !String(bonuses[0].code||"").toLowerCase().startsWith("u")) {
-    bonuses = JSON.parse(JSON.stringify(DEFAULT_BONUSES));
-    violations = JSON.parse(JSON.stringify(DEFAULT_VIOLATIONS));
-    penalties = normalizePenalties(DEFAULT_PENALTIES);
-    localStorage.setItem("qlnn_bonuses_" + cid, JSON.stringify(bonuses));
-    localStorage.setItem("qlnn_violations_" + cid, JSON.stringify(violations));
-    localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
-  }
-  penaltyAssigns = JSON.parse(localStorage.getItem("qlnn_penAssign_" + cid) || "[]");
-  deadlineCfg = JSON.parse(localStorage.getItem("qlnn_deadline_" + cid) || "null") || { day: 0, hour: 10, penaltyText: "" };
-}
-
-function saveAccounts() {
-  localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
-  if (firebaseReady && db) {
-    db.collection("qlnn_meta").doc("accounts").set({ data: accounts, updatedAt: new Date().toISOString() })
-      .then(function(){ console.info("[QLNN] Đã đẩy accounts lên Firestore"); })
-      .catch(function(e){ console.warn("[QLNN] Lỗi ghi accounts:", e); });
-  }
-}
-function pushAllLocalToCloud() {
-  if (!firebaseReady || !db) return Promise.resolve(false);
-  return db.collection("qlnn_meta").doc("accounts").set({
-    data: accounts, updatedAt: new Date().toISOString()
-  }).then(function(){
-    return db.collection("qlnn_meta").doc("pending").set({
-      data: pendingRegs, updatedAt: new Date().toISOString()
-    });
-  }).then(function(){ return true; })
-  .catch(function(e){ console.warn(e); return false; });
-}
-function savePending() {
-  localStorage.setItem("qlnn_pending_v2", JSON.stringify(pendingRegs));
-  if (firebaseReady && db) {
-    db.collection("qlnn_meta").doc("pending").set({ data: pendingRegs, updatedAt: new Date().toISOString() }).catch(function(e){ console.warn(e); });
-  }
-}
-function saveClassData() {
-  if (!currentUser) return;
-  if (!currentUser.classId) {
-    ensureUserClassId(currentUser);
-  }
-  if (!currentUser.classId) {
+function saveClassData(opts) {
+  opts = opts || {};
+  if (!currentUser) return false;
+  ensureUserClassId(currentUser);
+  var cid = currentUser.classId || normalizeClassId(currentUser);
+  if (!cid) {
     console.warn("saveClassData: thiếu classId", currentUser);
+    setSyncStatus("Lỗi: tài khoản chưa gắn lớp (classId)", false);
     return false;
   }
-  const cid = currentUser.classId;
+  currentUser.classId = cid;
   try {
     localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
     localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
@@ -1795,44 +1835,62 @@ function saveClassData() {
     localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns));
     localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg));
   } catch (e) {
-    console.warn("localStorage full?", e);
-    alert("Không lưu được trên máy (bộ nhớ đầy?). Thử trình duyệt khác.");
+    console.warn("localStorage", e);
+    alert("Không lưu được trên máy (bộ nhớ đầy?).");
     return false;
   }
-  if (firebaseReady && db) {
-    const localEntries = entries.slice();
+  if (!firebaseReady || !db) {
+    setSyncStatus("Đã lưu máy · Cloud chưa sẵn sàng (kiểm tra mạng / Firebase)", false);
+    return true;
+  }
+  setSyncStatus("☁ Đang đồng bộ " + entries.length + " bản ghi…", null);
+  var attempt = 0;
+  function pushCloud() {
+    attempt++;
     db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
-      let remoteEntries = [];
-      let remoteStudents = null;
+      var remoteEntries = [];
+      var remoteStudents = null;
       if (snap.exists) {
-        const d = snap.data() || {};
+        var d = snap.data() || {};
         if (Array.isArray(d.entries)) remoteEntries = d.entries;
         if (Array.isArray(d.students) && d.students.length) remoteStudents = d.students;
       }
-      entries = mergeEntryLists(remoteEntries, localEntries);
-      if (remoteStudents && remoteStudents.length && (!students || !students.length)) {
-        students = remoteStudents;
-      }
-      const payload = {
-        students: students, entries: entries, bonuses: bonuses, violations: violations,
-        penalties: penalties, penaltyAssigns: penaltyAssigns, deadlineCfg: deadlineCfg,
-        updatedAt: new Date().toISOString()
+      entries = mergeEntryLists(remoteEntries, entries);
+      if (remoteStudents && remoteStudents.length && (!students || !students.length)) students = remoteStudents;
+      var payload = {
+        students: students,
+        entries: entries,
+        bonuses: bonuses,
+        violations: violations,
+        penalties: penalties,
+        penaltyAssigns: penaltyAssigns,
+        deadlineCfg: deadlineCfg,
+        className: currentUser.className || "",
+        school: currentUser.school || "",
+        updatedAt: new Date().toISOString(),
+        updatedBy: currentUser.id || ""
       };
       return db.collection("qlnn_classes").doc(cid).set(payload, { merge: true });
     }).then(function() {
-      console.log("Firestore OK", cid, "entries", entries.length);
-      try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch (e) {}
-    }).catch(function(e){
-      console.warn("Firestore save error", e);
-      alert("Đã lưu trên máy nhưng chưa đồng bộ cloud: " + (e.message || e) + "\nKiểm tra mạng / Rules Firestore.");
+      try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
+      setSyncStatus("✓ Đã lưu & đồng bộ cloud · " + entries.length + " bản ghi · lớp " + cid, true);
+      subscribeClassData(cid);
+      if (opts.cb) opts.cb(true);
+    }).catch(function(err) {
+      console.warn("Firestore save", err);
+      if (attempt < 3) {
+        setSyncStatus("☁ Lỗi đồng bộ, thử lại lần " + (attempt + 1) + "…", false);
+        setTimeout(pushCloud, 1200 * attempt);
+      } else {
+        setSyncStatus("Đã lưu máy · Cloud lỗi: " + (err.message || err) + " — thử lại khi có mạng", false);
+        if (opts.cb) opts.cb(false);
+      }
     });
-  } else {
-    console.warn("Firebase chưa sẵn sàng — chỉ localStorage");
   }
+  pushCloud();
   return true;
 }
 
-loadAll();
 
 function getWeekNumber(d) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
@@ -2867,27 +2925,15 @@ function resetForm() {
 function ensureUserClassId(u) {
   if (!u) return null;
   try {
-    if (u.role === "gvcn" && !u.classId) {
-      u.classId = ((u.school || "") + "_" + (u.className || u.id)).toLowerCase().replace(/\s+/g, "_");
-    }
-    if (u.role === "leader" || u.role === "viewer") {
-      if (!u.classId && u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
+    var cid = normalizeClassId(u);
+    if (cid) {
+      u.classId = cid;
+      // đồng bộ className/school từ GVCN parent nếu thiếu
+      if ((u.role === "leader" || u.role === "viewer") && u.parentId && accounts[u.parentId]) {
         var pg = accounts[u.parentId];
-        u.classId = pg.classId || u.classId;
         u.className = u.className || pg.className;
         u.school = u.school || pg.school;
-      }
-      if (!u.classId && u.className && typeof accounts !== "undefined") {
-        Object.keys(accounts).forEach(function(k) {
-          var a = accounts[k];
-          if (a && a.role === "gvcn" && a.className === u.className) {
-            u.classId = a.classId || ((a.school || "") + "_" + a.className).toLowerCase().replace(/\s+/g, "_");
-            u.school = u.school || a.school;
-          }
-        });
-      }
-      if (!u.classId && u.className) {
-        u.classId = ((u.school || "") + "_" + u.className).toLowerCase().replace(/\s+/g, "_");
+        if (pg.classId) u.classId = String(pg.classId);
       }
     }
   } catch (e) { console.warn(e); }
