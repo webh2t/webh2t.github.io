@@ -1676,6 +1676,20 @@ function pullFirebaseThen(cb) {
     finish();
   });
 }
+function mergeEntryLists(a, b) {
+  const map = {};
+  (a || []).concat(b || []).forEach(function(e) {
+    if (!e) return;
+    const id = e.id || (e.studentId + "_" + e.date + "_" + e.contentCode + "_" + e.createdAt);
+    if (!id) return;
+    const prev = map[id];
+    if (!prev) { map[id] = e; return; }
+    const ta = prev.createdAt || prev.date || "";
+    const tb = e.createdAt || e.date || "";
+    if (String(tb) >= String(ta)) map[id] = e;
+  });
+  return Object.values(map);
+}
 function loadClassDataFromCloud(cid, cb) {
   if (!firebaseReady || !db || !cid) { if (cb) cb(); return; }
   db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
@@ -1686,8 +1700,8 @@ function loadClassDataFromCloud(cid, cb) {
         students = d.students;
         localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
       }
-      if (Array.isArray(d.entries) && d.entries.length) {
-        entries = d.entries;
+      if (Array.isArray(d.entries)) {
+        entries = mergeEntryLists(entries, d.entries);
         localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
       }
       if (Array.isArray(d.bonuses) && d.bonuses.length) {
@@ -1784,13 +1798,28 @@ function saveClassData() {
     return false;
   }
   if (firebaseReady && db) {
-    const payload = {
-      students: students, entries: entries, bonuses: bonuses, violations: violations,
-      penalties: penalties, penaltyAssigns: penaltyAssigns, deadlineCfg: deadlineCfg,
-      updatedAt: new Date().toISOString()
-    };
-    db.collection("qlnn_classes").doc(cid).set(payload, { merge: true }).then(function() {
+    const localEntries = entries.slice();
+    db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
+      let remoteEntries = [];
+      let remoteStudents = null;
+      if (snap.exists) {
+        const d = snap.data() || {};
+        if (Array.isArray(d.entries)) remoteEntries = d.entries;
+        if (Array.isArray(d.students) && d.students.length) remoteStudents = d.students;
+      }
+      entries = mergeEntryLists(remoteEntries, localEntries);
+      if (remoteStudents && remoteStudents.length && (!students || !students.length)) {
+        students = remoteStudents;
+      }
+      const payload = {
+        students: students, entries: entries, bonuses: bonuses, violations: violations,
+        penalties: penalties, penaltyAssigns: penaltyAssigns, deadlineCfg: deadlineCfg,
+        updatedAt: new Date().toISOString()
+      };
+      return db.collection("qlnn_classes").doc(cid).set(payload, { merge: true });
+    }).then(function() {
       console.log("Firestore OK", cid, "entries", entries.length);
+      try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch (e) {}
     }).catch(function(e){
       console.warn("Firestore save error", e);
       alert("Đã lưu trên máy nhưng chưa đồng bộ cloud: " + (e.message || e) + "\nKiểm tra mạng / Rules Firestore.");
@@ -2587,7 +2616,7 @@ function renderOverview() {
     return;
   }
 if (currentUser.role === "leader") {
-    let assigned = students.filter(s => s.inputBy === currentUser.id);
+    let assigned = students.filter(s => String(s.inputBy||'') === String(currentUser.id));
     if (!assigned.length && currentUser.team) {
       assigned = students.filter(s => String(s.team) === String(currentUser.team));
     }
@@ -2598,7 +2627,7 @@ if (currentUser.role === "leader") {
       '<th class="text-left py-2">ID</th><th class="text-left">Họ tên</th><th class="text-center">Tổ</th><th class="text-left">SĐT</th><th class="text-left">Ghi chú</th></tr></thead><tbody>' +
       assigned.map(s => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono text-sky-400">' + s.id + '</td><td class="font-semibold text-white">' + s.name +
       '</td><td class="text-center" style="color:deepskyblue">' + (s.team || "—") + '</td><td class="text-xs">' + (s.phone || "—") +
-      '</td><td class="text-xs text-slate-400">' + (s.inputBy === currentUser.id ? "Được giao nhập" : "") + '</td></tr>').join("") +
+      '</td><td class="text-xs text-slate-400">' + (String(s.inputBy||'') === String(currentUser.id) ? "Được giao nhập" : "") + '</td></tr>').join("") +
       '</tbody></table></div>'
     ) : '<p class="text-amber-300 text-sm mt-2">Chưa được phân công HS — nhờ <strong>GVCN</strong> vào <strong>Quản trị → Phân tổ</strong> chọn Người nhập.</p>';
     box.innerHTML = '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700">' +
@@ -2640,7 +2669,6 @@ function setClassify(type) { pickClassify(type); }
 function filterStudentsByTeam() {
   const teamEl = document.getElementById("fTeam");
   let team = teamEl ? teamEl.value : "";
-  // Mobile Leader: ô Tổ bị ẩn — lấy team từ tài khoản
   if ((!team || team === "") && currentUser && currentUser.role === "leader" && currentUser.team) {
     team = String(currentUser.team);
     if (teamEl) teamEl.value = team;
@@ -2651,25 +2679,25 @@ function filterStudentsByTeam() {
   sel.innerHTML = '<option value="">-- Chọn học sinh --</option>';
   let list = students.slice();
   if (currentUser && currentUser.role === "leader") {
-    const assigned = students.filter(s => s.inputBy === currentUser.id);
+    // Phân tổ: Người nhập (ID) = ID tài khoản Leader (vd b945, b925…)
+    let assigned = students.filter(s => String(s.inputBy || "") === String(currentUser.id));
     if (assigned.length) {
       list = assigned;
     } else if (currentUser.team) {
       list = students.filter(s => String(s.team) === String(currentUser.team));
     }
-    // Nếu chọn tổ trên form, lọc tiếp
     if (team) list = list.filter(s => String(s.team) === String(team));
   } else {
     if (team) list = list.filter(s => String(s.team) === String(team));
   }
   list.forEach(s => {
-    sel.innerHTML += '<option value="' + s.id + '" data-team="' + (s.team || "") + '">' + s.id + '. ' + s.name + '</option>';
+    sel.innerHTML += '<option value="' + s.id + '" data-team="' + (s.team || "") + '">' + s.id + ". " + s.name + "</option>";
   });
-  if (prev && list.some(s => String(s.id) === String(prev))) {
-    sel.value = prev;
-  }
+  if (prev && list.some(s => String(s.id) === String(prev))) sel.value = prev;
   try { updateMissingAssigned(); } catch (e) {}
 }
+
+
 function onStudentSelected() {
   const sel = document.getElementById("fStudent");
   if (!sel || !sel.value) return;
@@ -2892,7 +2920,7 @@ function saveEntryFromForm(e) {
       return;
     }
     // Nếu có phân công inputBy: chỉ HS được giao
-    const assigned = students.filter(s => s.inputBy === currentUser.id);
+    const assigned = students.filter(s => String(s.inputBy || '') === String(currentUser.id));
     if (assigned.length && !assigned.some(s => String(s.id) === String(student.id))) {
       alert("Học sinh này không thuộc phần bạn được phân công nhập.");
       return;
@@ -3179,8 +3207,8 @@ function renderRecent() {
 function renderLeaderMissingReport(activeWeek, activeFrom, activeTo) {
   const el = document.getElementById("missingAssigned");
   if (!el || !currentUser) return;
-  if (currentUser.role !== "gvcn" && currentUser.role !== "super" && currentUser.role !== "leader") {
-    el.innerHTML = "";
+  if (currentUser.role !== "gvcn" && currentUser.role !== "super") {
+    // Leader dùng updateMissingAssigned — không ghi đè
     return;
   }
   const normDate = function(d) {
@@ -3379,10 +3407,23 @@ function downloadEntriesTemplate() {
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Môn"],["TOÁN"],["VĂN"],["ANH"],["LÝ"],["TIN"],["HÓA"],["SINH"],["CÔNG NGHỆ"],["SỬ"],["ĐỊA"],["KTPL"],["GDĐP"],["HĐTN"],["THỂ DỤC"],["QUỐC PHÒNG"]]), "Mon");
   XLSX.writeFile(wb, "QLNN_Mau_Nhap_Thi_Dua.xlsx");
 }
+function debugLeaderCoverage() {
+  if (!currentUser) return;
+  const aw = (document.getElementById("fWeekNo") || {}).value || (currentSchoolWeek() || {}).w;
+  const assigned = students.filter(s => String(s.inputBy || "") === String(currentUser.id));
+  const covered = entries.filter(e => String(e.weekNo) === String(aw) || true).map(e => String(e.studentId));
+  console.log("[QLNN Leader]", {
+    id: currentUser.id, role: currentUser.role, team: currentUser.team, classId: currentUser.classId,
+    assigned: assigned.map(s => s.id),
+    entriesCount: entries.length,
+    entryStudentIds: [...new Set(entries.map(e => e.studentId))],
+    week: aw
+  });
+}
 function updateMissingAssigned() {
   const el = document.getElementById("missingAssigned");
   if (!el || currentUser.role !== "leader") { if (el) el.innerHTML = ""; return; }
-  const assigned = students.filter(s => s.inputBy === currentUser.id);
+  const assigned = students.filter(s => String(s.inputBy || '') === String(currentUser.id));
   let aw = (document.getElementById("fWeekNo") || {}).value;
   let from = "", to = "";
   if (!aw) {
@@ -3392,15 +3433,34 @@ function updateMissingAssigned() {
     const sw = SCHOOL_WEEKS.find(x => String(x.w) === String(aw));
     if (sw) { from = sw.from; to = sw.to; }
   }
-  const covered = new Set(entries.filter(e => {
-    if (from && to && e.date >= from && e.date <= to) return true;
-    return String(e.weekNo) === String(aw);
-  }).map(e => String(e.studentId)));
-  const missing = assigned.filter(s => !covered.has(String(s.id)));
+  const normD = function(d) {
+    if (!d) return "";
+    d = String(d).trim();
+    if (d.indexOf("/") >= 0) {
+      const p = d.split("/");
+      if (p.length === 3) return p[2] + "-" + String(p[1]).padStart(2,"0") + "-" + String(p[0]).padStart(2,"0");
+    }
+    return d.slice(0, 10);
+  };
+  const covered = new Set();
+  (entries || []).forEach(function(e) {
+    const ed = normD(e.date);
+    let ok = false;
+    if (from && to && ed && ed >= from && ed <= to) ok = true;
+    if (String(e.weekNo) === String(aw)) ok = true;
+    if (!ok && ed && typeof findSchoolWeek === "function") {
+      const sw = findSchoolWeek(ed);
+      if (sw && String(sw.w) === String(aw)) ok = true;
+    }
+    if (ok && e.studentId != null) covered.add(String(e.studentId));
+  });
+  // assigned: inputBy khớp id (string)
+  const assigned2 = assigned2.length ? assigned : students.filter(s => String(s.team) === String(currentUser.team));
+  const missing = assigned2.filter(s => !covered.has(String(s.id)));
   if (!missing.length) {
-    el.innerHTML = '<span class="text-green-400">✅ Đã nhập đủ ' + assigned.length + ' HS được giao trong tuần ' + (aw || "") + '.</span>';
+    el.innerHTML = '<span class="text-green-400">✅ Đã nhập đủ ' + assigned2.length + ' HS được giao trong tuần ' + (aw || "") + '.</span>';
   } else {
-    el.innerHTML = '⚠️ Tuần ' + (aw || "") + ': còn <strong>' + missing.length + '</strong> / ' + assigned.length + ' HS chưa nhập: ' +
+    el.innerHTML = '⚠️ Tuần ' + (aw || "") + ': còn <strong>' + missing.length + '</strong> / ' + assigned2.length + ' HS chưa nhập: ' +
       missing.map(s => s.name).join(", ");
   }
 }
@@ -3448,7 +3508,7 @@ function importEntriesExcel(ev) {
         if (!student) student = students.find(s => s.name.toLowerCase().includes(hsKey.toLowerCase()));
         if (!student) continue;
         if (currentUser.role === "leader") {
-          const assigned = students.filter(s => s.inputBy === currentUser.id);
+          const assigned = students.filter(s => String(s.inputBy || '') === String(currentUser.id));
           const pool = assigned.length ? assigned : students.filter(s => String(s.team) === String(currentUser.team));
           if (!pool.some(s => String(s.id) === String(student.id))) continue;
         }
@@ -3548,7 +3608,7 @@ function openPenaltyModal() {
   const ps = document.getElementById("penStudent");
   const pc = document.getElementById("penChoice");
   let list = students;
-  if (currentUser.role === "leader") list = students.filter(s => s.inputBy === currentUser.id || String(s.team) === String(currentUser.team));
+  if (currentUser.role === "leader") list = students.filter(s => String(s.inputBy||'') === String(currentUser.id) || String(s.team) === String(currentUser.team));
   ps.innerHTML = list.map(s => '<option value="' + s.id + '">' + s.name + '</option>').join("");
   pc.innerHTML = penalties.map((p, i) => '<option value="' + i + '">' + p + '</option>').join("");
   document.getElementById("penaltyModal").classList.remove("hidden");
@@ -5084,7 +5144,7 @@ function renderReport() {
   } else {
     let pool = students;
     if (currentUser && currentUser.role === "leader")
-      pool = students.filter(s => s.inputBy === currentUser.id);
+      pool = students.filter(s => String(s.inputBy||'') === String(currentUser.id));
     const have = new Set(agg.map(s => String(s.id)));
     const missing = pool.filter(s => !have.has(String(s.id)));
     if (missing.length && currentUser && currentUser.role !== "viewer" && currentUser.role !== "super" && !guestMode) {
@@ -5524,7 +5584,7 @@ function renderTeamAssign() {
         // Không cho người nhập chính mình: nếu account gắn studentId === s.id hoặc tên trùng
         if (la.studentId && String(la.studentId) === String(s.id)) return;
         if (la.name && s.name && la.name.trim().toLowerCase() === s.name.trim().toLowerCase()) return;
-        const sel = s.inputBy === lid ? " selected" : "";
+        const sel = String(s.inputBy||'') === String(lid) ? " selected" : "";
         opts += '<option value="' + lid + '"' + sel + '>' + (la.name || lid) + " (" + lid + ")</option>";
       });
       html += '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono text-sky-400">' + s.id + '</td><td class="text-white font-medium">' + s.name +
