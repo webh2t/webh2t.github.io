@@ -984,7 +984,9 @@ table.w-full.text-sm { font-size: 13px; }
 
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
 <h3 class="font-semibold text-sky-400 mb-3">Bản ghi gần đây
-<button type="button" onclick="downloadRecentEntriesXlsx()" class="ml-2 px-3 py-1 rounded text-xs font-bold" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>
+<button type="button" onclick="downloadRecentEntriesXlsx()" class="ml-2 px-3 py-1 rounded text-xs font-bold no-print" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>
+<button type="button" onclick="document.getElementById('uploadEntriesFile').click()" class="ml-2 px-3 py-1 rounded text-xs font-bold no-print" style="background:#0ea5e9;color:#fff">📤 Upload Excel offline</button>
+<input type="file" id="uploadEntriesFile" accept=".xlsx,.xls" class="hidden" onchange="uploadEntriesFromExcel(event)"/>
 </h3>
 <div class="overflow-x-auto">
 <table class="w-full text-sm">
@@ -1003,7 +1005,7 @@ table.w-full.text-sm { font-size: 13px; }
 <tbody id="recentBody"></tbody>
 </table>
 </div>
-<div id="missingAssigned" class="mt-4 text-sm text-amber-300/90"></div>
+<div id="missingAssigned" class="mt-4 text-sm" style="color:#0f172a"></div>
 </div>
 </section>
 
@@ -2788,7 +2790,15 @@ function switchTab(name) {
     const fw = document.getElementById("fWeekNo");
     if (fw && cw) { fw.value = cw.w; onWeekSelect(); }
     const afterLoad = function() {
-      try { updateMissingAssigned(); renderRecent(); } catch (e) { console.warn(e); }
+      try {
+        renderRecent();
+        updateMissingAssigned();
+        var aw = (document.getElementById("fWeekNo") || {}).value;
+        var sw = typeof SCHOOL_WEEKS !== "undefined" && SCHOOL_WEEKS.find(function(x){ return String(x.w) === String(aw); });
+        if (currentUser && (currentUser.role === "gvcn" || currentUser.role === "super")) {
+          renderLeaderMissingReport(aw, sw && sw.from, sw && sw.to);
+        }
+      } catch (e) { console.warn(e); }
     };
     if (currentUser && currentUser.classId && typeof loadClassDataFromCloud === "function") {
       loadClassDataFromCloud(currentUser.classId, afterLoad);
@@ -3386,6 +3396,8 @@ function renderRecent() {
 
   if (!mine.length) {
     body.innerHTML = '<tr><td colspan="8" class="py-4 text-center text-slate-500">Chưa có bản ghi trong tuần này</td></tr>';
+    try { renderLeaderMissingReport(activeWeek, activeFrom, activeTo); } catch (e) {}
+    try { if (currentUser && currentUser.role === "leader") updateMissingAssigned(); } catch (e) {}
     return;
   }
   const pad = n => String(n).padStart(2, "0");
@@ -3565,6 +3577,122 @@ function renderLeaderMissingReport(activeWeek, activeFrom, activeTo) {
   el.innerHTML = html;
 }
 
+
+
+
+function uploadEntriesFromExcel(ev) {
+  var file = ev.target && ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); ev.target.value = ""; return; }
+  if (!currentUser) { alert("Chưa đăng nhập"); return; }
+  ensureUserClassId(currentUser);
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, { type: "array" });
+      var sheet = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+      if (!rows.length) { alert("File trống"); return; }
+      // Chuẩn hóa tên cột
+      function pick(row, names) {
+        for (var i = 0; i < names.length; i++) {
+          if (row[names[i]] != null && row[names[i]] !== "") return row[names[i]];
+        }
+        // case-insensitive
+        var keys = Object.keys(row);
+        for (var i = 0; i < names.length; i++) {
+          var n = names[i].toLowerCase();
+          for (var k = 0; k < keys.length; k++) {
+            if (String(keys[k]).toLowerCase().trim() === n) return row[keys[k]];
+          }
+        }
+        return "";
+      }
+      var added = 0, skipped = 0;
+      rows.forEach(function(row) {
+        var sid = String(pick(row, ["ID HS", "ID", "studentId", "Mã HS"])).trim();
+        var sname = String(pick(row, ["Họ tên HS", "Họ và tên", "Họ tên", "studentName", "HS"])).trim();
+        var st = students.find(function(s) {
+          return String(s.id) === sid || (sname && String(s.name).toUpperCase() === sname.toUpperCase());
+        });
+        if (!sid && st) sid = st.id;
+        if (!sname && st) sname = st.name;
+        if (!sid && !sname) { skipped++; return; }
+        var typeRaw = String(pick(row, ["Loại", "type", "Loại nội dung"])).toLowerCase();
+        var type = "silent";
+        if (typeRaw.indexOf("ưu") >= 0 || typeRaw.indexOf("bonus") >= 0 || typeRaw === "u") type = "bonus";
+        else if (typeRaw.indexOf("vi") >= 0 || typeRaw.indexOf("violation") >= 0 || typeRaw === "v") type = "violation";
+        else if (typeRaw.indexOf("im") >= 0 || typeRaw === "silent") type = "silent";
+        var code = String(pick(row, ["Mã", "contentCode", "Mã nội dung"])).trim();
+        var content = String(pick(row, ["Nội dung", "contentText", "Nội dung thi đua"])).trim();
+        var pts = Number(pick(row, ["Điểm", "points", "±Điểm"])) || 0;
+        var times = Number(pick(row, ["Số lần", "times", "Lần"])) || 1;
+        var date = String(pick(row, ["Ngày", "date", "Ngày nhập"])).trim();
+        // Excel serial date?
+        if (date && !isNaN(Number(date)) && Number(date) > 40000) {
+          var excelEpoch = new Date(Date.UTC(1899, 11, 30));
+          var d0 = new Date(excelEpoch.getTime() + Number(date) * 86400000);
+          date = d0.toISOString().slice(0, 10);
+        } else if (date.indexOf("/") >= 0) {
+          var p = date.split("/");
+          if (p.length === 3) date = p[2] + "-" + p[1].padStart(2,"0") + "-" + p[0].padStart(2,"0");
+        }
+        var weekNo = String(pick(row, ["Tuần", "weekNo", "Tuần NH"])).replace(/[^\d]/g, "") || "";
+        if (!weekNo && date && typeof findSchoolWeek === "function") {
+          var sw = findSchoolWeek(date);
+          if (sw) weekNo = sw.w;
+        }
+        if (!weekNo) {
+          var cur = currentSchoolWeek();
+          if (cur) weekNo = cur.w;
+        }
+        if (type === "silent") { pts = 0; content = content || "Im lặng (không ưu điểm / không vi phạm)"; code = code || "SILENT"; }
+        var total = pts * times;
+        var team = (st && st.team) || pick(row, ["Tổ", "team"]) || "";
+        var entry = {
+          id: "off_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
+          date: date || (currentSchoolWeek() || {}).from || "",
+          subject: String(pick(row, ["Môn", "subject"]) || "IM LẶNG"),
+          team: team,
+          studentId: sid || (st && st.id) || "",
+          studentName: sname || (st && st.name) || "",
+          type: type,
+          contentCode: code,
+          contentText: content || code,
+          points: pts,
+          times: times,
+          total: total,
+          inputBy: currentUser.id,
+          inputByName: currentUser.name || currentUser.id,
+          createdAt: new Date().toISOString(),
+          weekNo: weekNo,
+          offlineImport: true
+        };
+        if (!entry.studentId) { skipped++; return; }
+        // Leader: chỉ HS được giao
+        if (currentUser.role === "leader") {
+          var assigned = students.filter(function(s) { return String(s.inputBy || "") === String(currentUser.id); });
+          if (assigned.length && !assigned.some(function(s) { return String(s.id) === String(entry.studentId); })) {
+            skipped++;
+            return;
+          }
+        }
+        entries.unshift(entry);
+        try { saveOneEntryToCloud(entry); } catch (err) {}
+        added++;
+      });
+      saveClassData();
+      try { renderRecent(); } catch (e) {}
+      alert("Upload offline xong: thêm " + added + " bản ghi" + (skipped ? (", bỏ qua " + skipped) : "") + ".\nGVCN sẽ thấy sau khi đồng bộ cloud.");
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi đọc file: " + (err.message || err));
+    }
+    ev.target.value = "";
+  };
+  reader.readAsArrayBuffer(file);
+}
 
 
 function downloadRecentEntriesXlsx() {
