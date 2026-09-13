@@ -1661,8 +1661,22 @@ function pullFirebaseThen(cb) {
         var remote = snaps[0].data().data || {};
         var localSnap = Object.assign({}, accounts);
         // Cloud ghi đè key trùng; giữ key chỉ có ở local
-        Object.keys(remote).forEach(function(k){ accounts[k] = remote[k]; });
-        Object.keys(localSnap).forEach(function(k){ if (!accounts[k]) accounts[k] = localSnap[k]; });
+        var deletedIds = [];
+        try { deletedIds = JSON.parse(localStorage.getItem("qlnn_deleted_accounts") || "[]"); } catch (e) {}
+        Object.keys(remote).forEach(function(k){
+          if (deletedIds.indexOf(String(k).toLowerCase()) >= 0) return;
+          accounts[k] = remote[k];
+        });
+        Object.keys(localSnap).forEach(function(k){
+          if (deletedIds.indexOf(String(k).toLowerCase()) >= 0) return;
+          if (!accounts[k]) accounts[k] = localSnap[k];
+        });
+        // Đảm bảo key đã xóa không còn
+        deletedIds.forEach(function(d) {
+          Object.keys(accounts).forEach(function(k) {
+            if (String(k).toLowerCase() === d) delete accounts[k];
+          });
+        });
         localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
         console.info("[QLNN] accounts từ cloud:", Object.keys(accounts).length);
         if (Object.keys(accounts).length > Object.keys(remote).length) {
@@ -2590,85 +2604,108 @@ function showParentReportLogin() {
 }
 
 function doParentReportLogin() {
-  const id = (document.getElementById("parentLoginId").value || "").trim().toLowerCase();
-  const pass = (document.getElementById("parentLoginPass").value || "").trim();
-  const err = document.getElementById("parentLoginError");
-  if (!id || !pass) {
-    err.textContent = "Nhập ID và mật khẩu xem lớp do GVCN cấp";
-    err.classList.remove("hidden");
-    return;
-  }
-  function finishLogin(acc) {
-    // Resolve class from account or parent GVCN
-    let classId = acc.classId;
-    let className = acc.className || "";
-    let school = acc.school || "";
-    let year = acc.year || "2026-2027";
-    if (acc.parentId && accounts[acc.parentId]) {
-      const g = accounts[acc.parentId];
-      classId = classId || g.classId;
-      className = className || g.className;
-      school = school || g.school;
-      year = year || g.year || "2026-2027";
+  try {
+    var idEl = document.getElementById("parentLoginId");
+    var passEl = document.getElementById("parentLoginPass");
+    var err = document.getElementById("parentLoginError");
+    var id = (idEl && idEl.value || "").trim();
+    var pass = (passEl && passEl.value || "").trim();
+    if (err) { err.classList.add("hidden"); err.textContent = ""; }
+    if (!id || !pass) {
+      if (err) { err.textContent = "Nhập ID và mật khẩu xem lớp do GVCN cấp"; err.classList.remove("hidden"); }
+      return;
     }
-    if (!classId && className) {
-      classId = ((school || "") + "_" + className).toLowerCase().replace(/\s+/g, "_");
-    }
-    currentUser = {
-      id: id,
-      role: "viewer",
-      name: acc.name || ("Xem lớp " + className),
-      classId: classId,
-      className: className,
-      school: school,
-      parentId: acc.parentId || null,
-      year: year,
-      pass: pass
-    };
-    guestMode = false;
-    localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser));
-    loadClassData();
-    if (!students.length) {
-      Object.keys(localStorage).forEach(function(k) {
-        if (!k.startsWith("qlnn_students_")) return;
-        try {
-          const arr = JSON.parse(localStorage.getItem(k) || "[]");
-          if (arr.length && className && arr.some(function(s){ return (s.className || "") === className; })) {
-            students = arr;
-            currentUser.classId = k.replace("qlnn_students_", "");
-            entries = JSON.parse(localStorage.getItem("qlnn_entries_" + currentUser.classId) || "[]");
-            penaltyAssigns = JSON.parse(localStorage.getItem("qlnn_penAssign_" + currentUser.classId) || "[]");
-          }
-        } catch (e) {}
-      });
-    }
-    document.getElementById("parentReportModal").classList.add("hidden");
-    loadClassDataFromCloud(currentUser.classId, function(){ renderApp(); });
-  }
-  function tryLocal() {
-    const acc = accounts[id];
-    if (acc && String(acc.pass) === String(pass)) {
-      finishLogin(acc);
-      return true;
-    }
-    // Match any viewer with same pass id
-    for (const k in accounts) {
-      const a = accounts[k];
-      if (!a) continue;
-      if ((a.role === "viewer" || (a.id && a.id === id)) && String(a.pass) === String(pass) && (k === id || (a.id && a.id.toLowerCase() === id))) {
-        finishLogin(Object.assign({ id: k }, a));
-        return true;
+    function finishLogin(acc, accId) {
+      var classId = acc.classId;
+      var className = acc.className || "";
+      var school = acc.school || "";
+      var year = acc.year || "2026-2027";
+      if (acc.parentId && accounts[acc.parentId]) {
+        var g = accounts[acc.parentId];
+        classId = classId || g.classId;
+        className = className || g.className;
+        school = school || g.school;
+        year = year || g.year || year;
+      }
+      if (!classId && className) {
+        classId = ((school || "") + "_" + className).toLowerCase().replace(/\s+/g, "_");
+      }
+      currentUser = {
+        id: accId || id,
+        role: "viewer",
+        name: acc.name || ("Xem lớp " + className),
+        classId: classId,
+        className: className,
+        school: school,
+        parentId: acc.parentId || null,
+        year: year
+      };
+      guestMode = false;
+      try { localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser)); } catch (e) {}
+      try { loadClassData(); } catch (e) {}
+      var modal = document.getElementById("parentReportModal");
+      if (modal) modal.classList.add("hidden");
+      if (currentUser.classId) {
+        loadClassDataFromCloud(currentUser.classId, function() { renderApp(); });
+      } else {
+        renderApp();
       }
     }
-    return false;
+    function tryLocal() {
+      // 1) findAccountById
+      if (typeof findAccountById === "function") {
+        var found = findAccountById(id);
+        if (found && found.acc && String(found.acc.pass) === String(pass)) {
+          // Cho phép viewer, hoặc bất kỳ account xem lớp
+          if (found.acc.role === "viewer" || found.acc.role === "gvcn" || !found.acc.role) {
+            finishLogin(found.acc, found.key);
+            return true;
+          }
+          // Leader không dùng form PH
+          if (found.acc.role === "leader") {
+            if (err) { err.textContent = "Đây là tài khoản Leader — dùng ĐĂNG NHẬP chính."; err.classList.remove("hidden"); }
+            return true;
+          }
+        }
+      }
+      var low = id.toLowerCase();
+      if (accounts[id] && String(accounts[id].pass) === String(pass)) {
+        finishLogin(accounts[id], id);
+        return true;
+      }
+      if (accounts[low] && String(accounts[low].pass) === String(pass)) {
+        finishLogin(accounts[low], low);
+        return true;
+      }
+      for (var k in accounts) {
+        var a = accounts[k];
+        if (!a) continue;
+        if (String(a.pass) !== String(pass)) continue;
+        if (String(k).toLowerCase() === low || String(a.id || "").toLowerCase() === low) {
+          finishLogin(a, k);
+          return true;
+        }
+      }
+      return false;
+    }
+    var done = false;
+    function go() {
+      if (done) return;
+      done = true;
+      if (tryLocal()) return;
+      if (err) {
+        err.textContent = "Sai ID/mật khẩu xem lớp. Hỏi GVCN (vd xemb9). Admin/GVCN cần đăng nhập 1 lần để đồng bộ accounts lên cloud.";
+        err.classList.remove("hidden");
+      }
+    }
+    setTimeout(go, 4000);
+    try { pullFirebaseThen(go); } catch (e) { go(); }
+  } catch (e) {
+    console.error(e);
+    alert("Lỗi đăng nhập xem báo cáo: " + (e.message || e));
   }
-  // Pull accounts from cloud first (mobile), then login
-  pullFirebaseThen(function() {
-    if (tryLocal()) return;
-    err.textContent = "Sai ID/mật khẩu xem lớp. Liên hệ GVCN cấp ID (vd xemb9). Nếu dùng máy mới, đợi Firebase đồng bộ hoặc mở đúng link trang.";
-    err.classList.remove("hidden");
-  });
 }
+
 
 
 try {
@@ -2798,7 +2835,9 @@ function switchTab(name) {
         var aw = (document.getElementById("fWeekNo") || {}).value;
         var sw = typeof SCHOOL_WEEKS !== "undefined" && SCHOOL_WEEKS.find(function(x){ return String(x.w) === String(aw); });
         if (currentUser && (currentUser.role === "gvcn" || currentUser.role === "super")) {
-          renderLeaderMissingReport(aw, sw && sw.from, sw && sw.to);
+          setTimeout(function() {
+            renderLeaderMissingReport(aw, sw && sw.from, sw && sw.to);
+          }, 100);
         }
       } catch (e) { console.warn(e); }
     };
@@ -3984,7 +4023,10 @@ function debugLeaderCoverage() {
 }
 function updateMissingAssigned() {
   const el = document.getElementById("missingAssigned");
-  if (!el || currentUser.role !== "leader") { if (el) el.innerHTML = ""; return; }
+  if (!el || !currentUser) return;
+  // GVCN/super: không xóa — dùng renderLeaderMissingReport
+  if (currentUser.role === "gvcn" || currentUser.role === "super") return;
+  if (currentUser.role !== "leader") { el.innerHTML = ""; return; }
   const assigned = students.filter(s => String(s.inputBy || '') === String(currentUser.id));
   let aw = (document.getElementById("fWeekNo") || {}).value;
   let from = "", to = "";
@@ -6059,10 +6101,34 @@ function autoAccId() {
 }
 
 function deleteAccount(id) {
-  if (!confirm("Xóa " + id + "?")) return;
-  delete accounts[id];
-  saveAccounts();
+  if (!id) return;
+  if (!confirm("Xóa tài khoản \"" + id + "\"? Thao tác sẽ đồng bộ lên cloud.")) return;
+  // Xóa mọi biến thể hoa/thường
+  var targets = [];
+  Object.keys(accounts || {}).forEach(function(k) {
+    if (String(k) === String(id) || String(k).toLowerCase() === String(id).toLowerCase()) targets.push(k);
+  });
+  if (!targets.length) targets = [id];
+  targets.forEach(function(k) { delete accounts[k]; });
+  try {
+    var delList = JSON.parse(localStorage.getItem("qlnn_deleted_accounts") || "[]");
+    targets.forEach(function(k) {
+      var low = String(k).toLowerCase();
+      if (delList.indexOf(low) < 0) delList.push(low);
+    });
+    localStorage.setItem("qlnn_deleted_accounts", JSON.stringify(delList));
+  } catch (e) {}
+  try { localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts)); } catch (e) {}
   renderAccountsTable();
+  // Ép ghi cloud (toàn bộ map accounts, không còn ID đã xóa)
+  pushAllLocalToCloud().then(function(ok) {
+    if (ok) {
+      alert("Đã xóa " + targets.join(", ") + " và đồng bộ cloud.");
+    } else {
+      alert("Đã xóa trên máy. Cloud chưa xác nhận — kiểm tra mạng rồi đăng nhập Admin/GVCN lại để đẩy accounts.");
+    }
+    renderAccountsTable();
+  });
 }
 function exportAccountsExcel() {
   const rows = [["ID", "Họ tên", "Vai trò", "Tổ", "Mật khẩu", "Điện thoại"]];
