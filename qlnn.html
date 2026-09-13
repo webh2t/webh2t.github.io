@@ -667,11 +667,13 @@ button.btn-penalty {
   -webkit-text-fill-color: #ffffff !important;
   border: none !important;
   font-weight: 700 !important;
-  font-size: 12px !important;
-  padding: 6px 10px !important;
-  border-radius: 8px !important;
+  font-size: 11px !important;
+  padding: 4px 8px !important;
+  border-radius: 6px !important;
   min-height: auto !important;
+  min-width: auto !important;
   white-space: nowrap !important;
+  flex-shrink: 0 !important;
 }
 button.btn-penalty:hover { background: #c2410c !important; }
 #recentBody td { vertical-align: middle; }
@@ -989,7 +991,7 @@ table.w-full.text-sm { font-size: 13px; }
 <input type="file" id="uploadEntriesFile" accept=".xlsx,.xls" class="hidden" onchange="uploadEntriesFromExcel(event)"/>
 </h3>
 <div class="overflow-x-auto">
-<table class="w-full text-sm">
+<table class="w-full text-sm" style="table-layout:fixed">
 <thead class="text-slate-400 border-b border-slate-600">
 <tr>
 <th class="text-left py-2">Ngày giờ lưu</th>
@@ -1153,7 +1155,7 @@ table.w-full.text-sm { font-size: 13px; }
 </div>
 </div>
 <div class="overflow-x-auto">
-<table class="w-full text-sm">
+<table class="w-full text-sm" style="table-layout:fixed">
 <thead class="text-slate-400 border-b border-slate-600">
 <tr>
 <th class="text-left py-2">ID</th><th class="text-left">Họ tên</th><th class="text-left">Vai trò</th>
@@ -3395,7 +3397,50 @@ function renderRecent() {
   });
 
   if (!mine.length) {
-    body.innerHTML = '<tr><td colspan="8" class="py-4 text-center text-slate-500">Chưa có bản ghi trong tuần này</td></tr>';
+    // Vẫn dựng TỔNG KẾT im lặng 100 + báo cáo thiếu
+    let html0 = '<tr><td colspan="8" class="py-3 text-center text-slate-500">Chưa có bản ghi nhập tay trong tuần này — HS trống tính Im lặng (100 điểm)</td></tr>';
+    let sums0 = [];
+    let listHS = students || [];
+    if (currentUser && currentUser.role === "leader") {
+      const asg = listHS.filter(s => String(s.inputBy || "") === String(currentUser.id));
+      if (asg.length) listHS = asg;
+      else if (currentUser.team) listHS = listHS.filter(s => String(s.team) === String(currentUser.team));
+    }
+    listHS.forEach(st => {
+      sums0.push({ week: activeWeek || "?", name: st.name, id: st.id, team: st.team || "?", bonusTimes: 0, violTimes: 0, bonus: 0, viol: 0, silentAuto: true });
+    });
+    sums0.sort((a, b) => {
+      const ta = Number(a.team) || 99, tb = Number(b.team) || 99;
+      if (ta !== tb) return ta - tb;
+      return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+    });
+    if (sums0.length) {
+      let rangeTxt = "";
+      const swR = SCHOOL_WEEKS.find(x => String(x.w) === String(activeWeek));
+      if (swR && typeof formatDate === "function") rangeTxt = " · từ " + formatDate(swR.from) + " đến " + formatDate(swR.to);
+      html0 += '<tr><td colspan="8" class="py-3 font-bold text-sm" style="color:#0369a1;background:#f0f9ff">TỔNG KẾT · Tuần ' + (activeWeek || "") + rangeTxt + '</td></tr>';
+      html0 += '<tr class="text-xs border-b font-bold" style="background:#fef2f2">' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:6%">Tổ</td>' +
+        '<td class="py-2 text-left" style="color:#b91c1c;width:28%">Họ tên HS</td>' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số ƯĐ</td>' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm ƯĐ</td>' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số VP</td>' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm VP</td>' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:10%">Điểm tuần</td>' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:22%">Hình phạt</td></tr>';
+      sums0.forEach(s => {
+        html0 += '<tr class="border-b border-slate-200" style="color:#0f172a">' +
+          '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + s.team + '</td>' +
+          '<td class="py-1.5 font-medium" style="font-size:13px">' + s.id + '. ' + s.name + ' <span style="color:#64748b;font-size:11px">(im lặng)</span></td>' +
+          '<td class="py-1.5 text-center" style="color:#15803d">0</td>' +
+          '<td class="py-1.5 text-center" style="color:#15803d">0</td>' +
+          '<td class="py-1.5 text-center" style="color:#b91c1c">0</td>' +
+          '<td class="py-1.5 text-center" style="color:#b91c1c">0</td>' +
+          '<td class="py-1.5 text-center font-bold" style="color:#a16207">100</td>' +
+          '<td class="py-1.5 text-center text-slate-400">—</td></tr>';
+      });
+    }
+    body.innerHTML = html0;
     try { renderLeaderMissingReport(activeWeek, activeFrom, activeTo); } catch (e) {}
     try { if (currentUser && currentUser.role === "leader") updateMissingAssigned(); } catch (e) {}
     return;
@@ -3454,6 +3499,35 @@ function renderRecent() {
   if (swR) rangeTxt = " · từ " + formatDate(swR.from) + " đến " + formatDate(swR.to);
   else if (activeFrom && activeTo) rangeTxt = " · từ " + formatDate(activeFrom) + " đến " + formatDate(activeTo);
 
+    // Bổ sung HS chưa có bản ghi → Im lặng 100 điểm (theo phân tổ / cả lớp)
+  (function fillSilent() {
+    var listHS = students || [];
+    if (currentUser && currentUser.role === "leader") {
+      var asg = listHS.filter(function(s) { return String(s.inputBy || "") === String(currentUser.id); });
+      if (asg.length) listHS = asg;
+      else if (currentUser.team) listHS = listHS.filter(function(s) { return String(s.team) === String(currentUser.team); });
+    }
+    var have = {};
+    sums.forEach(function(s) { have[String(s.id)] = true; });
+    listHS.forEach(function(st) {
+      if (have[String(st.id)]) return;
+      sums.push({
+        week: activeWeek || "?",
+        name: st.name,
+        id: st.id,
+        team: st.team || "?",
+        bonusTimes: 0, violTimes: 0, bonus: 0, viol: 0,
+        silentAuto: true
+      });
+    });
+    sums.sort(function(a, b) {
+      var ta = Number(a.team) || 99, tb = Number(b.team) || 99;
+      if (ta !== tb) return ta - tb;
+      return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+    });
+  })();
+
+    
   if (sums.length) {
     html += '<tr><td colspan="8" class="py-3 font-bold text-sm" style="color:#0369a1;background:#f0f9ff">TỔNG KẾT · Tuần ' + (activeWeek || "") + rangeTxt +
       ' <span class="no-print" style="float:right">' +
@@ -3461,15 +3535,16 @@ function renderRecent() {
       '<button type="button" onclick="downloadTongKetXlsx()" class="px-2 py-1 rounded text-xs font-bold" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>' +
       '</span></td></tr>';
     html += '<tr class="text-xs border-b font-bold" style="background:#fef2f2">' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Tổ</td>' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Họ tên HS</td>' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Số lần ƯĐ</td>' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Điểm ƯĐ</td>' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Số lần VP</td>' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Điểm VP</td>' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Điểm tuần</td>' +
-      '<td class="py-2 px-2 text-center" style="color:#b91c1c">Hình phạt (chỉ VP)</td></tr>';
-    window._tongKetRows = sums.map(function(s) {
+      '<td class="py-2 text-center" style="color:#b91c1c;width:6%">Tổ</td>' +
+      '<td class="py-2 text-left" style="color:#b91c1c;width:28%">Họ tên HS</td>' +
+      '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số ƯĐ</td>' +
+      '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm ƯĐ</td>' +
+      '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số VP</td>' +
+      '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm VP</td>' +
+      '<td class="py-2 text-center" style="color:#b91c1c;width:10%">Điểm tuần</td>' +
+      '<td class="py-2 text-center" style="color:#b91c1c;width:22%">Hình phạt</td></tr>';
+    
+window._tongKetRows = sums.map(function(s) {
       const score = 100 + s.bonus + s.viol;
       const pa = (penaltyAssigns || []).filter(p => String(p.studentId) === String(s.id) && String(p.week) === String(s.week)).slice(-1)[0];
       return Object.assign({}, s, { score: score, penalty: pa ? pa.penalty : "" });
@@ -3481,22 +3556,23 @@ function renderRecent() {
       const canPen = currentUser && (currentUser.role === "gvcn" || currentUser.role === "leader" || currentUser.role === "super");
       let penCell = '<span class="text-slate-400 text-xs">—</span>';
       if (s.violTimes > 0 && canPen) {
-        penCell = '<div style="color:#78350f;font-size:12px;font-weight:700;margin-bottom:4px">' + penLabel + '</div>' +
+        penCell = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap">' +
+          '<span style="color:#78350f;font-size:11px;font-weight:700;max-width:9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + String(penLabel).replace(/"/g, "&quot;") + '">' + penLabel + '</span>' +
           '<button type="button" class="btn-penalty" data-sid="' + s.id +
           '" data-sname="' + String(s.name).replace(/"/g, "&quot;") + '" data-week="' + s.week + '" onclick="openPenaltyForStudent(this)">' +
-          (pa ? "Sửa hình phạt" : "Chọn hình phạt") + '</button>';
+          (pa ? "Sửa" : "Chọn") + '</button></div>';
       } else if (s.violTimes > 0) {
         penCell = '<span style="color:#92400e">' + penLabel + '</span>';
       }
       html += '<tr class="border-b border-slate-200" style="color:#0f172a">' +
-        '<td class="py-2 px-2 text-center font-bold" style="color:#7e22ce">' + s.team + '</td>' +
-        '<td class="py-2 px-3 font-medium">' + s.id + '. ' + s.name + '</td>' +
-        '<td class="py-2 px-2 text-center" style="color:#15803d">' + s.bonusTimes + '</td>' +
-        '<td class="py-2 px-2 text-center font-semibold" style="color:#15803d">' + (s.bonus > 0 ? "+" : "") + s.bonus + '</td>' +
-        '<td class="py-2 px-2 text-center" style="color:#b91c1c">' + s.violTimes + '</td>' +
-        '<td class="py-2 px-2 text-center font-semibold" style="color:#b91c1c">' + s.viol + '</td>' +
-        '<td class="py-2 px-2 text-center font-bold" style="color:#a16207">' + score + '</td>' +
-        '<td class="py-2 px-2 text-center">' + penCell + '</td></tr>';
+        '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + s.team + '</td>' +
+        '<td class="py-1.5 font-medium" style="font-size:13px">' + s.id + '. ' + s.name + (s.silentAuto ? ' <span style="color:#64748b;font-size:11px">(im lặng)</span>' : '') + '</td>' +
+        '<td class="py-1.5 text-center" style="color:#15803d">' + s.bonusTimes + '</td>' +
+        '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + (s.bonus > 0 ? "+" : "") + s.bonus + '</td>' +
+        '<td class="py-1.5 text-center" style="color:#b91c1c">' + s.violTimes + '</td>' +
+        '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + s.viol + '</td>' +
+        '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + score + '</td>' +
+        '<td class="py-1.5 text-center">' + penCell + '</td></tr>';
     });
   }
   body.innerHTML = html;
@@ -3506,78 +3582,83 @@ function renderRecent() {
 function renderLeaderMissingReport(activeWeek, activeFrom, activeTo) {
   const el = document.getElementById("missingAssigned");
   if (!el || !currentUser) return;
-  if (currentUser.role !== "gvcn" && currentUser.role !== "super") {
-    // Leader dùng updateMissingAssigned — không ghi đè
-    return;
-  }
+  if (currentUser.role !== "gvcn" && currentUser.role !== "super") return;
+
   const normDate = function(d) {
     if (!d) return "";
     d = String(d).trim();
     if (d.indexOf("/") >= 0) {
       const p = d.split("/");
-      if (p.length === 3) return p[2] + "-" + p[1].padStart(2,"0") + "-" + p[0].padStart(2,"0");
+      if (p.length === 3) return p[2] + "-" + String(p[1]).padStart(2,"0") + "-" + String(p[0]).padStart(2,"0");
     }
     return d.slice(0, 10);
   };
-  const weekEntries = (entries || []).filter(e => {
+  const weekEntries = (entries || []).filter(function(e) {
     const ed = normDate(e.date);
     if (activeFrom && activeTo && ed && ed >= activeFrom && ed <= activeTo) return true;
     if (String(e.weekNo) === String(activeWeek)) return true;
-    if (ed) {
-      const sw = typeof findSchoolWeek === "function" ? findSchoolWeek(ed) : null;
+    if (ed && typeof findSchoolWeek === "function") {
+      const sw = findSchoolWeek(ed);
       if (sw && String(sw.w) === String(activeWeek)) return true;
     }
     return false;
   });
-  const covered = new Set(weekEntries.map(e => String(e.studentId)));
+  const covered = new Set(weekEntries.map(function(e) { return String(e.studentId); }));
   const totalHS = (students || []).length;
-  const missingAll = (students || []).filter(s => !covered.has(String(s.id)));
+  const missingAll = (students || []).filter(function(s) { return !covered.has(String(s.id)); });
 
-  let html = '<div class="mt-3 p-3 rounded-lg border" style="border-color:#f59e0b;background:#fffbeb;color:#0f172a">';
-  html += '<div class="font-bold text-sm mb-2" style="color:#9f1239">📋 Báo cáo chưa nhập · Tuần ' + (activeWeek || "") + '</div>';
-  html += '<div class="mb-3 p-2 rounded" style="background:#fff;border:1px solid #fecaca">';
-  html += '<b>Tổng số HS chưa nhập:</b> <span style="color:#b91c1c;font-weight:800;font-size:1.15rem">' + missingAll.length + '</span>';
-  html += ' / ' + totalHS + ' (sỉ số lớp' + (currentUser.className ? " " + currentUser.className : "") + ')';
+  let html = '<div class="mt-4 p-4 rounded-xl border-2" style="border-color:#f59e0b;background:#fffbeb;color:#0f172a">';
+  html += '<div class="font-bold text-base mb-3" style="color:#9f1239">📋 BÁO CÁO NHẬP THI ĐUA · Tuần ' + (activeWeek || "?") + '</div>';
+  html += '<div class="mb-3 p-3 rounded-lg" style="background:#fff;border:1px solid #fecaca">';
+  html += '<div><b>Sỉ số lớp:</b> ' + totalHS + (currentUser.className ? " · " + currentUser.className : "") + '</div>';
+  html += '<div class="mt-1"><b>Đã có bản ghi:</b> <span style="color:#15803d;font-weight:800">' + (totalHS - missingAll.length) + '</span>';
+  html += ' · <b>Chưa nhập:</b> <span style="color:#b91c1c;font-weight:800">' + missingAll.length + '</span></div>';
   if (missingAll.length) {
-    html += '<div class="text-xs mt-1" style="color:#7f1d1d;word-break:break-all">' + missingAll.map(s => s.id).join(", ") + '</div>';
+    html += '<div class="text-xs mt-2" style="color:#7f1d1d;word-break:break-all">ID chưa nhập: ' + missingAll.map(function(s){ return s.id; }).join(", ") + '</div>';
+  } else {
+    html += '<div class="mt-2 font-semibold" style="color:#15803d">✓ Cả lớp đã có bản ghi (hoặc sẽ tính Im lặng 100 điểm cho HS trống).</div>';
   }
   html += '</div>';
 
-  for (let team = 1; team <= 4; team++) {
-    const teamStudents = (students || []).filter(s => String(s.team) === String(team));
-    if (!teamStudents.length) continue;
-    const missTeam = teamStudents.filter(s => !covered.has(String(s.id)));
-    // group by inputBy
-    const groups = {};
-    missTeam.forEach(s => {
-      const key = s.inputBy || ("to" + team);
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(s);
-    });
-    Object.keys(groups).forEach(lid => {
-      const miss = groups[lid];
-      if (!miss.length) return;
-      const acc = (accounts && accounts[lid]) ? accounts[lid] : null;
-      const leaderName = (acc && acc.name) || (lid.indexOf("to") === 0 ? "(chưa gán Leader)" : lid);
-      const ids = miss.map(s => s.id).sort(function(a,b){ return String(a).localeCompare(String(b), "vi", {numeric:true}); });
-      let idTxt = ids.join(", ");
-      if (ids.length >= 2) idTxt = ids[0] + " - " + ids[ids.length - 1] + " (" + ids.join(", ") + ")";
-      html += '<div class="text-sm mb-1.5 py-1 border-b border-amber-200">';
-      html += '<b style="color:#7e22ce">Tổ ' + team + '</b> | Người nhập <b>' + leaderName + '</b> | thiếu <b style="color:#b91c1c">' + miss.length + '</b> | ';
-      html += '<span style="font-family:ui-monospace,monospace;color:#9f1239">' + idTxt + '</span></div>';
-    });
-    if (!missTeam.length) {
-      html += '<div class="text-sm mb-1" style="color:#15803d"><b>Tổ ' + team + '</b> · đã nhập đủ ' + teamStudents.length + ' HS</div>';
+  // Theo từng Leader (inputBy) theo phân tổ
+  const byLeader = {};
+  (students || []).forEach(function(s) {
+    const lid = String(s.inputBy || ("to" + (s.team || "?")));
+    if (!byLeader[lid]) byLeader[lid] = [];
+    byLeader[lid].push(s);
+  });
+  const leaderIds = Object.keys(byLeader).sort(function(a, b) {
+    const ta = Number((byLeader[a][0] && byLeader[a][0].team) || 99);
+    const tb = Number((byLeader[b][0] && byLeader[b][0].team) || 99);
+    if (ta !== tb) return ta - tb;
+    return String(a).localeCompare(String(b));
+  });
+
+  html += '<div class="font-bold text-sm mb-2" style="color:#92400e">Theo phân tổ · Người nhập (Leader)</div>';
+  leaderIds.forEach(function(lid) {
+    const list = byLeader[lid];
+    const team = (list[0] && list[0].team) || "?";
+    const acc = accounts && accounts[lid];
+    const leaderName = (acc && acc.name) || (list[0] && list.find(function(x){ return String(x.id) === lid; }) && list.find(function(x){ return String(x.id) === lid; }).name) || lid;
+    const miss = list.filter(function(s) { return !covered.has(String(s.id)); });
+    const done = list.length - miss.length;
+    if (miss.length === 0) {
+      html += '<div class="text-sm py-2 px-2 mb-1 rounded" style="background:#ecfdf5;border:1px solid #bbf7d0">';
+      html += '<b style="color:#7e22ce">Tổ ' + team + '</b> | <b>' + leaderName + '</b> <span class="text-xs">(' + lid + ')</span> · ';
+      html += '<span style="color:#15803d;font-weight:800">✓ Đã nhập đủ ' + list.length + ' HS</span></div>';
+    } else {
+      const ids = miss.map(function(s){ return s.id; }).sort(function(a,b){ return String(a).localeCompare(String(b),"vi",{numeric:true}); });
+      html += '<div class="text-sm py-2 px-2 mb-1 rounded" style="background:#fef2f2;border:1px solid #fecaca">';
+      html += '<b style="color:#7e22ce">Tổ ' + team + '</b> | Người nhập <b>' + leaderName + '</b> <span class="text-xs">(' + lid + ')</span> · ';
+      html += 'đã ' + done + '/' + list.length + ' · <b style="color:#b91c1c">thiếu ' + miss.length + '</b> · ';
+      html += '<span style="font-family:ui-monospace,monospace;color:#9f1239">' + ids.join(", ") + '</span></div>';
     }
-  }
-  if (!missingAll.length) {
-    html += '<div class="text-sm font-semibold mt-2" style="color:#15803d">✓ Tất cả học sinh đã có bản ghi trong tuần.</div>';
-  }
+  });
+
+  html += '<p class="text-xs mt-3" style="color:#78716c">HS chưa có bản ghi khi xem TỔNG KẾT / Báo cáo được tính <b>Im lặng · 100 điểm</b> (không ƯĐ, không VP).</p>';
   html += '</div>';
   el.innerHTML = html;
 }
-
-
 
 
 function uploadEntriesFromExcel(ev) {
