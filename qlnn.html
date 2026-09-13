@@ -1744,9 +1744,41 @@ function setSyncStatus(msg, ok) {
 }
 
 var _classUnsub = null;
+var _entriesUnsub = null;
 function subscribeClassData(cid) {
   if (!firebaseReady || !db || !cid) return;
   if (_classUnsub) { try { _classUnsub(); } catch(e) {} _classUnsub = null; }
+  if (_entriesUnsub) { try { _entriesUnsub(); } catch(e) {} _entriesUnsub = null; }
+  // Realtime từng bản ghi (nhiều Leader cùng lúc)
+  _entriesUnsub = db.collection("qlnn_classes").doc(cid).collection("entries").onSnapshot(function(qs) {
+    var remote = [];
+    qs.forEach(function(doc) {
+      var d = doc.data();
+      if (d) { if (!d.id) d.id = doc.id; remote.push(d); }
+    });
+    if (remote.length || qs.size === 0) {
+      // gộp với local, không xóa local chỉ vì remote tạm trống lần đầu
+      if (remote.length) {
+        var before = entries.length;
+        entries = mergeEntryLists(entries, remote);
+        try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
+        if (entries.length !== before) {
+          try {
+            if (document.getElementById("recentBody")) renderRecent();
+            if (typeof updateMissingAssigned === "function") updateMissingAssigned();
+            if (typeof renderLeaderMissingReport === "function") {
+              var aw = (document.getElementById("fWeekNo") || {}).value;
+              var sw = SCHOOL_WEEKS.find(function(x){ return String(x.w) === String(aw); });
+              renderLeaderMissingReport(aw, sw && sw.from, sw && sw.to);
+            }
+          } catch(e) {}
+          if (typeof setSyncStatus === "function") {
+            setSyncStatus("☁ Cập nhật realtime · " + entries.length + " bản ghi", true);
+          }
+        }
+      }
+    }
+  }, function(err) { console.warn("entries snapshot", err); });
   _classUnsub = db.collection("qlnn_classes").doc(cid).onSnapshot(function(snap) {
     if (!snap.exists) return;
     var d = snap.data() || {};
@@ -1809,13 +1841,73 @@ function loadClassDataFromCloud(cid, cb) {
       if (d.deadlineCfg) deadlineCfg = d.deadlineCfg;
     }
     subscribeClassData(cid);
-    if (cb) cb();
+    loadEntriesSubcollection(cid, function() {
+      if (cb) cb();
+    });
   }).catch(function(err) {
     console.warn("loadClassDataFromCloud", err);
-    setSyncStatus("Không tải được cloud — dùng dữ liệu máy", false);
+    if (typeof setSyncStatus === "function") setSyncStatus("Không tải được cloud — dùng dữ liệu máy", false);
     if (cb) cb();
   });
 }
+
+
+/** Ghi TỪNG bản ghi vào subcollection — tránh nhiều Leader ghi đè lẫn nhau */
+function saveOneEntryToCloud(entry) {
+  if (!entry || !entry.id) return;
+  ensureUserClassId(currentUser);
+  var cid = currentUser && (currentUser.classId || normalizeClassId(currentUser));
+  if (!cid || !firebaseReady || !db) return;
+  var ref = db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(entry.id));
+  ref.set(Object.assign({}, entry, {
+    classId: cid,
+    syncedAt: new Date().toISOString()
+  }), { merge: true }).then(function() {
+    console.info("[QLNN] entry cloud OK", entry.id, entry.studentName);
+    if (typeof setSyncStatus === "function") {
+      setSyncStatus("✓ Bản ghi đã lên cloud: " + (entry.studentName || entry.id), true);
+    }
+  }).catch(function(err) {
+    console.warn("[QLNN] entry cloud lỗi", err);
+    if (typeof setSyncStatus === "function") {
+      setSyncStatus("Cloud lỗi (bản ghi vẫn trên máy): " + (err.message || err), false);
+    }
+  });
+}
+
+function deleteOneEntryFromCloud(eid) {
+  ensureUserClassId(currentUser);
+  var cid = currentUser && currentUser.classId;
+  if (!cid || !firebaseReady || !db || !eid) return;
+  db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(eid)).delete().catch(function(e) {
+    console.warn(e);
+  });
+}
+
+/** Tải tất cả entries từ subcollection + gộp mảng cũ */
+function loadEntriesSubcollection(cid, cb) {
+  if (!firebaseReady || !db || !cid) { if (cb) cb(); return; }
+  db.collection("qlnn_classes").doc(cid).collection("entries").get().then(function(qs) {
+    var remote = [];
+    qs.forEach(function(doc) {
+      var d = doc.data();
+      if (d) {
+        if (!d.id) d.id = doc.id;
+        remote.push(d);
+      }
+    });
+    if (remote.length) {
+      entries = mergeEntryLists(entries, remote);
+      try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch (e) {}
+      console.info("[QLNN] entries subcollection:", remote.length, "→ tổng", entries.length);
+    }
+    if (cb) cb();
+  }).catch(function(err) {
+    console.warn("loadEntriesSubcollection", err);
+    if (cb) cb();
+  });
+}
+
 
 function saveClassData(opts) {
   opts = opts || {};
@@ -3210,6 +3302,7 @@ function saveEntryFromForm(e) {
   }
   entries.unshift(entry);
   const ok = saveClassData();
+  try { saveOneEntryToCloud(entry); } catch (e) { console.warn(e); }
   const msg = document.getElementById("formMsg");
   if (msg) {
     msg.textContent = ok
@@ -3574,6 +3667,7 @@ function deleteEntry(eid) {
   const ok = currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader";
   if (!ok) { alert("Không có quyền xóa bản ghi này"); return; }
   if (!confirm("Xóa bản ghi này?")) return;
+  try { deleteOneEntryFromCloud(eid); } catch(e) {}
   entries = entries.filter(e => String(e.id) !== String(eid));
   saveClassData();
   renderRecent();
