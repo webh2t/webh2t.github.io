@@ -4732,53 +4732,67 @@ function renderWeekMonthBoards(list, agg) {
       html += '<div style="font-size:0.85rem;margin-top:0.25rem;color:#9f1239;font-weight:700">Tuần ' + (weekNo || "—") + (from ? ': từ ngày ' + from + ' – ' + to : '') + '</div></div>';
       if (!isClass) html += '<div class="text-xs mb-2 text-slate-600">Tổ trưởng: <b>' + leaderName + '</b></div>';
 
-      html += '<div class="overflow-x-auto"><table><thead><tr><th rowspan="2">STT</th><th rowspan="2" class="name-col">HỌ VÀ TÊN</th><th rowspan="2">Ngày sinh</th><th rowspan="2">GT</th>';
-      if (isClass) html += '<th rowspan="2">Tổ</th>';
-      html += '<th colspan="12">12 TIÊU CHÍ</th>';
-      html += '<th rowspan="2">+</th><th rowspan="2">−</th><th rowspan="2">CUỐI<br/>TUẦN</th><th rowspan="2">XẾP LOẠI</th></tr><tr>';
-      for (let i = 0; i < 12; i++) html += '<th title="' + (criteria[i].text || "") + '">' + (i + 1) + '</th>';
-      html += '</tr></thead><tbody>';
-
-      members.forEach((s, idx) => {
+      // Bảng tuần theo tổ: Tổ | Họ tên HS | Điểm+(ƯĐ) | Điểm–(VP) | Điểm tuần | Vị thứ tổ
+      const rowData = members.map(function(s) {
         const stEntries = list.filter(e => String(e.studentId) === String(s.id));
         let plus = 0, minus = 0;
-        const marks = criteria.map(c => {
-          const hit = stEntries.filter(e => (e.contentCode || e.contentText) === (c.code || c.text));
-          if (!hit.length) return "";
-          const tsum = hit.reduce((a, e) => a + (e.total != null ? e.total : e.points * e.times), 0);
-          if (tsum > 0) { plus += tsum; return "+" + tsum; }
-          if (tsum < 0) { minus += tsum; return String(tsum); }
-          return hit.length ? "•" : "";
-        });
-        stEntries.forEach(e => {
-          const key = e.contentCode || e.contentText;
-          if (!criteria.some(c => (c.code || c.text) === key)) {
-            const tt = e.total != null ? e.total : e.points * e.times;
-            if (tt > 0) plus += tt; else minus += tt;
-          }
+        stEntries.forEach(function(e) {
+          if (e.type === "silent") return;
+          const tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+          if (e.type === "bonus" || tt > 0) plus += Math.abs(tt);
+          else if (e.type === "violation") minus += (tt > 0 ? -Math.abs(tt) : tt);
+          else if (tt > 0) plus += tt; else minus += tt;
         });
         const score = 100 + plus + minus;
-        const rk = rankClass(score);
-        html += '<tr><td>' + (idx + 1) + '</td><td class="name-col">' + s.name + '</td>';
-        html += '<td class="text-xs">' + (s.dob || "—") + '</td><td class="text-xs">' + (s.gender || "—") + '</td>';
-        if (isClass) html += '<td>' + (s.team || "") + '</td>';
-        marks.forEach(m => html += '<td>' + m + '</td>');
-        html += '<td class="score-plus">' + (plus ? "+" + plus : "0") + '</td>';
-        html += '<td class="score-minus">' + (minus || "0") + '</td>';
-        html += '<td style="font-weight:800">' + score + '</td>';
-        html += '<td class="' + rk.cls + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td></tr>';
+        return { s: s, plus: plus, minus: minus, score: score, team: s.team || team || "?" };
+      });
+      // Vị thứ trong tổ (cùng tổ, điểm cao = hạng 1)
+      const byTeamRank = {};
+      [1,2,3,4].forEach(function(tn) {
+        const arr = rowData.filter(function(r) { return String(r.team) === String(tn) || (!isClass && String(team) === String(tn)); });
+        if (!isClass && String(team) === String(tn)) {
+          /* use all rowData for single team view */
+        }
+      });
+      // sort copy for ranking within display group
+      const rankSrc = rowData.slice().sort(function(a,b){ return b.score - a.score; });
+      const posMap = {};
+      rankSrc.forEach(function(r, i) { posMap[String(r.s.id)] = i + 1; });
+      // nếu cả lớp: vị thứ theo từng tổ
+      if (isClass) {
+        [1,2,3,4].forEach(function(tn) {
+          const arr = rowData.filter(function(r){ return String(r.team) === String(tn); }).slice().sort(function(a,b){ return b.score - a.score; });
+          arr.forEach(function(r, i) { posMap[String(r.s.id)] = i + 1; });
+        });
+      }
+      html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
+      html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
+      html += '<th class="py-2 px-1 text-center" style="width:8%">Tổ</th>';
+      html += '<th class="py-2 px-2 text-left" style="width:36%">Họ tên HS</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:12%">Điểm + (ƯĐ)</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:12%">Điểm – (VP)</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:12%">Điểm tuần</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:12%">Vị thứ tổ</th>';
+      html += '</tr></thead><tbody>';
+      rowData.forEach(function(r) {
+        html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + r.team + '</td>';
+        html += '<td class="py-1.5 px-2 font-medium">' + r.s.id + '. ' + r.s.name + '</td>';
+        html += '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + (r.plus ? ("+" + r.plus) : "0") + '</td>';
+        html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + (r.minus || "0") + '</td>';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + r.score + '</td>';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#0369a1">' + (posMap[String(r.s.id)] || "—") + '</td>';
+        html += '</tr>';
       });
       html += '</tbody></table></div>';
-      const scored = members.map(s => {
-        const stEntries = list.filter(e => String(e.studentId) === String(s.id));
-        let b = 0, v = 0;
-        stEntries.forEach(e => { const tt = e.total != null ? e.total : e.points * e.times; if (tt > 0) b += tt; else v += tt; });
-        const sc = 100 + b + v;
-        return { name: s.name, id: s.id, score: sc, rk: rankClass(sc) };
+      const scored = rowData.map(function(r) {
+        return { name: r.s.name, id: r.s.id, score: r.score, rk: rankClass(r.score) };
       });
+      window._weekScoreMap = window._weekScoreMap || {};
+      rowData.forEach(function(r) { window._weekScoreMap[String(r.s.id)] = r.score; });
       const poolIds = new Set(members.map(s => String(s.id)));
       html += rankStatsHtml(scored);
-      html += violStatsHtml(list, poolIds);
+      html += violStatsHtml(list, poolIds, window._weekScoreMap || null);
       html += '</div>';
     });
     box.innerHTML = html || '<p class="text-slate-400">Chọn tuần và (tuỳ chọn) tổ để xem bảng. Không chọn tổ = cả lớp (sắp xếp A–Z).</p>';
