@@ -727,7 +727,7 @@ table.w-full.text-sm { font-size: 13px; }
 <input id="loginPass" type="password" class="input-field text-base py-3" placeholder="••••••••" autocomplete="current-password" enterkeyhint="go" onkeydown="if(event.key==='Enter'){event.preventDefault();doLogin();}"/>
 </div>
 <div id="loginError" class="text-red-400 text-sm hidden"></div>
-<button type="button" id="btnDoLogin" onclick="doLogin()" class="w-full py-3.5 text-base font-bold rounded-lg shadow-lg touch-manipulation" style="background:#6b7280!important;color:#1e3a8a!important;font-weight:800">ĐĂNG NHẬP</button>
+<button type="button" id="btnDoLogin" onclick="doLogin()" class="w-full py-3.5 text-base font-bold rounded-lg shadow-lg touch-manipulation" style="background:#ffffff!important;color:#0f766e!important;font-weight:800;border:2px solid #2563eb!important">ĐĂNG NHẬP</button>
 <button type="button" onclick="forgotPassword()" class="w-full py-3 mt-2 text-sm font-semibold text-amber-300 hover:text-yellow-300 underline touch-manipulation">Quên mật khẩu? — Báo Admin WEBH2T cấp lại</button>
 </div>
 <p class="mt-4 text-sm leading-relaxed" style="color:#fff">Khu vực đăng nhập: <strong style="color:#fff">GVCN</strong>, <strong style="color:#fff">Nhập thi đua</strong>, <strong style="color:#fff">PH/HS xem báo cáo</strong>.</p>
@@ -834,7 +834,7 @@ table.w-full.text-sm { font-size: 13px; }
 <p class="text-lg mb-6"><span style="color:#991b1b;font-weight:800">NĂM HỌC:</span> <span class="hero-year" style="color:#991b1b;font-weight:800">2026 – 2027</span></p>
 
 <div class="flex flex-wrap justify-center gap-3 mb-10">
-<button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#6b7280!important;color:#1e3a8a!important;min-width:12.5rem;width:12.5rem;font-weight:800">ĐĂNG NHẬP</button>
+<button onclick="showAuth('login')" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#ffffff!important;color:#0f766e!important;min-width:12.5rem;width:12.5rem;font-weight:800;border:2px solid #2563eb!important">ĐĂNG NHẬP</button>
 <button onclick="showParentReportLogin()" class="px-6 py-3 rounded-lg font-bold shadow-lg inline-flex items-center justify-center" style="background:#bae6fd!important;color:#0c4a6e!important;font-weight:700;min-width:12.5rem">XEM BÁO CÁO PH-HS</button>
 </div>
 
@@ -994,14 +994,15 @@ table.w-full.text-sm { font-size: 13px; }
 <table class="w-full text-sm" style="table-layout:fixed">
 <thead class="text-slate-400 border-b border-slate-600">
 <tr>
-<th class="text-left py-2">Ngày giờ lưu</th>
-<th class="text-left">HS</th>
-<th class="text-left">Nội dung</th>
-<th class="text-right">±Điểm</th>
-<th class="text-right">Lần</th>
-<th class="text-right">Tổng điểm<br/><span class="font-normal text-xs">(±Điểm × lần)</span></th>
-<th class="text-left">Người nhập</th>
-<th class="text-center">Thao tác</th>
+<th class="text-left py-2" style="width:11%">Ngày giờ lưu</th>
+<th class="text-left" style="width:16%">Họ tên HS</th>
+<th class="text-center" style="width:8%">Ngày</th>
+<th class="text-center" style="width:9%">Môn</th>
+<th class="text-center" style="width:6%">Số lần</th>
+<th class="text-left" style="width:20%">Nội dung</th>
+<th class="text-right" style="width:8%">Tổng điểm</th>
+<th class="text-left" style="width:12%">Người nhập</th>
+<th class="text-center" style="width:10%">Thao tác</th>
 </tr>
 </thead>
 <tbody id="recentBody"></tbody>
@@ -1155,6 +1156,10 @@ table.w-full.text-sm { font-size: 13px; }
 </label>
 <button onclick="exportAccountsExcel()" class="btn-secondary text-sm">Tải Excel .xlsx</button>
 </div>
+</div>
+<div class="flex flex-wrap gap-2 items-center mb-2">
+<button type="button" onclick="saveAccountsPanel()" class="px-4 py-2 rounded-lg text-sm font-bold" style="background:#fff;color:#78350f;border:2px solid #78350f">💾 Lưu tài khoản</button>
+<span id="accountsSaveHint" class="text-xs hidden" style="color:#b45309"></span>
 </div>
 <div class="overflow-x-auto">
 <table class="w-full text-sm" style="table-layout:fixed">
@@ -2427,12 +2432,10 @@ function doLoginAfterSync(id, pass, err) {
 
 
 function logout() {
-  const hregOut = document.getElementById("headerRegBtn");
-  if (hregOut) { hregOut.classList.remove("hidden"); hregOut.style.display = ""; }
-
   currentUser = null;
   guestMode = false;
   localStorage.removeItem("qlnn_session_v2");
+  updateHeaderRegBtnVisibility();
   renderApp();
 }
 
@@ -2732,7 +2735,44 @@ function loadSession() {
   } catch (e) { currentUser = null; }
 }
 
+
+function updateHeaderRegBtnVisibility() {
+  var hreg = document.getElementById("headerRegBtn");
+  if (!hreg) return;
+  if (currentUser && currentUser.role) {
+    hreg.classList.add("hidden");
+    hreg.style.display = "none";
+  } else {
+    hreg.classList.remove("hidden");
+    hreg.style.display = "";
+  }
+}
+
+function saveAccountsPanel() {
+  try { localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts)); } catch (e) {}
+  if (typeof saveAccounts === "function") {
+    try { saveAccounts(); } catch (e) {}
+  }
+  if (typeof pushAllLocalToCloud === "function") {
+    pushAllLocalToCloud().then(function(ok) {
+      window._accountsDirty = false;
+      var hint = document.getElementById("accountsSaveHint");
+      if (hint) {
+        hint.classList.remove("hidden");
+        hint.textContent = ok ? "✓ Đã lưu & đồng bộ cloud." : "Đã lưu máy. Cloud chưa xác nhận — kiểm tra mạng.";
+        hint.style.color = ok ? "#15803d" : "#b45309";
+      }
+      alert(ok ? "Đã lưu tài khoản lên cloud." : "Đã lưu trên máy. Cloud chưa xác nhận.");
+      if (typeof renderAccountsTable === "function") renderAccountsTable();
+    });
+  } else {
+    alert("Đã lưu trên máy.");
+  }
+}
+
 function renderApp() {
+  try { updateHeaderRegBtnVisibility(); } catch (e) {}
+
   const welcome = document.getElementById("welcomeSection");
   const app = document.getElementById("appSection");
   const badge = document.getElementById("userBadge");
@@ -3387,6 +3427,73 @@ function studentWeekScore(studentId) {
   return 100 + bonus + viol;
 }
 
+
+/** Báo cáo số HS Leader đã nhập theo tổ (tuần đang chọn) */
+function renderLeaderEnteredByTeam(activeWeek, activeFrom, activeTo) {
+  var el = document.getElementById("missingAssigned");
+  if (!el || !currentUser) return;
+  if (currentUser.role !== "gvcn" && currentUser.role !== "super") return;
+  var normDate = function(d) {
+    if (!d) return "";
+    d = String(d).trim();
+    if (d.indexOf("/") >= 0) {
+      var p = d.split("/");
+      if (p.length === 3) return p[2] + "-" + p[1].padStart(2,"0") + "-" + p[0].padStart(2,"0");
+    }
+    return d.slice(0, 10);
+  };
+  var inWeek = function(e) {
+    var ed = normDate(e.date);
+    if (activeFrom && activeTo && ed && ed >= activeFrom && ed <= activeTo) return true;
+    if (activeWeek && String(e.weekNo) === String(activeWeek)) return true;
+    return false;
+  };
+  var weekEntries = (entries || []).filter(inWeek);
+  var enteredIds = {};
+  weekEntries.forEach(function(e) { enteredIds[String(e.studentId)] = true; });
+
+  var byTeam = { "1": [], "2": [], "3": [], "4": [] };
+  (students || []).forEach(function(s) {
+    var tm = String(s.team || "");
+    if (!byTeam[tm]) byTeam[tm] = [];
+    byTeam[tm].push(s);
+  });
+
+  var html = '<div class="mt-3 p-3 rounded-lg border text-sm" style="border-color:#bae6fd;background:#f0f9ff;color:#0f172a">';
+  html += '<div class="font-bold mb-2" style="color:#0369a1">📊 Leader đã nhập online theo tổ · Tuần ' + (activeWeek || "") + '</div>';
+  ["1","2","3","4"].forEach(function(tm) {
+    var list = byTeam[tm] || [];
+    if (!list.length) return;
+    var done = list.filter(function(s) { return enteredIds[String(s.id)]; });
+    var miss = list.filter(function(s) { return !enteredIds[String(s.id)]; });
+    // Leader phụ trách
+    var leaders = Object.entries(accounts || {}).filter(function(pair) {
+      var a = pair[1];
+      return a && a.role === "leader" && String(a.team) === tm;
+    }).map(function(pair) { return pair[1].name || pair[0]; });
+    html += '<div class="mb-1"><b>Tổ ' + tm + '</b>';
+    if (leaders.length) html += ' · Leader: ' + leaders.join(", ");
+    html += ' — Đã nhập <b style="color:#15803d">' + done.length + '</b>/' + list.length;
+    if (miss.length) {
+      html += ' · Chưa nhập <b style="color:#b91c1c">' + miss.length + '</b>: ';
+      html += miss.map(function(s) { return s.id; }).join(", ");
+    } else {
+      html += ' · <span style="color:#15803d">Đủ</span>';
+    }
+    html += '</div>';
+  });
+  html += '<p class="text-xs mt-1" style="color:#64748b">HS chưa nhập được tính <i>HS ngồi im lặng</i> · điểm tuần 100.</p>';
+  html += '</div>';
+  // append without wiping leader missing if already set
+  var prev = el.innerHTML || "";
+  if (prev.indexOf("Leader đã nhập online") < 0) {
+    el.innerHTML = prev + html;
+  } else {
+    el.innerHTML = html + (prev.indexOf("Báo cáo Leader") >= 0 ? "" : prev);
+  }
+}
+
+
 function renderRecent() {
   const body = document.getElementById("recentBody");
   if (!body) return;
@@ -3439,7 +3546,7 @@ function renderRecent() {
 
   if (!mine.length) {
     // Vẫn dựng TỔNG KẾT im lặng 100 + báo cáo thiếu
-    let html0 = '<tr><td colspan="8" class="py-3 text-center text-slate-500">Chưa có bản ghi nhập tay trong tuần này — HS trống tính Im lặng (100 điểm)</td></tr>';
+    let html0 = '<tr><td colspan="9" class="py-3 text-center text-slate-500">Chưa có bản ghi nhập tay trong tuần này — HS trống tính «HS ngồi im lặng» (100 điểm)</td></tr>';
     let sums0 = [];
     let listHS = students || [];
     if (currentUser && currentUser.role === "leader") {
@@ -3461,8 +3568,8 @@ function renderRecent() {
       if (swR && typeof formatDate === "function") rangeTxt = " · từ " + formatDate(swR.from) + " đến " + formatDate(swR.to);
       html0 += '<tr><td colspan="8" class="py-3 font-bold text-sm" style="color:#0369a1;background:#f0f9ff">TỔNG KẾT · Tuần ' + (activeWeek || "") + rangeTxt + '</td></tr>';
       html0 += '<tr class="text-xs border-b font-bold" style="background:#fef2f2">' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:6%">Tổ</td>' +
-        '<td class="py-2 text-left" style="color:#b91c1c;width:28%">Họ tên HS</td>' +
+        '<td class="py-2 text-center" style="color:#b91c1c;width:4%">Tổ</td>' +
+        '<td class="py-2 text-left" style="color:#b91c1c;width:32%">Họ tên HS</td>' +
         '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số ƯĐ</td>' +
         '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm ƯĐ</td>' +
         '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số VP</td>' +
@@ -3472,7 +3579,7 @@ function renderRecent() {
       sums0.forEach(s => {
         html0 += '<tr class="border-b border-slate-200" style="color:#0f172a">' +
           '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + s.team + '</td>' +
-          '<td class="py-1.5 font-medium" style="font-size:13px">' + s.id + '. ' + s.name + ' <span style="color:#64748b;font-size:11px">(im lặng)</span></td>' +
+          '<td class="py-1.5 font-medium" style="font-size:13px">' + s.name + ' <span style="color:#64748b;font-size:11px">(HS ngồi im lặng)</span></td>' +
           '<td class="py-1.5 text-center" style="color:#15803d">0</td>' +
           '<td class="py-1.5 text-center" style="color:#15803d">0</td>' +
           '<td class="py-1.5 text-center" style="color:#b91c1c">0</td>' +
@@ -3483,6 +3590,7 @@ function renderRecent() {
     }
     body.innerHTML = html0;
     try { renderLeaderMissingReport(activeWeek, activeFrom, activeTo); } catch (e) {}
+    try { renderLeaderEnteredByTeam(activeWeek, activeFrom, activeTo); } catch (e) {}
     try { if (currentUser && currentUser.role === "leader") updateMissingAssigned(); } catch (e) {}
     return;
   }
@@ -3501,14 +3609,21 @@ function renderRecent() {
       ? '<button type="button" class="btn-sua" onclick="editEntry(\'' + e.id + '\')">Sửa</button> '
         + '<button type="button" class="btn-xoa" onclick="deleteEntry(\'' + e.id + '\')">Xóa</button>'
       : "";
-    return '<tr class="border-b border-slate-200"><td class="py-2 px-1 font-mono whitespace-nowrap" style="font-size:12px;color:#0369a1">' + fmtDT(when) + '</td>' +
-      '<td class="py-2 px-2 font-semibold" style="font-size:14px;min-width:12rem;max-width:16rem;color:#0f172a;word-break:break-word">' + e.studentName + '</td>' +
-      '<td class="py-2 px-2" style="font-size:13px;min-width:10rem;max-width:18rem;color:#334155;word-break:break-word">' + (e.contentText || "") + '</td>' +
-      '<td class="text-right py-2 px-1 ' + (e.points > 0 ? "text-green-600" : "text-red-600") + '" style="font-size:13px">' +
-      (e.points > 0 ? "+" : "") + e.points + '</td><td class="text-right py-2 px-1" style="font-size:13px">' + e.times +
-      '</td><td class="text-right py-2 px-1 font-semibold ' + (lineTotal >= 0 ? "text-green-600" : "text-red-600") + '" style="font-size:13px">' +
-      (lineTotal > 0 ? "+" : "") + lineTotal + '</td><td class="px-1" style="font-size:12px;color:#92400e">' + (e.inputByName || e.inputBy || "—") +
-      '</td><td class="text-center whitespace-nowrap px-1">' + actions + '</td></tr>';
+    const dateDisp = e.date ? (typeof formatDate === "function" ? formatDate(String(e.date).slice(0,10)) : String(e.date).slice(0,10)) : "—";
+    const monDisp = (e.subject && e.subject !== "IM LẶNG") ? e.subject : "";
+    const timesDisp = (e.times != null ? e.times : 1);
+    const contentDisp = (e.type === "silent") ? "HS ngồi im lặng" : (e.contentText || "");
+    return '<tr class="border-b border-slate-200">' +
+      '<td class="py-2 px-1 font-mono whitespace-nowrap" style="font-size:11px;color:#0369a1">' + fmtDT(when) + '</td>' +
+      '<td class="py-2 px-2 font-semibold" style="font-size:13px;color:#0f172a;word-break:break-word">' + e.studentName + '</td>' +
+      '<td class="py-2 px-1 text-center whitespace-nowrap" style="font-size:12px;color:#0f172a">' + dateDisp + '</td>' +
+      '<td class="py-2 px-1 text-center" style="font-size:12px;color:#334155">' + (monDisp || "—") + '</td>' +
+      '<td class="py-2 px-1 text-center" style="font-size:12px">' + timesDisp + '</td>' +
+      '<td class="py-2 px-2" style="font-size:12px;color:#334155;word-break:break-word">' + contentDisp + '</td>' +
+      '<td class="text-right py-2 px-1 font-semibold ' + (lineTotal >= 0 ? "text-green-600" : "text-red-600") + '" style="font-size:13px">' +
+      (lineTotal > 0 ? "+" : "") + lineTotal + '</td>' +
+      '<td class="px-1" style="font-size:11px;color:#92400e">' + (e.inputByName || e.inputBy || "—") + '</td>' +
+      '<td class="text-center whitespace-nowrap px-1">' + actions + '</td></tr>';
   }).join("");
 
   const summaryMap = {};
@@ -3576,8 +3691,8 @@ function renderRecent() {
       '<button type="button" onclick="downloadTongKetXlsx()" class="px-2 py-1 rounded text-xs font-bold" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>' +
       '</span></td></tr>';
     html += '<tr class="text-xs border-b font-bold" style="background:#fef2f2">' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:6%">Tổ</td>' +
-      '<td class="py-2 text-left" style="color:#b91c1c;width:28%">Họ tên HS</td>' +
+      '<td class="py-2 text-center" style="color:#b91c1c;width:4%">Tổ</td>' +
+      '<td class="py-2 text-left" style="color:#b91c1c;width:32%">Họ tên HS</td>' +
       '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số ƯĐ</td>' +
       '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm ƯĐ</td>' +
       '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số VP</td>' +
@@ -3607,7 +3722,7 @@ window._tongKetRows = sums.map(function(s) {
       }
       html += '<tr class="border-b border-slate-200" style="color:#0f172a">' +
         '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + s.team + '</td>' +
-        '<td class="py-1.5 font-medium" style="font-size:13px">' + s.id + '. ' + s.name + (s.silentAuto ? ' <span style="color:#64748b;font-size:11px">(im lặng)</span>' : '') + '</td>' +
+        '<td class="py-1.5 font-medium" style="font-size:13px;text-align:left">' + s.name + (s.silentAuto ? ' <span style="color:#64748b;font-size:11px">(HS ngồi im lặng)</span>' : '') + '</td>' +
         '<td class="py-1.5 text-center" style="color:#15803d">' + s.bonusTimes + '</td>' +
         '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + (s.bonus > 0 ? "+" : "") + s.bonus + '</td>' +
         '<td class="py-1.5 text-center" style="color:#b91c1c">' + s.violTimes + '</td>' +
@@ -6887,8 +7002,7 @@ function autoAccId() {
 
 function deleteAccount(id) {
   if (!id) return;
-  if (!confirm("Xóa tài khoản \"" + id + "\"? Thao tác sẽ đồng bộ lên cloud.")) return;
-  // Xóa mọi biến thể hoa/thường
+  if (!confirm("Xóa tài khoản \"" + id + "\"?\nSau khi xóa hãy nhấn «Lưu tài khoản» để ghi lên cloud.")) return;
   var targets = [];
   Object.keys(accounts || {}).forEach(function(k) {
     if (String(k) === String(id) || String(k).toLowerCase() === String(id).toLowerCase()) targets.push(k);
@@ -6902,19 +7016,19 @@ function deleteAccount(id) {
       if (delList.indexOf(low) < 0) delList.push(low);
     });
     localStorage.setItem("qlnn_deleted_accounts", JSON.stringify(delList));
+    localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
   } catch (e) {}
-  try { localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts)); } catch (e) {}
-  renderAccountsTable();
-  // Ép ghi cloud (toàn bộ map accounts, không còn ID đã xóa)
-  pushAllLocalToCloud().then(function(ok) {
-    if (ok) {
-      alert("Đã xóa " + targets.join(", ") + " và đồng bộ cloud.");
-    } else {
-      alert("Đã xóa trên máy. Cloud chưa xác nhận — kiểm tra mạng rồi đăng nhập Admin/GVCN lại để đẩy accounts.");
-    }
-    renderAccountsTable();
-  });
+  window._accountsDirty = true;
+  if (typeof renderAccountsTable === "function") renderAccountsTable();
+  var hint = document.getElementById("accountsSaveHint");
+  if (hint) {
+    hint.classList.remove("hidden");
+    hint.style.color = "#b45309";
+    hint.textContent = "Đã xóa " + targets.join(", ") + " trên máy — nhấn «Lưu tài khoản» để đồng bộ cloud.";
+  }
 }
+
+
 function exportAccountsExcel() {
   const rows = [["ID", "Họ tên", "Vai trò", "Tổ", "Mật khẩu", "Điện thoại"]];
   Object.entries(classAccounts()).forEach(([id, a]) => rows.push([id, a.name, a.role, a.team || "", a.pass, a.phone || ""]));
