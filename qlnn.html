@@ -866,7 +866,16 @@ table.w-full.text-sm { font-size: 13px; }
 <section id="tab-input" class="tab-content hidden">
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-6">
 <h2 class="text-xl font-bold text-yellow-400 mb-4">📝 Nhập thi đua học sinh</h2>
-
+<div class="mb-4 text-sm leading-relaxed" style="color:#0f172a;text-align:left;padding-left:0;margin-left:0;border-left:4px solid #0ea5e9;padding:10px 12px;background:#f0f9ff;border-radius:8px">
+<div class="font-bold mb-1" style="color:#0369a1">Hướng dẫn nhập nhanh</div>
+<ul class="list-disc ml-5 space-y-1" style="color:#0f172a">
+<li><b>HS không có</b> nội dung Ưu điểm / Vi phạm → <b>không cần nhập</b> (hệ thống hiểu «HS ngồi im lặng», điểm tuần 100).</li>
+<li><b>HS Vắng</b> (có phép / không phép), <b>đi học trễ</b>, <b>không mặc áo đoàn thanh niên</b> → <b>không chọn Môn</b>.</li>
+<li><b>Ưu điểm cùng môn cùng ngày</b> → chọn <b>tổng số lần</b> rồi Lưu (một dòng).</li>
+<li><b>Các trường hợp khác</b> → chọn đủ: <b>Ngày, Môn, Tổ, Họ tên HS, Nội dung, Số lần</b> → <b>Lưu</b>.</li>
+<li>Kiểm tra <b>Bản ghi gần đây</b> — sai thì bấm <b>Sửa</b> → chỉnh → <b>Lưu</b>.</li>
+</ul>
+</div>
 <!-- HÀNG 1: OCR / UPLOAD / MẪU -->
 <div id="inputToolsRow" class="mb-4 p-4 bg-slate-900/70 rounded-xl border border-slate-600 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
 <div>
@@ -5079,18 +5088,7 @@ function renderSoKetTo(list) {
     });
   });
 
-  if (teamRankList.length > 1) {
-    html += '<div class="mt-3 p-3 rounded-lg border" style="border-color:#fcd34d;background:#fffbeb">';
-    html += '<div class="font-bold mb-2" style="color:#92400e">XẾP VỊ THỨ LỚP THEO TỔ</div>';
-    html += '<table class="text-sm" style="border-collapse:collapse"><thead><tr style="background:#fef3c7">';
-    html += '<th class="border px-3 py-1">Tổ</th><th class="border px-3 py-1">Tổng điểm tổ</th><th class="border px-3 py-1">Vị thứ lớp</th></tr></thead><tbody>';
-    teamRankList.forEach(function(it) {
-      html += '<tr><td class="border px-3 py-1 text-center font-bold">Tổ ' + it.team + '</td>';
-      html += '<td class="border px-3 py-1 text-center" style="color:#a16207">' + it.total + '</td>';
-      html += '<td class="border px-3 py-1 text-center font-bold" style="color:#9f1239">' + teamClassRank[it.team] + '</td></tr>';
-    });
-    html += '</tbody></table></div>';
-  }
+  /* XẾP VỊ THỨ LỚP THEO TỔ đã bỏ */
   if (!teams.length) html += '<p class="text-sm text-slate-500">Chưa có danh sách học sinh.</p>';
   html += '</div>';
   box.innerHTML = html;
@@ -5393,58 +5391,109 @@ function renderWeekMonthBoards(list, agg) {
     let html = headHtml;
     html += '<div class="week-board mb-3 compact-class">';
     html += '<div class="text-center mb-1"><b style="color:#0c4a6e">CẢ NĂM · Tuần hiện tại ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS</b></div>';
-    const rowYw = pool.map(function(s) {
-      const we = list.filter(e => String(e.studentId) === String(s.id) && (
-        String(e.weekNo) === String(weekNo) || (wmeta && e.date >= wmeta.from && e.date <= wmeta.to)
-      ));
-      let b = 0, v = 0;
-      we.forEach(function(e) {
+    // Bảng tuần hiện tại: ID | Tổ | Họ tên | Ngày | Môn | Số lần | Nội dung | VP tuần trước
+    // Sắp theo danh sách lớp (ID tăng dần)
+    var poolSorted = pool.slice().sort(function(a, b) {
+      return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+    });
+    function weekEntriesOf(sid) {
+      return list.filter(function(e) {
+        if (String(e.studentId) !== String(sid)) return false;
+        if (String(e.weekNo) === String(weekNo)) return true;
+        if (wmeta && e.date && String(e.date).slice(0,10) >= wmeta.from && String(e.date).slice(0,10) <= wmeta.to) return true;
+        return false;
+      });
+    }
+    function priorViolTimes(sid) {
+      // Tổng số lần VP các tuần trước tuần hiện tại
+      var n = 0;
+      list.forEach(function(e) {
+        if (String(e.studentId) !== String(sid)) return;
+        if (e.type !== "violation") return;
+        var wn = e.weekNo != null ? Number(e.weekNo) : null;
+        if (wn != null && !isNaN(wn) && wn < Number(weekNo)) {
+          n += (e.times || 1);
+          return;
+        }
+        if (wmeta && e.date && String(e.date).slice(0,10) < wmeta.from) {
+          n += (e.times || 1);
+        }
+      });
+      return n;
+    }
+    function contentPlain(e) {
+      if (e.type === "silent") return "HS ngồi im lặng";
+      var text = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "");
+      text = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || text;
+      text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+/g, "").trim();
+      return text;
+    }
+    function datePlain(e) {
+      if (!e.date) return "—";
+      return typeof formatDate === "function" ? formatDate(String(e.date).slice(0,10)) : String(e.date).slice(0,10);
+    }
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
+    html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
+    html += '<th class="py-2 text-center" style="width:7%">ID</th>';
+    html += '<th class="py-2 text-center" style="width:5%">Tổ</th>';
+    html += '<th class="py-2 text-left" style="width:18%">Họ tên HS</th>';
+    html += '<th class="py-2 text-center" style="width:9%">Ngày</th>';
+    html += '<th class="py-2 text-center" style="width:10%">Môn</th>';
+    html += '<th class="py-2 text-center" style="width:6%">Số lần</th>';
+    html += '<th class="py-2 text-left" style="width:30%">Nội dung (ƯĐ/ VP)</th>';
+    html += '<th class="py-2 text-center" style="width:10%">VP tuần trước</th>';
+    html += '</tr></thead><tbody>';
+    var scoredYw = [];
+    var scoreMapY = {};
+    poolSorted.forEach(function(s) {
+      var we = weekEntriesOf(s.id).filter(function(e) { return e.type !== "silent"; });
+      var prior = priorViolTimes(s.id);
+      // điểm tuần
+      var b = 0, v = 0;
+      weekEntriesOf(s.id).forEach(function(e) {
         if (e.type === "silent") return;
-        const tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+        var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
         if (e.type === "bonus" || tt > 0) b += Math.abs(tt);
         else if (e.type === "violation") v += (tt > 0 ? -Math.abs(tt) : tt);
         else if (tt > 0) b += tt; else v += tt;
       });
-      const sc = 100 + b + v;
-      return { s: s, plus: b, minus: v, score: sc, team: s.team || "?", rk: rankClass(sc) };
-    });
-    rowYw.sort(function(a, b) {
-      var ta = Number(a.team) || 99, tb = Number(b.team) || 99;
-      if (ta !== tb) return ta - tb;
-      return String(a.s.id).localeCompare(String(b.s.id), "vi", { numeric: true });
-    });
-    var posY = {};
-    [1,2,3,4].forEach(function(tn) {
-      var arr = rowYw.filter(function(r){ return String(r.team) === String(tn); });
-      var m = rankByScoreWithTies(arr, "score");
-      Object.keys(m).forEach(function(k){ posY[k] = m[k]; });
-    });
-    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
-    html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
-    html += '<th class="py-2 text-center" style="width:8%">Tổ</th>';
-    html += '<th class="py-2" style="width:36%;text-align:left">Họ tên HS</th>';
-    html += '<th class="py-2 text-center" style="width:12%">Điểm + (ƯĐ)</th>';
-    html += '<th class="py-2 text-center" style="width:12%">Điểm – (VP)</th>';
-    html += '<th class="py-2 text-center" style="width:12%">Điểm tuần</th>';
-    html += '<th class="py-2 text-center" style="width:12%">Vị thứ tổ</th>';
-    html += '</tr></thead><tbody>';
-    rowYw.forEach(function(r) {
-      html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
-      html += '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + r.team + '</td>';
-      html += '<td class="py-1.5 px-2 font-medium" style="text-align:left">' + r.s.name + '</td>';
-      html += '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + (r.plus ? ("+" + r.plus) : "0") + '</td>';
-      html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + (r.minus || "0") + '</td>';
-      html += '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + r.score + '</td>';
-      html += '<td class="py-1.5 text-center font-bold" style="color:#0369a1">' + (posY[String(r.s.id)] || "—") + '</td></tr>';
+      var sc = 100 + b + v;
+      scoredYw.push({ name: s.name, id: s.id, score: sc, rk: rankClass(sc) });
+      scoreMapY[String(s.id)] = sc;
+      if (!we.length) {
+        html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+        html += '<td class="py-1.5 text-center text-xs">' + s.id + '</td>';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + (s.team || "—") + '</td>';
+        html += '<td class="py-1.5 px-2 font-medium" style="text-align:left">' + s.name + '</td>';
+        html += '<td class="py-1.5 text-center">—</td><td class="py-1.5 text-center">—</td><td class="py-1.5 text-center">—</td>';
+        html += '<td class="py-1.5 px-2" style="text-align:left;color:#64748b;font-style:italic">HS ngồi im lặng</td>';
+        html += '<td class="py-1.5 text-center" style="color:#b91c1c">' + (prior || "0") + '</td></tr>';
+      } else {
+        we.forEach(function(e, li) {
+          var mon = (e.subject && e.subject !== "IM LẶNG" && e.subject !== "NỀ NẾP") ? e.subject : "—";
+          var color = e.type === "bonus" ? "#15803d" : "#b91c1c";
+          html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+          if (li === 0) {
+            html += '<td class="py-1.5 text-center text-xs" rowspan="' + we.length + '">' + s.id + '</td>';
+            html += '<td class="py-1.5 text-center font-bold" style="color:#7e22ce" rowspan="' + we.length + '">' + (s.team || "—") + '</td>';
+            html += '<td class="py-1.5 px-2 font-medium" style="text-align:left" rowspan="' + we.length + '">' + s.name + '</td>';
+          }
+          html += '<td class="py-1.5 text-center text-xs">' + datePlain(e) + '</td>';
+          html += '<td class="py-1.5 text-center text-xs">' + mon + '</td>';
+          html += '<td class="py-1.5 text-center">' + (e.times || 1) + '</td>';
+          html += '<td class="py-1.5 px-2" style="text-align:left;color:' + color + '">' + contentPlain(e) + '</td>';
+          if (li === 0) {
+            html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c" rowspan="' + we.length + '">' + (prior || "0") + '</td>';
+          }
+          html += '</tr>';
+        });
+      }
     });
     html += '</tbody></table></div>';
-    const scoredYw = rowYw.map(function(r){ return { name: r.s.name, id: r.s.id, score: r.score, rk: r.rk }; });
-    const scoreMapY = {};
-    rowYw.forEach(function(r){ scoreMapY[String(r.s.id)] = r.score; });
     html += rankStatsHtml(scoredYw);
     html += violStatsHtml(list.filter(function(e){
       return String(e.weekNo) === String(weekNo) || (wmeta && e.date >= wmeta.from && e.date <= wmeta.to);
-    }), new Set(pool.map(s => String(s.id))), scoreMapY);
+    }), new Set(pool.map(function(s){ return String(s.id); })), scoreMapY);
     html += '</div>';
     // Month current
     const weekNos = weeksForMonth(mon);
