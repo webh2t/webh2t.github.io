@@ -5131,6 +5131,55 @@ function downloadSoKetXlsx() {
 }
 
 
+
+function downloadReportBoardJpg(elId, namePrefix) {
+  var el = document.getElementById(elId);
+  if (!el) { alert("Chưa có bảng để tải"); return; }
+  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
+  html2canvas(el, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
+    var a = document.createElement("a");
+    a.download = (namePrefix || "BaoCao") + ".jpg";
+    a.href = canvas.toDataURL("image/jpeg", 0.92);
+    a.click();
+  }).catch(function(e) { alert("Lỗi JPG: " + (e.message || e)); });
+}
+
+function downloadReportWeekXlsx() {
+  if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
+  var table = document.querySelector("#reportWeekCapture table");
+  if (!table) { alert("Chưa có bảng tuần"); return; }
+  var wb = XLSX.utils.table_to_book(table, { sheet: "Tuan" });
+  XLSX.writeFile(wb, "BaoCao_Tuan_hien_tai.xlsx");
+}
+
+function downloadReportMonthXlsx() {
+  if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
+  var data = window._reportMonthExport;
+  if (!data || !data.rows) { alert("Chưa có dữ liệu tháng"); return; }
+  var aoa = [
+    ["Tháng hiện tại " + data.mon + (data.range ? ": " + data.range : "")],
+    [],
+    ["STT", "Tổ", "Họ tên HS", "Ngày sinh", "GT", "Số lần ƯĐ +", "Số lần VP −", "Điểm tháng", "Vị thứ", "Xếp loại"]
+  ];
+  data.rows.forEach(function(r, idx) {
+    aoa.push([
+      idx + 1,
+      r.s.team || "",
+      r.s.name,
+      r.s.dob || "",
+      r.s.gender || "",
+      r.udTimes,
+      r.vpTimes,
+      r.score,
+      r.pos,
+      (r.rk && r.rk.label) || ""
+    ]);
+  });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "Thang");
+  XLSX.writeFile(wb, "BaoCao_Thang" + data.mon + ".xlsx");
+}
+
 function renderWeekMonthBoards(list, agg) {
   const box = document.getElementById("reportWeekBoard");
   if (!box) return;
@@ -5390,8 +5439,14 @@ function renderWeekMonthBoards(list, agg) {
     const toY = wmeta ? formatDate(wmeta.to) : "";
     let html = headHtml;
     html += '<div class="week-board mb-3 compact-class">';
-    html += '<div class="text-center mb-1"><b style="color:#0c4a6e">CẢ NĂM · Tuần hiện tại ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS</b></div>';
-    // Bảng tuần hiện tại: ID | Tổ | Họ tên | Ngày | Môn | Số lần | Nội dung | VP tuần trước
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">Tuần hiện tại ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS</b></div>';
+    html += '<div class="no-print flex gap-2">';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportWeekCapture\',\'Tuan' + weekNo + '\')">📷 Tải ảnh .jpg</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportWeekXlsx()">📊 Tải .xlsx</button>';
+    html += '</div></div>';
+    html += '<div id="reportWeekCapture">';
+// Bảng tuần hiện tại: ID | Tổ | Họ tên | Ngày | Môn | Số lần | Nội dung | VP tuần trước
     // Sắp theo danh sách lớp (ID tăng dần)
     var poolSorted = pool.slice().sort(function(a, b) {
       return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
@@ -5494,32 +5549,91 @@ function renderWeekMonthBoards(list, agg) {
     html += violStatsHtml(list.filter(function(e){
       return String(e.weekNo) === String(weekNo) || (wmeta && e.date >= wmeta.from && e.date <= wmeta.to);
     }), new Set(pool.map(function(s){ return String(s.id); })), scoreMapY);
-    html += '</div>';
+    html += '</div></div>';
     // Month current
     const weekNos = weeksForMonth(mon);
     const nWm = weekNos.length || 1;
     const mRangeY = monthDateRange(mon);
     html += '<div class="week-board mb-3 compact-class">';
-    html += '<div class="text-center mb-1"><b style="color:#0c4a6e">Tháng hiện tại ' + mon + (mRangeY ? ': ' + mRangeY : '') + ' · Tuần ' + weekNos.join("-") + '</b></div>';
-    html += '<div class="overflow-x-auto"><table><thead><tr><th>STT</th><th class="name-col">Họ tên</th><th>Ngày sinh</th><th>GT</th><th>Tổ</th><th>Tổng tháng</th><th>Xếp loại</th></tr></thead><tbody>';
-    const scoredYm = [];
-    pool.forEach((s, idx) => {
-      let sum = 0;
-      weekNos.forEach(wn => {
-        const wm = SCHOOL_WEEKS.find(x => String(x.w) === String(wn));
-        const we = list.filter(e => String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to)));
-        let b = 0, v = 0;
-        we.forEach(e => { const tt = e.total != null ? e.total : e.points * e.times; if (tt > 0) b += tt; else v += tt; });
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">Tháng hiện tại ' + mon + (mRangeY ? ': ' + mRangeY : '') + '</b></div>';
+    html += '<div class="no-print flex gap-2">';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportMonthCapture\',\'Thang' + mon + '\')">📷 Tải ảnh .jpg</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportMonthXlsx()">📊 Tải .xlsx</button>';
+    html += '</div></div>';
+    html += '<div id="reportMonthCapture">';
+    // Tính điểm tháng + số lần ƯĐ/VP
+    var monthRows = pool.map(function(s) {
+      var sum = 0, udTimes = 0, vpTimes = 0;
+      weekNos.forEach(function(wn) {
+        var wm = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(wn); });
+        var we = list.filter(function(e) {
+          return String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to));
+        });
+        var b = 0, v = 0;
+        we.forEach(function(e) {
+          if (e.type === "silent") return;
+          var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+          var n = e.times || 1;
+          if (e.type === "bonus" || tt > 0) { b += Math.abs(tt); udTimes += n; }
+          else if (e.type === "violation") { v += (tt > 0 ? -Math.abs(tt) : tt); vpTimes += n; }
+          else if (tt > 0) { b += tt; udTimes += n; }
+          else { v += tt; vpTimes += n; }
+        });
         sum += 100 + b + v;
       });
-      const rk = rankClassScaled(sum, nWm);
-      scoredYm.push({ name: s.name, id: s.id, score: sum, rk: rk });
-      html += '<tr><td>' + (idx+1) + '</td><td class="name-col">' + s.name + '</td><td class="text-xs">' + (s.dob||"—") + '</td><td class="text-xs">' + (s.gender||"—") + '</td><td>' + (s.team||"") + '</td><td style="font-weight:800">' + sum + '</td><td class="' + rk.cls + '">' + rk.label + '</td></tr>';
+      var rk = rankClassScaled(sum, nWm);
+      return { s: s, score: sum, udTimes: udTimes, vpTimes: vpTimes, rk: rk };
+    });
+    // Dense rank cả lớp theo điểm tháng (cao → hạng 1)
+    monthRows.sort(function(a, b) { return b.score - a.score; });
+    var rank = 0, prev = null;
+    monthRows.forEach(function(r) {
+      if (prev === null || r.score !== prev) { rank += 1; prev = r.score; }
+      r.pos = rank;
+    });
+    // Sắp xếp tăng dần theo vị thứ
+    monthRows.sort(function(a, b) {
+      if (a.pos !== b.pos) return a.pos - b.pos;
+      return String(a.s.id).localeCompare(String(b.s.id), "vi", { numeric: true });
+    });
+    var topColors = { 1: "#dc2626", 2: "#ea580c", 3: "#ca8a04" }; // đỏ / cam / vàng
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
+    html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
+    html += '<th class="py-2 text-center" style="width:5%">STT</th>';
+    html += '<th class="py-2 text-center" style="width:5%">Tổ</th>';
+    html += '<th class="py-2 text-left" style="width:18%">Họ tên HS</th>';
+    html += '<th class="py-2 text-center" style="width:10%">Ngày sinh</th>';
+    html += '<th class="py-2 text-center" style="width:5%">GT</th>';
+    html += '<th class="py-2 text-center" style="width:9%">Số lần ƯĐ +</th>';
+    html += '<th class="py-2 text-center" style="width:9%">Số lần VP −</th>';
+    html += '<th class="py-2 text-center" style="width:10%">Điểm tháng</th>';
+    html += '<th class="py-2 text-center" style="width:8%">Vị thứ</th>';
+    html += '<th class="py-2 text-center" style="width:14%">Xếp loại</th>';
+    html += '</tr></thead><tbody>';
+    var scoredYm = [];
+    monthRows.forEach(function(r, idx) {
+      scoredYm.push({ name: r.s.name, id: r.s.id, score: r.score, rk: r.rk });
+      var posColor = topColors[r.pos] || "#0f172a";
+      var star = r.pos === 1 ? " ★★★" : (r.pos === 2 ? " ★★" : (r.pos === 3 ? " ★" : ""));
+      html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+      html += '<td class="py-1.5 text-center">' + (idx + 1) + '</td>';
+      html += '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + (r.s.team || "—") + '</td>';
+      html += '<td class="py-1.5 px-2 font-medium" style="text-align:left">' + r.s.name + '</td>';
+      html += '<td class="py-1.5 text-center text-xs">' + (r.s.dob || "—") + '</td>';
+      html += '<td class="py-1.5 text-center text-xs">' + (r.s.gender || "—") + '</td>';
+      html += '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + r.udTimes + '</td>';
+      html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + r.vpTimes + '</td>';
+      html += '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + r.score + '</td>';
+      html += '<td class="py-1.5 text-center font-extrabold" style="color:' + posColor + '">' + r.pos + star + '</td>';
+      html += '<td class="py-1.5 text-center font-bold ' + r.rk.cls + '">' + r.rk.label + (r.rk.stars ? " " + r.rk.stars : "") + '</td>';
+      html += '</tr>';
     });
     html += '</tbody></table></div>';
+    window._reportMonthExport = { mon: mon, range: mRangeY || "", rows: monthRows };
     html += rankStatsHtml(scoredYm);
-    html += violStatsHtml(list, new Set(pool.map(s => String(s.id))));
-    html += '</div>';
+    html += violStatsHtml(list, new Set(pool.map(function(s){ return String(s.id); })));
+    html += '</div></div>';
     // HK current
     const months = hk === "hk1" ? [9,10,11,12] : [1,2,3,4];
     let allW = [];
