@@ -3,1025 +3,2301 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Xếp chỗ ngồi lớp học tự động</title>
+<title>CLASSROOM — Sơ đồ lớp học thông minh</title>
 <style>
-:root{
-  --blue:#1557b0; --blue2:#0b3d91; --navy:#123d78; --red:#c0392b;
-  --ink:#18324b; --paper:#fffdf7;
-  --seat-border:#7eb6e8;
-  --to1:#2563eb; --to2:#0d9488; --to3:#db2777; --to4:#b45309;
+:root {
+  --primary: #1e3a5f;
+  --primary-mid: #2563eb;
+  --primary-light: #3b82f6;
+  --bg: #f1f5f9;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #0f172a;
+  --muted: #64748b;
+  --success: #059669;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --radius: 12px;
+  --shadow: 0 1px 3px rgba(15,23,42,.08), 0 4px 12px rgba(15,23,42,.04);
+  --font: Inter, "Segoe UI", Roboto, system-ui, -apple-system, Arial, sans-serif;
+  --to1: #2563eb; --to2: #0d9488; --to3: #db2777; --to4: #b45309;
 }
-*{box-sizing:border-box}
-html{-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
-body{
-  margin:0;font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  color:var(--ink);
-  background:linear-gradient(135deg,#edf5ff,#f9fbff 55%,#eef8f4);
+* { box-sizing: border-box; }
+html { -webkit-font-smoothing: antialiased; }
+body {
+  margin: 0; font-family: var(--font); color: var(--text); background: var(--bg);
+  min-height: 100vh;
 }
-.header{
-  padding:24px 20px 14px;text-align:center;color:white;
-  background:linear-gradient(135deg,var(--blue2),#1685d5);
-  box-shadow:0 4px 18px #15365a30;
-}
-.header h1{margin:0;font-size:clamp(25px,4vw,40px);letter-spacing:.3px;font-weight:800;line-height:1.3}
-.copyright-top{margin-top:12px;font-size:12px;font-weight:800;letter-spacing:.6px;opacity:.85}
-.home-btn{
-  position:fixed;top:16px;left:16px;width:60px;height:60px;border-radius:50%;
-  background:linear-gradient(135deg,#ffd54a,#f0a500);color:#5b3a00;
-  display:flex;align-items:center;justify-content:center;font-size:28px;
-  box-shadow:0 6px 18px #00000040;text-decoration:none;z-index:999;
-  border:3px solid #fff;transition:transform .15s;
-}
-.home-btn:hover{transform:scale(1.08)}
-.wrap{max-width:1680px;margin:22px auto;padding:0 16px}
-.panel{background:#fff;border:1px solid #dce7f4;border-radius:18px;box-shadow:0 10px 30px #204a7314;margin-bottom:20px}
-.control-panel{padding:20px}
-.panel-title{padding:16px 20px 4px;font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px;line-height:1.4}
-.panel-sub{padding:0 20px 12px;font-size:13px;color:#66788a}
-.form-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:end}
-.field label{display:block;font-weight:800;font-size:14px;margin:0 0 7px;line-height:1.4}
-.field input,.field select,.field textarea{
-  width:100%;border:2px solid #d7e1ee;border-radius:11px;padding:12px 13px;
-  font-size:16px;outline:none;background:#fbfdff;transition:.2s;font-family:inherit;
-}
-.field input:focus,.field textarea:focus{border-color:#4c8ed8;box-shadow:0 0 0 4px #4c8ed820}
-.name-area{grid-column:1/-1}
-.name-area textarea{min-height:90px;resize:vertical}
-.hint{font-size:12px;color:#66788a;margin-top:6px;line-height:1.5}
-.quickadd{grid-column:1/-1;display:flex;gap:10px;align-items:center;background:#f4f9ff;border:2px dashed #a9c8ef;border-radius:12px;padding:14px 16px;flex-wrap:wrap}
-.quickadd .qtitle{font-weight:800;font-size:14px;width:100%;line-height:1.45}
-.quickadd input{flex:1 1 260px;border:2px solid #d7e1ee;border-radius:11px;padding:12px 13px;font-size:16px;outline:none;background:#fff;font-family:inherit}
-.progress{font-size:13px;font-weight:700;color:#1251a2;width:100%}
-.fx-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:#3a4a5c;width:100%}
-.fx-toggle input{width:18px;height:18px;accent-color:#1557b0}
-.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;padding:0 20px 20px}
-.actions.inline{padding:0 20px 20px}
-.btn{
-  border:0;border-radius:12px;padding:13px 20px;color:white;font-weight:700;
-  font-size:14.5px;cursor:pointer;box-shadow:0 4px 10px #00000018;
-  transition:transform .15s,filter .15s;letter-spacing:0;line-height:1.6;
-  font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-  white-space:normal;
-}
-.btn:hover{transform:translateY(-1px);filter:brightness(1.04)}
-.btn:active{transform:translateY(1px)}
-.btn-add{background:linear-gradient(135deg,#0aa06b,#087a43)}
-.btn-primary{background:linear-gradient(135deg,#1264cf,#0a4aa2)}
-.btn-random{background:linear-gradient(135deg,#7c3aed,#5b21b6)}
-.btn-save{background:linear-gradient(135deg,#16a05d,#087a43)}
-.btn-jpg{background:linear-gradient(135deg,#ef8d00,#d86f00)}
-.btn-docx{background:linear-gradient(135deg,#2b6cb0,#1a4f8a)}
-.btn-xlsx{background:linear-gradient(135deg,#1a9e5c,#0d6b3d)}
-.btn-reset{background:linear-gradient(135deg,#e74c3c,#b92d22)}
-.btn-team{background:linear-gradient(135deg,#0e9aa8,#0a6d78)}
-.btn-committee{background:linear-gradient(135deg,#8b5cf6,#5b21b6)}
-.status{margin:14px 20px 20px;padding:11px 14px;border-radius:10px;background:#f1f7ff;border-left:5px solid var(--blue);font-size:14px;font-weight:650;line-height:1.5}
-.preview-head{padding:16px 20px;border-bottom:1px solid #e2e8f0;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-.preview-head h2{margin:0;font-size:20px;font-weight:800;line-height:1.4}
-.preview-head .badge{background:#eaf2ff;color:#1251a2;padding:7px 11px;border-radius:999px;font-weight:800}
-#seatPlan{margin:0;padding:16px;background:#f0f7ff;overflow:auto}
+button, input, select, textarea { font-family: inherit; }
 
-/* Two-column */
-.main-two-col{display:grid;grid-template-columns:minmax(340px,420px) 1fr;gap:20px;align-items:start;margin-bottom:20px}
-.main-two-col .control-panel{margin-bottom:0}
-.main-two-col .preview-panel{margin-bottom:0;position:sticky;top:12px}
+/* ===== HEADER ===== */
+.app-header {
+  background: var(--primary); color: #fff; padding: 12px 20px;
+  display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.15);
+}
+.app-brand { display: flex; flex-direction: column; gap: 2px; }
+.app-brand .name { font-size: 18px; font-weight: 800; letter-spacing: .5px; }
+.app-brand .tag { font-size: 12px; opacity: .85; font-weight: 500; }
+.app-meta { font-size: 13px; opacity: .9; text-align: right; line-height: 1.4; }
+.app-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn {
+  border: 0; border-radius: 8px; padding: 8px 14px; font-weight: 600; font-size: 13px;
+  cursor: pointer; transition: background .15s, transform .1s; display: inline-flex; align-items: center; gap: 6px;
+  line-height: 1.3; white-space: nowrap;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn-primary { background: var(--primary-mid); color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-secondary { background: #fff; color: var(--primary); border: 1px solid var(--border); }
+.btn-secondary:hover { background: #f8fafc; }
+.btn-success { background: var(--success); color: #fff; }
+.btn-warning { background: var(--warning); color: #fff; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.35); }
+.btn-ghost:hover { background: rgba(255,255,255,.1); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 8px 10px; }
 
-/* ========== SHEET – theo mẫu So_do_lop_11B9 ========== */
-.sheet{
-  min-width:980px;position:relative;padding:22px 28px 28px;
-  border:4px solid #3b82f6;border-radius:28px;background:#fffef9;
-  box-shadow:0 12px 36px #1e3a5f18;
+/* ===== LAYOUT ===== */
+.app-body {
+  display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: calc(100vh - 64px);
 }
-.deco-heart{position:absolute;font-size:16px;color:#f472b6;opacity:.7;pointer-events:none}
-.dh1{left:90px;top:18px}.dh2{right:200px;top:12px}.dh3{left:40px;bottom:120px}.dh4{right:40px;bottom:90px}
+.sidebar {
+  background: var(--surface); border-right: 1px solid var(--border);
+  padding: 16px; overflow-y: auto; max-height: calc(100vh - 64px);
+}
+.main-panel { padding: 16px; overflow-y: auto; max-height: calc(100vh - 64px); }
+.card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow); margin-bottom: 14px; overflow: hidden;
+}
+.card-hd {
+  padding: 10px 14px; font-weight: 700; font-size: 13px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; gap: 8px; background: #f8fafc;
+  color: var(--primary);
+}
+.card-bd { padding: 12px 14px; }
+.field { margin-bottom: 10px; }
+.field label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 4px; }
+.field input, .field select, .field textarea {
+  width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+  font-size: 14px; outline: none; background: #fff;
+}
+.field input:focus, .field textarea:focus, .field select:focus {
+  border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+.field textarea { min-height: 72px; resize: vertical; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hint { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.tabs { display: flex; gap: 4px; margin-bottom: 12px; flex-wrap: wrap; }
+.tab {
+  padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border); background: #fff;
+  font-size: 12px; font-weight: 600; cursor: pointer; color: var(--muted);
+}
+.tab.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
 
-.sheet-header{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px}
-.sheet-logo{
-  flex:0 0 auto;width:72px;height:72px;border-radius:50%;border:3px solid #60a5fa;
-  display:flex;align-items:center;justify-content:center;font-size:34px;background:#eff6ff;overflow:hidden;
+/* Stats */
+.stats-bar {
+  display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;
 }
-.sheet-logo img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.stat {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  padding: 8px 14px; font-size: 13px; font-weight: 600; color: var(--text);
+}
+.stat span { color: var(--primary-mid); font-weight: 800; }
 
-/* Cloud banner title */
-.sheet-title{
-  flex:1 1 auto;text-align:center;padding:10px 18px 12px;
-  background:linear-gradient(180deg,#e0f2fe 0%,#f0f9ff 40%,#fff 100%);
-  border-radius:40% 40% 30% 30% / 60% 60% 40% 40%;
-  border:2px solid #93c5fd;position:relative;
-  box-shadow:0 4px 0 #bae6fd;
+/* Seat map */
+.sheet-wrap { overflow: auto; background: #e8eef5; border-radius: var(--radius); padding: 12px; }
+.sheet {
+  min-width: 920px; margin: 0 auto; background: #fffef9; border: 3px solid #3b82f6;
+  border-radius: 20px; padding: 18px 22px 22px; position: relative;
 }
-.sheet-title .school{font-size:15px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#1e40af;line-height:1.3}
-.sheet-title .year-line{font-size:13px;font-weight:700;color:#0369a1;margin:2px 0 0}
-.sheet-title .year-line .rays{color:#f59e0b;letter-spacing:2px}
-.sheet-title h1{
-  margin:4px 0 2px;font-weight:900;text-transform:uppercase;
-  font-size:clamp(22px,2.6vw,30px);letter-spacing:.5px;line-height:1.25;
-  background:linear-gradient(90deg,#2563eb,#7c3aed,#db2777,#ea580c);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+.sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sheet-logo {
+  width: 64px; height: 64px; border-radius: 50%; border: 2px solid #60a5fa;
+  display: flex; align-items: center; justify-content: center; font-size: 28px;
+  background: #eff6ff; overflow: hidden; flex-shrink: 0;
 }
-.sheet-title .slogan{font-size:13px;font-weight:700;font-style:italic;color:#0369a1;margin-top:2px}
-.sheet-title .slogan .heart{color:#f472b6}
+.sheet-logo img { width: 100%; height: 100%; object-fit: cover; }
+.sheet-title {
+  flex: 1; text-align: center; padding: 8px 14px;
+  background: linear-gradient(180deg, #e0f2fe, #f8fafc);
+  border-radius: 16px; border: 1px solid #93c5fd;
+}
+.sheet-title .school { font-size: 13px; font-weight: 800; color: #1e40af; text-transform: uppercase; }
+.sheet-title .year { font-size: 12px; font-weight: 600; color: #0369a1; margin: 2px 0; }
+.sheet-title h1 { margin: 2px 0; font-size: 22px; font-weight: 900; color: #1e3a5f; }
+.sheet-title .slogan { font-size: 12px; font-style: italic; color: #0369a1; }
+.gvcn-box {
+  border: 2px solid #f97316; border-radius: 12px; padding: 6px 12px; text-align: center;
+  min-width: 140px; background: #fff7ed; flex-shrink: 0;
+}
+.gvcn-box .lbl { font-size: 10px; font-weight: 800; color: #c2410c; }
+.gvcn-box .nm { font-size: 13px; font-weight: 800; color: #9a3412; }
+.gvcn-box .dt { font-size: 10px; color: #9a3412; font-style: italic; }
 
-.gvcn-box{
-  flex:0 0 auto;border:2.5px solid #f97316;border-radius:16px;padding:8px 14px;
-  text-align:center;min-width:160px;background:#fff7ed;
+.seat-area { display: flex; align-items: stretch; gap: 0; }
+.seat-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
+.desk-row {
+  display: flex; border: 1.5px solid #7eb6e8; border-radius: 10px; overflow: hidden; background: #fff;
 }
-.gvcn-label{font-size:11px;font-weight:800;color:#c2410c}
-.gvcn-name{font-size:14px;font-weight:800;color:#9a3412;margin-top:2px}
-.gvcn-date{font-size:11px;color:#9a3412;margin-top:4px;font-style:italic}
+.desk-cell {
+  flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center;
+  text-align: center; padding: 4px 2px; font-weight: 700; font-size: 11px; text-transform: uppercase;
+  line-height: 1.15; border-right: 1px solid #bfdbfe; word-break: break-word; color: #1e293b;
+  cursor: grab; position: relative; user-select: none;
+}
+.desk-cell:last-child { border-right: 0; }
+.desk-cell.empty { color: #cbd5e1; font-weight: 500; cursor: default; }
+.desk-cell.locked { background: #fef3c7; }
+.desk-cell.locked::after { content: "🔒"; position: absolute; top: 1px; right: 2px; font-size: 9px; }
+.desk-cell.priority { box-shadow: inset 0 0 0 2px #0d9488; }
+.desk-cell.priority:not(.locked) { background: #f0fdfa; }
+.desk-cell.dragging { opacity: .5; }
+.desk-cell.drag-over { outline: 2px dashed var(--primary-mid); background: #dbeafe; }
+.desk-cell.small { font-size: 10px; }
+.desk-cell.tiny { font-size: 8.5px; }
+.to-label-row { display: flex; justify-content: center; padding: 2px 0; }
+.to-badge {
+  font-size: 11px; font-weight: 800; padding: 1px 8px; border: 1.5px solid #64748b;
+  border-radius: 5px; background: #fff; color: #334155;
+}
+.to-badge.to1 { border-color: var(--to1); color: var(--to1); }
+.to-badge.to2 { border-color: var(--to2); color: var(--to2); }
+.to-badge.to3 { border-color: var(--to3); color: var(--to3); }
+.to-badge.to4 { border-color: var(--to4); color: var(--to4); }
+.aisle-col { flex: 0 0 32px; display: flex; align-items: center; justify-content: center; margin: 0 6px; }
+.aisle-label { writing-mode: vertical-rl; font-weight: 800; font-size: 11px; color: #64748b; letter-spacing: 2px; }
 
-/* Seat grid – soft rounded blocks like sample */
-.seat-area{display:flex;align-items:stretch;gap:0;position:relative}
-.seat-col{flex:1 1 0;display:flex;flex-direction:column;gap:8px}
-.desk-row{
-  display:flex;border:2px solid var(--seat-border);border-radius:12px;
-  overflow:hidden;background:#fff;box-shadow:0 1px 3px #0001;
+.room-footer {
+  display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;
+  margin-top: 16px; flex-wrap: wrap; padding: 0 4px;
 }
-.desk-cell{
-  flex:1 1 0;min-height:48px;display:flex;align-items:center;justify-content:center;text-align:center;
-  padding:5px 3px;font-weight:800;font-size:12px;text-transform:uppercase;line-height:1.2;
-  border-right:1.5px solid #bfdbfe;word-break:break-word;color:#1e293b;
-}
-.desk-cell:last-child{border-right:0}
-.desk-cell.empty{color:#cbd5e1;font-weight:600}
-.desk-cell.small{font-size:10.5px}
-.desk-cell.tiny{font-size:9px}
+.rf-item { text-align: center; font-size: 12px; font-weight: 700; color: #1e40af; }
+.rf-board { background: #1e293b; color: #fff; font-weight: 900; letter-spacing: 2px; padding: 12px 28px; border-radius: 6px; font-size: 13px; }
+.sheet-tagline { text-align: center; margin-top: 12px; font-style: italic; font-weight: 600; color: #be185d; font-size: 12px; }
 
-/* Tổ label rows */
-.to-label-row{
-  display:flex;justify-content:center;align-items:center;padding:2px 0;min-height:22px;
-}
-.to-badge{
-  display:inline-block;font-size:12px;font-weight:800;padding:2px 10px;
-  border:2px solid #64748b;border-radius:6px;background:#fff;color:#334155;
-  letter-spacing:.5px;
-}
-.to-badge.to1{border-color:var(--to1);color:var(--to1)}
-.to-badge.to2{border-color:var(--to2);color:var(--to2)}
-.to-badge.to3{border-color:var(--to3);color:var(--to3)}
-.to-badge.to4{border-color:var(--to4);color:var(--to4)}
+/* Student table */
+.stu-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.stu-table th, .stu-table td { border: 1px solid var(--border); padding: 5px 6px; text-align: left; }
+.stu-table th { background: #f1f5f9; font-weight: 700; position: sticky; top: 0; }
+.stu-table tr:hover { background: #f8fafc; }
+.stu-table input, .stu-table select { width: 100%; border: 1px solid transparent; background: transparent; padding: 2px 4px; font-size: 12px; }
+.stu-table input:focus, .stu-table select:focus { border-color: var(--primary-light); background: #fff; outline: none; }
+.table-scroll { max-height: 280px; overflow: auto; border: 1px solid var(--border); border-radius: 8px; }
 
-.aisle-col{
-  flex:0 0 36px;display:flex;align-items:center;justify-content:center;margin:0 8px;
-}
-.aisle-label{
-  writing-mode:vertical-rl;font-weight:800;font-size:12px;color:#64748b;
-  letter-spacing:3px;text-orientation:mixed;
-}
-
-/* Footer room elements */
-.room-footer{
-  display:flex;justify-content:space-between;align-items:flex-end;gap:12px;
-  margin-top:22px;flex-wrap:wrap;padding:0 8px;
-}
-.rf-item{display:flex;flex-direction:column;align-items:center;gap:2px}
-.rf-door-illus{
-  width:90px;height:70px;background:linear-gradient(180deg,#f0f9ff,#e0f2fe);
-  border-radius:10px;display:flex;align-items:center;justify-content:center;gap:4px;
-  border:1.5px solid #bae6fd;position:relative;
-}
-.rf-door-illus .arrow{font-size:18px;color:#3b82f6;font-weight:800}
-.rf-door-illus .door{font-size:32px}
-.rf-door-illus .plant{font-size:18px}
-.rf-label{font-weight:800;font-size:12px;color:#1e40af;letter-spacing:.5px;margin-top:4px}
-.rf-board{
-  background:#1e293b;color:#fff;font-weight:900;letter-spacing:3px;font-size:15px;
-  padding:16px 36px;border-radius:8px;border:4px solid #334155;
-}
-.rf-desk-illus{
-  width:110px;height:70px;background:linear-gradient(180deg,#fef3c7,#fde68a);
-  border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  border:1.5px solid #fbbf24;position:relative;
-}
-.rf-desk-illus .desk-top{font-size:28px}
-.rf-desk-illus .desk-label{
-  font-size:10px;font-weight:800;color:#92400e;background:#fef3c7;
-  padding:2px 8px;border-radius:4px;border:1px solid #f59e0b;margin-top:-4px;
-}
-
-.sheet-tagline{
-  text-align:center;margin-top:16px;font-style:italic;font-weight:700;
-  color:#be185d;font-size:13px;letter-spacing:.2px;
+/* Groups / committee cards */
+.grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.to-card { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; background: #f8fafc; }
+.to-card h3 { margin: 0 0 6px; font-size: 14px; }
+.to-role { font-size: 12px; margin: 3px 0; line-height: 1.4; }
+.to-members { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+.disclaimer {
+  background: #fffbeb; border: 1px solid #fcd34d; border-radius: 8px; padding: 8px 12px;
+  font-size: 12px; color: #92400e; margin-bottom: 10px; line-height: 1.4;
 }
 
-.toast{position:fixed;right:18px;bottom:18px;background:#17324d;color:#fff;padding:13px 16px;border-radius:12px;box-shadow:0 8px 30px #0004;opacity:0;transform:translateY(10px);pointer-events:none;transition:.25s;z-index:10;font-weight:700;line-height:1.4}
-.toast.show{opacity:1;transform:translateY(0)}
-.site-footer{text-align:center;padding:20px 12px 26px;color:#5b6b7d;font-size:13px;font-weight:800;letter-spacing:.5px;line-height:1.4}
-
-.to-panel-body{padding:0 20px 20px}
-.to-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;background:#fff;padding:6px}
-.to-card{border-radius:12px;padding:14px 16px;border:2px solid #ddd;background:#f8fafc}
-.to-card h3{margin:0 0 8px;font-size:16px;line-height:1.3}
-.to-count{font-weight:600;font-size:12px;color:#596777}
-.to-role{font-size:13px;margin:4px 0;line-height:1.5}
-.to-members{font-size:12.5px;margin-top:6px;color:#3a4a5c;line-height:1.5}
-
-.committee-panel-body{padding:0 20px 20px}
-.org-tree,.org-tree ul,.org-tree li{margin:0;padding:0;list-style:none}
-.org-tree{text-align:center;padding:20px 10px;background:#fff;border-radius:12px}
-.org-tree,.org-tree ul{display:table;width:100%}
-.org-tree ul{margin:0 auto}
-.org-tree li{display:table-cell;text-align:center;vertical-align:top;padding:20px 8px 0 8px;position:relative}
-.org-tree li::before,.org-tree li::after{content:'';position:absolute;top:0;right:50%;border-top:2px solid #9db6dd;width:50%;height:20px}
-.org-tree li::after{right:auto;left:50%;border-left:2px solid #9db6dd}
-.org-tree li:only-child::after,.org-tree li:only-child::before{display:none}
-.org-tree li:only-child{padding-top:0}
-.org-tree li:first-child::before,.org-tree li:last-child::after{border:0 none}
-.org-tree li:last-child::before{border-right:2px solid #9db6dd;border-radius:0 5px 0 0}
-.org-tree li:first-child::after{border-radius:5px 0 0 0}
-.org-tree ul::before{content:'';position:absolute;top:0;left:50%;border-left:2px solid #9db6dd;width:0;height:20px}
-.org-tree > li{padding-top:0}
-.org-tree > li::before,.org-tree > li::after{display:none}
-.org-node{border:2px solid #123d78;border-radius:10px;padding:10px 12px;display:inline-block;background:#fff;font-weight:700;font-size:12.5px;min-width:130px;box-shadow:0 2px 6px #0002;line-height:1.5}
-.org-root{background:#123d78;color:#fff;border-color:#0b3d91;font-size:14px}
-.org-doan{background:#fff3e0;border-color:#d86f00}
-
-.fx-overlay{position:fixed;inset:0;background:#0b2340cc;display:none;align-items:center;justify-content:center;z-index:1000;padding:20px}
-.fx-overlay.show{display:flex}
-.fx-card{--accent:#1557b0;background:#fff;border-radius:20px;padding:32px 30px;max-width:420px;width:100%;text-align:center;box-shadow:0 20px 60px #0006;border:4px solid var(--accent)}
-.fx-icon-anim{font-size:54px;display:inline-block;animation:fxPulse 1s ease-in-out infinite}
-@keyframes fxPulse{0%,100%{transform:scale(1) rotate(-6deg)}50%{transform:scale(1.12) rotate(6deg)}}
-.fx-title{font-weight:800;font-size:17px;margin-top:10px;color:var(--accent);line-height:1.4}
-.fx-subtitle{font-size:14px;margin-top:4px;color:#3a4a5c;line-height:1.5}
-.fx-ring-wrap{position:relative;width:120px;height:120px;margin:18px auto 8px}
-.fx-ring{width:120px;height:120px;transform:rotate(-90deg)}
-.fx-ring-bg{fill:none;stroke:#e5eaf1;stroke-width:8}
-.fx-ring-fg{fill:none;stroke:var(--accent);stroke-width:8;stroke-linecap:round;transition:stroke-dashoffset 1s linear}
-.fx-ring-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:var(--accent)}
-.fx-cycle{margin-top:8px;font-weight:800;font-size:15px;color:#123d78;min-height:20px}
-.fx-skip{margin-top:18px}
-.fx-result-card{max-width:700px}
-.fx-result-body{max-height:62vh;overflow:auto;padding:10px 4px;margin-top:6px}
-
-.logo-upload-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.logo-preview-mini{width:48px;height:48px;border-radius:50%;border:2px solid #60a5fa;overflow:hidden;display:flex;align-items:center;justify-content:center;background:#eff6ff;font-size:20px;flex-shrink:0}
-.logo-preview-mini img{width:100%;height:100%;object-fit:cover}
-.logo-hint{font-size:12px;color:#66788a;margin-top:4px}
-
-@media(max-width:1100px){
-  .main-two-col{grid-template-columns:1fr}
-  .main-two-col .preview-panel{position:static}
-  .form-grid{grid-template-columns:1fr 1fr}
-  .to-grid{grid-template-columns:1fr 1fr}
-  .sheet-header{flex-direction:column;align-items:center;text-align:center}
+/* Org tree */
+.org-tree, .org-tree ul, .org-tree li { margin: 0; padding: 0; list-style: none; }
+.org-tree { text-align: center; padding: 12px; }
+.org-tree, .org-tree ul { display: table; width: 100%; }
+.org-tree ul { margin: 0 auto; }
+.org-tree li { display: table-cell; text-align: center; vertical-align: top; padding: 16px 6px 0; position: relative; }
+.org-tree li::before, .org-tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #94a3b8; width: 50%; height: 16px; }
+.org-tree li::after { right: auto; left: 50%; border-left: 2px solid #94a3b8; }
+.org-tree li:only-child::after, .org-tree li:only-child::before { display: none; }
+.org-tree li:only-child { padding-top: 0; }
+.org-tree li:first-child::before, .org-tree li:last-child::after { border: 0 none; }
+.org-tree li:last-child::before { border-right: 2px solid #94a3b8; border-radius: 0 4px 0 0; }
+.org-tree li:first-child::after { border-radius: 4px 0 0 0; }
+.org-tree ul::before { content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #94a3b8; width: 0; height: 16px; }
+.org-tree > li { padding-top: 0; }
+.org-tree > li::before, .org-tree > li::after { display: none; }
+.org-node {
+  border: 1.5px solid var(--primary); border-radius: 8px; padding: 8px 10px; display: inline-block;
+  background: #fff; font-weight: 600; font-size: 12px; min-width: 110px; line-height: 1.4;
 }
-@media(max-width:600px){
-  .form-grid{grid-template-columns:1fr}
-  .btn{width:100%}
-  .control-panel{padding:14px}
-  #seatPlan{padding:10px}
-  .to-grid{grid-template-columns:1fr}
-  .seat-area{flex-direction:column}
-  .aisle-col{flex-direction:row;width:100%;height:22px;margin:6px 0}
-  .aisle-label{writing-mode:horizontal-tb}
+.org-root { background: var(--primary); color: #fff; border-color: var(--primary); }
+.org-doan { background: #fff7ed; border-color: #ea580c; }
+
+/* Modal / toast / overlay */
+.toast {
+  position: fixed; right: 16px; bottom: 16px; background: #1e293b; color: #fff;
+  padding: 12px 16px; border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,.2);
+  opacity: 0; transform: translateY(8px); pointer-events: none; transition: .2s; z-index: 2000;
+  font-weight: 600; font-size: 13px; max-width: 360px; line-height: 1.4;
 }
-@media print{
-  body{background:white}
-  .header,.control-panel,.preview-head,.site-footer,.home-btn,.main-two-col > .panel:first-child{display:none!important}
-  .wrap{margin:0;padding:0;max-width:none}
-  .panel{box-shadow:none;border:0}
-  #seatPlan{padding:0}
-  .sheet{min-width:0}
-  .main-two-col{display:block}
+.toast.show { opacity: 1; transform: translateY(0); }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none;
+  align-items: center; justify-content: center; z-index: 1500; padding: 16px;
+}
+.modal-overlay.show { display: flex; }
+.modal {
+  background: #fff; border-radius: 14px; max-width: 520px; width: 100%;
+  box-shadow: 0 20px 50px rgba(0,0,0,.25); overflow: hidden;
+}
+.modal-hd { padding: 14px 18px; font-weight: 800; border-bottom: 1px solid var(--border); font-size: 15px; }
+.modal-bd { padding: 16px 18px; font-size: 14px; line-height: 1.5; max-height: 60vh; overflow: auto; }
+.modal-ft { padding: 12px 18px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; }
+.fx-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,.7); display: none;
+  align-items: center; justify-content: center; z-index: 1600; padding: 20px;
+}
+.fx-overlay.show { display: flex; }
+.fx-card {
+  background: #fff; border-radius: 16px; padding: 28px; max-width: 400px; width: 100%;
+  text-align: center; border: 3px solid var(--primary-mid);
+}
+.fx-title { font-weight: 800; font-size: 16px; color: var(--primary-mid); margin-top: 8px; }
+.fx-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+.fx-num { font-size: 36px; font-weight: 900; color: var(--primary); margin: 12px 0; }
+.criteria-list { display: flex; flex-direction: column; gap: 6px; font-size: 13px; }
+.criteria-list label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 500; }
+.bottom-tabs {
+  display: flex; gap: 6px; margin: 16px 0 10px; flex-wrap: wrap;
+}
+.plan-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.plan-chip {
+  padding: 4px 10px; border-radius: 999px; border: 1px solid var(--border);
+  font-size: 12px; font-weight: 600; cursor: pointer; background: #fff;
+}
+.plan-chip.active { background: var(--primary-mid); color: #fff; border-color: var(--primary-mid); }
+
+/* Presentation */
+body.present .sidebar, body.present .app-header .app-actions .hide-present,
+body.present .bottom-section { display: none !important; }
+body.present .app-body { grid-template-columns: 1fr; }
+body.present .main-panel { max-height: 100vh; }
+body.present .sheet { transform: scale(1.05); }
+
+@media (max-width: 1024px) {
+  .app-body { grid-template-columns: 1fr; }
+  .sidebar { max-height: none; border-right: 0; border-bottom: 1px solid var(--border); }
+  .main-panel { max-height: none; }
+  .grid4 { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 600px) {
+  .grid4, .grid2, .row2 { grid-template-columns: 1fr; }
+  .seat-area { flex-direction: column; }
+  .aisle-col { width: 100%; height: 20px; margin: 4px 0; }
+  .aisle-label { writing-mode: horizontal-tb; }
+}
+@media print {
+  .app-header, .sidebar, .bottom-section, .stats-bar, .toast, .btn { display: none !important; }
+  .app-body { display: block; }
+  .sheet { border: 2px solid #333; box-shadow: none; }
 }
 </style>
 </head>
 <body>
-<a href="https://webh2t.github.io/" target="_blank" rel="noopener" class="home-btn" title="Về trang chủ WebH2T">🏠</a>
-<header class="header">
-  <h1>📚 XẾP CHỖ NGỒI LỚP HỌC TỰ ĐỘNG</h1>
-  <div class="copyright-top">© BẢN QUYỀN SẢN PHẨM @WEBH2T</div>
+<header class="app-header">
+  <div class="app-brand" style="display:flex;align-items:center;gap:14px">
+    <a href="https://webh2t.github.io/" target="_blank" rel="noopener" title="Về trang chủ WebH2T" class="home-link"
+       style="width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,#ffd54a,#f0a500);color:#5b3a00;display:flex;align-items:center;justify-content:center;text-decoration:none;font-size:20px;border:2px solid rgba(255,255,255,.9);flex-shrink:0;box-shadow:0 2px 8px rgba(0,0,0,.2)">🏠</a>
+    <div style="line-height:1.25">
+      <a href="https://webh2t.github.io/" target="_blank" rel="noopener" class="name" style="color:#fff;text-decoration:none;font-size:18px;font-weight:800;letter-spacing:.5px">CLASSROOM</a>
+      <div class="tag" style="margin-top:2px">Sơ đồ lớp học thông minh · Công cụ hỗ trợ giáo viên THPT</div>
+    </div>
+  </div>
+  <div class="app-meta" id="headerMeta">— · — · Năm học —</div>
+  <div class="app-actions">
+    <button class="btn btn-ghost btn-sm hide-present" onclick="undoAction()" title="Hoàn tác">↶ Hoàn tác</button>
+    <button class="btn btn-ghost btn-sm hide-present" onclick="redoAction()" title="Làm lại">↷ Làm lại</button>
+    <button class="btn btn-ghost btn-sm" onclick="savePlan()">Lưu</button>
+    <button class="btn btn-ghost btn-sm hide-present" onclick="togglePresent()">Trình chiếu</button>
+    <button class="btn btn-ghost btn-sm hide-present" onclick="openSettings()">Cài đặt</button>
+  </div>
 </header>
 
-<main class="wrap">
-<div class="main-two-col">
-  <section class="panel control-panel">
-    <div class="form-grid">
-      <div class="field">
-        <label for="school">🏫 TRƯỜNG</label>
-        <input id="school" placeholder="Ví dụ: Trường THPT Hà Huy Tập">
-      </div>
-      <div class="field">
-        <label for="className">👥 LỚP</label>
-        <input id="className" placeholder="Ví dụ: 11B9">
-      </div>
-      <div class="field">
-        <label for="schoolYear">📅 NĂM HỌC</label>
-        <input id="schoolYear" value="2026 – 2027">
-      </div>
-      <div class="field">
-        <label for="teacherName">🧑‍🏫 GIÁO VIÊN CHỦ NHIỆM (GVCN)</label>
-        <input id="teacherName" value="Trần Duy Tâm" placeholder="Ví dụ: Trần Duy Tâm">
-      </div>
-      <div class="field">
-        <label for="effectiveDate">🗓️ ÁP DỤNG TỪ NGÀY</label>
-        <input id="effectiveDate" placeholder="Ví dụ: 16/09/2026">
-      </div>
-      <div class="field">
-        <label for="studentCount">🔢 SỐ LƯỢNG HỌC SINH (sức chứa phòng)</label>
-        <input type="number" id="studentCount" min="1" max="64" value="48">
-      </div>
-      <div class="field" style="grid-column:1/-1">
-        <label for="logoFile">🖼️ LOGO LỚP (tùy chọn)</label>
-        <div class="logo-upload-row">
-          <div class="logo-preview-mini" id="logoPreviewMini">🏫</div>
-          <input type="file" id="logoFile" accept="image/*" style="flex:1;min-width:180px">
+<div class="app-body">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="tabs" id="sideTabs">
+      <button class="tab active" data-tab="tabClass">Lớp học</button>
+      <button class="tab" data-tab="tabStudents">Học sinh</button>
+      <button class="tab" data-tab="tabSeat">Xếp chỗ</button>
+      <button class="tab" data-tab="tabExport">Xuất</button>
+    </div>
+
+    <!-- Lớp học -->
+    <div class="tab-panel active" id="tabClass">
+      <div class="card">
+        <div class="card-hd">Thông tin lớp</div>
+        <div class="card-bd">
+          <div class="field"><label>Trường</label><input id="school" placeholder="Trường THPT …"></div>
+          <div class="row2">
+            <div class="field"><label>Lớp</label><input id="className" placeholder="11B9"></div>
+            <div class="field"><label>Năm học</label><input id="schoolYear" value="2026 – 2027"></div>
+          </div>
+          <div class="field"><label>Giáo viên chủ nhiệm</label><input id="teacherName" value="Trần Duy Tâm"></div>
+          <div class="field"><label>Áp dụng từ ngày</label><input id="effectiveDate" placeholder="16/09/2026"></div>
+          <div class="row2">
+            <div class="field"><label>Sĩ số (sức chứa)</label><input type="number" id="studentCount" min="1" max="64" value="48"></div>
+            <div class="field"><label>HS / bàn</label>
+              <select id="perDesk"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Logo lớp</label>
+            <input type="file" id="logoFile" accept="image/*">
+            <div class="hint">JPG/PNG · hiện góc trái sơ đồ</div>
+          </div>
         </div>
-        <div class="logo-hint">Chọn ảnh logo lớp (JPG/PNG). Ảnh sẽ hiện ở góc trái sơ đồ.</div>
       </div>
-      <div class="field quickadd">
-        <div class="qtitle">✍️ NHẬP TỪNG HỌC SINH — mỗi lần nhập 1 tên, hệ thống tự xếp ngay vào 1 chỗ trống ngẫu nhiên</div>
-        <input id="oneName" placeholder="Nhập họ và tên học sinh rồi bấm Enter hoặc THÊM…">
-        <button class="btn btn-add" onclick="addOneStudent()">➕ THÊM VÀ XẾP CHỖ</button>
-        <label class="fx-toggle"><input type="checkbox" id="toggleSuspense" checked> 🎬 Hiệu ứng chờ AI phân tích (10 giây/học sinh) khi xếp chỗ</label>
-        <div class="progress" id="progressLine">Đã xếp 0 / 48 học sinh.</div>
-      </div>
-      <div class="field name-area">
-        <label for="names">📋 (Tuỳ chọn) DÁN DANH SÁCH NHIỀU HỌC SINH CÙNG LÚC</label>
-        <textarea id="names" placeholder="Dán danh sách, mỗi tên 1 dòng, rồi bấm XẾP CHỖ TỰ ĐỘNG."></textarea>
-        <div class="hint">Nếu bật hiệu ứng chờ: 10 giây/học sinh. Có thể bấm "Bỏ qua chờ" để xếp nhanh.</div>
+      <div class="card">
+        <div class="card-hd">Phương án xếp chỗ</div>
+        <div class="card-bd">
+          <div class="plan-list" id="planList"></div>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="saveAsPlan()">Lưu phương án</button>
+            <button class="btn btn-secondary btn-sm" onclick="duplicatePlan()">Nhân bản</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteCurrentPlan()">Xóa</button>
+          </div>
+        </div>
       </div>
     </div>
-    <div class="actions" style="padding:0;margin-top:16px">
-      <button class="btn btn-primary" onclick="assignBulk()">⚡ XẾP CHỖ TỰ ĐỘNG (danh sách dán)</button>
-      <button class="btn btn-random" onclick="shuffleAll()">🎲 XÁO TRỘN VÀ XẾP LẠI</button>
-      <button class="btn btn-save" onclick="savePlan()">💾 LƯU SƠ ĐỒ</button>
-      <button class="btn btn-jpg" onclick="downloadJPG()">🖼️ TẢI ẢNH (.JPG)</button>
-      <button class="btn btn-docx" onclick="downloadDOCX()">📄 TẢI WORD (.DOCX)</button>
-      <button class="btn btn-reset" onclick="resetAll()">↺ XẾP LẠI TỪ ĐẦU</button>
-    </div>
-    <div id="status" class="status" style="margin:14px 0 0">Hãy nhập tên từng học sinh — cột bên phải cập nhật sơ đồ theo thời gian thực.</div>
-  </section>
 
-  <section class="panel preview-panel">
-    <div class="preview-head">
-      <h2>📋 SƠ ĐỒ LỚP (xem trước)</h2>
-      <span class="badge" id="countBadge">0 / 48 chỗ</span>
+    <!-- Học sinh -->
+    <div class="tab-panel" id="tabStudents">
+      <div class="card">
+        <div class="card-hd">
+          <span>Danh sách học sinh</span>
+          <span id="stuCountLabel" style="font-weight:600;color:var(--muted)">0</span>
+        </div>
+        <div class="card-bd">
+          <div class="field">
+            <label>Thêm nhanh (mỗi dòng 1 tên)</label>
+            <textarea id="names" placeholder="Nguyễn Văn A&#10;Trần Thị B"></textarea>
+          </div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+            <button class="btn btn-primary btn-sm" onclick="importFromTextarea()">Thêm vào danh sách</button>
+            <button class="btn btn-secondary btn-sm" onclick="triggerExcelImport()">Nhập Excel</button>
+            <button class="btn btn-secondary btn-sm" onclick="downloadExcelTemplate()">Tải mẫu Excel</button>
+            <input type="file" id="excelFile" accept=".xlsx,.xls,.csv" style="display:none">
+          </div>
+          <div class="hint" style="margin-bottom:8px">Mẫu có cột <b>Đối tượng</b> (vd: Khuyết tật) để xếp chỗ theo tiêu chí ưu tiên.</div>
+          <div class="field">
+            <input id="stuSearch" placeholder="Tìm tên…" oninput="renderStudentTable()">
+          </div>
+          <div class="table-scroll">
+            <table class="stu-table" id="stuTable">
+              <thead><tr><th>STT</th><th>Họ tên</th><th>GT</th><th>Học lực</th><th>Đối tượng</th><th>Khóa</th><th></th></tr></thead>
+              <tbody id="stuTableBody"></tbody>
+            </table>
+          </div>
+          <div class="hint" style="margin-top:6px">GT: Nam/Nữ · Học lực: Giỏi/Khá/TB/Yếu · Đối tượng: Khuyết tật (ưu tiên Tổ 1/3)</div>
+        </div>
+      </div>
     </div>
-    <div id="seatPlan">
+
+    <!-- Xếp chỗ -->
+    <div class="tab-panel" id="tabSeat">
+      <div class="card">
+        <div class="card-hd">Chế độ xếp chỗ</div>
+        <div class="card-bd">
+          <div class="field" style="margin-bottom:10px">
+            <label>Học sinh tự chọn chỗ — chọn tên (theo STT Excel)</label>
+            <select id="selfPickName"><option value="">— Chọn học sinh —</option></select>
+          </div>
+          <button class="btn btn-primary" style="width:100%;margin-bottom:10px" onclick="selfPickSeat()">Tôi chọn chỗ (đếm 5 giây)</button>
+          <div class="hint" style="margin-bottom:12px">Sau 5 giây hệ thống xếp chỗ theo tiêu chí (HS khuyết tật → đầu bàn Tổ 1 hoặc Tổ 3 gần Bàn GV).</div>
+          <hr style="border:0;border-top:1px solid var(--border);margin:10px 0">
+          <button class="btn btn-primary" style="width:100%;margin-bottom:8px" onclick="seatQuick()">Xếp chỗ ngẫu nhiên (nhanh)</button>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="seatByCriteria()">Xếp chỗ theo tiêu chí</button>
+          <button class="btn btn-secondary" style="width:100%;margin-bottom:8px" onclick="shuffleAll()">Xáo trộn lại (giữ đã khóa)</button>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;margin:8px 0">
+            <input type="checkbox" id="toggleSuspense"> Chế độ trình diễn (countdown)
+          </label>
+          <div class="hint">Mặc định: kết quả ngay. Bật trình diễn khi chiếu trước lớp.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Tiêu chí (chế độ B)</div>
+        <div class="card-bd criteria-list" id="criteriaBox">
+          <label><input type="checkbox" id="cDisability" checked> HS khuyết tật / đối tượng ưu tiên → đầu bàn Tổ 1 hoặc Tổ 3 (gần Bàn giáo viên)</label>
+          <label><input type="checkbox" id="cBalance" checked> Cân bằng học lực giữa các khu vực</label>
+          <label><input type="checkbox" id="cGender"> Cân bằng giới tính (nếu có dữ liệu)</label>
+          <label><input type="checkbox" id="cFrontWeak"> Ưu tiên HS cần hỗ trợ học lực gần bảng</label>
+          <label><input type="checkbox" id="cSpread"> Phân bố đều, tránh dồn một khu</label>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-hd">Thêm từng học sinh</div>
+        <div class="card-bd">
+          <div class="field"><input id="oneName" placeholder="Họ và tên rồi Enter"></div>
+          <button class="btn btn-success btn-sm" onclick="addOneStudent()">Thêm & xếp chỗ trống</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Xuất -->
+    <div class="tab-panel" id="tabExport">
+      <div class="card">
+        <div class="card-hd">Xuất file</div>
+        <div class="card-bd" style="display:flex;flex-direction:column;gap:8px">
+          <button class="btn btn-secondary" onclick="downloadJPG()">Xuất sơ đồ (JPG)</button>
+          <button class="btn btn-secondary" onclick="downloadDOCX()">Xuất hồ sơ lớp (Word)</button>
+          <button class="btn btn-secondary" onclick="exportExcelFull()">Xuất Excel tổng hợp</button>
+          <button class="btn btn-secondary" onclick="backupJSON()">Sao lưu JSON</button>
+          <button class="btn btn-secondary" onclick="document.getElementById('restoreFile').click()">Khôi phục JSON</button>
+          <input type="file" id="restoreFile" accept=".json" style="display:none">
+          <button class="btn btn-danger btn-sm" onclick="clearDeviceData()">Xóa dữ liệu trên thiết bị</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-panel">
+    <div class="stats-bar" id="statsBar"></div>
+    <div id="planExplain" class="disclaimer" style="display:none"></div>
+    <div class="sheet-wrap">
       <div class="sheet" id="sheet">
-        <span class="deco-heart dh1">♡</span>
-        <span class="deco-heart dh2">♡</span>
-        <span class="deco-heart dh3">♡</span>
-        <span class="deco-heart dh4">♡</span>
-
         <div class="sheet-header">
           <div class="sheet-logo" id="sheetLogo">🏫</div>
           <div class="sheet-title">
-            <div class="school" id="outSchool">TRƯỜNG THPT HÀ HUY TẬP</div>
-            <div class="year-line"><span class="rays">✦</span> Năm Học : <span id="outYear">2026 – 2027</span> <span class="rays">✦</span></div>
-            <h1>SƠ ĐỒ LỚP <span id="outClass">11B9</span></h1>
-            <div class="slogan"><span class="heart">♡</span> Đoàn kết – Học tập – cùng tiến bộ <span class="heart">♡</span></div>
+            <div class="school" id="outSchool">TRƯỜNG THPT</div>
+            <div class="year">Năm học: <span id="outYear">2026 – 2027</span></div>
+            <h1>SƠ ĐỒ LỚP <span id="outClass">—</span></h1>
+            <div class="slogan">Đoàn kết – Học tập – cùng tiến bộ</div>
           </div>
           <div class="gvcn-box">
-            <div class="gvcn-label">GVCN:</div>
-            <div class="gvcn-name" id="outGvcn">Trần Duy Tâm</div>
-            <div class="gvcn-date" id="outDate"></div>
+            <div class="lbl">GVCN</div>
+            <div class="nm" id="outGvcn">Trần Duy Tâm</div>
+            <div class="dt" id="outDate"></div>
           </div>
         </div>
-
         <div class="seat-area" id="seatArea"></div>
-
         <div class="room-footer">
-          <div class="rf-item">
-            <div class="rf-door-illus">
-              <span class="arrow">→</span>
-              <span class="door">🚪</span>
-              <span class="plant">🪴</span>
-            </div>
-            <div class="rf-label">LỐI VÀO</div>
-          </div>
-          <div class="rf-item">
-            <div class="rf-board">BẢNG ĐEN</div>
-          </div>
-          <div class="rf-item">
-            <div class="rf-desk-illus">
-              <span class="desk-top">🪑📚🪴</span>
-              <span class="desk-label">BÀN GIÁO VIÊN</span>
-            </div>
-          </div>
+          <div class="rf-item">🚪 LỐI VÀO</div>
+          <div class="rf-board">BẢNG ĐEN</div>
+          <div class="rf-item">🪑 BÀN GIÁO VIÊN</div>
         </div>
-
-        <div class="sheet-tagline">♡ Một lớp học – Một gia đình – Một mục tiêu – Một tương lai rực rỡ! ♡</div>
+        <div class="sheet-tagline">Một lớp học – Một gia đình – Một mục tiêu – Một tương lai rực rỡ</div>
       </div>
     </div>
-  </section>
+
+    <div class="bottom-section">
+      <div class="bottom-tabs">
+        <button class="tab active" data-btab="btGroups">Nhóm</button>
+        <button class="tab" data-btab="btCommittee">Nhiệm vụ lớp</button>
+      </div>
+      <div id="btGroups" class="bt-panel">
+        <div class="card">
+          <div class="card-hd">
+            <span>Phân công vai trò nhóm (4 tổ theo vị trí ngồi)</span>
+          </div>
+          <div class="card-bd">
+            <div class="disclaimer">Kết quả mang tính hỗ trợ. Giáo viên quyết định cuối cùng. Có thể chỉnh sửa sau khi tạo phương án.</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
+              <button class="btn btn-primary btn-sm" onclick="randomizeToRoles()">CHỌN TỔ TRƯỞNG / TỔ PHÓ</button>
+              <button class="btn btn-secondary btn-sm" onclick="reshuffleWithinGroups()">XẾP LẠI TỔ</button>
+            </div>
+            <div class="hint" style="margin-bottom:8px">Thời gian đếm ngược = sĩ số lớp (vd: 48 HS → 48 giây). Xếp lại tổ: đảo chỗ trong cùng tổ; chỗ đã khóa giữ nguyên.</div>
+            <div id="toResultArea"></div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-secondary btn-sm" onclick="exportImageOf('toResultSheet','to')">Xuất JPG nhóm</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportExcelTo()">Xuất Excel nhóm</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="btCommittee" class="bt-panel" style="display:none">
+        <div class="card">
+          <div class="card-hd">
+            <span>Hỗ trợ phân công nhiệm vụ lớp</span>
+            <button class="btn btn-primary btn-sm" onclick="randomizeCommittee()">CHỌN NHIỆM VỤ LỚP</button>
+          </div>
+          <div class="card-bd">
+            <div class="disclaimer">Kết quả chỉ là phương án hỗ trợ. Giáo viên quyết định và có thể điều chỉnh.</div>
+            <div id="committeeResultArea"></div>
+            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-secondary btn-sm" onclick="exportImageOf('committeeSheet','ban_can_su')">Xuất JPG</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportExcelCommittee()">Xuất Excel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
 </div>
 
-<section class="panel">
-  <div class="panel-title">🧑‍🤝‍🧑 RANDOM TỔ TRƯỞNG VÀ TỔ PHÓ (4 TỔ)</div>
-  <div class="panel-sub">Theo mẫu sơ đồ: Tổ 1 = dãy phải 3 hàng cuối, Tổ 2 = dãy phải 3 hàng đầu, Tổ 3 = dãy trái 3 hàng cuối, Tổ 4 = dãy trái 3 hàng đầu.</div>
-  <div class="to-panel-body">
-    <div class="actions inline" style="padding:0;margin-bottom:10px">
-      <button class="btn btn-team" onclick="randomizeToRoles()">🎩 RANDOM TỔ TRƯỞNG VÀ TỔ PHÓ</button>
-      <button class="btn btn-jpg" onclick="exportImageOf('toResultSheet','to')">🖼️ XUẤT DANH SÁCH TỔ (.JPG)</button>
-      <button class="btn btn-xlsx" onclick="exportExcelTo()">📊 XUẤT DANH SÁCH TỔ (.XLSX)</button>
-    </div>
-    <div id="toResultArea"></div>
-  </div>
-</section>
-
-<section class="panel">
-  <div class="panel-title">🏫 RANDOM BAN CÁN SỰ LỚP</div>
-  <div class="panel-sub">Nón kỳ diệu quay 90 giây, công bố sơ đồ cây: lớp trưởng, lớp phó, bí thư/phó bí thư Đoàn, ủy viên, 3 thanh niên xung kích.</div>
-  <div class="committee-panel-body">
-    <div class="actions inline" style="padding:0;margin-bottom:10px">
-      <button class="btn btn-committee" onclick="randomizeCommittee()">🎩 RANDOM BAN CÁN SỰ LỚP</button>
-      <button class="btn btn-jpg" onclick="exportImageOf('committeeSheet','ban_can_su')">🖼️ XUẤT DANH SÁCH (.JPG)</button>
-      <button class="btn btn-xlsx" onclick="exportExcelCommittee()">📊 XUẤT DANH SÁCH (.XLSX)</button>
-    </div>
-    <div id="committeeResultArea"></div>
-  </div>
-</section>
-</main>
+<footer class="site-footer" style="text-align:center;padding:16px 12px 22px;color:#64748b;font-size:12px;font-weight:700;letter-spacing:.4px;line-height:1.5;border-top:1px solid #e2e8f0;background:#f8fafc">
+  © Bản quyền sản phẩm · Bảo mật dữ liệu trên thiết bị · <a href="https://webh2t.github.io/" target="_blank" rel="noopener" style="color:#1e3a5f;text-decoration:none">WEBH2T</a>
+</footer>
 <div class="toast" id="toast"></div>
-<footer class="site-footer">© BẢN QUYỀN SẢN PHẨM @WEBH2T</footer>
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <div class="modal-hd" id="modalTitle">Xác nhận</div>
+    <div class="modal-bd" id="modalBody"></div>
+    <div class="modal-ft" id="modalFt"></div>
+  </div>
+</div>
+<div class="fx-overlay" id="fxOverlay"></div>
 
 <script>
+/* =========================
+   APP STATE / CONSTANTS
+========================= */
+const APP_VERSION = "2.0";
+const DEBUG = false;
 const COLS = 8;
-let seatCount = 48;
-let seats = new Array(seatCount).fill(null);
-let hasPlan = false;
+const STORAGE_KEY_V2 = "classroomData_v2";
+const STORAGE_KEY_V1 = "seatPlan2026";
+
+let appState = {
+  version: APP_VERSION,
+  classroom: {
+    school: "", className: "", schoolYear: "2026 – 2027",
+    teacherName: "Trần Duy Tâm", effectiveDate: "",
+    seatCount: 48, logoDataUrl: null
+  },
+  students: [], // {id, stt, name, gender, academicLevel, doiTuong, note, locked, seatId}
+  seats: [],    // parallel array seatIndex -> studentId | null (compat)
+  groups: null,
+  committee: null,
+  plans: [],
+  currentPlanId: null,
+  settings: { suspense: false, perDesk: 2 }
+};
+
+let historyStack = [];
+let redoStack = [];
+const HISTORY_MAX = 25;
+let logoDataUrl = null;
 let lastToRoleResult = null;
 let lastCommitteeResult = null;
-let logoDataUrl = null;
+let dragSeatIdx = null;
 
-function escapeHTML(s){
-  return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+const COMMITTEE_ROLES = [
+  { role: "Lớp trưởng", count: 1 },
+  { role: "Lớp phó học tập", count: 1 },
+  { role: "Lớp phó nề nếp", count: 1 },
+  { role: "Lớp phó lao động", count: 1 },
+  { role: "Lớp phó văn thể mỹ", count: 1 },
+  { role: "Bí thư Đoàn", count: 1 },
+  { role: "Phó bí thư Đoàn", count: 1 },
+  { role: "Ủy viên cán sự Đoàn", count: 1 },
+  { role: "Thanh niên xung kích", count: 3 }
+];
+
+function log() { if (DEBUG) console.log.apply(console, arguments); }
+function uid() { return "s_" + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); }
+
+/* =========================
+   HELPERS (KEEP escapeHTML)
+========================= */
+function escapeHTML(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" }[m]));
 }
-function setStatus(html){ document.getElementById('status').innerHTML = html; }
-function toast(msg){
-  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2400);
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2800);
 }
-function currentClassSlug(){
-  return (document.getElementById('className').value.trim()||'lop').replace(/\s+/g,'_');
+function setStatus() { /* compat no-op status bar removed */ }
+function currentClassSlug() {
+  return (document.getElementById("className").value.trim() || "lop").replace(/\s+/g, "_");
 }
-function suspenseEnabled(){
-  const el = document.getElementById('toggleSuspense');
-  return el ? el.checked : true;
+function suspenseEnabled() {
+  const el = document.getElementById("toggleSuspense");
+  return el ? el.checked : false;
+}
+/** Thời gian đếm ngược theo sĩ số lớp (tối thiểu 5s, tối đa 120s) */
+function durationByClassSize() {
+  const n = appState.students.length || 0;
+  if (n <= 0) return 5;
+  return Math.min(120, Math.max(5, n));
 }
 
-function showOverlay(innerHtml){
-  let ov = document.getElementById('fxOverlay');
-  if(!ov){ ov = document.createElement('div'); ov.id='fxOverlay'; ov.className='fx-overlay'; document.body.appendChild(ov); }
-  ov.innerHTML = innerHtml;
-  ov.classList.add('show');
+function showConfirm(title, body, onOk) {
+  document.getElementById("modalTitle").textContent = title;
+  document.getElementById("modalBody").innerHTML = body;
+  document.getElementById("modalFt").innerHTML = "";
+  const cancel = document.createElement("button");
+  cancel.className = "btn btn-secondary";
+  cancel.textContent = "Hủy";
+  cancel.onclick = hideModal;
+  const ok = document.createElement("button");
+  ok.className = "btn btn-primary";
+  ok.textContent = "Đồng ý";
+  ok.onclick = () => { hideModal(); onOk && onOk(); };
+  document.getElementById("modalFt").append(cancel, ok);
+  document.getElementById("modalOverlay").classList.add("show");
 }
-function hideOverlay(){
-  const ov = document.getElementById('fxOverlay');
-  if(ov) ov.classList.remove('show');
+function hideModal() { document.getElementById("modalOverlay").classList.remove("show"); }
+document.getElementById("modalOverlay").addEventListener("click", e => {
+  if (e.target.id === "modalOverlay") hideModal();
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    hideModal();
+    hideOverlay();
+    if (document.body.classList.contains("present")) togglePresent();
+  }
+});
+
+/* =========================
+   COUNTDOWN (KEEP + rename copy)
+========================= */
+function showOverlay(html) {
+  const ov = document.getElementById("fxOverlay");
+  ov.innerHTML = html;
+  ov.classList.add("show");
 }
-function runCountdown({ seconds, icon, title, subtitle, names, accentColor }){
-  return new Promise(resolve=>{
-    const total = seconds;
+function hideOverlay() {
+  document.getElementById("fxOverlay").classList.remove("show");
+}
+function runCountdown({ seconds, title, subtitle, names }) {
+  return new Promise(resolve => {
     let remaining = seconds;
-    const r = 54, circleLen = 2*Math.PI*r;
-    showOverlay(`
-      <div class="fx-card" style="--accent:${accentColor||'#1557b0'}">
-        <div class="fx-icon-anim">${icon||'🤖'}</div>
-        <div class="fx-title">${title}</div>
-        ${subtitle?`<div class="fx-subtitle">${subtitle}</div>`:''}
-        <div class="fx-ring-wrap">
-          <svg class="fx-ring" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="${r}" class="fx-ring-bg"/>
-            <circle cx="60" cy="60" r="${r}" class="fx-ring-fg" id="fxRingFg" stroke-dasharray="${circleLen}" stroke-dashoffset="0"/>
-          </svg>
-          <div class="fx-ring-text" id="fxRingText">${remaining}</div>
-        </div>
-        ${names && names.length ? `<div class="fx-cycle" id="fxCycle">${escapeHTML(names[0])}</div>` : ''}
-        <button class="btn btn-reset fx-skip" id="fxSkipBtn" type="button">⏭️ Bỏ qua chờ</button>
-      </div>
-    `);
+    const hasNames = names && names.length;
+    showOverlay(
+      '<div class="fx-card"><div class="fx-title">' + (title || "Đang tạo phương án…") + "</div>" +
+      (subtitle ? '<div class="fx-sub">' + subtitle + "</div>" : "") +
+      '<div class="fx-num" id="fxNum">' + remaining + "</div>" +
+      (hasNames ? '<div class="fx-sub" style="font-weight:800;font-size:15px;color:var(--primary);min-height:22px" id="fxCycle">' + escapeHTML(names[0]) + "</div>" : "") +
+      '<button class="btn btn-secondary" id="fxSkip">Bỏ qua</button></div>'
+    );
     let nameIdx = 0;
-    const cycleEl = document.getElementById('fxCycle');
-    const nameTimer = (names && names.length) ? setInterval(()=>{
-      nameIdx = (nameIdx+1) % names.length;
-      if(cycleEl) cycleEl.textContent = names[nameIdx];
-    }, 180) : null;
-    const ringFg = document.getElementById('fxRingFg');
-    const ringText = document.getElementById('fxRingText');
-    const timer = setInterval(()=>{
+    const nameTimer = hasNames ? setInterval(() => {
+      nameIdx = (nameIdx + 1) % names.length;
+      const el = document.getElementById("fxCycle");
+      if (el) el.textContent = names[nameIdx];
+    }, 120) : null;
+    const timer = setInterval(() => {
       remaining--;
-      if(ringText) ringText.textContent = Math.max(remaining,0);
-      if(ringFg) ringFg.style.strokeDashoffset = String(circleLen * (1 - Math.max(remaining,0)/total));
-      if(remaining<=0){ finish(); }
+      const n = document.getElementById("fxNum");
+      if (n) n.textContent = Math.max(remaining, 0);
+      if (remaining <= 0) finish();
     }, 1000);
-    function finish(){
+    function finish() {
       clearInterval(timer);
-      if(nameTimer) clearInterval(nameTimer);
+      if (nameTimer) clearInterval(nameTimer);
       hideOverlay();
       resolve();
     }
-    const skipBtn = document.getElementById('fxSkipBtn');
-    if(skipBtn) skipBtn.addEventListener('click', finish);
+    const skip = document.getElementById("fxSkip");
+    if (skip) skip.onclick = finish;
   });
 }
 
-function setSeatCount(n, preserve){
-  n = Math.max(1, Math.min(200, n|0));
-  const oldSeats = preserve ? seats.slice() : [];
-  seatCount = n;
-  seats = new Array(seatCount).fill(null);
-  if(preserve){
-    const placed = oldSeats.filter(Boolean);
-    let cut = false;
-    placed.forEach((name,i)=>{ if(i < seatCount){ seats[i] = name; } else { cut = true; } });
-    if(cut) toast('⚠️ Sức chứa mới nhỏ hơn số học sinh đã xếp, một số học sinh đã bị bỏ khỏi sơ đồ.');
+/* =========================
+   STUDENTS
+========================= */
+function getStudent(id) { return appState.students.find(s => s.id === id); }
+function studentNameAtSeat(idx) {
+  const id = appState.seats[idx];
+  if (!id) return null;
+  const s = getStudent(id);
+  return s ? s.name : null;
+}
+function isSeatLocked(idx) {
+  const id = appState.seats[idx];
+  if (!id) return false;
+  const s = getStudent(id);
+  return s ? !!s.locked : false;
+}
+function ensureSeatsSize() {
+  const n = appState.classroom.seatCount;
+  while (appState.seats.length < n) appState.seats.push(null);
+  if (appState.seats.length > n) {
+    // unassign students beyond capacity
+    for (let i = n; i < appState.seats.length; i++) {
+      const id = appState.seats[i];
+      if (id) {
+        const s = getStudent(id);
+        if (s) s.seatId = null;
+      }
+    }
+    appState.seats = appState.seats.slice(0, n);
   }
 }
-function emptySeatIndexes(){
-  const idx=[]; for(let i=0;i<seatCount;i++) if(!seats[i]) idx.push(i); return idx;
+function emptySeatIndexes() {
+  ensureSeatsSize();
+  const idx = [];
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    if (!appState.seats[i]) idx.push(i);
+  }
+  return idx;
 }
-function placeInRandomEmptySeat(name){
+function placeInRandomEmptySeat(nameOrId) {
   const empties = emptySeatIndexes();
-  if(empties.length===0) return -1;
-  const pick = empties[Math.floor(Math.random()*empties.length)];
-  seats[pick] = name; return pick;
-}
-async function addOneStudent(){
-  const input = document.getElementById('oneName');
-  const name = input.value.trim();
-  if(!name){ toast('⚠️ Hãy nhập tên học sinh.'); return; }
-  const filled = seats.filter(Boolean).length;
-  if(filled >= seatCount){ setStatus(`⚠️ Đã đủ <b>${seatCount}</b> chỗ ngồi.`); return; }
-  input.value = '';
-  if(suspenseEnabled()){
-    await runCountdown({
-      seconds:10, icon:'🤖',
-      title:'AI đang phân tích chỗ ngồi phù hợp cho',
-      subtitle:`<b>${escapeHTML(name)}</b>`,
-      accentColor:'#1557b0'
-    });
+  if (!empties.length) return -1;
+  const pick = empties[Math.floor(Math.random() * empties.length)];
+  let sid = nameOrId;
+  if (typeof nameOrId === "string" && !getStudent(nameOrId)) {
+    // treat as name - find or create
+    let st = appState.students.find(s => s.name === nameOrId && s.seatId == null);
+    if (!st) {
+      st = { id: uid(), stt: appState.students.length + 1, name: nameOrId, gender: "", academicLevel: "", doiTuong: "", note: "", locked: false, seatId: pick };
+      appState.students.push(st);
+    } else {
+      st.seatId = pick;
+    }
+    sid = st.id;
+  } else {
+    const st = getStudent(sid);
+    if (st) st.seatId = pick;
   }
+  appState.seats[pick] = sid;
+  return pick;
+}
+function addStudentRecord(name, gender, level, note, doiTuong, stt) {
+  const n = (name || "").trim();
+  if (!n) return null;
+  const nextStt = (stt != null && stt !== "") ? Number(stt) || appState.students.length + 1 : appState.students.length + 1;
+  const st = {
+    id: uid(), stt: nextStt, name: n, gender: gender || "", academicLevel: level || "",
+    doiTuong: (doiTuong || "").trim(), note: note || "", locked: false, seatId: null
+  };
+  appState.students.push(st);
+  return st;
+}
+function isPriorityStudent(st) {
+  if (!st) return false;
+  const d = (st.doiTuong || "").toLowerCase().normalize("NFC");
+  return d.includes("khuyết") || d.includes("khuyet") || d.includes("khuyết tật") || d.includes("ưu tiên") || d.includes("uu tien") || d === "kt";
+}
+function importFromTextarea() {
+  const lines = document.getElementById("names").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  if (!lines.length) { toast("Chưa có tên trong ô nhập."); return; }
+  pushHistory();
+  let added = 0;
+  lines.forEach(line => {
+    if (!appState.students.some(s => s.name.toLowerCase() === line.toLowerCase() && s.seatId == null)) {
+      addStudentRecord(line);
+      added++;
+    }
+  });
+  document.getElementById("names").value = "";
+  renderAll();
+  toast("Đã thêm " + added + " học sinh vào danh sách.");
+}
+async function addOneStudent() {
+  const input = document.getElementById("oneName");
+  const name = input.value.trim();
+  if (!name) { toast("Hãy nhập tên học sinh."); return; }
+  if (emptySeatIndexes().length === 0) { toast("Đã đủ chỗ ngồi. Hãy tăng sức chứa nếu cần."); return; }
+  input.value = "";
+  if (suspenseEnabled()) {
+    await runCountdown({ seconds: 10, title: "Đang tạo phương án xếp chỗ…", subtitle: escapeHTML(name) });
+  }
+  pushHistory();
   const pos = placeInRandomEmptySeat(name);
-  hasPlan = true;
-  renderPlan();
-  setStatus(`✅ Đã xếp <b>${escapeHTML(name)}</b> vào chỗ số <b>${pos+1}</b>.`);
+  renderAll();
+  toast("Đã xếp " + name + " vào chỗ " + (pos + 1) + ".");
   input.focus();
 }
-document.addEventListener('DOMContentLoaded', ()=>{
-  document.getElementById('oneName').addEventListener('keydown', e=>{
-    if(e.key==='Enter'){ e.preventDefault(); addOneStudent(); }
+
+function renderStudentTable() {
+  const q = (document.getElementById("stuSearch").value || "").trim().toLowerCase();
+  const body = document.getElementById("stuTableBody");
+  const list = appState.students
+    .filter(s => !q || s.name.toLowerCase().includes(q))
+    .slice()
+    .sort((a, b) => (Number(a.stt) || 0) - (Number(b.stt) || 0));
+  document.getElementById("stuCountLabel").textContent = appState.students.length + " HS";
+  body.innerHTML = list.map((s, i) => {
+    const dt = s.doiTuong || "";
+    return "<tr data-id=\"" + s.id + "\">" +
+      "<td>" + (s.stt != null ? s.stt : (i + 1)) + "</td>" +
+      "<td><input value=\"" + escapeHTML(s.name) + "\" data-f=\"name\"></td>" +
+      "<td><select data-f=\"gender\"><option value=\"\"" + (!s.gender ? " selected" : "") + ">—</option>" +
+      "<option value=\"Nam\"" + (s.gender === "Nam" ? " selected" : "") + ">Nam</option>" +
+      "<option value=\"Nữ\"" + (s.gender === "Nữ" ? " selected" : "") + ">Nữ</option></select></td>" +
+      "<td><select data-f=\"academicLevel\">" +
+      ["", "Giỏi", "Khá", "TB", "Yếu"].map(lv =>
+        "<option value=\"" + lv + "\"" + (s.academicLevel === lv ? " selected" : "") + ">" + (lv || "—") + "</option>"
+      ).join("") + "</select></td>" +
+      "<td><select data-f=\"doiTuong\">" +
+      [["", "—"], ["Khuyết tật", "Khuyết tật"], ["Ưu tiên khác", "Ưu tiên khác"]].map(function(pair) {
+        return "<option value=\"" + pair[0] + "\"" + (dt === pair[0] ? " selected" : "") + ">" + pair[1] + "</option>";
+      }).join("") + "</select></td>" +
+      "<td style=\"text-align:center\"><input type=\"checkbox\" data-f=\"locked\"" + (s.locked ? " checked" : "") + "></td>" +
+      "<td><button class=\"btn btn-danger btn-sm\" data-del=\"" + s.id + "\">Xóa</button></td></tr>";
+  }).join("");
+  body.querySelectorAll("input, select").forEach(el => {
+    el.addEventListener("change", () => {
+      const tr = el.closest("tr");
+      const id = tr.getAttribute("data-id");
+      const st = getStudent(id);
+      if (!st) return;
+      const f = el.getAttribute("data-f");
+      if (f === "locked") st.locked = el.checked;
+      else st[f] = el.value;
+      renderPlan();
+      renderStats();
+    });
   });
-  document.getElementById('studentCount').addEventListener('change', e=>{
-    const n = Number(e.target.value)||48;
-    setSeatCount(n, true);
-    hasPlan = seats.some(Boolean);
-    renderPlan();
-    setStatus(`🔧 Đã cập nhật sức chứa phòng thành <b>${seatCount}</b> chỗ.`);
-  });
-  ['school','className','schoolYear','teacherName','effectiveDate'].forEach(id=>{
-    document.getElementById(id).addEventListener('input', renderPlan);
-  });
-  document.getElementById('logoFile').addEventListener('change', function(e){
-    const file = e.target.files && e.target.files[0];
-    if(!file) return;
-    if(!file.type.startsWith('image/')){ toast('⚠️ Vui lòng chọn file ảnh.'); return; }
-    const reader = new FileReader();
-    reader.onload = function(ev){
-      logoDataUrl = ev.target.result;
-      updateLogoDisplay();
-      toast('🖼️ Đã tải logo lớp.');
-    };
-    reader.readAsDataURL(file);
-  });
-});
-function updateLogoDisplay(){
-  const mini = document.getElementById('logoPreviewMini');
-  const sheetLogo = document.getElementById('sheetLogo');
-  if(logoDataUrl){
-    mini.innerHTML = '<img src="'+logoDataUrl+'" alt="Logo">';
-    sheetLogo.innerHTML = '<img src="'+logoDataUrl+'" alt="Logo lớp">';
-  } else {
-    mini.textContent = '🏫';
-    sheetLogo.textContent = '🏫';
-  }
-}
-function getBulkNames(){
-  return document.getElementById('names').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
-}
-async function assignBulk(){
-  const names = getBulkNames();
-  if(names.length===0){ toast('⚠️ Chưa dán danh sách học sinh.'); return; }
-  const already = new Set(seats.filter(Boolean).map(n=>n.toLowerCase()));
-  const useSuspense = suspenseEnabled();
-  let added = 0, skippedFull = 0, total = 0;
-  const toProcess = names.filter(n=>!already.has(n.toLowerCase()));
-  for(const name of names){
-    if(already.has(name.toLowerCase())) continue;
-    if(seats.filter(Boolean).length >= seatCount){ skippedFull++; continue; }
-    total++;
-    if(useSuspense){
-      await runCountdown({
-        seconds:10, icon:'🤖',
-        title:'AI đang phân tích chỗ ngồi phù hợp cho',
-        subtitle:`<b>${escapeHTML(name)}</b> &nbsp;(${total}/${toProcess.length})`,
-        accentColor:'#1557b0'
+  body.querySelectorAll("[data-del]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-del");
+      showConfirm("Xóa học sinh", "Xóa học sinh khỏi danh sách và sơ đồ?", () => {
+        pushHistory();
+        const st = getStudent(id);
+        if (st && st.seatId != null) appState.seats[st.seatId] = null;
+        appState.students = appState.students.filter(s => s.id !== id);
+        renderAll();
+        toast("Đã xóa học sinh.");
       });
-    }
-    const pos = placeInRandomEmptySeat(name);
-    already.add(name.toLowerCase());
-    added++;
-    hasPlan = true;
-    renderPlan();
-    setStatus(`✅ Vừa công bố <b>${escapeHTML(name)}</b> — chỗ số <b>${pos+1}</b>.`);
-  }
-  hasPlan = seats.some(Boolean);
-  renderPlan();
-  setStatus(`✅ Đã xếp thêm <b>${added}</b> học sinh.${skippedFull?` (${skippedFull} tên không xếp được vì hết chỗ)`:''}`);
-}
-function shuffleAll(){
-  const names = seats.filter(Boolean);
-  if(names.length===0){ toast('⚠️ Chưa có học sinh nào để xáo trộn.'); return; }
-  for(let i=names.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [names[i],names[j]]=[names[j],names[i]]; }
-  seats = new Array(seatCount).fill(null);
-  const idxPool = Array.from({length:seatCount},(_, i)=>i);
-  for(let i=idxPool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [idxPool[i],idxPool[j]]=[idxPool[j],idxPool[i]]; }
-  names.forEach((name,i)=>{ seats[idxPool[i]] = name; });
-  hasPlan = true;
-  renderPlan();
-  setStatus(`🎲 Đã xáo trộn lại vị trí của <b>${names.length}</b> học sinh.`);
+    });
+  });
 }
 
-/* Tổ theo mẫu hình:
-   - Tổ 1: dãy PHẢI, 3 hàng CUỐI (rows half..end, cols 4-7)
-   - Tổ 2: dãy PHẢI, 3 hàng ĐẦU (rows 0..half-1, cols 4-7)
-   - Tổ 3: dãy TRÁI, 3 hàng CUỐI (rows half..end, cols 0-3)
-   - Tổ 4: dãy TRÁI, 3 hàng ĐẦU (rows 0..half-1, cols 0-3)
-*/
-function zoneInfo(){
-  const totalRows = Math.ceil(seatCount / COLS);
+/* =========================
+   SEATING ENGINE
+========================= */
+function zoneInfo() {
+  const totalRows = Math.ceil(appState.classroom.seatCount / COLS);
   const half = Math.ceil(totalRows / 2);
   return { totalRows, half };
 }
-function getZone(idx){
+function getZone(idx) {
   const { half } = zoneInfo();
   const row = Math.floor(idx / COLS);
   const col = idx % COLS;
   const isLeft = col < 4;
   const isTop = row < half;
-  if(isLeft && isTop) return 4;
-  if(!isLeft && isTop) return 2;
-  if(isLeft && !isTop) return 3;
-  return 1; // right bottom
+  if (isLeft && isTop) return 4;
+  if (!isLeft && isTop) return 2;
+  if (isLeft && !isTop) return 3;
+  return 1;
 }
-
-function deskCellHTML(idx){
-  if(idx>=seatCount) return '<div class="desk-cell empty"></div>';
-  const name = seats[idx];
-  let cls = 'desk-cell' + (name?'':' empty');
-  if(name){
-    if(name.length>16) cls += ' tiny';
-    else if(name.length>10) cls += ' small';
+function levelScore(lv) {
+  return { "Giỏi": 4, "Khá": 3, "TB": 2, "Yếu": 1 }[lv] || 2.5;
+}
+function seatQuick() {
+  const unseated = appState.students.filter(s => s.seatId == null);
+  const namesFromTa = document.getElementById("names").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  if (!unseated.length && namesFromTa.length) {
+    namesFromTa.forEach(n => addStudentRecord(n));
+    document.getElementById("names").value = "";
   }
-  return '<div class="'+cls+'">'+(name?escapeHTML(name):'')+'</div>';
+  const pool = appState.students.filter(s => s.seatId == null);
+  if (!pool.length && !appState.students.some(s => s.seatId != null)) {
+    toast("Chưa có học sinh. Hãy thêm danh sách trước.");
+    return;
+  }
+  pushHistory();
+  // clear non-locked seats
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    const id = appState.seats[i];
+    if (!id) continue;
+    const st = getStudent(id);
+    if (st && !st.locked) {
+      st.seatId = null;
+      appState.seats[i] = null;
+    } else if (!st) appState.seats[i] = null;
+  }
+  const toPlace = appState.students.filter(s => s.seatId == null);
+  shuffleArray(toPlace);
+  toPlace.forEach(st => {
+    const empties = emptySeatIndexes();
+    if (!empties.length) return;
+    const pick = empties[Math.floor(Math.random() * empties.length)];
+    appState.seats[pick] = st.id;
+    st.seatId = pick;
+  });
+  document.getElementById("planExplain").style.display = "block";
+  document.getElementById("planExplain").textContent = "Phương án được tạo ngẫu nhiên (giữ các vị trí đã khóa).";
+  renderAll();
+  toast("Đã xếp chỗ ngẫu nhiên.");
 }
-function deskRowHTML(indices){
-  return '<div class="desk-row">'+indices.map(deskCellHTML).join('')+'</div>';
+function seatByCriteria() {
+  const pool = appState.students.slice();
+  if (!pool.length) { toast("Chưa có học sinh."); return; }
+  pushHistory();
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    const id = appState.seats[i];
+    if (!id) continue;
+    const st = getStudent(id);
+    if (st && !st.locked) { st.seatId = null; appState.seats[i] = null; }
+  }
+  const lockedIds = new Set(appState.students.filter(s => s.locked && s.seatId != null).map(s => s.id));
+  const free = appState.students.filter(s => !lockedIds.has(s.id));
+  const useDisability = document.getElementById("cDisability") ? document.getElementById("cDisability").checked : true;
+  const useBalance = document.getElementById("cBalance").checked;
+  const useGender = document.getElementById("cGender").checked;
+  const useFront = document.getElementById("cFrontWeak").checked;
+  const useSpread = document.getElementById("cSpread").checked;
+
+  // Seats nearest teacher desk / board = highest row index (bottom of map)
+  function seatNearTeacherScore(seatIdx) {
+    // Tổ 1 = dãy phải hàng cuối; Tổ 3 = dãy trái hàng cuối (gần Bàn GV / bảng)
+    const z = getZone(seatIdx);
+    const row = Math.floor(seatIdx / COLS);
+    const col = seatIdx % COLS;
+    let score = row * 10;
+    if (z === 1 || z === 3) score += 100; // bắt buộc ưu tiên Tổ 1 / Tổ 3
+    // "Đầu bàn": sát lối đi (col 3 trái / col 4 phải)
+    if (col === 3 || col === 4) score += 5;
+    // Ưu tiên ghế ngoài cùng hàng gần GV hơn
+    if (col === 0 || col === 7) score += 1;
+    return score;
+  }
+
+  // Generate candidate assignments (scoring)
+  let bestAssign = null;
+  let bestScore = -Infinity;
+  const trials = 40;
+  for (let t = 0; t < trials; t++) {
+    const empties = emptySeatIndexes().slice();
+    shuffleArray(empties);
+    const order = free.slice();
+    shuffleArray(order);
+    // Priority: disability first, then weak academic if useFront
+    order.sort((a, b) => {
+      const pa = isPriorityStudent(a) ? 1 : 0;
+      const pb = isPriorityStudent(b) ? 1 : 0;
+      if (pa !== pb) return pb - pa;
+      if (useFront) return levelScore(a.academicLevel) - levelScore(b.academicLevel);
+      return 0;
+    });
+    const assign = {}; // seat -> id
+    // keep locked
+    for (let i = 0; i < appState.classroom.seatCount; i++) {
+      if (appState.seats[i]) assign[i] = appState.seats[i];
+    }
+    let ei = 0;
+    order.forEach(st => {
+      while (ei < empties.length && assign[empties[ei]] != null) ei++;
+      if (ei >= empties.length) return;
+      let pickIdx = ei;
+      const needFront = (useDisability && isPriorityStudent(st)) || (useFront && levelScore(st.academicLevel) <= 2);
+      if (needFront) {
+        let bestE = ei;
+        let bestSc = -1;
+        for (let j = ei; j < empties.length; j++) {
+          if (assign[empties[j]] != null) continue;
+          const sc = seatNearTeacherScore(empties[j]);
+          if (sc > bestSc) { bestSc = sc; bestE = j; }
+        }
+        pickIdx = bestE;
+      }
+      const seat = empties[pickIdx];
+      assign[seat] = st.id;
+      const tmp = empties[ei]; empties[ei] = empties[pickIdx]; empties[pickIdx] = tmp;
+      ei++;
+    });
+    let score = 0;
+    if (useBalance) {
+      const zoneLevels = { 1: [], 2: [], 3: [], 4: [] };
+      Object.keys(assign).forEach(si => {
+        const st = getStudent(assign[si]);
+        if (st) zoneLevels[getZone(+si)].push(levelScore(st.academicLevel));
+      });
+      const avgs = [1, 2, 3, 4].map(z => {
+        const a = zoneLevels[z];
+        if (!a.length) return 2.5;
+        return a.reduce((x, y) => x + y, 0) / a.length;
+      });
+      const mean = avgs.reduce((a, b) => a + b, 0) / 4;
+      const variance = avgs.reduce((s, v) => s + (v - mean) * (v - mean), 0);
+      score -= variance * 10;
+    }
+    if (useGender) {
+      const zoneG = { 1: { Nam: 0, Nữ: 0 }, 2: { Nam: 0, Nữ: 0 }, 3: { Nam: 0, Nữ: 0 }, 4: { Nam: 0, Nữ: 0 } };
+      Object.keys(assign).forEach(si => {
+        const st = getStudent(assign[si]);
+        if (st && (st.gender === "Nam" || st.gender === "Nữ")) zoneG[getZone(+si)][st.gender]++;
+      });
+      [1, 2, 3, 4].forEach(z => {
+        score -= Math.abs(zoneG[z].Nam - zoneG[z].Nữ) * 0.5;
+      });
+    }
+    if (useSpread) {
+      const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+      Object.keys(assign).forEach(si => { counts[getZone(+si)]++; });
+      const vals = [1, 2, 3, 4].map(z => counts[z]);
+      const mx = Math.max(...vals), mn = Math.min(...vals);
+      score -= (mx - mn) * 2;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      bestAssign = assign;
+    }
+  }
+  // apply best
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    appState.seats[i] = null;
+  }
+  appState.students.forEach(s => { if (!s.locked) s.seatId = null; });
+  Object.keys(bestAssign || {}).forEach(si => {
+    const id = bestAssign[si];
+    appState.seats[+si] = id;
+    const st = getStudent(id);
+    if (st) st.seatId = +si;
+  });
+  const reasons = [];
+  if (useDisability) reasons.push("HS khuyết tật / đối tượng ưu tiên ngồi hàng gần Bàn giáo viên");
+  if (useBalance) reasons.push("Cân bằng học lực giữa các khu vực");
+  if (useGender) reasons.push("Cân bằng giới tính");
+  if (useFront) reasons.push("Ưu tiên HS cần hỗ trợ học lực gần bảng");
+  if (useSpread) reasons.push("Phân bố đều theo khu vực");
+  if (!reasons.length) reasons.push("Ngẫu nhiên (không bật tiêu chí)");
+  document.getElementById("planExplain").style.display = "block";
+  document.getElementById("planExplain").innerHTML = "<b>Phương án dựa trên:</b> " + reasons.map(r => "✓ " + r).join(" · ");
+  renderAll();
+  toast("Đã tạo phương án theo tiêu chí.");
+}
+function shuffleArray(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function shuffleAll() {
+  const movable = [];
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    const id = appState.seats[i];
+    if (!id) continue;
+    const st = getStudent(id);
+    if (st && !st.locked) {
+      movable.push(id);
+      appState.seats[i] = null;
+      st.seatId = null;
+    }
+  }
+  if (!movable.length) { toast("Không có học sinh nào có thể xáo (hoặc tất cả đã khóa)."); return; }
+  pushHistory();
+  shuffleArray(movable);
+  const empties = emptySeatIndexes();
+  shuffleArray(empties);
+  movable.forEach((id, i) => {
+    if (i >= empties.length) return;
+    appState.seats[empties[i]] = id;
+    const st = getStudent(id);
+    if (st) st.seatId = empties[i];
+  });
+  renderAll();
+  toast("Đã xáo trộn (giữ vị trí khóa).");
+}
+async function assignBulk() {
+  // compat: paste names then seat
+  const lines = document.getElementById("names").value.split(/\r?\n/).map(x => x.trim()).filter(Boolean);
+  if (!lines.length) { toast("Chưa dán danh sách."); return; }
+  pushHistory();
+  lines.forEach(n => {
+    if (!appState.students.some(s => s.name.toLowerCase() === n.toLowerCase())) addStudentRecord(n);
+  });
+  for (const n of lines) {
+    const st = appState.students.find(s => s.name.toLowerCase() === n.toLowerCase() && s.seatId == null);
+    if (!st) continue;
+    if (!emptySeatIndexes().length) break;
+    if (suspenseEnabled()) {
+      await runCountdown({ seconds: 10, title: "Đang tạo phương án xếp chỗ…", subtitle: escapeHTML(n) });
+    }
+    placeInRandomEmptySeat(st.id);
+    renderPlan();
+  }
+  document.getElementById("names").value = "";
+  renderAll();
+  toast("Đã xếp từ danh sách dán.");
 }
 
-function renderPlan(){
-  document.getElementById('outSchool').textContent = (document.getElementById('school').value.trim() || 'TRƯỜNG THPT HÀ HUY TẬP').toUpperCase();
-  document.getElementById('outClass').textContent = document.getElementById('className').value.trim() || '11B9';
-  document.getElementById('outYear').textContent = document.getElementById('schoolYear').value.trim() || '2026 – 2027';
-  const gvcn = document.getElementById('teacherName').value.trim();
-  document.getElementById('outGvcn').textContent = gvcn || '—';
-  const date = document.getElementById('effectiveDate').value.trim();
-  document.getElementById('outDate').textContent = date ? '(Áp dụng từ ngày '+date+')' : '';
-
-  const filled = seats.filter(Boolean).length;
-  document.getElementById('countBadge').textContent = filled+' / '+seatCount+' chỗ';
-  document.getElementById('progressLine').textContent = 'Đã xếp '+filled+' / '+seatCount+' học sinh.';
+/* =========================
+   RENDER PLAN (KEEP name)
+========================= */
+function deskCellHTML(idx) {
+  if (idx >= appState.classroom.seatCount) return '<div class="desk-cell empty"></div>';
+  const id = appState.seats[idx];
+  const st = id ? getStudent(id) : null;
+  const name = st ? st.name : "";
+  let cls = "desk-cell" + (name ? "" : " empty");
+  if (st && st.locked) cls += " locked";
+  if (st && isPriorityStudent(st)) cls += " priority";
+  if (name && name.length > 16) cls += " tiny";
+  else if (name && name.length > 10) cls += " small";
+  return '<div class="' + cls + '" draggable="' + (name ? "true" : "false") + '" data-seat="' + idx + '" title="' +
+    (st && isPriorityStudent(st) ? "Đối tượng ưu tiên: " + escapeHTML(st.doiTuong || "") : "") + '">' +
+    (name ? escapeHTML(name) : "") + "</div>";
+}
+function deskRowHTML(indices) {
+  return '<div class="desk-row">' + indices.map(deskCellHTML).join("") + "</div>";
+}
+function renderPlan() {
+  syncFormToState();
+  document.getElementById("outSchool").textContent = (appState.classroom.school || "TRƯỜNG THPT").toUpperCase();
+  document.getElementById("outClass").textContent = appState.classroom.className || "—";
+  document.getElementById("outYear").textContent = appState.classroom.schoolYear || "2026 – 2027";
+  document.getElementById("outGvcn").textContent = appState.classroom.teacherName || "—";
+  document.getElementById("outDate").textContent = appState.classroom.effectiveDate
+    ? "(Áp dụng từ ngày " + appState.classroom.effectiveDate + ")" : "";
+  const school = appState.classroom.school || "—";
+  const cls = appState.classroom.className || "—";
+  const year = appState.classroom.schoolYear || "2026 – 2027";
+  document.getElementById("headerMeta").textContent = school + " · " + cls + " · Năm học " + year;
 
   const { totalRows, half } = zoneInfo();
-  const area = document.getElementById('seatArea');
-  let leftHTML = '', rightHTML = '';
-  for(let r=0;r<totalRows;r++){
-    const base = r*COLS;
-    leftHTML += deskRowHTML([base,base+1,base+2,base+3]);
-    rightHTML += deskRowHTML([base+4,base+5,base+6,base+7]);
-    // Insert Tổ labels after the top half (between half-1 and half)
-    if(r === half - 1){
+  let leftHTML = "", rightHTML = "";
+  for (let r = 0; r < totalRows; r++) {
+    const base = r * COLS;
+    leftHTML += deskRowHTML([base, base + 1, base + 2, base + 3]);
+    rightHTML += deskRowHTML([base + 4, base + 5, base + 6, base + 7]);
+    if (r === half - 1) {
       leftHTML += '<div class="to-label-row"><span class="to-badge to4">TỔ 4</span></div>';
       rightHTML += '<div class="to-label-row"><span class="to-badge to2">TỔ 2</span></div>';
     }
   }
-  // Bottom labels after last row
   leftHTML += '<div class="to-label-row"><span class="to-badge to3">TỔ 3</span></div>';
   rightHTML += '<div class="to-label-row"><span class="to-badge to1">TỔ 1</span></div>';
-
-  area.innerHTML =
-    '<div class="seat-col">'+leftHTML+'</div>'+
-    '<div class="aisle-col"><span class="aisle-label">LỐI ĐI</span></div>'+
-    '<div class="seat-col">'+rightHTML+'</div>';
-
+  document.getElementById("seatArea").innerHTML =
+    '<div class="seat-col">' + leftHTML + '</div>' +
+    '<div class="aisle-col"><span class="aisle-label">LỐI ĐI</span></div>' +
+    '<div class="seat-col">' + rightHTML + "</div>";
   updateLogoDisplay();
+  bindDragDrop();
 }
-
-function savePlan(){
-  if(!hasPlan){ toast('⚠️ Hãy xếp chỗ trước khi lưu.'); return; }
-  localStorage.setItem('seatPlan2026',JSON.stringify({
-    school:document.getElementById('school').value,
-    className:document.getElementById('className').value,
-    schoolYear:document.getElementById('schoolYear').value,
-    teacherName:document.getElementById('teacherName').value,
-    effectiveDate:document.getElementById('effectiveDate').value,
-    seatCount:seatCount, seats:seats, logoDataUrl:logoDataUrl||null,
-    savedAt:new Date().toLocaleString('vi-VN')
-  }));
-  toast('💾 Đã lưu sơ đồ trên máy trình duyệt.');
+function renderStats() {
+  const filled = appState.seats.filter(Boolean).length;
+  const locked = appState.students.filter(s => s.locked).length;
+  const n = appState.classroom.seatCount;
+  const desks = Math.ceil(n / (parseInt(document.getElementById("perDesk").value, 10) || 2));
+  document.getElementById("statsBar").innerHTML =
+    '<div class="stat">Học sinh: <span>' + appState.students.length + "</span></div>" +
+    '<div class="stat">Đã xếp: <span>' + filled + "/" + n + "</span></div>" +
+    '<div class="stat">Bàn (~): <span>' + desks + "</span></div>" +
+    '<div class="stat">Khóa: <span>' + locked + "</span></div>" +
+    '<div class="stat">Nhóm: <span>4</span></div>';
 }
-function resetAll(){
-  document.getElementById('names').value='';
-  document.getElementById('oneName').value='';
-  document.getElementById('school').value='';
-  document.getElementById('className').value='';
-  document.getElementById('schoolYear').value='2026 – 2027';
-  document.getElementById('teacherName').value='Trần Duy Tâm';
-  document.getElementById('effectiveDate').value='';
-  document.getElementById('studentCount').value='48';
-  document.getElementById('logoFile').value='';
-  logoDataUrl = null;
-  setSeatCount(48,false);
-  hasPlan=false;
-  lastToRoleResult=null; lastCommitteeResult=null;
-  document.getElementById('toResultArea').innerHTML='';
-  document.getElementById('committeeResultArea').innerHTML='';
+function renderAll() {
   renderPlan();
-  setStatus('🔄 Đã làm mới. Hãy nhập tên từng học sinh để bắt đầu xếp lại.');
-  toast('Đã xóa sơ đồ hiện tại.');
+  renderStudentTable();
+  refreshSelfPickSelect();
+  renderStats();
+  renderPlanList();
+  if (lastToRoleResult) renderToResults(lastToRoleResult);
+  if (lastCommitteeResult) renderCommitteeResults(lastCommitteeResult);
 }
-window.addEventListener('load',()=>{
-  const saved = localStorage.getItem('seatPlan2026');
-  if(saved){
-    try{
-      const x = JSON.parse(saved);
-      if(x.school) document.getElementById('school').value = x.school;
-      if(x.className) document.getElementById('className').value = x.className;
-      if(x.schoolYear) document.getElementById('schoolYear').value = x.schoolYear;
-      if(x.teacherName) document.getElementById('teacherName').value = x.teacherName;
-      else document.getElementById('teacherName').value = 'Trần Duy Tâm';
-      if(x.effectiveDate) document.getElementById('effectiveDate').value = x.effectiveDate;
-      if(x.seatCount){ document.getElementById('studentCount').value = x.seatCount; setSeatCount(x.seatCount,false); }
-      if(Array.isArray(x.seats)){
-        seats = x.seats.slice(0, seatCount);
-        while(seats.length < seatCount) seats.push(null);
-        hasPlan = seats.some(Boolean);
-      }
-      if(x.logoDataUrl){ logoDataUrl = x.logoDataUrl; }
-      renderPlan();
-      if(hasPlan) setStatus('📌 Đã khôi phục sơ đồ đã lưu lúc <b>'+(x.savedAt||'')+'</b>.');
-    }catch(e){}
-  } else { renderPlan(); }
-});
-
-async function downloadJPG(){
-  if(!hasPlan){ toast('⚠️ Hãy xếp chỗ trước khi tải ảnh.'); return; }
-  if(typeof html2canvas==='undefined'){ toast('Đang tải công cụ xuất ảnh, hãy thử lại sau 1 giây.'); return; }
-  const node=document.getElementById('sheet');
-  const canvas=await html2canvas(node,{scale:2,backgroundColor:'#fffef9',useCORS:true});
-  const a=document.createElement('a');
-  a.download='So_do_lop_'+currentClassSlug()+'.jpg';
-  a.href=canvas.toDataURL('image/jpeg',0.95);
-  a.click();
+function updateLogoDisplay() {
+  const sheetLogo = document.getElementById("sheetLogo");
+  const url = logoDataUrl || appState.classroom.logoDataUrl;
+  if (url) sheetLogo.innerHTML = '<img src="' + url + '" alt="Logo">';
+  else sheetLogo.textContent = "🏫";
 }
 
-async function downloadDOCX(){
-  if(!hasPlan){ toast('⚠️ Hãy xếp chỗ trước khi tải.'); return; }
-  if(typeof docx==='undefined'){ toast('Đang tải công cụ xuất Word, hãy thử lại sau 1 giây.'); return; }
-  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, VerticalAlign, ShadingType } = docx;
-  const { totalRows } = zoneInfo();
-  const noBorder = { style: BorderStyle.NONE, size:0, color:'FFFFFF' };
-  const thinBorder = { style: BorderStyle.SINGLE, size:4, color:'3B82F6' };
-  const cellBorders = { top:thinBorder,bottom:thinBorder,left:thinBorder,right:thinBorder };
-  const spacerBorders = { top:noBorder,bottom:noBorder,left:noBorder,right:noBorder };
-  const regWidth = 11.75, spacerWidth = 6;
-  const midRow = Math.floor((totalRows-1)/2);
-  const rows = [];
-  for(let r=0;r<totalRows;r++){
-    const cells = [];
-    for(let c=0;c<4;c++){
-      const idx = r*COLS + c;
-      const label = idx < seatCount ? (seats[idx] || '') : '';
-      cells.push(new TableCell({
-        width:{size:regWidth,type:WidthType.PERCENTAGE}, borders:cellBorders, verticalAlign:VerticalAlign.CENTER,
-        children:[ new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:label,bold:true,size:16})]}) ]
-      }));
-    }
-    cells.push(new TableCell({
-      width:{size:spacerWidth,type:WidthType.PERCENTAGE}, borders:spacerBorders, verticalAlign:VerticalAlign.CENTER,
-      shading:{ fill:'E0F2FE', type:ShadingType.CLEAR, color:'auto' },
-      children:[ new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:r===midRow?'LỐI ĐI':'', italics:true,size:12,color:'64748B'})]}) ]
-    }));
-    for(let c=4;c<8;c++){
-      const idx = r*COLS + c;
-      const label = idx < seatCount ? (seats[idx] || '') : '';
-      cells.push(new TableCell({
-        width:{size:regWidth,type:WidthType.PERCENTAGE}, borders:cellBorders, verticalAlign:VerticalAlign.CENTER,
-        children:[ new Paragraph({alignment:AlignmentType.CENTER,children:[new TextRun({text:label,bold:true,size:16})]}) ]
-      }));
-    }
-    rows.push(new TableRow({ children: cells }));
-  }
-  const table = new Table({ rows, width:{ size:100, type: WidthType.PERCENTAGE } });
-  const school = (document.getElementById('school').value.trim() || 'TRƯỜNG THPT HÀ HUY TẬP').toUpperCase();
-  const className = document.getElementById('className').value.trim() || '11B9';
-  const schoolYear = document.getElementById('schoolYear').value.trim() || '2026 – 2027';
-  const gvcn = document.getElementById('teacherName').value.trim() || 'Trần Duy Tâm';
-  const effectiveDate = document.getElementById('effectiveDate').value.trim();
-  const doc = new Document({
-    sections:[{ children:[
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({ text: school, bold:true, size:26, color:'1E40AF' }) ] }),
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({ text: 'Năm Học : '+schoolYear, bold:true, size:20, color:'0369A1' }) ] }),
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({ text: 'SƠ ĐỒ LỚP '+className, bold:true, size:34, color:'7C3AED' }) ] }),
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({ text: 'Đoàn kết – Học tập – cùng tiến bộ', italics:true, size:18, color:'0369A1' }) ] }),
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({
-        text: 'GVCN: '+gvcn+(effectiveDate?'  (Áp dụng từ ngày '+effectiveDate+')':''), italics:true, size:20, color:'C2410C'
-      }) ] }),
-      new Paragraph({ text:'' }),
-      table,
-      new Paragraph({ text:'' }),
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({ text:'LỐI VÀO  —  BẢNG ĐEN  —  BÀN GIÁO VIÊN', bold:true, italics:true, size:20 }) ] }),
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({ text:'Một lớp học – Một gia đình – Một mục tiêu – Một tương lai rực rỡ!', italics:true, size:18, color:'BE185D' }) ] }),
-      new Paragraph({ text:'' }),
-      new Paragraph({ alignment: AlignmentType.CENTER, children:[ new TextRun({ text:'© Bản quyền sản phẩm @WebH2T', size:16, color:'888888' }) ] })
-    ]}]
+/* =========================
+   DRAG & DROP
+========================= */
+function bindDragDrop() {
+  document.querySelectorAll(".desk-cell[data-seat]").forEach(cell => {
+    cell.addEventListener("dragstart", e => {
+      const idx = +cell.getAttribute("data-seat");
+      if (!appState.seats[idx]) { e.preventDefault(); return; }
+      if (isSeatLocked(idx)) { e.preventDefault(); toast("Vị trí đang khóa."); return; }
+      dragSeatIdx = idx;
+      cell.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    cell.addEventListener("dragend", () => {
+      cell.classList.remove("dragging");
+      document.querySelectorAll(".desk-cell.drag-over").forEach(c => c.classList.remove("drag-over"));
+      dragSeatIdx = null;
+    });
+    cell.addEventListener("dragover", e => {
+      e.preventDefault();
+      cell.classList.add("drag-over");
+    });
+    cell.addEventListener("dragleave", () => cell.classList.remove("drag-over"));
+    cell.addEventListener("drop", e => {
+      e.preventDefault();
+      cell.classList.remove("drag-over");
+      const to = +cell.getAttribute("data-seat");
+      if (dragSeatIdx == null || dragSeatIdx === to) return;
+      if (isSeatLocked(to) && appState.seats[to]) { toast("Ô đích đang khóa."); return; }
+      pushHistory();
+      const a = appState.seats[dragSeatIdx];
+      const b = appState.seats[to];
+      appState.seats[dragSeatIdx] = b;
+      appState.seats[to] = a;
+      if (a) { const sa = getStudent(a); if (sa) sa.seatId = to; }
+      if (b) { const sb = getStudent(b); if (sb) sb.seatId = dragSeatIdx; }
+      renderAll();
+      toast(b ? "Đã đổi chỗ." : "Đã chuyển chỗ.");
+    });
+    cell.addEventListener("dblclick", () => {
+      const idx = +cell.getAttribute("data-seat");
+      const id = appState.seats[idx];
+      if (!id) return;
+      const st = getStudent(id);
+      if (!st) return;
+      st.locked = !st.locked;
+      renderAll();
+      toast(st.locked ? "Đã khóa vị trí: " + st.name : "Đã mở khóa: " + st.name);
+    });
   });
-  const blob = await Packer.toBlob(doc);
-  const a=document.createElement('a');
-  a.download='So_do_lop_'+currentClassSlug()+'.docx';
-  a.href=URL.createObjectURL(blob); a.click(); URL.revokeObjectURL(a.href);
 }
 
-async function randomizeToRoles(){
-  if(!hasPlan || seats.filter(Boolean).length===0){ toast('⚠️ Hãy xếp chỗ trước khi random tổ.'); return; }
-  const zones = {1:[],2:[],3:[],4:[]};
-  for(let i=0;i<seatCount;i++){ const name=seats[i]; if(name) zones[getZone(i)].push(name); }
-  const result = {1:null,2:null,3:null,4:null};
-  renderToResults(result);
-  const zoneColors = {1:'#2563eb',2:'#0d9488',3:'#db2777',4:'#b45309'};
-  const insufficientZones = [];
-  const useSuspense = suspenseEnabled();
-  for(const z of [1,2,3,4]){
-    const members = zones[z];
-    if(useSuspense){
-      await runCountdown({
-        seconds:60, icon:'🎩',
-        title:'Nón kỳ diệu đang chọn Tổ trưởng và Tổ phó',
-        subtitle:'<b>TỔ '+z+'</b> — '+members.length+' học sinh',
-        names: members.length ? members : null,
-        accentColor: zoneColors[z]
-      });
+/* =========================
+   HISTORY UNDO/REDO
+========================= */
+function snapshot() {
+  return JSON.stringify({
+    students: appState.students,
+    seats: appState.seats,
+    classroom: appState.classroom
+  });
+}
+function pushHistory() {
+  historyStack.push(snapshot());
+  if (historyStack.length > HISTORY_MAX) historyStack.shift();
+  redoStack = [];
+}
+function restoreSnap(raw) {
+  try {
+    const d = JSON.parse(raw);
+    appState.students = d.students;
+    appState.seats = d.seats;
+    Object.assign(appState.classroom, d.classroom);
+    syncStateToForm();
+    renderAll();
+  } catch (e) { log(e); }
+}
+function undoAction() {
+  if (!historyStack.length) { toast("Không còn thao tác để hoàn tác."); return; }
+  redoStack.push(snapshot());
+  restoreSnap(historyStack.pop());
+  toast("Đã hoàn tác.");
+}
+function redoAction() {
+  if (!redoStack.length) { toast("Không còn thao tác để làm lại."); return; }
+  historyStack.push(snapshot());
+  restoreSnap(redoStack.pop());
+  toast("Đã làm lại.");
+}
+
+/* =========================
+   GROUPS (KEEP randomizeToRoles)
+========================= */
+
+/* =========================
+   SELF-PICK SEAT (học sinh tự chọn tên)
+========================= */
+function refreshSelfPickSelect() {
+  const sel = document.getElementById("selfPickName");
+  if (!sel) return;
+  const cur = sel.value;
+  // Sắp xếp theo STT (thứ tự Excel), không theo alphabet
+  const all = appState.students.slice().sort((a, b) => {
+    const sa = (a.stt != null ? Number(a.stt) : 9999);
+    const sb = (b.stt != null ? Number(b.stt) : 9999);
+    if (sa !== sb) return sa - sb;
+    return String(a.name).localeCompare(String(b.name), "vi");
+  });
+  sel.innerHTML = '<option value="">— Chọn học sinh (theo STT) —</option>' +
+    all.map(s => {
+      const sttLabel = (s.stt != null ? s.stt + ". " : "");
+      const tag = s.seatId != null ? " (đã có chỗ)" : (isPriorityStudent(s) ? " ★ ưu tiên" : "");
+      return '<option value="' + s.id + '"' + (s.id === cur ? " selected" : "") + ">" +
+        sttLabel + escapeHTML(s.name) + tag + "</option>";
+    }).join("");
+}
+function pickBestSeatForStudent(st) {
+  const empties = emptySeatIndexes();
+  if (!empties.length) return -1;
+  const useDisability = !document.getElementById("cDisability") || document.getElementById("cDisability").checked;
+  const useFront = document.getElementById("cFrontWeak") && document.getElementById("cFrontWeak").checked;
+  function score(seatIdx) {
+    const z = getZone(seatIdx);
+    const row = Math.floor(seatIdx / COLS);
+    const col = seatIdx % COLS;
+    let sc = row * 10;
+    if (z === 1 || z === 3) sc += 100;
+    if (col === 3 || col === 4) sc += 5;
+    return sc;
+  }
+  let pool = empties.slice();
+  if (useDisability && isPriorityStudent(st)) {
+    // Chỉ Tổ 1 hoặc Tổ 3 nếu còn trống
+    const preferred = empties.filter(i => {
+      const z = getZone(i);
+      return z === 1 || z === 3;
+    });
+    if (preferred.length) pool = preferred;
+    pool.sort((a, b) => score(b) - score(a));
+    return pool[0];
+  }
+  if (useFront && levelScore(st.academicLevel) <= 2) {
+    pool.sort((a, b) => score(b) - score(a));
+    return pool[0];
+  }
+  // Ngẫu nhiên trong các chỗ trống
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+async function selfPickSeat() {
+  const sel = document.getElementById("selfPickName");
+  const id = sel && sel.value;
+  if (!id) { toast("Hãy chọn tên trong danh sách."); return; }
+  const st = getStudent(id);
+  if (!st) { toast("Không tìm thấy học sinh."); return; }
+  if (st.seatId != null) {
+    showConfirm("Đã có chỗ", "<b>" + escapeHTML(st.name) + "</b> đã ở chỗ " + (st.seatId + 1) + ". Xếp lại chỗ khác?", async () => {
+      pushHistory();
+      appState.seats[st.seatId] = null;
+      st.seatId = null;
+      await doSelfPick(st);
+    });
+    return;
+  }
+  await doSelfPick(st);
+}
+async function doSelfPick(st) {
+  if (!emptySeatIndexes().length) { toast("Không còn chỗ trống."); return; }
+  const allNames = appState.students.map(s => s.name);
+  await runCountdown({
+    seconds: 5,
+    title: "Đang chọn chỗ phù hợp cho",
+    subtitle: escapeHTML(st.name) + (isPriorityStudent(st) ? " · Đối tượng ưu tiên" : ""),
+    names: allNames
+  });
+  pushHistory();
+  const seat = pickBestSeatForStudent(st);
+  if (seat < 0) { toast("Không còn chỗ trống."); return; }
+  appState.seats[seat] = st.id;
+  st.seatId = seat;
+  const z = getZone(seat);
+  document.getElementById("planExplain").style.display = "block";
+  let msg = "Đã xếp <b>" + escapeHTML(st.name) + "</b> → chỗ " + (seat + 1) + " (Tổ " + z + ").";
+  if (isPriorityStudent(st)) msg += " Ưu tiên đầu bàn Tổ 1/Tổ 3 gần Bàn giáo viên.";
+  document.getElementById("planExplain").innerHTML = msg;
+  renderAll();
+  toast("Đã xếp chỗ cho " + st.name + " · Tổ " + z);
+}
+
+/* =========================
+   MAGIC HAT — Lớp trưởng / Phó HT / Bí thư (học lực)
+========================= */
+let lastLeaderResult = null;
+function weightedPickByAcademic(pool, preferHigh) {
+  // preferHigh: true → Giỏi/Khá weighted higher
+  if (!pool.length) return null;
+  const weights = pool.map(name => {
+    const st = appState.students.find(s => s.name === name);
+    const lv = st ? levelScore(st.academicLevel) : 2.5;
+    // weight: Giỏi 8, Khá 5, TB 2, Yếu 1, unknown 3
+    if (preferHigh) {
+      if (lv >= 4) return 8;
+      if (lv >= 3) return 5;
+      if (lv >= 2) return 2;
+      return 1;
     }
-    if(members.length < 3){
-      insufficientZones.push(z);
-      result[z] = { truong:null, pho:[], members };
+    return 3;
+  });
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+async function magicHatLeaders() {
+  const pool = appState.students.filter(s => s.seatId != null).map(s => s.name);
+  if (pool.length < 3) {
+    toast("Cần ít nhất 3 học sinh đã xếp chỗ.");
+    return;
+  }
+  const names = appState.students.map(s => s.name);
+  await runCountdown({
+    seconds: 5,
+    title: "Nón kỳ diệu — chọn Lớp trưởng / Phó học tập / Bí thư",
+    subtitle: "Ưu tiên học lực Giỏi · Khá (hỗ trợ giáo viên quyết định)",
+    names: names
+  });
+  const available = pool.slice();
+  shuffleArray(available);
+  const lopTruong = weightedPickByAcademic(available, true);
+  const rest1 = available.filter(n => n !== lopTruong);
+  const phoHT = weightedPickByAcademic(rest1, true);
+  const rest2 = rest1.filter(n => n !== phoHT);
+  const biThu = weightedPickByAcademic(rest2, true);
+  lastLeaderResult = {
+    "Lớp trưởng": lopTruong,
+    "Lớp phó học tập": phoHT,
+    "Bí thư Đoàn": biThu
+  };
+  // Also sync into committee partial if empty roles
+  renderLeaderResults();
+  toast("Đã chọn phương án Lớp trưởng / Phó HT / Bí thư (theo học lực).");
+}
+function renderLeaderResults() {
+  const el = document.getElementById("leaderResultArea");
+  if (!el || !lastLeaderResult) return;
+  el.innerHTML =
+    '<div class="disclaimer">Phương án hỗ trợ theo học lực. Giáo viên có thể chỉ định lại.</div>' +
+    '<div class="grid2">' +
+    Object.keys(lastLeaderResult).map(role =>
+      '<div class="to-card"><h3>' + escapeHTML(role) + '</h3><div class="to-role">' +
+      escapeHTML(lastLeaderResult[role] || "—") + "</div></div>"
+    ).join("") +
+    "</div>";
+}
+
+
+/* =========================
+   XẾP LẠI TRONG TỔ (đảo chỗ cùng zone)
+========================= */
+async function reshuffleWithinGroups() {
+  const filled = appState.seats.filter(Boolean).length;
+  if (!filled) { toast("Hãy xếp chỗ trước khi xếp lại trong tổ."); return; }
+  pushHistory();
+  const zones = { 1: [], 2: [], 3: [], 4: [] };
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    const id = appState.seats[i];
+    if (!id) continue;
+    const st = getStudent(id);
+    if (st && st.locked) continue;
+    zones[getZone(i)].push({ seatIdx: i, studentId: id, name: st ? st.name : "" });
+  }
+  const allNames = appState.students.map(s => s.name);
+  const secs = durationByClassSize();
+  await runCountdown({
+    seconds: secs,
+    title: "XẾP LẠI TỔ",
+    subtitle: "Sĩ số " + secs + " · đếm " + secs + " giây · đảo chỗ trong từng tổ",
+    names: allNames.length ? allNames : ["…"]
+  });
+  for (const z of [1, 2, 3, 4]) {
+    const members = zones[z];
+    if (members.length < 2) continue;
+    const seatIdxs = members.map(m => m.seatIdx);
+    const ids = members.map(m => m.studentId);
+    shuffleArray(ids);
+    seatIdxs.forEach((seatIdx, i) => {
+      const id = ids[i];
+      appState.seats[seatIdx] = id;
+      const st = getStudent(id);
+      if (st) st.seatId = seatIdx;
+    });
+  }
+  document.getElementById("planExplain").style.display = "block";
+  document.getElementById("planExplain").textContent =
+    "Đã xếp lại vị trí trong từng tổ (giữ nguyên tổ, đảo chỗ giữa các bàn của tổ). Chỗ đã khóa không bị đổi.";
+  renderAll();
+  toast("Đã xếp lại trong 4 tổ.");
+}
+
+async function randomizeToRoles() {
+  const filled = appState.seats.filter(Boolean).length;
+  if (!filled) { toast("Hãy xếp chỗ trước khi phân nhóm."); return; }
+  const zones = { 1: [], 2: [], 3: [], 4: [] };
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    const name = studentNameAtSeat(i);
+    if (name) zones[getZone(i)].push(name);
+  }
+  const result = { 1: null, 2: null, 3: null, 4: null };
+  renderToResults(result);
+  const insufficient = [];
+  const allNames = appState.students.map(s => s.name);
+  const secs = durationByClassSize();
+  await runCountdown({
+    seconds: secs,
+    title: "CHỌN TỔ TRƯỞNG / TỔ PHÓ",
+    subtitle: "Sĩ số " + secs + " · đếm " + secs + " giây · ưu tiên học lực cho Tổ trưởng",
+    names: allNames.length ? allNames : ["…"]
+  });
+  for (const z of [1, 2, 3, 4]) {
+    const members = zones[z];
+    if (members.length < 3) {
+      insufficient.push(z);
+      result[z] = { truong: null, pho: [], members };
     } else {
-      const shuffled=[...members];
-      for(let i=shuffled.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]; }
-      result[z] = { truong: shuffled[0], pho:[shuffled[1],shuffled[2]], members };
+      const truong = weightedPickByAcademic(members, true) || members[0];
+      const rest = members.filter(m => m !== truong);
+      shuffleArray(rest);
+      result[z] = { truong: truong, pho: rest.slice(0, 2), members };
     }
     renderToResults(result);
   }
   lastToRoleResult = result;
-  if(insufficientZones.length) toast('⚠️ Tổ '+insufficientZones.join(', ')+' chưa đủ 3 học sinh.');
-  else toast('🎩 Đã random xong tổ trưởng & tổ phó cho 4 tổ.');
+  appState.groups = result;
+  if (insufficient.length) toast("Tổ " + insufficient.join(", ") + " chưa đủ 3 học sinh.");
+  else toast("Đã chọn Tổ trưởng / Tổ phó (nón kỳ diệu · học lực).");
 }
-function renderToResults(result){
-  let html = '<div class="to-grid" id="toResultSheet">';
-  [1,2,3,4].forEach(z=>{
+function renderToResults(result) {
+  let html = '<div class="grid4" id="toResultSheet">';
+  [1, 2, 3, 4].forEach(z => {
     const r = result[z];
-    if(!r){
-      html += '<div class="to-card"><h3>TỔ '+z+'</h3><div class="to-role">🎩 Đang chờ nón kỳ diệu…</div></div>';
+    if (!r) {
+      html += '<div class="to-card"><h3>TỔ ' + z + '</h3><div class="to-role">Đang chờ…</div></div>';
       return;
     }
-    const others = r.members.filter(m=> m!==r.truong && !r.pho.includes(m));
-    html += '<div class="to-card">'+
-      '<h3>TỔ '+z+' <span class="to-count">('+r.members.length+' học sinh)</span></h3>'+
-      '<div class="to-role">⭐ <b>Tổ trưởng:</b> '+(r.truong?escapeHTML(r.truong):'—')+'</div>'+
-      '<div class="to-role">🔹 <b>Tổ phó:</b> '+(r.pho.length?r.pho.map(escapeHTML).join(', '):'—')+'</div>'+
-      '<div class="to-members"><b>Tổ viên:</b> '+(others.length?others.map(escapeHTML).join(', '):'—')+'</div>'+
-    '</div>';
+    const others = r.members.filter(m => m !== r.truong && !(r.pho || []).includes(m));
+    html += '<div class="to-card"><h3>TỔ ' + z + ' <span style="font-weight:500;color:var(--muted)">(' + r.members.length + ')</span></h3>' +
+      '<div class="to-role"><b>Tổ trưởng:</b> ' + (r.truong ? escapeHTML(r.truong) : "—") + "</div>" +
+      '<div class="to-role"><b>Tổ phó:</b> ' + (r.pho && r.pho.length ? r.pho.map(escapeHTML).join(", ") : "—") + "</div>" +
+      '<div class="to-members"><b>Tổ viên:</b> ' + (others.length ? others.map(escapeHTML).join(", ") : "—") + "</div></div>";
   });
-  html += '</div>';
-  document.getElementById('toResultArea').innerHTML = html;
+  html += "</div>";
+  document.getElementById("toResultArea").innerHTML = html;
 }
-function exportExcelTo(){
-  if(!lastToRoleResult){ toast('⚠️ Hãy random tổ trưởng/tổ phó trước.'); return; }
-  if(typeof XLSX==='undefined'){ toast('Đang tải công cụ xuất Excel, hãy thử lại sau 1 giây.'); return; }
-  const wsData = [['Tổ','Vai trò','Họ và tên']];
-  [1,2,3,4].forEach(z=>{
+function exportExcelTo() {
+  if (!lastToRoleResult) { toast("Hãy tạo phương án nhóm trước."); return; }
+  if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong."); return; }
+  const wsData = [["Tổ", "Vai trò", "Họ và tên"]];
+  [1, 2, 3, 4].forEach(z => {
     const r = lastToRoleResult[z];
-    wsData.push(['Tổ '+z, 'Tổ trưởng', r.truong||'']);
-    r.pho.forEach(p=> wsData.push(['Tổ '+z, 'Tổ phó', p]));
-    r.members.filter(m=> m!==r.truong && !r.pho.includes(m)).forEach(m=> wsData.push(['Tổ '+z, 'Tổ viên', m]));
+    if (!r) return;
+    wsData.push(["Tổ " + z, "Tổ trưởng", r.truong || ""]);
+    (r.pho || []).forEach(p => wsData.push(["Tổ " + z, "Tổ phó", p]));
+    r.members.filter(m => m !== r.truong && !(r.pho || []).includes(m)).forEach(m =>
+      wsData.push(["Tổ " + z, "Tổ viên", m])
+    );
   });
   const ws = XLSX.utils.aoa_to_sheet(wsData);
   const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Danh sach To');
-  XLSX.writeFile(wb, 'Danh_sach_to_'+currentClassSlug()+'.xlsx');
+  XLSX.utils.book_append_sheet(wb, ws, "Danh sach To");
+  XLSX.writeFile(wb, "Danh_sach_to_" + currentClassSlug() + ".xlsx");
 }
 
-const COMMITTEE_ROLES = [
-  {role:'Lớp trưởng', count:1},
-  {role:'Lớp phó học tập', count:1},
-  {role:'Lớp phó nề nếp', count:1},
-  {role:'Lớp phó lao động', count:1},
-  {role:'Lớp phó văn thể mỹ', count:1},
-  {role:'Bí thư Đoàn', count:1},
-  {role:'Phó bí thư Đoàn', count:1},
-  {role:'Ủy viên cán sự Đoàn', count:1},
-  {role:'Thanh niên xung kích', count:3},
-];
-async function randomizeCommittee(){
-  const pool = seats.filter(Boolean).slice();
-  const totalNeeded = COMMITTEE_ROLES.reduce((s,r)=>s+r.count,0);
-  if(pool.length < totalNeeded){ toast('⚠️ Cần tối thiểu '+totalNeeded+' học sinh đã xếp chỗ.'); return; }
-  const shuffled=[...pool];
-  for(let i=shuffled.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]]; }
-  let cursor=0;
-  const result = COMMITTEE_ROLES.map(r=>{
-    const names = shuffled.slice(cursor, cursor+r.count);
-    cursor += r.count;
-    return { role:r.role, names };
-  });
-  if(suspenseEnabled()){
-    await runCountdown({
-      seconds:90, icon:'🎩',
-      title:'Nón kỳ diệu đang chọn Ban cán sự lớp',
-      subtitle:'Tổng sĩ số: <b>'+pool.length+'</b> học sinh',
-      names: pool,
-      accentColor:'#8b5cf6'
-    });
-  }
-  lastCommitteeResult = result;
-  renderCommitteeResults(result);
-  showCommitteeResultModal(result);
-  toast('🎩 Đã random ban cán sự lớp.');
-}
-function committeeTreeInner(result){
-  const byRole = {}; result.forEach(r=> byRole[r.role]=r.names);
-  const g = (role)=> (byRole[role] && byRole[role][0]) ? escapeHTML(byRole[role][0]) : '—';
-  const tnxk = (byRole['Thanh niên xung kích']||[]).map(escapeHTML).join(', ') || '—';
-  return '<li>'+
-        '<div class="org-node org-root">👑 Lớp trưởng<br>'+g('Lớp trưởng')+'</div>'+
-        '<ul>'+
-          '<li><div class="org-node">📘 Lớp phó học tập<br>'+g('Lớp phó học tập')+'</div></li>'+
-          '<li><div class="org-node">📏 Lớp phó nề nếp<br>'+g('Lớp phó nề nếp')+'</div></li>'+
-          '<li><div class="org-node">🧹 Lớp phó lao động<br>'+g('Lớp phó lao động')+'</div></li>'+
-          '<li><div class="org-node">🎨 Lớp phó văn thể mỹ<br>'+g('Lớp phó văn thể mỹ')+'</div></li>'+
-          '<li>'+
-            '<div class="org-node org-doan">🚩 Bí thư Đoàn<br>'+g('Bí thư Đoàn')+'</div>'+
-            '<ul>'+
-              '<li><div class="org-node">🚩 Phó bí thư Đoàn<br>'+g('Phó bí thư Đoàn')+'</div></li>'+
-              '<li><div class="org-node">🎗️ Ủy viên cán sự Đoàn<br>'+g('Ủy viên cán sự Đoàn')+'</div></li>'+
-              '<li><div class="org-node">🛡️ Thanh niên xung kích<br>'+tnxk+'</div></li>'+
-            '</ul>'+
-          '</li>'+
-        '</ul>'+
-      '</li>';
-}
-function renderCommitteeResults(result){
-  document.getElementById('committeeResultArea').innerHTML =
-    '<ul class="org-tree" id="committeeSheet">'+committeeTreeInner(result)+'</ul>';
-}
-function showCommitteeResultModal(result){
-  showOverlay(
-    '<div class="fx-card fx-result-card" style="--accent:#8b5cf6;">'+
-      '<div class="fx-title" style="margin-bottom:6px;">🌳 KẾT QUẢ BAN CÁN SỰ LỚP</div>'+
-      '<div class="fx-subtitle">Sơ đồ hình cây</div>'+
-      '<div class="fx-result-body"><ul class="org-tree">'+committeeTreeInner(result)+'</ul></div>'+
-      '<button class="btn btn-reset fx-skip" id="fxCloseBtn" type="button">✖️ Đóng</button>'+
-    '</div>'
-  );
-  const btn = document.getElementById('fxCloseBtn');
-  if(btn) btn.addEventListener('click', hideOverlay);
-}
-function exportExcelCommittee(){
-  if(!lastCommitteeResult){ toast('⚠️ Hãy random ban cán sự lớp trước.'); return; }
-  if(typeof XLSX==='undefined'){ toast('Đang tải công cụ xuất Excel, hãy thử lại sau 1 giây.'); return; }
-  const wsData = [['Chức vụ','Họ và tên']];
-  lastCommitteeResult.forEach(r=>{ wsData.push([r.role, r.names.join(', ')]); });
-  const ws = XLSX.utils.aoa_to_sheet(wsData);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Ban can su lop');
-  XLSX.writeFile(wb, 'Ban_can_su_lop_'+currentClassSlug()+'.xlsx');
-}
-
-async function exportImageOf(elementId, kind){
-  if(typeof html2canvas==='undefined'){ toast('Đang tải công cụ xuất ảnh, hãy thử lại sau 1 giây.'); return; }
-  const node = document.getElementById(elementId);
-  if(!node || !node.innerHTML.trim()){
-    toast(kind==='to' ? '⚠️ Hãy random tổ trưởng/tổ phó trước.' : '⚠️ Hãy random ban cán sự lớp trước.');
+/* =========================
+   COMMITTEE (KEEP API)
+========================= */
+async function randomizeCommittee() {
+  const pool = appState.students.filter(s => s.seatId != null).map(s => s.name);
+  const need = COMMITTEE_ROLES.reduce((s, r) => s + r.count, 0);
+  if (pool.length < need) {
+    toast("Cần tối thiểu " + need + " học sinh đã xếp chỗ.");
     return;
   }
-  const canvas = await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});
-  const a=document.createElement('a');
-  a.download = (kind==='to' ? 'Danh_sach_to_'+currentClassSlug()+'.jpg' : 'Ban_can_su_lop_'+currentClassSlug()+'.jpg');
-  a.href=canvas.toDataURL('image/jpeg',0.95);
+  const allNames = appState.students.map(s => s.name);
+  const secs = durationByClassSize();
+  await runCountdown({
+    seconds: secs,
+    title: "CHỌN NHIỆM VỤ LỚP",
+    subtitle: "Sĩ số " + secs + " · đếm " + secs + " giây · ưu tiên học lực (Lớp trưởng / Phó HT / Bí thư)",
+    names: allNames.length ? allNames : ["…"]
+  });
+  // Roles that prefer high academic
+  const preferHighRoles = {
+    "Lớp trưởng": true,
+    "Lớp phó học tập": true,
+    "Bí thư Đoàn": true,
+    "Phó bí thư Đoàn": true
+  };
+  let available = pool.slice();
+  const result = [];
+  COMMITTEE_ROLES.forEach(r => {
+    const names = [];
+    for (let i = 0; i < r.count; i++) {
+      if (!available.length) break;
+      let pick;
+      if (preferHighRoles[r.role]) {
+        pick = weightedPickByAcademic(available, true);
+      } else {
+        pick = available[Math.floor(Math.random() * available.length)];
+      }
+      names.push(pick);
+      available = available.filter(n => n !== pick);
+    }
+    result.push({ role: r.role, names });
+  });
+  lastCommitteeResult = result;
+  appState.committee = result;
+  // Sync key leaders display
+  function roleName(role) {
+    const r = result.find(x => x.role === role);
+    return (r && r.names && r.names[0]) ? r.names[0] : "—";
+  }
+  lastLeaderResult = {
+    "Lớp trưởng": roleName("Lớp trưởng"),
+    "Lớp phó học tập": roleName("Lớp phó học tập"),
+    "Bí thư Đoàn": roleName("Bí thư Đoàn")
+  };
+  renderLeaderResults();
+  renderCommitteeResults(result);
+  showCommitteeResultModal(result);
+  toast("Đã tạo phương án nhiệm vụ lớp (nón kỳ diệu · học lực).");
+}
+function committeeTreeInner(result) {
+  const byRole = {};
+  result.forEach(r => { byRole[r.role] = r.names; });
+  const g = role => (byRole[role] && byRole[role][0]) ? escapeHTML(byRole[role][0]) : "—";
+  const tnxk = (byRole["Thanh niên xung kích"] || []).map(escapeHTML).join(", ") || "—";
+  return "<li><div class=\"org-node org-root\">Lớp trưởng<br>" + g("Lớp trưởng") + "</div><ul>" +
+    "<li><div class=\"org-node\">Lớp phó học tập<br>" + g("Lớp phó học tập") + "</div></li>" +
+    "<li><div class=\"org-node\">Lớp phó nề nếp<br>" + g("Lớp phó nề nếp") + "</div></li>" +
+    "<li><div class=\"org-node\">Lớp phó lao động<br>" + g("Lớp phó lao động") + "</div></li>" +
+    "<li><div class=\"org-node\">Lớp phó văn thể mỹ<br>" + g("Lớp phó văn thể mỹ") + "</div></li>" +
+    "<li><div class=\"org-node org-doan\">Bí thư Đoàn<br>" + g("Bí thư Đoàn") + "</div><ul>" +
+    "<li><div class=\"org-node\">Phó bí thư Đoàn<br>" + g("Phó bí thư Đoàn") + "</div></li>" +
+    "<li><div class=\"org-node\">Ủy viên cán sự Đoàn<br>" + g("Ủy viên cán sự Đoàn") + "</div></li>" +
+    "<li><div class=\"org-node\">Thanh niên xung kích<br>" + tnxk + "</div></li>" +
+    "</ul></li></ul></li>";
+}
+function renderCommitteeResults(result) {
+  document.getElementById("committeeResultArea").innerHTML =
+    '<ul class="org-tree" id="committeeSheet">' + committeeTreeInner(result) + "</ul>";
+}
+function showCommitteeResultModal(result) {
+  showOverlay(
+    '<div class="fx-card" style="max-width:640px">' +
+    '<div class="fx-title">Kết quả phân công nhiệm vụ lớp</div>' +
+    '<div class="fx-sub">Phương án hỗ trợ — giáo viên quyết định cuối cùng</div>' +
+    '<div style="max-height:50vh;overflow:auto;margin:10px 0"><ul class="org-tree">' +
+    committeeTreeInner(result) + "</ul></div>" +
+    '<button class="btn btn-secondary" id="fxCloseBtn">Đóng</button></div>'
+  );
+  const btn = document.getElementById("fxCloseBtn");
+  if (btn) btn.onclick = hideOverlay;
+}
+function exportExcelCommittee() {
+  if (!lastCommitteeResult) { toast("Hãy tạo phương án trước."); return; }
+  if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong."); return; }
+  const wsData = [["Chức vụ", "Họ và tên"]];
+  lastCommitteeResult.forEach(r => wsData.push([r.role, r.names.join(", ")]));
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Nhiem vu lop");
+  XLSX.writeFile(wb, "Nhiem_vu_lop_" + currentClassSlug() + ".xlsx");
+}
+
+/* =========================
+   EXPORT IMAGE / JPG / DOCX
+========================= */
+async function exportImageOf(elementId, kind) {
+  if (typeof html2canvas === "undefined") { toast("Công cụ xuất ảnh chưa tải xong."); return; }
+  const node = document.getElementById(elementId);
+  if (!node || !node.innerHTML.trim()) {
+    toast(kind === "to" ? "Hãy tạo phương án nhóm trước." : "Hãy tạo phương án nhiệm vụ lớp trước.");
+    return;
+  }
+  const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+  const a = document.createElement("a");
+  a.download = (kind === "to" ? "Danh_sach_to_" : "Nhiem_vu_lop_") + currentClassSlug() + ".jpg";
+  a.href = canvas.toDataURL("image/jpeg", 0.95);
   a.click();
 }
+async function downloadJPG() {
+  if (!appState.seats.some(Boolean)) { toast("Hãy xếp chỗ trước khi xuất ảnh."); return; }
+  if (typeof html2canvas === "undefined") { toast("Công cụ xuất ảnh chưa tải xong."); return; }
+  const node = document.getElementById("sheet");
+  const canvas = await html2canvas(node, { scale: 2, backgroundColor: "#fffef9", useCORS: true });
+  const a = document.createElement("a");
+  a.download = "So_do_lop_" + currentClassSlug() + ".jpg";
+  a.href = canvas.toDataURL("image/jpeg", 0.95);
+  a.click();
+}
+async function downloadDOCX() {
+  if (!appState.seats.some(Boolean)) { toast("Hãy xếp chỗ trước khi xuất Word."); return; }
+  if (typeof docx === "undefined") { toast("Công cụ xuất Word chưa tải xong."); return; }
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, VerticalAlign, ShadingType } = docx;
+  const { totalRows } = zoneInfo();
+  const thin = { style: BorderStyle.SINGLE, size: 4, color: "3B82F6" };
+  const none = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+  const cb = { top: thin, bottom: thin, left: thin, right: thin };
+  const sb = { top: none, bottom: none, left: none, right: none };
+  const rows = [];
+  const mid = Math.floor((totalRows - 1) / 2);
+  for (let r = 0; r < totalRows; r++) {
+    const cells = [];
+    for (let c = 0; c < 4; c++) {
+      const idx = r * COLS + c;
+      const label = idx < appState.classroom.seatCount ? (studentNameAtSeat(idx) || "") : "";
+      cells.push(new TableCell({
+        width: { size: 11.75, type: WidthType.PERCENTAGE }, borders: cb, verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label, bold: true, size: 16 })] })]
+      }));
+    }
+    cells.push(new TableCell({
+      width: { size: 6, type: WidthType.PERCENTAGE }, borders: sb, verticalAlign: VerticalAlign.CENTER,
+      shading: { fill: "E0F2FE", type: ShadingType.CLEAR, color: "auto" },
+      children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: r === mid ? "LỐI ĐI" : "", italics: true, size: 12, color: "64748B" })] })]
+    }));
+    for (let c = 4; c < 8; c++) {
+      const idx = r * COLS + c;
+      const label = idx < appState.classroom.seatCount ? (studentNameAtSeat(idx) || "") : "";
+      cells.push(new TableCell({
+        width: { size: 11.75, type: WidthType.PERCENTAGE }, borders: cb, verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label, bold: true, size: 16 })] })]
+      }));
+    }
+    rows.push(new TableRow({ children: cells }));
+  }
+  const table = new Table({ rows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  const school = (appState.classroom.school || "TRƯỜNG THPT").toUpperCase();
+  const cls = appState.classroom.className || "—";
+  const year = appState.classroom.schoolYear || "2026 – 2027";
+  const gvcn = appState.classroom.teacherName || "Trần Duy Tâm";
+  const children = [
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: school, bold: true, size: 26, color: "1E3A5F" })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "LỚP " + cls + " · NĂM HỌC " + year, bold: true, size: 22 })] }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "GVCN: " + gvcn, italics: true, size: 20 })] }),
+    new Paragraph({ text: "" }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "SƠ ĐỒ CHỖ NGỒI", bold: true, size: 28, color: "1E40AF" })] }),
+    new Paragraph({ text: "" }),
+    table,
+    new Paragraph({ text: "" }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "LỐI VÀO — BẢNG ĐEN — BÀN GIÁO VIÊN", size: 18 })] }),
+    new Paragraph({ text: "" }),
+    new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Hồ sơ lớp học · Tạo bởi CLASSROOM", size: 16, color: "64748B" })] })
+  ];
+  // student list page content
+  children.push(new Paragraph({ text: "" }));
+  children.push(new Paragraph({ children: [new TextRun({ text: "DANH SÁCH HỌC SINH THEO VỊ TRÍ", bold: true, size: 24 })] }));
+  appState.seats.forEach((id, i) => {
+    const name = studentNameAtSeat(i);
+    if (name) children.push(new Paragraph({ children: [new TextRun({ text: "Chỗ " + (i + 1) + " · Tổ " + getZone(i) + ": " + name, size: 18 })] }));
+  });
+  if (lastToRoleResult) {
+    children.push(new Paragraph({ text: "" }));
+    children.push(new Paragraph({ children: [new TextRun({ text: "PHÂN CÔNG VAI TRÒ NHÓM", bold: true, size: 24 })] }));
+    [1, 2, 3, 4].forEach(z => {
+      const r = lastToRoleResult[z];
+      if (!r) return;
+      children.push(new Paragraph({ children: [new TextRun({ text: "Tổ " + z + " — Trưởng: " + (r.truong || "—") + " | Phó: " + ((r.pho || []).join(", ") || "—"), size: 18 })] }));
+    });
+  }
+  if (lastCommitteeResult) {
+    children.push(new Paragraph({ text: "" }));
+    children.push(new Paragraph({ children: [new TextRun({ text: "PHÂN CÔNG NHIỆM VỤ LỚP (hỗ trợ)", bold: true, size: 24 })] }));
+    lastCommitteeResult.forEach(r => {
+      children.push(new Paragraph({ children: [new TextRun({ text: r.role + ": " + r.names.join(", "), size: 18 })] }));
+    });
+  }
+  const doc = new Document({ sections: [{ children }] });
+  const blob = await Packer.toBlob(doc);
+  const a = document.createElement("a");
+  a.download = "Ho_so_lop_" + currentClassSlug() + ".docx";
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function exportExcelFull() {
+  if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong."); return; }
+  const wb = XLSX.utils.book_new();
+  // Sheet info
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+    ["Trường", appState.classroom.school],
+    ["Lớp", appState.classroom.className],
+    ["Năm học", appState.classroom.schoolYear],
+    ["GVCN", appState.classroom.teacherName],
+    ["Sĩ số sức chứa", appState.classroom.seatCount],
+    ["Số HS", appState.students.length]
+  ]), "Thong tin lop");
+  // Students
+  const stuRows = [["STT", "Họ tên", "Giới tính", "Học lực", "Đối tượng", "Ghi chú", "Bàn/Chỗ", "Tổ", "Khóa"]];
+  appState.students.forEach((s, i) => {
+    stuRows.push([
+      i + 1, s.name, s.gender, s.academicLevel, s.doiTuong || "", s.note,
+      s.seatId != null ? s.seatId + 1 : "",
+      s.seatId != null ? getZone(s.seatId) : "",
+      s.locked ? "Có" : ""
+    ]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(stuRows), "Hoc sinh");
+  // Seats
+  const seatRows = [["Chỗ", "Họ tên", "Tổ"]];
+  for (let i = 0; i < appState.classroom.seatCount; i++) {
+    seatRows.push([i + 1, studentNameAtSeat(i) || "", getZone(i)]);
+  }
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(seatRows), "So do cho");
+  if (lastToRoleResult) {
+    const gRows = [["Tổ", "Vai trò", "Họ tên"]];
+    [1, 2, 3, 4].forEach(z => {
+      const r = lastToRoleResult[z];
+      if (!r) return;
+      gRows.push(["Tổ " + z, "Tổ trưởng", r.truong || ""]);
+      (r.pho || []).forEach(p => gRows.push(["Tổ " + z, "Tổ phó", p]));
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(gRows), "Nhom");
+  }
+  if (lastCommitteeResult) {
+    const cRows = [["Chức vụ", "Họ tên"]];
+    lastCommitteeResult.forEach(r => cRows.push([r.role, r.names.join(", ")]));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cRows), "Nhiem vu lop");
+  }
+  XLSX.writeFile(wb, "Tong_hop_lop_" + currentClassSlug() + ".xlsx");
+  toast("Đã xuất Excel tổng hợp.");
+}
+
+/* =========================
+   STORAGE + MIGRATION
+========================= */
+function syncFormToState() {
+  appState.classroom.school = document.getElementById("school").value;
+  appState.classroom.className = document.getElementById("className").value;
+  appState.classroom.schoolYear = document.getElementById("schoolYear").value;
+  appState.classroom.teacherName = document.getElementById("teacherName").value;
+  appState.classroom.effectiveDate = document.getElementById("effectiveDate").value;
+  appState.classroom.seatCount = Math.max(1, Math.min(200, parseInt(document.getElementById("studentCount").value, 10) || 48));
+  appState.classroom.logoDataUrl = logoDataUrl;
+  appState.settings.suspense = suspenseEnabled();
+  appState.settings.perDesk = parseInt(document.getElementById("perDesk").value, 10) || 2;
+}
+function syncStateToForm() {
+  document.getElementById("school").value = appState.classroom.school || "";
+  document.getElementById("className").value = appState.classroom.className || "";
+  document.getElementById("schoolYear").value = appState.classroom.schoolYear || "2026 – 2027";
+  document.getElementById("teacherName").value = appState.classroom.teacherName || "Trần Duy Tâm";
+  document.getElementById("effectiveDate").value = appState.classroom.effectiveDate || "";
+  document.getElementById("studentCount").value = appState.classroom.seatCount || 48;
+  document.getElementById("toggleSuspense").checked = !!appState.settings.suspense;
+  if (appState.settings.perDesk) document.getElementById("perDesk").value = String(appState.settings.perDesk);
+  logoDataUrl = appState.classroom.logoDataUrl;
+}
+function savePlan() {
+  syncFormToState();
+  ensureSeatsSize();
+  try {
+    localStorage.setItem(STORAGE_KEY_V2, JSON.stringify({
+      version: APP_VERSION,
+      classroom: appState.classroom,
+      students: appState.students,
+      seats: appState.seats,
+      groups: lastToRoleResult,
+      committee: lastCommitteeResult,
+      plans: appState.plans,
+      currentPlanId: appState.currentPlanId,
+      settings: appState.settings,
+      savedAt: new Date().toLocaleString("vi-VN")
+    }));
+    // also write lightweight v1-compatible snapshot for safety
+    localStorage.setItem(STORAGE_KEY_V1, JSON.stringify({
+      school: appState.classroom.school,
+      className: appState.classroom.className,
+      schoolYear: appState.classroom.schoolYear,
+      teacherName: appState.classroom.teacherName,
+      effectiveDate: appState.classroom.effectiveDate,
+      seatCount: appState.classroom.seatCount,
+      seats: appState.seats.map(id => id ? (getStudent(id) || {}).name || null : null),
+      logoDataUrl: logoDataUrl,
+      savedAt: new Date().toLocaleString("vi-VN")
+    }));
+    toast("Đã lưu trên thiết bị.");
+  } catch (e) {
+    toast("Không lưu được (localStorage đầy hoặc bị chặn).");
+  }
+}
+function migrateLegacyData(raw) {
+  // v1: seats is string[]
+  const students = [];
+  const seats = [];
+  const names = Array.isArray(raw.seats) ? raw.seats : [];
+  const seatCount = raw.seatCount || names.length || 48;
+  for (let i = 0; i < seatCount; i++) {
+    const nm = names[i];
+    if (nm) {
+      const st = { id: uid(), stt: students.length + 1, name: nm, gender: "", academicLevel: "", doiTuong: "", note: "", locked: false, seatId: i };
+      students.push(st);
+      seats.push(st.id);
+    } else seats.push(null);
+  }
+  return {
+    version: APP_VERSION,
+    classroom: {
+      school: raw.school || "",
+      className: raw.className || "",
+      schoolYear: raw.schoolYear || "2026 – 2027",
+      teacherName: raw.teacherName || "Trần Duy Tâm",
+      effectiveDate: raw.effectiveDate || "",
+      seatCount: seatCount,
+      logoDataUrl: raw.logoDataUrl || null
+    },
+    students,
+    seats,
+    settings: { suspense: false, perDesk: 2 },
+    plans: [],
+    currentPlanId: null
+  };
+}
+function loadData() {
+  try {
+    const v2 = localStorage.getItem(STORAGE_KEY_V2);
+    if (v2) {
+      const d = JSON.parse(v2);
+      appState.classroom = Object.assign(appState.classroom, d.classroom || {});
+      appState.students = d.students || [];
+      appState.seats = d.seats || [];
+      appState.plans = d.plans || [];
+      appState.currentPlanId = d.currentPlanId || null;
+      appState.settings = Object.assign(appState.settings, d.settings || {});
+      lastToRoleResult = d.groups || null;
+      lastCommitteeResult = d.committee || null;
+      logoDataUrl = appState.classroom.logoDataUrl;
+      log("[STORAGE] loaded v2");
+      return;
+    }
+    const v1 = localStorage.getItem(STORAGE_KEY_V1);
+    if (v1) {
+      const raw = JSON.parse(v1);
+      const migrated = migrateLegacyData(raw);
+      appState.classroom = migrated.classroom;
+      appState.students = migrated.students;
+      appState.seats = migrated.seats;
+      logoDataUrl = migrated.classroom.logoDataUrl;
+      log("[STORAGE] migrated v1 → v2");
+      toast("Đã chuyển dữ liệu cũ sang phiên bản 2.0.");
+    }
+  } catch (e) {
+    log("[STORAGE] error", e);
+  }
+}
+function resetAll() {
+  showConfirm("Xếp lại từ đầu", "Xóa sơ đồ và danh sách học sinh trên màn hình (chưa xóa bản lưu thiết bị trừ khi bạn bấm Xóa dữ liệu)?", () => {
+    pushHistory();
+    appState.students = [];
+    appState.seats = new Array(appState.classroom.seatCount).fill(null);
+    lastToRoleResult = null;
+    lastCommitteeResult = null;
+    document.getElementById("toResultArea").innerHTML = "";
+    document.getElementById("committeeResultArea").innerHTML = "";
+    document.getElementById("names").value = "";
+    document.getElementById("planExplain").style.display = "none";
+    renderAll();
+    toast("Đã làm mới sơ đồ.");
+  });
+}
+function clearDeviceData() {
+  showConfirm("Xóa dữ liệu thiết bị", "Thao tác này xóa toàn bộ dữ liệu CLASSROOM đã lưu trên trình duyệt. Không hoàn tác được.", () => {
+    localStorage.removeItem(STORAGE_KEY_V2);
+    localStorage.removeItem(STORAGE_KEY_V1);
+    toast("Đã xóa dữ liệu trên thiết bị.");
+  });
+}
+function backupJSON() {
+  syncFormToState();
+  const blob = new Blob([JSON.stringify({
+    version: APP_VERSION,
+    classroom: appState.classroom,
+    students: appState.students,
+    seats: appState.seats,
+    groups: lastToRoleResult,
+    committee: lastCommitteeResult,
+    plans: appState.plans,
+    settings: appState.settings,
+    exportedAt: new Date().toISOString()
+  }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.download = "classroom-backup-" + currentClassSlug() + ".json";
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function restoreJSON(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const d = JSON.parse(ev.target.result);
+      pushHistory();
+      if (d.students && d.seats) {
+        appState.classroom = Object.assign(appState.classroom, d.classroom || {});
+        appState.students = d.students;
+        appState.seats = d.seats;
+        lastToRoleResult = d.groups || null;
+        lastCommitteeResult = d.committee || null;
+        appState.plans = d.plans || [];
+        logoDataUrl = appState.classroom.logoDataUrl;
+        syncStateToForm();
+        renderAll();
+        toast("Đã khôi phục dữ liệu.");
+      } else if (Array.isArray(d.seats)) {
+        const m = migrateLegacyData(d);
+        appState.classroom = m.classroom;
+        appState.students = m.students;
+        appState.seats = m.seats;
+        syncStateToForm();
+        renderAll();
+        toast("Đã khôi phục (định dạng cũ).");
+      } else toast("File không hợp lệ.");
+    } catch (e) {
+      toast("Không đọc được file JSON.");
+    }
+  };
+  reader.readAsText(file);
+}
+
+/* =========================
+   PLANS
+========================= */
+function renderPlanList() {
+  const el = document.getElementById("planList");
+  if (!appState.plans.length) {
+    el.innerHTML = '<span class="hint">Chưa có phương án đã lưu.</span>';
+    return;
+  }
+  el.innerHTML = appState.plans.map(p =>
+    '<span class="plan-chip' + (p.id === appState.currentPlanId ? " active" : "") + '" data-pid="' + p.id + '">' +
+    escapeHTML(p.name) + "</span>"
+  ).join("");
+  el.querySelectorAll(".plan-chip").forEach(chip => {
+    chip.onclick = () => loadPlan(chip.getAttribute("data-pid"));
+  });
+}
+function saveAsPlan() {
+  const name = prompt("Tên phương án:", "Phương án " + (appState.plans.length + 1));
+  if (!name) return;
+  syncFormToState();
+  const plan = {
+    id: uid(),
+    name: name.trim(),
+    students: JSON.parse(JSON.stringify(appState.students)),
+    seats: appState.seats.slice(),
+    groups: lastToRoleResult,
+    committee: lastCommitteeResult
+  };
+  appState.plans.push(plan);
+  appState.currentPlanId = plan.id;
+  renderPlanList();
+  savePlan();
+  toast("Đã lưu phương án: " + name);
+}
+function loadPlan(pid) {
+  const p = appState.plans.find(x => x.id === pid);
+  if (!p) return;
+  pushHistory();
+  appState.students = JSON.parse(JSON.stringify(p.students));
+  appState.seats = p.seats.slice();
+  lastToRoleResult = p.groups;
+  lastCommitteeResult = p.committee;
+  appState.currentPlanId = pid;
+  renderAll();
+  toast("Đã mở: " + p.name);
+}
+function duplicatePlan() {
+  if (!appState.currentPlanId) { saveAsPlan(); return; }
+  const p = appState.plans.find(x => x.id === appState.currentPlanId);
+  if (!p) return;
+  const copy = JSON.parse(JSON.stringify(p));
+  copy.id = uid();
+  copy.name = p.name + " (bản sao)";
+  appState.plans.push(copy);
+  appState.currentPlanId = copy.id;
+  renderPlanList();
+  toast("Đã nhân bản.");
+}
+function deleteCurrentPlan() {
+  if (!appState.currentPlanId) { toast("Chưa chọn phương án."); return; }
+  showConfirm("Xóa phương án", "Xóa phương án hiện tại khỏi danh sách?", () => {
+    appState.plans = appState.plans.filter(p => p.id !== appState.currentPlanId);
+    appState.currentPlanId = null;
+    renderPlanList();
+    toast("Đã xóa phương án.");
+  });
+}
+
+/* =========================
+   EXCEL IMPORT
+========================= */
+function downloadExcelTemplate() {
+  if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong. Thử lại sau giây lát."); return; }
+  const wsData = [
+    ["STT", "Họ và tên", "Giới tính", "Học lực", "Đối tượng", "Ghi chú"],
+    [1, "Nguyễn Văn An", "Nam", "Khá", "", ""],
+    [2, "Trần Thị Bình", "Nữ", "Giỏi", "", ""],
+    [3, "Lê Minh Cường", "Nam", "TB", "Khuyết tật", "Ưu tiên ngồi gần bàn giáo viên"],
+    [4, "Phạm Thu Dung", "Nữ", "Khá", "", ""],
+    [5, "Hoàng Đức Em", "Nam", "Yếu", "", ""]
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws["!cols"] = [{ wch: 6 }, { wch: 22 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 36 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Danh sach HS");
+  // Instruction sheet
+  const guide = [
+    ["HƯỚNG DẪN ĐIỀN MẪU — CLASSROOM"],
+    [""],
+    ["Cột", "Mô tả"],
+    ["STT", "Số thứ tự (tùy chọn)"],
+    ["Họ và tên", "Bắt buộc"],
+    ["Giới tính", "Nam / Nữ (tùy chọn)"],
+    ["Học lực", "Giỏi / Khá / TB / Yếu (tùy chọn, dùng khi xếp theo tiêu chí)"],
+    ["Đối tượng", "Để trống hoặc ghi: Khuyết tật (HS sẽ được ưu tiên ngồi hàng gần Bàn giáo viên khi bật tiêu chí)"],
+    ["Ghi chú", "Ghi chú nội bộ của giáo viên"],
+    [""],
+    ["Lưu ý: Khi nhập file vào CLASSROOM, hệ thống sẽ hỏi xác nhận trước khi thêm vào danh sách."]
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(guide);
+  ws2["!cols"] = [{ wch: 14 }, { wch: 80 }];
+  XLSX.utils.book_append_sheet(wb, ws2, "Huong dan");
+  XLSX.writeFile(wb, "Mau_danh_sach_hoc_sinh_CLASSROOM.xlsx");
+  toast("Đã tải mẫu Excel.");
+}
+function triggerExcelImport() { document.getElementById("excelFile").click(); }
+function handleExcelImport(file) {
+  if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong."); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      if (!rows.length) { toast("File trống."); return; }
+      // detect header
+      let start = 0;
+      const h = (rows[0] || []).map(x => String(x || "").toLowerCase());
+      if (h.some(x => x.includes("tên") || x.includes("name") || x.includes("họ"))) start = 1;
+      const parsed = [];
+      for (let i = start; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || !row.length) continue;
+        let name = "", gender = "", level = "", note = "", doiTuong = "", sttVal = i - start + 1;
+        if (start === 1) {
+          const idxStt = h.findIndex(x => x === "stt" || x.includes("stt") || x === "số" || x.includes("số tt") || x.includes("thu tu") || x.includes("thứ tự"));
+          const idxName = h.findIndex(x => x.includes("tên") || x.includes("name") || x.includes("họ"));
+          const idxG = h.findIndex(x => x.includes("giới") || x.includes("gender"));
+          const idxL = h.findIndex(x => x.includes("học lực") || x.includes("lực") || x.includes("level"));
+          const idxN = h.findIndex(x => x.includes("ghi chú") || x.includes("note"));
+          const idxD = h.findIndex(x => x.includes("đối tượng") || x.includes("doi tuong") || x.includes("khuyết") || x.includes("ưu tiên") || x.includes("doiTuong") || x.includes("đối"));
+          if (idxStt >= 0 && row[idxStt] != null && String(row[idxStt]).trim() !== "") {
+            const n = parseInt(String(row[idxStt]).trim(), 10);
+            if (!isNaN(n)) sttVal = n;
+          }
+          name = String(row[idxName >= 0 ? idxName : 1] || row[0] || "").trim();
+          if (idxG >= 0) gender = String(row[idxG] || "").trim();
+          if (idxL >= 0) level = String(row[idxL] || "").trim();
+          if (idxN >= 0) note = String(row[idxN] || "").trim();
+          if (idxD >= 0) doiTuong = String(row[idxD] || "").trim();
+        } else {
+          if (row[0] != null && !isNaN(parseInt(String(row[0]), 10))) sttVal = parseInt(String(row[0]), 10);
+          name = String(row[1] != null ? row[1] : row[0] || "").trim();
+          if (row[2]) gender = String(row[2]).trim();
+          if (row[3]) level = String(row[3]).trim();
+          if (row[4]) doiTuong = String(row[4]).trim();
+          if (row[5]) note = String(row[5]).trim();
+        }
+        if (name && !/^\d+$/.test(name)) parsed.push({ name, gender, level, note, doiTuong, stt: sttVal });
+      }
+      if (!parsed.length) { toast("Không tìm thấy tên học sinh trong file."); return; }
+      showConfirm(
+        "Nhập từ Excel",
+        "Tìm thấy <b>" + parsed.length + "</b> học sinh. Thêm vào danh sách hiện tại?",
+        () => {
+          pushHistory();
+          parsed.forEach(p => {
+            if (!appState.students.some(s => s.name.toLowerCase() === p.name.toLowerCase())) {
+              addStudentRecord(p.name, p.gender, p.level, p.note, p.doiTuong, p.stt);
+            }
+          });
+          appState.students.sort((a, b) => (Number(a.stt) || 0) - (Number(b.stt) || 0));
+          renderAll();
+          toast("Đã nhập " + parsed.length + " học sinh (theo STT).");
+        }
+      );
+    } catch (err) {
+      toast("Lỗi đọc file Excel.");
+      log(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* =========================
+   UI TABS / PRESENT / SETTINGS
+========================= */
+function initTabs() {
+  document.querySelectorAll("#sideTabs .tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll("#sideTabs .tab").forEach(t => t.classList.remove("active"));
+      document.querySelectorAll(".tab-panel").forEach(p => p.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById(tab.getAttribute("data-tab")).classList.add("active");
+    });
+  });
+  document.querySelectorAll("[data-btab]").forEach(tab => {
+    tab.addEventListener("click", () => {
+      document.querySelectorAll("[data-btab]").forEach(t => t.classList.remove("active"));
+      tab.classList.add("active");
+      document.getElementById("btGroups").style.display = tab.getAttribute("data-btab") === "btGroups" ? "block" : "none";
+      document.getElementById("btCommittee").style.display = tab.getAttribute("data-btab") === "btCommittee" ? "block" : "none";
+    });
+  });
+}
+function togglePresent() {
+  document.body.classList.toggle("present");
+  toast(document.body.classList.contains("present") ? "Chế độ trình chiếu (Esc để thoát)" : "Đã thoát trình chiếu");
+}
+function openSettings() {
+  showConfirm("Cài đặt",
+    "<div class=\"criteria-list\">" +
+    "<label><input type=\"checkbox\" id=\"setAutoSave\" checked disabled> Tự lưu khi thao tác (đang dùng nút Lưu)</label>" +
+    "<p class=\"hint\">Phiên bản " + APP_VERSION + " · Dữ liệu lưu cục bộ trên trình duyệt.</p>" +
+    "<p class=\"hint\">Double-click ô chỗ ngồi để khóa/mở khóa. Kéo thả để đổi chỗ.</p>" +
+    "</div>",
+    () => {}
+  );
+}
+
+/* =========================
+   INIT
+========================= */
+document.addEventListener("DOMContentLoaded", () => {
+  initTabs();
+  loadData();
+  ensureSeatsSize();
+  syncStateToForm();
+  renderAll();
+
+  document.getElementById("oneName").addEventListener("keydown", e => {
+    if (e.key === "Enter") { e.preventDefault(); addOneStudent(); }
+  });
+  document.getElementById("studentCount").addEventListener("change", () => {
+    pushHistory();
+    const n = parseInt(document.getElementById("studentCount").value, 10) || 48;
+    appState.classroom.seatCount = Math.max(1, Math.min(200, n));
+    ensureSeatsSize();
+    renderAll();
+  });
+  ["school", "className", "schoolYear", "teacherName", "effectiveDate"].forEach(id => {
+    document.getElementById(id).addEventListener("input", () => { syncFormToState(); renderPlan(); renderStats(); });
+  });
+  document.getElementById("logoFile").addEventListener("change", e => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      logoDataUrl = ev.target.result;
+      appState.classroom.logoDataUrl = logoDataUrl;
+      updateLogoDisplay();
+      toast("Đã tải logo.");
+    };
+    reader.readAsDataURL(file);
+  });
+  document.getElementById("excelFile").addEventListener("change", e => {
+    const f = e.target.files && e.target.files[0];
+    if (f) handleExcelImport(f);
+    e.target.value = "";
+  });
+  document.getElementById("restoreFile").addEventListener("change", e => {
+    const f = e.target.files && e.target.files[0];
+    if (f) restoreJSON(f);
+    e.target.value = "";
+  });
+});
+
+// Compat aliases used by any residual inline handlers
+window.addOneStudent = addOneStudent;
+window.assignBulk = assignBulk;
+window.shuffleAll = shuffleAll;
+window.savePlan = savePlan;
+window.resetAll = resetAll;
+window.downloadJPG = downloadJPG;
+window.downloadDOCX = downloadDOCX;
+window.randomizeToRoles = randomizeToRoles;
+window.randomizeCommittee = randomizeCommittee;
+window.exportExcelTo = exportExcelTo;
+window.exportExcelCommittee = exportExcelCommittee;
+window.exportImageOf = exportImageOf;
+window.escapeHTML = escapeHTML;
+window.renderPlan = renderPlan;
+window.seatQuick = seatQuick;
+window.seatByCriteria = seatByCriteria;
+window.downloadExcelTemplate = downloadExcelTemplate;
+window.isPriorityStudent = isPriorityStudent;
+window.selfPickSeat = selfPickSeat;
+window.magicHatLeaders = magicHatLeaders;
+window.refreshSelfPickSelect = refreshSelfPickSelect;
+window.reshuffleWithinGroups = reshuffleWithinGroups;
 </script>
 <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/docx@8.5/build/index.umd.min.js"></script>
