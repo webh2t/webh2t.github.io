@@ -54,13 +54,13 @@ body{font-family:Inter,system-ui,sans-serif;font-size:17px}
 .hero-app-title{color:cyan!important;font-weight:700;text-shadow:0 0 12px rgba(0,255,255,.35)}
 .hero-year{color:aqua!important;font-weight:700}
 .clock-sky{color:aquamarine!important;font-weight:600}
-.name-gvcn{color:#ffffff!important;font-weight:800;font-size:1.75rem!important;line-height:1.25}
-.meta-gvcn{color:#9d174d!important} /* hồng đậm */
+.name-gvcn,#overviewContent .name-gvcn,#overviewContent h2.name-gvcn{color:#0d9488!important;font-weight:800;font-size:1.75rem!important;line-height:1.25}
+.meta-gvcn,#overviewContent .meta-gvcn{color:#ef4444!important;font-weight:700}
 .expire-red{color:#dc2626!important;font-weight:600}
 
 #tab-overview, #overviewContent { color: #e2e8f0; }
-#overviewContent h2, #overviewContent .name-gvcn { color: #fff !important; font-size: 1.75rem !important; }
-#overviewContent .meta-gvcn { color: #f9a8d4 !important; }
+#overviewContent h2, #overviewContent .name-gvcn { color: #0d9488 !important; font-size: 1.75rem !important; font-weight: 800 !important; }
+#overviewContent .meta-gvcn { color: #ef4444 !important; font-weight: 700 !important; }
 #tab-admin .admin-sub:not(.hidden) { display: block !important; }
 
 #btnLogout{color:#ff0000!important;background:#450a0a!important;border:1px solid #ff0000!important;font-weight:700}
@@ -679,6 +679,120 @@ button.btn-penalty:hover { background: #c2410c !important; }
 #recentBody td { vertical-align: middle; }
 table.w-full.text-sm { font-size: 13px; }
 
+
+/* Header + CTA 2026 */
+header.glass, header.sticky {
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+#clock.clock-box, .clock-box {
+  background: #dbeafe !important;
+  color: #1e3a8a !important;
+  border: none !important;
+  border-radius: 999px !important;
+  padding: 0.4rem 0.9rem !important;
+  font-weight: 700 !important;
+}
+#headerRegBtn {
+  background: #fef08a !important;
+  color: #1e3a8a !important;
+  border: 1px solid #fde047 !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+}
+/* Nút ĐĂNG KÝ / Xem báo cáo — nền xanh chữ trắng */
+#authRegister button[onclick*="register"],
+#authRegister .btn-primary,
+button[onclick*="showAuth('register')"],
+button[onclick*="showParentReport"],
+button[onclick*="enterGuestReport"],
+#btnParentReport,
+.btn-xem-bao-cao,
+button.btn-register-primary {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+}
+
+/* === Color tweaks (user request) === */
+.name-gvcn {
+  color: #0d9488 !important; /* xanh ngọc */
+  font-weight: 800 !important;
+  font-size: 1.75rem !important;
+  line-height: 1.25;
+}
+.meta-gvcn {
+  color: #ef4444 !important; /* đỏ tươi */
+  font-weight: 700 !important;
+}
+/* Admin subtabs: nền trắng, chữ xanh dương, viền đỏ nâu */
+#adminSubTabs .subtab-btn,
+.subtab-btn {
+  background: #ffffff !important;
+  color: #1d4ed8 !important;
+  border: 1.5px solid #9a3412 !important;
+  border-radius: 10px !important;
+  font-weight: 700 !important;
+}
+#adminSubTabs .subtab-btn.subtab-active,
+#adminSubTabs .subtab-btn.active,
+.subtab-btn.subtab-active,
+.subtab-btn.active {
+  background: #eff6ff !important;
+  color: #1e40af !important;
+  border-color: #b45309 !important;
+  box-shadow: 0 0 0 2px rgba(154, 52, 18, 0.15);
+}
+/* Lưu bản ghi / Lưu & nhập tiếp */
+#entryForm button[type="submit"],
+button[onclick*="saveEntryFromForm"] {
+  background: #ffffff !important;
+  color: #0d9488 !important;
+  border: 2px solid #22c55e !important;
+  border-radius: 12px !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+/* Xem báo cáo PH/HS */
+button[onclick*="showParentReport"],
+button[onclick*="enterGuestReport"],
+#btnParentReport,
+.btn-xem-bao-cao {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+  padding: 0.75rem 1.25rem !important;
+}
+
+/* FORCE: tên GVCN + meta + nút Xem báo cáo */
+#overviewContent h2.name-gvcn,
+#overviewContent .name-gvcn,
+h2.name-gvcn {
+  color: #0d9488 !important;
+  font-weight: 800 !important;
+}
+#overviewContent .meta-gvcn,
+p.meta-gvcn,
+.meta-gvcn {
+  color: #ef4444 !important;
+  font-weight: 700 !important;
+}
+#parentReportModal button[onclick*="doParentReportLogin"],
+button[onclick="doParentReportLogin()"] {
+  background: #2563eb !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 999px !important;
+  font-weight: 700 !important;
+}
+#parentReportModal button[onclick*="doParentReportLogin"]:hover {
+  background: #1d4ed8 !important;
+  color: #fff !important;
+}
 </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen theme-light">
@@ -688,13 +802,14 @@ table.w-full.text-sm { font-size: 13px; }
 <a href="https://webh2t.github.io/" class="flex items-center gap-3">
 <img src="https://webh2t.github.io/assets/LOGO1.png" alt="WEBH2T" class="w-11 h-11 rounded-full object-cover border-2 border-yellow-400/50" onerror="this.style.display='none'"/>
 <div>
-<div class="font-bold text-yellow-400 leading-tight">WEBH2T</div>
-<div class="text-xs text-slate-400">QLNN · Nề nếp tác phong</div>
+<div class="font-bold leading-tight" style="color:#0f172a;font-size:1.05rem">WEBH2T</div>
+<div class="text-xs leading-snug" style="color:#64748b">QLNN · Nề nếp tác phong</div>
+<div class="text-xs leading-snug" style="color:#64748b">Sổ liên lạc điện tử 2026</div>
 </div>
 </a>
 <div class="flex items-center gap-3 text-sm flex-wrap justify-end">
 <div id="clock" class="clock-box"></div>
-<button type="button" id="headerRegBtn" onclick="showAuth('register')" class="text-sm font-bold px-3 py-1.5 rounded-lg" style="background:#fef08a;color:#1e3a8a;border:1px solid #1e3a8a">ĐĂNG KÝ GVCN</button>
+<button type="button" id="headerRegBtn" onclick="showAuth('register')" class="text-sm font-bold px-4 py-2 rounded-xl" style="background:#fef08a;color:#1e3a8a;border:1px solid #fde047;box-shadow:0 1px 2px rgba(0,0,0,0.06)">ĐĂNG KÝ GVCN</button>
 <span id="userBadge" class="hidden px-3 py-1 rounded-full bg-slate-700 text-xs"></span>
 <button id="btnLogout" class="hidden text-sm font-bold px-3 py-1.5 rounded-lg" style="background:#450a0a;color:#ff0000;border:1px solid #ff0000" onclick="logout()">Đăng xuất</button>
 </div>
@@ -819,7 +934,7 @@ table.w-full.text-sm { font-size: 13px; }
 <input id="parentLoginPass" type="password" class="input-field text-base py-3" placeholder="••••••••"/>
 </div>
 <div id="parentLoginError" class="text-red-400 text-sm hidden"></div>
-<button type="button" onclick="doParentReportLogin()" class="btn-primary w-full py-3.5 text-base touch-manipulation">Xem báo cáo</button>
+<button type="button" onclick="doParentReportLogin()" class="w-full py-3.5 text-base touch-manipulation font-bold" style="background:#2563eb;color:#fff;border:none;border-radius:999px">Xem báo cáo</button>
 <button type="button" onclick="document.getElementById('parentReportModal').classList.add('hidden')" class="btn-secondary w-full py-2.5">Đóng</button>
 </div>
 </div>
@@ -986,7 +1101,7 @@ table.w-full.text-sm { font-size: 13px; }
 </div>
 
 <div class="flex flex-wrap gap-3">
-<button type="submit" onclick="return saveEntryFromForm(event)" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:#16a34a;color:#fff;border:none">💾 Lưu bản ghi</button>
+<button type="submit" onclick="return saveEntryFromForm(event)" class="px-6 py-2.5 rounded-lg font-bold shadow-lg" style="background:#fff;color:#0d9488;border:2px solid #22c55e">💾 Lưu bản ghi</button>
 <button type="button" onclick="resetForm()" class="px-4 py-2 rounded-lg font-semibold" style="background:#78350f;color:#fff">Làm mới</button>
 </div>
 </form>
@@ -1147,11 +1262,11 @@ table.w-full.text-sm { font-size: 13px; }
 
 <section id="tab-admin" class="tab-content hidden">
 <div class="flex flex-wrap gap-2 mb-4 no-print" id="adminSubTabs">
-<button data-sub="accounts" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Tài khoản</button>
-<button data-sub="teams" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Phân tổ</button>
-<button data-sub="catalogs" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Danh mục điểm</button>
-<button data-sub="deadline" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700">Dữ liệu</button>
-<button data-sub="pending" id="subPendingBtn" class="subtab-btn px-3 py-1.5 rounded-lg text-sm bg-slate-700 hidden">Chờ duyệt GVCN</button>
+<button data-sub="accounts" class="subtab-btn px-3 py-1.5 rounded-lg text-sm">Tài khoản</button>
+<button data-sub="teams" class="subtab-btn px-3 py-1.5 rounded-lg text-sm">Phân tổ</button>
+<button data-sub="catalogs" class="subtab-btn px-3 py-1.5 rounded-lg text-sm">Danh mục điểm</button>
+<button data-sub="deadline" class="subtab-btn px-3 py-1.5 rounded-lg text-sm">Dữ liệu</button>
+<button data-sub="pending" id="subPendingBtn" class="subtab-btn px-3 py-1.5 rounded-lg text-sm hidden">Chờ duyệt GVCN</button>
 </div>
 
 <div id="sub-accounts" class="admin-sub hidden">
@@ -2055,21 +2170,21 @@ function weeksForMonth(m) {
   return MONTH_WEEKS[+m] || [];
 }
 function rankClass(s) {
-  // Thang điểm cuối tuần (theo mẫu thi đua tổ)
+  // Thang điểm cuối tuần
   if (s >= 120) return { label: "XUẤT SẮC", cls: "rank-xs", stars: "★★★★★" };
   if (s >= 110) return { label: "TỐT", cls: "rank-tot", stars: "★★★" };
-  if (s >= 100) return { label: "HOÀN THÀNH TỐT", cls: "rank-htt", stars: "★★" };
-  if (s >= 90) return { label: "CẦN CỐ GẮNG", cls: "rank-ccg", stars: "★" };
-  return { label: "CẦN HỖ TRỢ GĐ", cls: "rank-ht", stars: "" };
+  if (s >= 100) return { label: "KHÁ", cls: "rank-htt", stars: "★★" };
+  if (s >= 90) return { label: "ĐẠT", cls: "rank-ccg", stars: "★" };
+  return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "" };
 }
 function rankClassScaled(total, n) {
-  // Thang tuần × n (tháng: n=số tuần; HK: n=tổng tuần các tháng)
+  // Thang tuần × n (tháng / học kỳ)
   if (!n || n < 1) n = 1;
   if (total >= 120 * n) return { label: "XUẤT SẮC", cls: "rank-xs", stars: "★★★★★" };
   if (total >= 110 * n) return { label: "TỐT", cls: "rank-tot", stars: "★★★" };
-  if (total >= 100 * n) return { label: "HOÀN THÀNH TỐT", cls: "rank-htt", stars: "★★" };
-  if (total >= 90 * n) return { label: "CẦN CỐ GẮNG", cls: "rank-ccg", stars: "★" };
-  return { label: "CẦN HỖ TRỢ GĐ", cls: "rank-ht", stars: "" };
+  if (total >= 100 * n) return { label: "KHÁ", cls: "rank-htt", stars: "★★" };
+  if (total >= 90 * n) return { label: "ĐẠT", cls: "rank-ccg", stars: "★" };
+  return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "" };
 }
 function rankClassMonth(total, nWeeks) {
   return rankClassScaled(total, nWeeks || 4);
@@ -4770,7 +4885,7 @@ function rankByScoreWithTies(items, scoreKey) {
   return posMap;
 }
 function rankStatsHtml(scoredList) {
-  const counts = { "XUẤT SẮC": 0, "TỐT": 0, "HOÀN THÀNH TỐT": 0, "CẦN CỐ GẮNG": 0, "CẦN HỖ TRỢ GĐ": 0 };
+  const counts = { "XUẤT SẮC": 0, "TỐT": 0, "KHÁ": 0, "ĐẠT": 0, "CHƯA ĐẠT": 0 };
   scoredList.forEach(x => {
     const lb = (x.rk && x.rk.label) || rankClass(x.score).label;
     if (counts[lb] != null) counts[lb]++;
@@ -6048,34 +6163,42 @@ var DUTY_PRIORITY_IDS = ["b919", "b920"];
  * - 1 lần, mã nhẹ: 1 công việc
  * - ≥2 lần hoặc mã nặng v04/v05/v03…: 2 công việc
  */
+
 function dutyWorkloadFromViols(stuId, weekViols) {
+  // Trả về số BUỔI trực theo mã VP tuần nguồn
+  // v01: 2 buổi · v03: 3 buổi · mã khác: 6 buổi · không VP: 0
   var mine = weekViols.filter(function(e) {
     return String(e.studentId) === String(stuId) && e.type === "violation";
   });
-  var times = 0;
-  var heavy = false;
+  if (!mine.length) return 0;
+  var hasV01 = false, hasV03 = false, hasOther = false;
   mine.forEach(function(e) {
     var code = normalizeViolCode(e);
-    if (code === "v01" || code === "v1") return;
-    var n = Number(e.times) || 1;
-    times += n;
-    // mã nặng: v03, v04, v05 hoặc số ≥ 3
-    var num = parseInt(String(code).replace(/\D/g, ""), 10);
-    if (!isNaN(num) && num >= 3) heavy = true;
-    if (code === "v04" || code === "v05" || code === "v03") heavy = true;
+    if (code === "v01" || code === "v1") hasV01 = true;
+    else if (code === "v03" || code === "v3") hasV03 = true;
+    else if (code) hasOther = true;
+    else hasOther = true; // VP không mã cũng tính khác
   });
-  if (times <= 0) return 0;
-  if (heavy || times >= 2) return 2;
-  return 1;
+  if (hasOther) return 6;
+  if (hasV03) return 3;
+  if (hasV01) return 2;
+  return 0;
+}
+
+function dutyStudentGender(st) {
+  var g = String((st && (st.gender || st.gioiTinh || "")) || "").toLowerCase();
+  if (g.indexOf("nam") >= 0 || g === "m" || g === "male") return "nam";
+  if (g.indexOf("nữ") >= 0 || g.indexOf("nu") >= 0 || g === "f" || g === "female") return "nu";
+  return "";
 }
 
 /**
- * Phân công trực nhật
- * - Vi phạm nặng = mọi mã v trừ v01
- * - Mỗi HS: 1–2 việc (theo số lần + mã), ngày khác nhau
- * - Việc 1–2 (Quét lớp, Quét hành lang): 2 HS thay phiên
- * - Việc 3–6: 1 HS
- * - v01: 1 việc / 1 ngày chỉ Thứ 5 hoặc Thứ 6
+ * Phân công trực nhật từ VP tuần nguồn
+ * - Việc 1–2 (Quét lớp, Quét hành lang): 2 HS / buổi
+ * - Việc 3–6: 1 HS / buổi; việc 5–6 ưu tiên HS nam
+ * - v01: 2 buổi, 2 việc khác nhau
+ * - v03: 3 buổi, 2 việc khác nhau
+ * - VP khác: 6 buổi, 2 việc khác nhau
  */
 function buildDutyPlanFromWeek(sourceWeekNo) {
   var sw = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(sourceWeekNo); });
@@ -6098,283 +6221,330 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
         name: shortDutyName(fullName),
         fullName: fullName,
         team: (st && st.team) || e.team || "",
+        gender: dutyStudentGender(st),
         codes: {},
-        isV01: false,
-        priority: DUTY_PRIORITY_IDS.indexOf(sid.toLowerCase()) >= 0
+        sessions: 0
       };
     }
     if (code) byId[sid].codes[code] = true;
-    if (code === "v01" || code === "v1") byId[sid].isV01 = true;
   });
 
-  // Phân loại: nặng = có VP không phải chỉ v01
   Object.keys(byId).forEach(function(sid) {
-    var stu = byId[sid];
-    var workload = dutyWorkloadFromViols(sid, weekViols);
-    // Nếu chỉ v01 (không VP khác)
-    var onlyV01 = stu.isV01 && workload === 0;
-    if (onlyV01) {
-      stu.onlyV01 = true;
-      stu.workload = 1; // 1 việc / 1 ngày
-    } else {
-      stu.onlyV01 = false;
-      // có cả v01 lẫn VP nặng → tính theo VP nặng
-      stu.workload = Math.max(workload, stu.priority ? 2 : workload) || 1;
-      if (stu.priority && stu.workload < 2) stu.workload = 2;
-    }
+    byId[sid].sessions = dutyWorkloadFromViols(sid, weekViols);
   });
 
-  var heavyPool = Object.keys(byId).map(function(k) { return byId[k]; }).filter(function(s) { return !s.onlyV01; });
-  var v01Pool = Object.keys(byId).map(function(k) { return byId[k]; }).filter(function(s) { return s.onlyV01; });
-
-  heavyPool.sort(function(a, b) {
-    if (a.priority && !b.priority) return -1;
-    if (!a.priority && b.priority) return 1;
-    if (b.workload !== a.workload) return b.workload - a.workload;
+  var pool = Object.keys(byId).map(function(k) { return byId[k]; }).filter(function(s) { return s.sessions > 0; });
+  pool.sort(function(a, b) {
+    if (b.sessions !== a.sessions) return b.sessions - a.sessions;
     var ta = Number(a.team) || 99, tb = Number(b.team) || 99;
     if (ta !== tb) return ta - tb;
     return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
   });
 
-  // Việc 1–2: tối đa 2 HS; việc 3–6: tối đa 1 HS
-  function maxOwners(taskIndex) {
-    return taskIndex < 2 ? 2 : 1;
-  }
+  var allDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+  function maxPerDay(taskIndex) { return taskIndex < 2 ? 2 : 1; }
 
+  // Gán tối đa 2 việc khác nhau cho mỗi HS
   var taskOwners = {};
   DUTY_TASKS.forEach(function(task) { taskOwners[task] = []; });
 
-  function ownedCount(stuId) {
-    var n = 0;
+  function ownedTasks(stuId) {
+    var list = [];
     DUTY_TASKS.forEach(function(task) {
-      if (taskOwners[task].some(function(x) { return x.id === stuId; })) n++;
+      if (taskOwners[task].some(function(x) { return x.id === stuId; })) list.push(task);
     });
-    return n;
+    return list;
   }
 
-  function giveTask(stu, task, taskIndex) {
-    if (taskOwners[task].length >= maxOwners(taskIndex)) return false;
-    if (taskOwners[task].some(function(x) { return x.id === stu.id; })) return false;
-    if (ownedCount(stu.id) >= stu.workload) return false;
+  function assignJob(stu, taskIdx) {
+    var task = DUTY_TASKS[taskIdx];
+    var owned = ownedTasks(stu.id);
+    if (owned.indexOf(task) >= 0) return true;
+    if (owned.length >= 2) return false;
+    // Việc 5–6 ưu tiên nam (không bắt buộc nếu không đủ nam)
+    if (taskIdx >= 4 && stu.gender === "nu") {
+      // vẫn cho phép nếu sau này thiếu người
+    }
     taskOwners[task].push(stu);
     return true;
   }
 
-  // Gán việc theo workload (nặng trước)
-  heavyPool.forEach(function(stu) {
-    var need = stu.workload || 1;
-    // Ưu tiên việc còn thiếu người
-    var order = DUTY_TASKS.map(function(task, idx) { return { task: task, idx: idx }; })
-      .sort(function(a, b) {
-        var da = maxOwners(a.idx) - taskOwners[a.task].length;
-        var db = maxOwners(b.idx) - taskOwners[b.task].length;
-        if (db !== da) return db - da;
-        return a.idx - b.idx;
-      });
-    for (var i = 0; i < order.length && ownedCount(stu.id) < need; i++) {
-      giveTask(stu, order[i].task, order[i].idx);
+  // 1) Mỗi HS nhận đúng 2 việc (hoặc 1 nếu pool nhỏ)
+  pool.forEach(function(stu) {
+    var needJobs = Math.min(2, DUTY_TASKS.length);
+    // Thứ tự ưu tiên việc: 1,2 cần nhiều người; 5,6 nếu nam
+    var order = [0, 1, 2, 3, 4, 5];
+    if (stu.gender === "nam") order = [4, 5, 0, 1, 2, 3];
+    for (var i = 0; i < order.length && ownedTasks(stu.id).length < needJobs; i++) {
+      assignJob(stu, order[i]);
+    }
+    // Bổ sung nếu chưa đủ 2 việc
+    for (var j = 0; j < DUTY_TASKS.length && ownedTasks(stu.id).length < needJobs; j++) {
+      assignJob(stu, j);
     }
   });
 
-  // Lấp việc 1–2 còn thiếu 2 người; việc 3–6 còn trống
+  // 2) Đảm bảo mỗi việc có ít nhất maxPerDay người sở hữu (lấp chỗ trống)
   DUTY_TASKS.forEach(function(task, idx) {
-    while (taskOwners[task].length < maxOwners(idx)) {
-      var cand = heavyPool.filter(function(s) {
-        return ownedCount(s.id) < Math.max(s.workload, 2) &&
-          !taskOwners[task].some(function(x) { return x.id === s.id; });
-      }).sort(function(a, b) { return ownedCount(a.id) - ownedCount(b.id); });
-      if (!cand.length) break;
-      // tạm nới workload để đủ 2 HS việc 1–2
-      var s = cand[0];
-      if (ownedCount(s.id) >= s.workload) s.workload = ownedCount(s.id) + 1;
-      if (!giveTask(s, task, idx)) break;
-    }
-  });
-
-  // v01: 1 việc / 1 ngày — Thứ 5 hoặc Thứ 6
-  var v01Days = ["Thứ 5", "Thứ 6"];
-  var result = [];
-  var allDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-
-  // Xếp ngày cho vi phạm nặng: T2–T7, thay phiên nếu 2 HS
-  DUTY_TASKS.forEach(function(task, tIdx) {
-    var owners = taskOwners[task] || [];
-    if (!owners.length) return;
-    allDays.forEach(function(day, di) {
-      if (owners.length === 1) {
-        result.push({ day: day, task: task, student: owners[0] });
-      } else {
-        // 2 HS thay phiên
-        var primary = owners[di % owners.length];
-        result.push({ day: day, task: task, student: primary });
-        // Một số ngày cả 2 (T5–T7) — việc 1–2
-        if (tIdx < 2 && di >= 3) {
-          owners.forEach(function(stu) {
-            if (stu.id !== primary.id) {
-              result.push({ day: day, task: task, student: stu });
-            }
+    var need = maxPerDay(idx);
+    while (taskOwners[task].length < need && pool.length) {
+      var cand = pool.filter(function(s) {
+        var o = ownedTasks(s.id);
+        return o.indexOf(task) < 0 && o.length < 2;
+      });
+      if (idx >= 4) {
+        var nam = cand.filter(function(s) { return s.gender === "nam"; });
+        if (nam.length) cand = nam.concat(cand.filter(function(s) { return s.gender !== "nam"; }));
+      }
+      if (!cand.length) {
+        // nới: cho phép HS đã có 2 việc nếu vẫn thiếu người cho việc 1–2
+        if (idx < 2) {
+          cand = pool.filter(function(s) {
+            return !taskOwners[task].some(function(x) { return x.id === s.id; });
           });
         }
+        if (!cand.length) break;
+      }
+      var pick = cand[0];
+      if (ownedTasks(pick.id).indexOf(task) < 0) {
+        if (ownedTasks(pick.id).length >= 2 && idx >= 2) break;
+        taskOwners[task].push(pick);
+      } else break;
+    }
+  });
+
+  // 3) Xếp vào ngày: mỗi HS dùng hết `sessions` buổi trên các việc đã gán
+  var sessionUsed = {};
+  pool.forEach(function(s) { sessionUsed[s.id] = 0; });
+  var result = [];
+  var cellHas = {}; // day|task|id
+
+  function tryPlace(day, task, taskIdx, stu) {
+    if (!stu) return false;
+    if (sessionUsed[stu.id] >= stu.sessions) return false;
+    var key = day + "|" + task + "|" + stu.id;
+    if (cellHas[key]) return false;
+    // đếm đã có bao nhiêu người trong ô day-task
+    var count = result.filter(function(r) { return r.day === day && r.task === task; }).length;
+    if (count >= maxPerDay(taskIdx)) return false;
+    result.push({ day: day, task: task, student: stu });
+    cellHas[key] = true;
+    sessionUsed[stu.id]++;
+    return true;
+  }
+
+  // Lấp theo ngày → việc (ưu tiên việc còn trống)
+  allDays.forEach(function(day) {
+    DUTY_TASKS.forEach(function(task, tIdx) {
+      var need = maxPerDay(tIdx);
+      var owners = (taskOwners[task] || []).slice();
+      // Xoay owners theo ngày
+      var di = allDays.indexOf(day);
+      owners = owners.slice(di % Math.max(owners.length, 1)).concat(owners.slice(0, di % Math.max(owners.length, 1)));
+      if (tIdx >= 4) {
+        owners.sort(function(a, b) {
+          if (a.gender === "nam" && b.gender !== "nam") return -1;
+          if (b.gender === "nam" && a.gender !== "nam") return 1;
+          return 0;
+        });
+      }
+      for (var k = 0; k < owners.length && result.filter(function(r) { return r.day === day && r.task === task; }).length < need; k++) {
+        tryPlace(day, task, tIdx, owners[k]);
       }
     });
   });
 
-  // v01
-  v01Pool.forEach(function(stu, i) {
-    var task = DUTY_TASKS[(i + 2) % DUTY_TASKS.length]; // ưu tiên việc 3+
-    var day = v01Days[i % v01Days.length];
-    result.push({ day: day, task: task, student: stu });
+  // 4) Lấp nốt ô trống bằng pool còn buổi
+  allDays.forEach(function(day) {
+    DUTY_TASKS.forEach(function(task, tIdx) {
+      var need = maxPerDay(tIdx);
+      while (result.filter(function(r) { return r.day === day && r.task === task; }).length < need) {
+        var cand = pool.filter(function(s) {
+          return sessionUsed[s.id] < s.sessions &&
+            !result.some(function(r) { return r.day === day && r.task === task && r.student.id === s.id; });
+        }).sort(function(a, b) { return (a.sessions - sessionUsed[a.id]) - (b.sessions - sessionUsed[b.id]); }).reverse();
+        if (tIdx >= 4) {
+          var nam2 = cand.filter(function(s) { return s.gender === "nam"; });
+          if (nam2.length) cand = nam2.concat(cand.filter(function(s) { return s.gender !== "nam"; }));
+        }
+        if (!cand.length) break;
+        if (!tryPlace(day, task, tIdx, cand[0])) break;
+      }
+    });
   });
 
   return {
     sourceWeek: sourceWeekNo,
-    weekdayPool: heavyPool,
-    weekendPool: v01Pool,
+    weekdayPool: pool.filter(function(s) {
+      var codes = Object.keys(s.codes || {});
+      return !codes.length || codes.some(function(c) { return c !== "v01" && c !== "v1"; });
+    }),
+    weekendPool: pool.filter(function(s) {
+      var codes = Object.keys(s.codes || {});
+      return codes.indexOf("v01") >= 0 || codes.indexOf("v1") >= 0;
+    }),
     assignments: result,
-    taskOwners: taskOwners
+    taskOwners: taskOwners,
+    pool: pool
   };
 }
 
-function downloadDutyJpg() {
-  var el = document.getElementById("dutyRosterCapture");
-  if (!el) { alert("Chưa có bảng trực nhật"); return; }
-  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
-  html2canvas(el, { scale: 2, backgroundColor: "#fffbeb" }).then(function(canvas) {
-    var a = document.createElement("a");
-    a.download = "TrucNhat_Tuan" + ((document.getElementById("dutyPlanWeek") || {}).value || "") + ".jpg";
-    a.href = canvas.toDataURL("image/jpeg", 0.92);
-    a.click();
-  }).catch(function(e) { alert("Lỗi JPG: " + (e.message || e)); });
-}
 
-function downloadDutyDocx() {
-  var el = document.getElementById("dutyRosterCapture");
-  if (!el) { alert("Chưa có bảng trực nhật"); return; }
-  var cls = (currentUser && currentUser.className) || "";
-  var week = (document.getElementById("dutyPlanWeek") || {}).value || "";
-  var html = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word"><head><meta charset="utf-8"><title>Trực nhật</title>';
-  html += '<style>table{border-collapse:collapse;width:100%;font-family:Arial,sans-serif;font-size:12pt}th,td{border:1px solid #333;padding:6px;text-align:center}th{background:#fef3c7}td:first-child,th:first-child{text-align:left}</style></head><body>';
-  html += '<h2 style="text-align:center;color:#9f1239">PHÂN CÔNG TRỰC NHẬT LỚP ' + cls + ' · Tuần ' + week + '</h2>';
-  html += el.innerHTML;
-  html += '</body></html>';
-  var blob = new Blob(['\ufeff', html], { type: "application/msword" });
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "TrucNhat_Tuan" + week + "_Lop" + cls + ".doc";
-  a.click();
-  setTimeout(function(){ URL.revokeObjectURL(a.href); }, 2000);
-}
 
 function renderDutyRoster() {
   var box = document.getElementById("notebookContent");
   if (!box) return;
   var cur = currentSchoolWeek();
-  var planWeek = cur ? cur.w : 2;
-  // Tuần nguồn = tuần trước (tối thiểu 1)
-  var srcWeek = Math.max(1, Number(planWeek) - 1);
-  // Cho phép chọn
+  var planWeek = cur ? Number(cur.w) : 2;
+  // Mặc định: tuần trực = tuần hiện tại; nguồn VP = tuần trước
+  var srcWeek = Math.max(1, planWeek - 1);
   var selSrc = (document.getElementById("dutySrcWeek") || {}).value;
   var selPlan = (document.getElementById("dutyPlanWeek") || {}).value;
   if (selSrc) srcWeek = Number(selSrc);
   if (selPlan) planWeek = Number(selPlan);
 
-  var plan = buildDutyPlanFromWeek(srcWeek);
+  // Dùng plan đã chỉnh tay nếu cùng tuần nguồn
+  var plan;
+  if (window._dutyPlanManual && window._dutyPlanManual.sourceWeek === srcWeek && window._dutyPlanManual.planWeek === planWeek) {
+    plan = window._dutyPlanManual;
+  } else {
+    plan = buildDutyPlanFromWeek(srcWeek);
+    plan.planWeek = planWeek;
+    window._dutyPlanManual = null;
+  }
+
   var cls = (currentUser && currentUser.className) || "";
   var school = (currentUser && currentUser.school) || "";
   var gvcn = (currentUser && currentUser.name) || "";
   var swPlan = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(planWeek); });
   var rangeTxt = swPlan ? ("từ " + formatDate(swPlan.from) + " đến " + formatDate(swPlan.to)) : "";
-
-  var weekOpts = "";
-  for (var w = 1; w <= 35; w++) {
-    weekOpts += '<option value="' + w + '">Tuần ' + w + '</option>';
-  }
+  var allDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+  var rowColors = ["#fff7ed", "#f0fdf4", "#eff6ff", "#fdf4ff", "#fefce8", "#f8fafc"];
+  var colColors = ["#9a3412", "#166534", "#1d4ed8", "#7e22ce", "#a16207", "#0f766e"];
 
   var html = '<div class="rounded-xl border-2 p-4 mb-4" style="border-color:#b45309;background:#fffbeb;color:#0f172a">';
   html += '<div class="text-center mb-3">';
   html += '<div class="font-bold text-lg" style="color:#9f1239">PHÂN CÔNG TRỰC NHẬT LỚP ' + (cls || "…") + '</div>';
   if (school) html += '<div class="text-sm" style="color:#78350f">' + school + (gvcn ? " · GVCN: " + gvcn : "") + '</div>';
-  html += '<div class="text-sm font-semibold mt-1" style="color:#0c4a6e">Tuần phân công ' + planWeek + (rangeTxt ? " · " + rangeTxt : "") + '</div>';
+  html += '<div class="text-sm font-semibold mt-1" style="color:#0c4a6e">Tuần đang trực: <b>' + planWeek + '</b>' + (rangeTxt ? " · " + rangeTxt : "") + ' · Nguồn VP: tuần <b>' + srcWeek + '</b></div>';
   html += '</div>';
 
-  html += '<div class="flex flex-wrap gap-3 items-end mb-4 text-sm">';
-  html += '<label>Tuần nguồn (HS vi phạm)<select id="dutySrcWeek" class="ml-1 border rounded px-2 py-1" onchange="renderDutyRoster()">';
+  html += '<div class="flex flex-wrap gap-3 items-end mb-3 text-sm">';
+  html += '<label>Tuần nguồn (VP)<select id="dutySrcWeek" class="ml-1 border rounded px-2 py-1" onchange="window._dutyPlanManual=null;renderDutyRoster()">';
   for (var w = 1; w <= 35; w++) html += '<option value="' + w + '"' + (w === Number(srcWeek) ? " selected" : "") + '>Tuần ' + w + '</option>';
   html += '</select></label>';
-  html += '<label>Tuần phân công<select id="dutyPlanWeek" class="ml-1 border rounded px-2 py-1" onchange="renderDutyRoster()">';
+  html += '<label>Tuần trực<select id="dutyPlanWeek" class="ml-1 border rounded px-2 py-1" onchange="window._dutyPlanManual=null;renderDutyRoster()">';
   for (var w = 1; w <= 35; w++) html += '<option value="' + w + '"' + (w === Number(planWeek) ? " selected" : "") + '>Tuần ' + w + '</option>';
   html += '</select></label>';
-  html += '<button type="button" class="px-3 py-1 rounded font-bold text-white" style="background:#b45309" onclick="renderDutyRoster()">↻ Làm mới kế hoạch</button>';
-  html += '<button type="button" class="px-3 py-1 rounded font-bold border" onclick="window.print()">🖨️ In</button>';
-  html += '<button type="button" class="px-3 py-1 rounded font-bold text-white" style="background:#0ea5e9" onclick="downloadDutyJpg()">📷 Tải về .jpg</button>';
-  html += '<button type="button" class="px-3 py-1 rounded font-bold text-white" style="background:#2563eb" onclick="downloadDutyDocx()">📄 Tải về .docx</button>';
+  html += '<button type="button" class="px-4 py-2 rounded-lg font-bold text-white" style="background:#b45309" onclick="window._dutyPlanManual=null;renderDutyRoster()">🔄 TẠO LỊCH TỰ ĐỘNG</button>';
+  html += '<button type="button" class="px-3 py-2 rounded-lg font-semibold" style="background:#fff;border:1px solid #b45309;color:#9f1239" onclick="downloadDutyJpg && downloadDutyJpg()">📷 Tải ảnh</button>';
   html += '</div>';
 
-  html += '<p class="text-xs mb-3" style="color:#78716c">Quy định: <b>Vi phạm nặng</b> (mọi mã v trừ v01) — số buổi theo mã + số lần (1–2 việc/HS). Việc 1–2: <b>2 HS</b> thay phiên; việc 3–6: <b>1 HS</b>. <b>v01</b>: 1 việc/1 ngày (Thứ 5 hoặc Thứ 6).</p>';
+  html += '<div class="text-xs mb-3 p-2 rounded border" style="border-color:#fde68a;background:#fff;color:#78350f;text-align:left">';
+  html += '<b>Quy tắc:</b> Việc 1–2 cần <b>2 HS/buổi</b> · Việc 3–6 cần <b>1 HS/buổi</b> (5–6 ưu tiên nam). ';
+  html += 'v01 → 2 buổi / 2 việc · v03 → 3 buổi / 2 việc · VP khác → 6 buổi / 2 việc. ';
+  html += 'Kéo thả tên HS giữa các ô để chỉnh tay.';
+  html += '</div>';
 
-  // Tóm tắt nguồn
-  html += '<div class="grid md:grid-cols-2 gap-3 mb-4 text-sm">';
-  html += '<div class="p-3 rounded-lg border" style="background:#fef2f2;border-color:#fecaca"><b style="color:#b91c1c">Vi phạm nặng</b><ul class="mt-1 ml-4 list-disc">';
-  if (!plan.weekdayPool.length) html += '<li>Không có</li>';
-  plan.weekdayPool.forEach(function(s) {
-    html += '<li>' + s.name + (s.code ? ' <span class="text-xs">(' + s.code + ')</span>' : '') + '</li>';
-  });
-  html += '</ul></div>';
-  html += '<div class="p-3 rounded-lg border" style="background:#eff6ff;border-color:#bfdbfe"><b style="color:#1d4ed8">Vắng có phép v01 (T5–T6 · 1 việc/1 ngày)</b><ul class="mt-1 ml-4 list-disc">';
-  if (!plan.weekendPool.length) html += '<li>Không có</li>';
-  plan.weekendPool.forEach(function(s) {
-    html += '<li>' + s.name + '</li>';
-  });
-  html += '</ul></div></div>';
+  // Pool HS + số buổi
+  if (plan.pool && plan.pool.length) {
+    html += '<div class="text-xs mb-3" style="text-align:left;color:#0f172a"><b>HS từ VP tuần ' + srcWeek + ':</b> ';
+    html += plan.pool.map(function(s) {
+      var codes = Object.keys(s.codes || {}).join(",");
+      return s.name + " (" + s.sessions + " buổi" + (codes ? " · " + codes : "") + ")";
+    }).join(" · ");
+    html += '</div>';
+  }
 
-  // Bảng ma trận: hàng = việc, cột = ngày
-  var allDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
-  var rowColors = ["#ffffff", "#f0f9ff", "#f0fdf4", "#fff7ed", "#faf5ff", "#fef2f2"];
-  var colColors = ["#0f172a", "#1d4ed8", "#15803d", "#c2410c", "#7e22ce", "#be123c", "#0f766e"];
-  html += '<div id="dutyRosterCapture" class="overflow-x-auto p-2 rounded-lg" style="background:#fffbeb">';
-  var swTitle = SCHOOL_WEEKS.find(function(x){ return String(x.w) === String(planWeek); });
-  var titleRange = "";
-  if (swTitle) titleRange = " · từ " + formatDate(swTitle.from) + " đến " + formatDate(swTitle.to);
-  html += '<div class="text-center font-bold mb-2" style="color:#9f1239">PHÂN CÔNG TRỰC NHẬT · Tuần ' + planWeek + titleRange + ' · Lớp ' + (cls || "") + '</div>';
-  html += '<table class="w-full text-sm" style="border-collapse:collapse;background:#fff">';
+  html += '<div id="dutyTableCapture" class="overflow-x-auto rounded-lg border" style="border-color:#f59e0b;background:#fffbeb">';
+  html += '<div class="text-center font-bold mb-2 pt-2" style="color:#9f1239">PHÂN CÔNG TRỰC NHẬT · Tuần ' + planWeek + (rangeTxt ? " · " + rangeTxt : "") + ' · Lớp ' + (cls || "") + '</div>';
+  html += '<table class="w-full text-sm" style="border-collapse:collapse;background:#fff" id="dutyAssignTable">';
   html += '<thead><tr style="background:#fef3c7;color:#92400e">';
   html += '<th class="py-2 px-2 text-left border">Công việc</th>';
   allDays.forEach(function(d) { html += '<th class="py-2 px-2 text-center border">' + d + '</th>'; });
   html += '</tr></thead><tbody>';
+
   DUTY_TASKS.forEach(function(task, ti) {
     var bg = rowColors[ti % rowColors.length];
     html += '<tr style="background:' + bg + '">';
-    html += '<td class="py-2 px-2 border font-semibold text-left" style="color:#78350f;background:' + bg + '">' + (ti + 1) + '. ' + task + '</td>';
+    html += '<td class="py-2 px-2 border font-semibold text-left" style="color:#78350f">' + (ti + 1) + '. ' + task + (ti < 2 ? " <span style='color:#b45309'>(2 HS)</span>" : " <span style='color:#64748b'>(1 HS)</span>") + '</td>';
     allDays.forEach(function(day, di) {
       var cell = plan.assignments.filter(function(a) { return a.day === day && a.task === task; });
-      var names = cell.map(function(a) { return a.student.name; }).join("<br/>");
       var color = colColors[di % colColors.length];
-      html += '<td class="py-2 px-1 border text-center text-xs font-semibold" style="color:' + color + ';background:' + bg + '">' + (names || "—") + '</td>';
+      html += '<td class="py-2 px-1 border text-center text-xs duty-cell" data-day="' + day + '" data-task="' + task.replace(/"/g, "&quot;") + '" data-tmax="' + (ti < 2 ? 2 : 1) + '" ondragover="event.preventDefault()" ondrop="dutyDrop(event)" style="color:' + color + ';background:' + bg + ';min-height:2.5rem;vertical-align:top">';
+      if (cell.length) {
+        cell.forEach(function(a) {
+          html += '<div class="duty-chip" draggable="true" ondragstart="dutyDragStart(event)" data-sid="' + a.student.id + '" data-sname="' + String(a.student.name || "").replace(/"/g, "&quot;") + '" data-day="' + day + '" data-task="' + task.replace(/"/g, "&quot;") + '" style="display:inline-block;margin:2px;padding:2px 6px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;cursor:grab;font-weight:700">' + a.student.name + '</div>';
+        });
+      } else {
+        html += '<span style="color:#94a3b8">—</span>';
+      }
+      html += '</td>';
     });
     html += '</tr>';
   });
   html += '</tbody></table></div>';
 
-  // Danh sách chi tiết theo ngày
-  html += '<div class="mt-4 text-sm"><b style="color:#9f1239">Chi tiết theo ngày</b>';
-  allDays.forEach(function(day) {
-    var dayAsg = plan.assignments.filter(function(a) { return a.day === day; });
-    if (!dayAsg.length) return;
-    html += '<div class="mt-2 p-2 rounded border" style="border-color:#fde68a">';
-    html += '<div class="font-bold" style="color:#b45309">' + day + '</div><ul class="ml-4 list-disc">';
-    dayAsg.forEach(function(a) {
-      html += '<li style="text-align:left">' + a.task + ' — <b>' + a.student.name + '</b></li>';
-    });
-    html += '</ul></div>';
-  });
-  html += '</div>';
-
   if (!plan.assignments.length) {
-    html += '<p class="mt-3 text-sm" style="color:#b91c1c">Chưa có HS vi phạm tuần ' + srcWeek + ' — không tạo được lịch trực tuần ' + planWeek + '. Nhập thi đua (VP) trước, rồi mở lại TRỰC NHẬT.</p>';
+    html += '<p class="mt-3 text-sm" style="color:#b91c1c">Chưa có HS vi phạm tuần ' + srcWeek + ' — bấm <b>🔄 TẠO LỊCH TỰ ĐỘNG</b> sau khi đã nhập VP tuần nguồn.</p>';
   }
+  html += '<p class="mt-2 text-xs" style="color:#64748b;text-align:left">Kéo tên HS thả vào ô khác để chỉnh. Ô việc 1–2 tối đa 2 HS; việc 3–6 tối đa 1 HS.</p>';
   html += '</div>';
   box.innerHTML = html;
+
+  // Lưu plan hiện tại để kéo thả
+  window._dutyPlanLive = {
+    sourceWeek: srcWeek,
+    planWeek: planWeek,
+    assignments: (plan.assignments || []).map(function(a) {
+      return { day: a.day, task: a.task, student: { id: a.student.id, name: a.student.name, fullName: a.student.fullName, team: a.student.team, gender: a.student.gender, sessions: a.student.sessions, codes: a.student.codes } };
+    }),
+    pool: plan.pool || [],
+    taskOwners: plan.taskOwners
+  };
 }
+
+window.dutyDragStart = function(ev) {
+  var el = ev.target.closest(".duty-chip");
+  if (!el) return;
+  ev.dataTransfer.setData("text/plain", JSON.stringify({
+    sid: el.getAttribute("data-sid"),
+    sname: el.getAttribute("data-sname"),
+    fromDay: el.getAttribute("data-day"),
+    fromTask: el.getAttribute("data-task")
+  }));
+};
+
+window.dutyDrop = function(ev) {
+  ev.preventDefault();
+  var cell = ev.target.closest(".duty-cell");
+  if (!cell || !window._dutyPlanLive) return;
+  var data;
+  try { data = JSON.parse(ev.dataTransfer.getData("text/plain")); } catch (e) { return; }
+  var toDay = cell.getAttribute("data-day");
+  var toTask = cell.getAttribute("data-task");
+  var tmax = Number(cell.getAttribute("data-tmax") || 1);
+  var asg = window._dutyPlanLive.assignments;
+  // Đếm người trong ô đích
+  var inTarget = asg.filter(function(a) { return a.day === toDay && a.task === toTask; });
+  if (inTarget.some(function(a) { return String(a.student.id) === String(data.sid); })) return;
+  if (inTarget.length >= tmax) {
+    alert("Ô này đã đủ " + tmax + " học sinh.");
+    return;
+  }
+  // Xóa khỏi ô nguồn
+  window._dutyPlanLive.assignments = asg.filter(function(a) {
+    return !(a.day === data.fromDay && a.task === data.fromTask && String(a.student.id) === String(data.sid));
+  });
+  // Thêm vào ô đích
+  window._dutyPlanLive.assignments.push({
+    day: toDay,
+    task: toTask,
+    student: { id: data.sid, name: data.sname }
+  });
+  window._dutyPlanManual = window._dutyPlanLive;
+  renderDutyRoster();
+};
 
 
 function switchNotebook(scope) {
@@ -6756,7 +6926,7 @@ function renderReport() {
     '<div class="p-2 bg-red-500/10 rounded border border-red-500/30"><div class="text-xs text-slate-400">Vi phạm nhiều</div><div class="font-semibold text-red-400">' +
     (most && most.violationCount ? most.name + " · " + most.violationCount + " lần" : "—") + '</div></div></div>';
 
-  const counts = { "XUẤT SẮC": 0, "TỐT": 0, "HOÀN THÀNH TỐT": 0, "CẦN CỐ GẮNG": 0, "CẦN HỖ TRỢ GĐ": 0 };
+  const counts = { "XUẤT SẮC": 0, "TỐT": 0, "KHÁ": 0, "ĐẠT": 0, "CHƯA ĐẠT": 0 };
   agg.forEach(s => { if (counts[s.rank.label] != null) counts[s.rank.label]++; });
   const ctx = document.getElementById("rankChart");
   if (rankChart) rankChart.destroy();
