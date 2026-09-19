@@ -793,6 +793,64 @@ button[onclick="doParentReportLogin()"] {
   background: #1d4ed8 !important;
   color: #fff !important;
 }
+
+/* Bản ghi gần đây + TỔNG KẾT: tất cả cột 1 hàng, chữ nhỏ, không tràn hàng 2 */
+#recentBody tr td,
+#recentBody tr th {
+  white-space: nowrap !important;
+  word-break: normal !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  vertical-align: middle !important;
+  padding-top: 0.3rem !important;
+  padding-bottom: 0.3rem !important;
+  padding-left: 0.25rem !important;
+  padding-right: 0.25rem !important;
+  font-size: 11px !important;
+  line-height: 1.25 !important;
+  max-width: 0; /* table-layout:fixed + ellipsis */
+}
+#recentBody tr td:nth-child(3),
+#recentBody tr td:nth-child(7) {
+  white-space: nowrap !important;
+  font-size: 10.5px !important;
+}
+/* Hàng tiêu đề TỔNG KẾT full width */
+#recentBody tr td[colspan] {
+  max-width: none !important;
+  white-space: normal !important;
+  font-size: 12px !important;
+  overflow: visible !important;
+}
+.overflow-x-auto table.w-full.text-sm {
+  width: 100% !important;
+  table-layout: fixed !important;
+  font-size: 11px !important;
+}
+.overflow-x-auto table.w-full.text-sm thead th {
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  font-size: 11px !important;
+  padding: 0.35rem 0.25rem !important;
+}
+
+.tongket-table th, .tongket-table td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 12px !important;
+  line-height: 1.3;
+  vertical-align: middle;
+}
+.tongket-table th:nth-child(2),
+.tongket-table td:nth-child(2) {
+  white-space: nowrap;
+  font-size: 12px !important;
+}
+#tongKetWeek {
+  width: 100%;
+}
 </style>
 </head>
 <body class="bg-slate-50 text-slate-900 min-h-screen theme-light">
@@ -1119,19 +1177,21 @@ button[onclick="doParentReportLogin()"] {
 <thead class="text-slate-400 border-b border-slate-600">
 <tr>
 <th class="text-left py-2" style="width:11%">Ngày giờ lưu</th>
-<th class="text-left" style="width:16%">Họ tên HS</th>
+<th class="text-center" style="width:4%">Tổ</th>
+<th class="text-left" style="width:14%">Họ tên HS</th>
 <th class="text-center" style="width:8%">Ngày</th>
 <th class="text-center" style="width:9%">Môn</th>
-<th class="text-center" style="width:6%">Số lần</th>
-<th class="text-left" style="width:20%">Nội dung</th>
-<th class="text-right" style="width:8%">Tổng điểm</th>
-<th class="text-left" style="width:12%">Người nhập</th>
+<th class="text-center" style="width:5%">Số lần</th>
+<th class="text-left" style="width:18%">Nội dung</th>
+<th class="text-right" style="width:7%">Tổng điểm</th>
+<th class="text-left" style="width:14%">Người nhập</th>
 <th class="text-center" style="width:10%">Thao tác</th>
 </tr>
 </thead>
 <tbody id="recentBody"></tbody>
 </table>
 </div>
+<div id="tongKetWeek" class="mt-4 overflow-x-auto"></div>
 <div id="missingAssigned" class="mt-4 text-sm" style="color:#0f172a"></div>
 </div>
 </section>
@@ -3493,8 +3553,10 @@ function saveEntryFromForm(e) {
   try { document.getElementById("fDate").value = dateVal; } catch (err) {}
   let contentText = (document.getElementById("fContentLabel").textContent || contentCode).replace(/^Đã chọn:\s*/, "");
   if (entryType === "silent") contentText = "Im lặng (không ưu điểm / không vi phạm)";
+  const weekNoSave = String(document.getElementById("fWeekNo").value || weekVal || (currentSchoolWeek() || {}).w || "");
   const entry = {
     id: Date.now() + Math.random().toString(36).slice(2, 6),
+    weekNo: weekNoSave,
     date: dateVal || document.getElementById("fDate").value,
     weekday: document.getElementById("fWeekday").value,
     subject: document.getElementById("fSubject").value,
@@ -3621,6 +3683,72 @@ function renderLeaderEnteredByTeam(activeWeek, activeFrom, activeTo) {
 }
 
 
+
+function buildTongKetWeekHtml(activeWeek, rangeTxt, sums) {
+  var h = "";
+  h += '<div id="tongKetCapture" class="rounded-xl border p-3" style="background:#f0fdf4;border-color:#86efac;color:#0f172a">';
+  h += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+  h += '<div class="font-bold text-sm" style="color:#0369a1">TỔNG KẾT · Tuần ' + (activeWeek || "") + (rangeTxt || "") + "</div>";
+  h += '<div class="no-print flex gap-2">';
+  h += '<button type="button" onclick="downloadTongKetJpg()" class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background:#0ea5e9;color:#fff">🖼️ Tải ảnh .jpg</button>';
+  h += '<button type="button" onclick="downloadTongKetXlsx()" class="px-3 py-1.5 rounded-lg text-xs font-bold" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>';
+  h += "</div></div>";
+  h += '<table class="w-full text-sm tongket-table" style="table-layout:fixed;width:100%;border-collapse:collapse;background:#fff">';
+  h += "<colgroup>";
+  h += '<col style="width:6%"/><col style="width:26%"/><col style="width:8%"/><col style="width:10%"/>';
+  h += '<col style="width:8%"/><col style="width:10%"/><col style="width:12%"/><col style="width:20%"/>';
+  h += "</colgroup>";
+  h += '<thead><tr style="background:#fef2f2;color:#b91c1c">';
+  h += '<th class="py-2 px-1 text-center">Tổ</th>';
+  h += '<th class="py-2 px-2 text-left">Họ tên HS</th>';
+  h += '<th class="py-2 px-1 text-center">Số ƯĐ</th>';
+  h += '<th class="py-2 px-1 text-center">Điểm ƯĐ</th>';
+  h += '<th class="py-2 px-1 text-center">Số VP</th>';
+  h += '<th class="py-2 px-1 text-center">Điểm VP</th>';
+  h += '<th class="py-2 px-1 text-center">Điểm tuần</th>';
+  h += '<th class="py-2 px-1 text-center">Hình phạt</th>';
+  h += "</tr></thead><tbody>";
+
+  window._tongKetRows = (sums || []).map(function(s) {
+    var score = 100 + (s.bonus || 0) + (s.viol || 0);
+    var pa = (penaltyAssigns || []).filter(function(p) {
+      return String(p.studentId) === String(s.id) && String(p.week) === String(s.week);
+    }).slice(-1)[0];
+    return Object.assign({}, s, { score: score, penalty: pa ? pa.penalty : "" });
+  });
+
+  (sums || []).forEach(function(s) {
+    var score = 100 + (s.bonus || 0) + (s.viol || 0);
+    var pa = (penaltyAssigns || []).filter(function(p) {
+      return String(p.studentId) === String(s.id) && String(p.week) === String(s.week);
+    }).slice(-1)[0];
+    var penLabel = pa ? pa.penalty : "—";
+    var canPen = currentUser && (currentUser.role === "gvcn" || currentUser.role === "leader" || currentUser.role === "super");
+    var penCell = '<span style="color:#94a3b8">—</span>';
+    if (s.violTimes > 0 && canPen) {
+      penCell = '<div style="display:flex;align-items:center;justify-content:center;gap:4px;flex-wrap:nowrap">' +
+        '<span style="color:#78350f;font-size:10px;font-weight:600;max-width:5.5rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + String(penLabel).replace(/"/g, "&quot;") + '">' + penLabel + "</span>" +
+        '<button type="button" class="btn-penalty" data-sid="' + s.id +
+        '" data-sname="' + String(s.name).replace(/"/g, "&quot;") + '" data-week="' + s.week + '" onclick="openPenaltyForStudent(this)" style="background:#ea580c;color:#fff;border:none;border-radius:8px;padding:2px 8px;font-size:11px;font-weight:700">' +
+        (pa ? "Sửa" : "Chọn") + "</button></div>";
+    } else if (s.violTimes > 0) {
+      penCell = '<span style="color:#92400e;font-size:11px">' + penLabel + "</span>";
+    }
+    h += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+    h += '<td class="py-1.5 px-1 text-center font-bold" style="color:#7e22ce">' + s.team + "</td>";
+    h += '<td class="py-1.5 px-2 text-left font-medium" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + String(s.name || "").replace(/"/g, "&quot;") + '">' + (s.name || "") + (s.silentAuto ? ' <span style="color:#64748b;font-size:10px">(im lặng)</span>' : "") + "</td>";
+    h += '<td class="py-1.5 px-1 text-center" style="color:#15803d">' + (s.bonusTimes || 0) + "</td>";
+    h += '<td class="py-1.5 px-1 text-center font-semibold" style="color:#15803d">' + (s.bonus > 0 ? "+" : "") + (s.bonus || 0) + "</td>";
+    h += '<td class="py-1.5 px-1 text-center" style="color:#b91c1c">' + (s.violTimes || 0) + "</td>";
+    h += '<td class="py-1.5 px-1 text-center font-semibold" style="color:#b91c1c">' + (s.viol || 0) + "</td>";
+    h += '<td class="py-1.5 px-1 text-center font-bold" style="color:#a16207">' + score + "</td>";
+    h += '<td class="py-1.5 px-1 text-center">' + penCell + "</td>";
+    h += "</tr>";
+  });
+  h += "</tbody></table></div>";
+  return h;
+}
+
 function renderRecent() {
   const body = document.getElementById("recentBody");
   if (!body) return;
@@ -3644,27 +3772,48 @@ function renderRecent() {
     return d.slice(0, 10);
   };
   const inWeek = e => {
+    if (!activeWeek && !activeFrom) return true;
+    // 1) weekNo khớp
+    if (activeWeek && e.weekNo != null && e.weekNo !== "" && String(e.weekNo) === String(activeWeek)) return true;
+    // 2) ngày bản ghi trong khoảng tuần
     const ed = normDate(e.date);
-    if (activeFrom && activeTo && ed) {
-      if (ed >= activeFrom && ed <= activeTo) return true;
-    }
-    if (activeWeek && String(e.weekNo) === String(activeWeek)) return true;
-    // fallback: tìm tuần theo ngày
-    if (ed) {
+    if (activeFrom && activeTo && ed && ed >= activeFrom && ed <= activeTo) return true;
+    if (ed && typeof findSchoolWeek === "function") {
       const sw = findSchoolWeek(ed);
       if (sw && String(sw.w) === String(activeWeek)) return true;
+    }
+    // 3) createdAt / updatedAt trong tuần (mobile đôi khi thiếu date chuẩn)
+    const ca = normDate(String(e.createdAt || e.updatedAt || "").slice(0, 10));
+    if (activeFrom && activeTo && ca && ca >= activeFrom && ca <= activeTo) return true;
+    if (ca && typeof findSchoolWeek === "function") {
+      const sw2 = findSchoolWeek(ca);
+      if (sw2 && String(sw2.w) === String(activeWeek)) return true;
     }
     return false;
   };
   // GVCN/super: mọi bản ghi tuần (gồm Leader); Leader: của mình
+  // Bổ sung weekNo thiếu từ ngày (bản ghi cũ / mobile)
+  (entries || []).forEach(function(e) {
+    if ((e.weekNo == null || e.weekNo === "") && e.date && typeof findSchoolWeek === "function") {
+      var swf = findSchoolWeek(normDate(e.date));
+      if (swf) e.weekNo = String(swf.w);
+    }
+  });
   let mine = entries.filter(e => {
     if (!inWeek(e)) return false;
     if (isGvcn) return true;
     if (currentUser.role === "leader") {
-      return String(e.inputBy) === String(currentUser.id) || String(e.inputByName) === String(currentUser.name);
+      return String(e.inputBy) === String(currentUser.id) || String(e.inputByName) === String(currentUser.name) || String(e.inputBy || "").toLowerCase() === String(currentUser.id || "").toLowerCase();
     }
     return false;
   });
+  // Fallback: nếu tuần hiện tại trống nhưng có entries — hiện entries tuần active theo createdAt gần nhất cùng class
+  if (!mine.length && (entries || []).length && isGvcn) {
+    mine = entries.filter(function(e) {
+      if (activeWeek && String(e.weekNo) === String(activeWeek)) return true;
+      return inWeek(e);
+    });
+  }
   // không cắt bớt khi GVCN — hiện đủ
   if (!isGvcn) mine = mine.slice(0, 80);
   mine.sort(function(a, b) {
@@ -3673,7 +3822,7 @@ function renderRecent() {
 
   if (!mine.length) {
     // Vẫn dựng TỔNG KẾT im lặng 100 + báo cáo thiếu
-    let html0 = '<tr><td colspan="9" class="py-3 text-center text-slate-500">Chưa có bản ghi nhập tay trong tuần này — HS trống tính «HS ngồi im lặng» (100 điểm)</td></tr>';
+    let html0 = '<tr><td colspan="10" class="py-3 text-center text-slate-500">Chưa có bản ghi nhập tay trong tuần này — HS trống tính «HS ngồi im lặng» (100 điểm)</td></tr>';
     let sums0 = [];
     let listHS = students || [];
     if (currentUser && currentUser.role === "leader") {
@@ -3689,33 +3838,18 @@ function renderRecent() {
       if (ta !== tb) return ta - tb;
       return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
     });
-    if (sums0.length) {
-      let rangeTxt = "";
-      const swR = SCHOOL_WEEKS.find(x => String(x.w) === String(activeWeek));
-      if (swR && typeof formatDate === "function") rangeTxt = " · từ " + formatDate(swR.from) + " đến " + formatDate(swR.to);
-      html0 += '<tr><td colspan="8" class="py-3 font-bold text-sm" style="color:#0369a1;background:#f0f9ff">TỔNG KẾT · Tuần ' + (activeWeek || "") + rangeTxt + '</td></tr>';
-      html0 += '<tr class="text-xs border-b font-bold" style="background:#fef2f2">' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:4%">Tổ</td>' +
-        '<td class="py-2 text-left" style="color:#b91c1c;width:32%">Họ tên HS</td>' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số ƯĐ</td>' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm ƯĐ</td>' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số VP</td>' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm VP</td>' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:10%">Điểm tuần</td>' +
-        '<td class="py-2 text-center" style="color:#b91c1c;width:22%">Hình phạt</td></tr>';
-      sums0.forEach(s => {
-        html0 += '<tr class="border-b border-slate-200" style="color:#0f172a">' +
-          '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + s.team + '</td>' +
-          '<td class="py-1.5 font-medium" style="font-size:13px">' + s.name + ' <span style="color:#64748b;font-size:11px">(HS ngồi im lặng)</span></td>' +
-          '<td class="py-1.5 text-center" style="color:#15803d">0</td>' +
-          '<td class="py-1.5 text-center" style="color:#15803d">0</td>' +
-          '<td class="py-1.5 text-center" style="color:#b91c1c">0</td>' +
-          '<td class="py-1.5 text-center" style="color:#b91c1c">0</td>' +
-          '<td class="py-1.5 text-center font-bold" style="color:#a16207">100</td>' +
-          '<td class="py-1.5 text-center text-slate-400">—</td></tr>';
-      });
-    }
+    // TỔNG KẾT empty-path: buildTongKetWeekHtml(sums0)
     body.innerHTML = html0;
+    try {
+      var tk0 = document.getElementById("tongKetWeek");
+      if (tk0 && typeof sums0 !== "undefined" && sums0.length && typeof buildTongKetWeekHtml === "function") {
+        var rt0 = "";
+        var sw0 = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(activeWeek); });
+        if (sw0) rt0 = " · từ " + formatDate(sw0.from) + " đến " + formatDate(sw0.to);
+        tk0.innerHTML = buildTongKetWeekHtml(activeWeek, rt0, sums0);
+      }
+    } catch (e0) {}
+
     try { renderLeaderMissingReport(activeWeek, activeFrom, activeTo); } catch (e) {}
     try { renderLeaderEnteredByTeam(activeWeek, activeFrom, activeTo); } catch (e) {}
     try { if (currentUser && currentUser.role === "leader") updateMissingAssigned(); } catch (e) {}
@@ -3740,16 +3874,28 @@ function renderRecent() {
     const monDisp = (e.subject && e.subject !== "IM LẶNG") ? e.subject : "";
     const timesDisp = (e.times != null ? e.times : 1);
     const contentDisp = (e.type === "silent") ? "HS ngồi im lặng" : (e.contentText || "");
+    var teamDisp = e.team || "";
+    if (!teamDisp && e.studentId) {
+      var stR = (students || []).find(function(s) { return String(s.id) === String(e.studentId); });
+      if (stR) teamDisp = stR.team || "";
+    }
+    var inputName = String(e.inputByName || "").trim();
+    if (!inputName && e.inputBy && typeof accounts !== "undefined" && accounts[e.inputBy] && accounts[e.inputBy].name) {
+      inputName = accounts[e.inputBy].name;
+    }
+    if (!inputName) inputName = String(e.inputBy || "").trim();
+    inputName = inputName.replace(/\s*[\(\[].*$/, "").trim();
     return '<tr class="border-b border-slate-200">' +
       '<td class="py-2 px-1 font-mono whitespace-nowrap" style="font-size:11px;color:#0369a1">' + fmtDT(when) + '</td>' +
-      '<td class="py-2 px-2 font-semibold" style="font-size:13px;color:#0f172a;word-break:break-word">' + e.studentName + '</td>' +
+      '<td class="py-2 px-1 text-center font-bold" style="font-size:12px;color:#7e22ce">' + (teamDisp || "—") + '</td>' +
+      '<td class="py-2 px-1 font-semibold" style="font-size:11px;color:#0f172a" title="' + String(e.studentName||'').replace(/"/g,'') + '">' + (e.studentName || "—") + '</td>' +
       '<td class="py-2 px-1 text-center whitespace-nowrap" style="font-size:12px;color:#0f172a">' + dateDisp + '</td>' +
       '<td class="py-2 px-1 text-center" style="font-size:12px;color:#334155">' + (monDisp || "—") + '</td>' +
       '<td class="py-2 px-1 text-center" style="font-size:12px">' + timesDisp + '</td>' +
-      '<td class="py-2 px-2" style="font-size:12px;color:#334155;word-break:break-word">' + contentDisp + '</td>' +
+      '<td class="py-2 px-1" style="font-size:10.5px;color:#334155" title="' + String(contentDisp||'').replace(/"/g,'') + '">' + contentDisp + '</td>' +
       '<td class="text-right py-2 px-1 font-semibold ' + (lineTotal >= 0 ? "text-green-600" : "text-red-600") + '" style="font-size:13px">' +
       (lineTotal > 0 ? "+" : "") + lineTotal + '</td>' +
-      '<td class="px-1" style="font-size:11px;color:#92400e">' + (e.inputByName || e.inputBy || "—") + '</td>' +
+      '<td class="px-1" style="font-size:12px;color:#92400e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + String(inputName || '').replace(/"/g,'') + '">' + (inputName || "—") + '</td>' +
       '<td class="text-center whitespace-nowrap px-1">' + actions + '</td></tr>';
   }).join("");
 
@@ -3811,54 +3957,20 @@ function renderRecent() {
   })();
 
     
-  if (sums.length) {
-    html += '<tr><td colspan="8" class="py-3 font-bold text-sm" style="color:#0369a1;background:#f0f9ff">TỔNG KẾT · Tuần ' + (activeWeek || "") + rangeTxt +
-      ' <span class="no-print" style="float:right">' +
-      '<button type="button" onclick="downloadTongKetJpg()" class="px-2 py-1 rounded text-xs font-bold" style="background:#0ea5e9;color:#fff;margin-right:4px">🖼️ Tải ảnh .jpg</button>' +
-      '<button type="button" onclick="downloadTongKetXlsx()" class="px-2 py-1 rounded text-xs font-bold" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>' +
-      '</span></td></tr>';
-    html += '<tr class="text-xs border-b font-bold" style="background:#fef2f2">' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:4%">Tổ</td>' +
-      '<td class="py-2 text-left" style="color:#b91c1c;width:32%">Họ tên HS</td>' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số ƯĐ</td>' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm ƯĐ</td>' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:8%">Số VP</td>' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:9%">Điểm VP</td>' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:10%">Điểm tuần</td>' +
-      '<td class="py-2 text-center" style="color:#b91c1c;width:22%">Hình phạt</td></tr>';
-    
-window._tongKetRows = sums.map(function(s) {
-      const score = 100 + s.bonus + s.viol;
-      const pa = (penaltyAssigns || []).filter(p => String(p.studentId) === String(s.id) && String(p.week) === String(s.week)).slice(-1)[0];
-      return Object.assign({}, s, { score: score, penalty: pa ? pa.penalty : "" });
-    });
-    sums.forEach(s => {
-      const score = 100 + s.bonus + s.viol;
-      const pa = (penaltyAssigns || []).filter(p => String(p.studentId) === String(s.id) && String(p.week) === String(s.week)).slice(-1)[0];
-      const penLabel = pa ? pa.penalty : "—";
-      const canPen = currentUser && (currentUser.role === "gvcn" || currentUser.role === "leader" || currentUser.role === "super");
-      let penCell = '<span class="text-slate-400 text-xs">—</span>';
-      if (s.violTimes > 0 && canPen) {
-        penCell = '<div style="display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:nowrap">' +
-          '<span style="color:#78350f;font-size:11px;font-weight:700;max-width:9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + String(penLabel).replace(/"/g, "&quot;") + '">' + penLabel + '</span>' +
-          '<button type="button" class="btn-penalty" data-sid="' + s.id +
-          '" data-sname="' + String(s.name).replace(/"/g, "&quot;") + '" data-week="' + s.week + '" onclick="openPenaltyForStudent(this)">' +
-          (pa ? "Sửa" : "Chọn") + '</button></div>';
-      } else if (s.violTimes > 0) {
-        penCell = '<span style="color:#92400e">' + penLabel + '</span>';
-      }
-      html += '<tr class="border-b border-slate-200" style="color:#0f172a">' +
-        '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + s.team + '</td>' +
-        '<td class="py-1.5 font-medium" style="font-size:13px;text-align:left">' + s.name + (s.silentAuto ? ' <span style="color:#64748b;font-size:11px">(HS ngồi im lặng)</span>' : '') + '</td>' +
-        '<td class="py-1.5 text-center" style="color:#15803d">' + s.bonusTimes + '</td>' +
-        '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + (s.bonus > 0 ? "+" : "") + s.bonus + '</td>' +
-        '<td class="py-1.5 text-center" style="color:#b91c1c">' + s.violTimes + '</td>' +
-        '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + s.viol + '</td>' +
-        '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + score + '</td>' +
-        '<td class="py-1.5 text-center">' + penCell + '</td></tr>';
-    });
-  }
+  // TỔNG KẾT tách bảng riêng (buildTongKetWeekHtml)
   body.innerHTML = html;
+  try {
+    var tkBox = document.getElementById("tongKetWeek");
+    if (tkBox && typeof sums !== "undefined" && sums && sums.length) {
+      var rangeTxt2 = "";
+      var swR2 = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(activeWeek); });
+      if (swR2 && typeof formatDate === "function") rangeTxt2 = " · từ " + formatDate(swR2.from) + " đến " + formatDate(swR2.to);
+      else if (activeFrom && activeTo && typeof formatDate === "function") rangeTxt2 = " · từ " + formatDate(activeFrom) + " đến " + formatDate(activeTo);
+      tkBox.innerHTML = buildTongKetWeekHtml(activeWeek, rangeTxt2, sums);
+    } else if (tkBox) {
+      tkBox.innerHTML = "";
+    }
+  } catch (errTk) { console.warn(errTk); }
   try {
     if (currentUser && (currentUser.role === "gvcn" || currentUser.role === "super")) {
       renderLeaderMissingReport(activeWeek, activeFrom, activeTo);
@@ -4194,12 +4306,25 @@ function deleteEntry(eid) {
       }
     } catch (err) { console.warn(err); }
 
-    // Cập nhật UI tức thì
+    // Cập nhật UI tức thì: Bản ghi + TỔNG KẾT + Báo cáo
     try {
-      renderRecent();
+      if (typeof renderRecent === "function") renderRecent();
       if (typeof updateMissingAssigned === "function") updateMissingAssigned();
       if (typeof updateOverviewStats === "function") updateOverviewStats();
       if (typeof qlnnUxRefreshProgress === "function") qlnnUxRefreshProgress();
+      // Báo cáo (nếu đang mở hoặc luôn làm mới dữ liệu)
+      if (typeof renderReport === "function") {
+        try { renderReport(); } catch (e2) { console.warn(e2); }
+      }
+      if (typeof renderClassViolTableOnce === "function") {
+        try { renderClassViolTableOnce(entries); } catch (e3) { console.warn(e3); }
+      }
+      if (typeof renderSoKetTo === "function") {
+        try {
+          var listR = typeof getFilteredEntries === "function" ? getFilteredEntries() : (entries || []);
+          renderSoKetTo(listR);
+        } catch (e4) { console.warn(e4); }
+      }
     } catch (err) { console.warn(err); }
 
     var msg = document.getElementById("formMsg");
@@ -4343,7 +4468,12 @@ function editEntry(eid) {
       } catch (err) { console.warn(err); }
 
       panel.remove();
-      try { renderRecent(); updateMissingAssigned(); } catch (err) {}
+      try {
+        renderRecent();
+        updateMissingAssigned();
+        if (typeof renderReport === "function") renderReport();
+        if (typeof renderClassViolTableOnce === "function") renderClassViolTableOnce(entries);
+      } catch (err) {}
       var msg = document.getElementById("formMsg");
       if (msg) {
         msg.textContent = "Đã cập nhật: " + (e.studentName || "") + " · Ngày " + nd + " · " + (ns || "—") + " · ×" + nt;
