@@ -1176,15 +1176,17 @@ button[onclick="doParentReportLogin()"] {
 <table class="w-full text-sm" style="table-layout:fixed">
 <thead class="text-slate-400 border-b border-slate-600">
 <tr>
-<th class="text-left py-2" style="width:11%">Ngày giờ lưu</th>
+<th class="text-center py-2" style="width:5%">Tuần</th>
+<th class="text-left" style="width:11%">Ngày giờ lưu</th>
 <th class="text-center" style="width:4%">Tổ</th>
-<th class="text-left" style="width:14%">Họ tên HS</th>
-<th class="text-center" style="width:8%">Ngày</th>
-<th class="text-center" style="width:9%">Môn</th>
+<th class="text-center" style="width:7%">ID HS</th>
+<th class="text-left" style="width:12%">Họ tên HS</th>
+<th class="text-center" style="width:7%">Ngày</th>
+<th class="text-center" style="width:8%">Môn</th>
 <th class="text-center" style="width:5%">Số lần</th>
-<th class="text-left" style="width:18%">Nội dung</th>
-<th class="text-right" style="width:7%">Tổng điểm</th>
-<th class="text-left" style="width:14%">Người nhập</th>
+<th class="text-left" style="width:14%">Nội dung</th>
+<th class="text-right" style="width:6%">Tổng điểm</th>
+<th class="text-left" style="width:11%">Người nhập</th>
 <th class="text-center" style="width:10%">Thao tác</th>
 </tr>
 </thead>
@@ -3822,7 +3824,7 @@ function renderRecent() {
 
   if (!mine.length) {
     // Vẫn dựng TỔNG KẾT im lặng 100 + báo cáo thiếu
-    let html0 = '<tr><td colspan="10" class="py-3 text-center text-slate-500">Chưa có bản ghi nhập tay trong tuần này — HS trống tính «HS ngồi im lặng» (100 điểm)</td></tr>';
+    let html0 = '<tr><td colspan="12" class="py-3 text-center text-slate-500">Chưa có bản ghi nhập tay trong tuần này — HS trống tính «HS ngồi im lặng» (100 điểm)</td></tr>';
     let sums0 = [];
     let listHS = students || [];
     if (currentUser && currentUser.role === "leader") {
@@ -3885,10 +3887,18 @@ function renderRecent() {
     }
     if (!inputName) inputName = String(e.inputBy || "").trim();
     inputName = inputName.replace(/\s*[\(\[].*$/, "").trim();
+        var weekDisp = e.weekNo || activeWeek || "";
+    if (!weekDisp && e.date && typeof findSchoolWeek === "function") {
+      var swd = findSchoolWeek(String(e.date).slice(0, 10));
+      if (swd) weekDisp = swd.w;
+    }
     return '<tr class="border-b border-slate-200">' +
-      '<td class="py-2 px-1 font-mono whitespace-nowrap" style="font-size:11px;color:#0369a1">' + fmtDT(when) + '</td>' +
-      '<td class="py-2 px-1 text-center font-bold" style="font-size:12px;color:#7e22ce">' + (teamDisp || "—") + '</td>' +
+      '<td class="py-2 px-1 text-center font-bold" style="font-size:11px;color:#0369a1">' + (weekDisp || "—") + '</td>' +
+      '<td class="py-2 px-1 font-mono whitespace-nowrap" style="font-size:10px;color:#0369a1">' + fmtDT(when) + '</td>' +
+      '<td class="py-2 px-1 text-center font-bold" style="font-size:11px;color:#7e22ce">' + (teamDisp || "—") + '</td>' +
+      '<td class="py-2 px-1 text-center font-mono" style="font-size:10px;color:#475569">' + (e.studentId || "—") + '</td>' +
       '<td class="py-2 px-1 font-semibold" style="font-size:11px;color:#0f172a" title="' + String(e.studentName||'').replace(/"/g,'') + '">' + (e.studentName || "—") + '</td>' +
+      
       '<td class="py-2 px-1 text-center whitespace-nowrap" style="font-size:12px;color:#0f172a">' + dateDisp + '</td>' +
       '<td class="py-2 px-1 text-center" style="font-size:12px;color:#334155">' + (monDisp || "—") + '</td>' +
       '<td class="py-2 px-1 text-center" style="font-size:12px">' + timesDisp + '</td>' +
@@ -4113,7 +4123,10 @@ function uploadEntriesFromExcel(ev) {
         var content = String(pick(row, ["Nội dung", "contentText", "Nội dung thi đua"])).trim();
         var pts = Number(pick(row, ["Điểm", "points", "±Điểm"])) || 0;
         var times = Number(pick(row, ["Số lần", "times", "Lần"])) || 1;
+        var totalX = pick(row, ["Tổng điểm", "Tổng điểm dòng", "total"]);
         var date = String(pick(row, ["Ngày", "date", "Ngày nhập"])).trim();
+        var teamX = String(pick(row, ["Tổ", "team"])).trim();
+        var inputByNameX = String(pick(row, ["Người nhập", "inputByName"])).trim();
         // Excel serial date?
         if (date && !isNaN(Number(date)) && Number(date) > 40000) {
           var excelEpoch = new Date(Date.UTC(1899, 11, 30));
@@ -4132,9 +4145,22 @@ function uploadEntriesFromExcel(ev) {
           var cur = currentSchoolWeek();
           if (cur) weekNo = cur.w;
         }
+        if (type === "silent" && !typeRaw) {
+          // File 11 cột offline: suy từ Tổng điểm / nội dung
+          var tnum = Number(totalX);
+          if (!isNaN(tnum) && tnum !== 0) {
+            type = tnum > 0 ? "bonus" : "violation";
+            if (!pts) pts = times ? (tnum / times) : tnum;
+          } else if (content && /im lặng|ngồi im/i.test(content)) {
+            type = "silent";
+          } else if (content) {
+            type = "violation"; // mặc định có nội dung không điểm
+          }
+        }
         if (type === "silent") { pts = 0; content = content || "Im lặng (không ưu điểm / không vi phạm)"; code = code || "SILENT"; }
-        var total = pts * times;
-        var team = (st && st.team) || pick(row, ["Tổ", "team"]) || "";
+        var total = (!isNaN(Number(totalX)) && totalX !== "" && totalX != null) ? Number(totalX) : (pts * times);
+        var team = (st && st.team) || teamX || pick(row, ["Tổ", "team"]) || "";
+        if (inputByNameX) { /* giữ tên người nhập file offline */ }
         var entry = {
           id: "off_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7),
           date: date || (currentSchoolWeek() || {}).from || "",
@@ -4149,7 +4175,7 @@ function uploadEntriesFromExcel(ev) {
           times: times,
           total: total,
           inputBy: currentUser.id,
-          inputByName: currentUser.name || currentUser.id,
+          inputByName: inputByNameX || currentUser.name || currentUser.id,
           createdAt: new Date().toISOString(),
           weekNo: weekNo,
           offlineImport: true
@@ -4217,24 +4243,32 @@ function downloadRecentEntriesXlsx() {
     return String(b.createdAt || b.date).localeCompare(String(a.createdAt || a.date));
   });
   if (!list.length) { alert("Không có bản ghi trong tuần để xuất"); return; }
-  const data = list.map(function(e) {
+    const data = list.map(function(e) {
     const total = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+    var when = e.createdAt || e.updatedAt || "";
+    var dateDisp = e.date || "";
+    try {
+      if (dateDisp && typeof formatDate === "function") dateDisp = formatDate(String(dateDisp).slice(0, 10));
+    } catch (err) {}
+    var whenDisp = when;
+    try {
+      if (when && typeof fmtDT === "function") whenDisp = fmtDT(when);
+      else if (when) whenDisp = String(when).replace("T", " ").slice(0, 19);
+    } catch (err) {}
+    var inputName = (e.inputByName || "").trim() || (e.inputBy || "");
+    inputName = String(inputName).replace(/\s*[\(\[].*$/, "").trim();
     return {
       "Tuần": e.weekNo || activeWeek || "",
-      "Ngày": e.date || "",
-      "Giờ lưu": e.createdAt || "",
+      "Ngày giờ lưu": whenDisp,
+      "Tổ": e.team || "",
       "ID HS": e.studentId || "",
       "Họ tên HS": e.studentName || "",
-      "Tổ": e.team || "",
+      "Ngày": dateDisp,
       "Môn": e.subject || "",
-      "Loại": e.type || "",
-      "Mã": e.contentCode || "",
-      "Nội dung": e.contentText || "",
-      "Điểm": e.points || 0,
       "Số lần": e.times || 1,
-      "Tổng điểm dòng": total,
-      "Người nhập ID": e.inputBy || "",
-      "Người nhập": e.inputByName || ""
+      "Nội dung": e.contentText || e.contentCode || "",
+      "Tổng điểm": total,
+      "Người nhập": inputName
     };
   });
   const ws = XLSX.utils.json_to_sheet(data);
@@ -4497,7 +4531,7 @@ function downloadEntriesTemplate() {
     ["NHẬP THI ĐUA LỚP " + cls, "", "NĂM HỌC " + year],
     ["Bật Enable Editing khi mở file trên Excel / WPS"],
     [],
-    ["Cột bắt buộc:", "Tuần | Ngày | Thứ | Môn | Tổ | Họ tên HS | Loại | Mã | Số lần"],
+    ["Cột bắt buộc:", "Tuần | Ngày giờ lưu | Tổ | ID HS | Họ tên HS | Ngày | Môn | Số lần | Nội dung | Tổng điểm | Người nhập"],
     ["Tuần:", "Chọn 1–35 hoặc 18' theo lịch năm học"],
     ["Ngày:", "Phải nằm trong khoảng tuần (VD tuần 1: 07/09/2026–12/09/2026)"],
     ["Loại:", "Ưu điểm / Vi phạm / Hình phạt"],
@@ -4508,7 +4542,7 @@ function downloadEntriesTemplate() {
   // Sheet nhập
   const rows = [
     ["NHẬP THI ĐUA LỚP " + cls + " — NĂM HỌC " + year],
-    ["Tuần", "Ngày (dd/mm/yyyy)", "Thứ", "Môn", "Tổ", "Họ tên học sinh", "Loại", "Mã", "Số lần"],
+    ["Tuần", "Ngày giờ lưu", "Tổ", "ID HS", "Họ tên HS", "Ngày", "Môn", "Số lần", "Nội dung", "Tổng điểm", "Người nhập"],
     ["1", "07/09/2026", "Thứ 2", "TOÁN", "1", "Nguyễn Văn A", "Ưu điểm", "u01", "1"],
     ["1", "08/09/2026", "Thứ 3", "VĂN", "1", "Nguyễn Văn A", "Vi phạm", "v01", "1"],
     ["1", "09/09/2026", "Thứ 4", "ANH", "1", "Nguyễn Văn A", "Hình phạt", "p01", "1"]
