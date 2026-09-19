@@ -1102,8 +1102,7 @@ button[onclick="doParentReportLogin()"] {
 <label class="block text-sm mb-1 text-slate-300 font-medium">Môn</label>
 <select id="fSubject" class="input-field" onchange="onSubjectChange()">
 <option value="">-- Chọn môn --</option>
-<option value="IM LẶNG">IM LẶNG</option>
-<option value="NỀ NẾP">NỀ NẾP</option><option value="SINH HOẠT 15'">SINH HOẠT 15'</option><option value="XIN VỀ">XIN VỀ</option><option>Chào cờ</option>
+<option value="NỀ NẾP">NỀ NẾP</option><option value="XIN VỀ">XIN VỀ</option><option>Chào cờ</option>
 <option>GDTC- cầu lông</option><option>GDTC- bóng chuyền</option>
 <option>GDTC- bóng rổ</option><option>GDTC- bóng đá</option>
 <option>TOÁN</option><option>VĂN</option><option>ANH</option><option>LÝ</option><option>TIN</option>
@@ -3784,12 +3783,14 @@ function renderRecent() {
       const sw = findSchoolWeek(ed);
       if (sw && String(sw.w) === String(activeWeek)) return true;
     }
-    // 3) createdAt / updatedAt trong tuần (mobile đôi khi thiếu date chuẩn)
-    const ca = normDate(String(e.createdAt || e.updatedAt || "").slice(0, 10));
-    if (activeFrom && activeTo && ca && ca >= activeFrom && ca <= activeTo) return true;
-    if (ca && typeof findSchoolWeek === "function") {
-      const sw2 = findSchoolWeek(ca);
-      if (sw2 && String(sw2.w) === String(activeWeek)) return true;
+    // 3) Chỉ dùng createdAt khi thiếu date VÀ thiếu weekNo (tránh cộng nhầm tuần trước)
+    if ((!e.date || !String(e.date).trim()) && (e.weekNo == null || e.weekNo === "")) {
+      const ca = normDate(String(e.createdAt || e.updatedAt || "").slice(0, 10));
+      if (activeFrom && activeTo && ca && ca >= activeFrom && ca <= activeTo) return true;
+      if (ca && typeof findSchoolWeek === "function") {
+        const sw2 = findSchoolWeek(ca);
+        if (sw2 && String(sw2.w) === String(activeWeek)) return true;
+      }
     }
     return false;
   };
@@ -3911,11 +3912,22 @@ function renderRecent() {
 
   const summaryMap = {};
   mine.forEach(e => {
-    const wk = e.weekNo || (findSchoolWeek(e.date) || {}).w || "?";
-    const key = wk + "||" + e.studentId;
+    // Chỉ tính đúng tuần đang xem (không cộng VP tuần trước)
+    var wk = e.weekNo != null && e.weekNo !== "" ? String(e.weekNo) : "";
+    if (!wk && e.date && typeof findSchoolWeek === "function") {
+      var swx = findSchoolWeek(normDate(e.date));
+      if (swx) wk = String(swx.w);
+    }
+    if (!wk) wk = String(activeWeek || "?");
+    if (activeWeek && String(wk) !== String(activeWeek)) return;
+    if (activeFrom && activeTo && e.date) {
+      var ed = normDate(e.date);
+      if (ed && (ed < activeFrom || ed > activeTo)) return;
+    }
+    const key = String(activeWeek || wk) + "||" + e.studentId;
     const st = students.find(x => String(x.id) === String(e.studentId));
     if (!summaryMap[key]) summaryMap[key] = {
-      week: wk, name: e.studentName, id: e.studentId,
+      week: String(activeWeek || wk), name: e.studentName, id: e.studentId,
       team: (st && st.team) || e.team || "?",
       bonusTimes: 0, violTimes: 0, bonus: 0, viol: 0
     };
@@ -4326,6 +4338,12 @@ function deleteEntry(eid) {
 
     if (!window._deletedEntryIds) window._deletedEntryIds = {};
     window._deletedEntryIds[eid] = Date.now();
+    if (!window._deletedEntryFingerprints) window._deletedEntryFingerprints = {};
+    if (ent) {
+      var fp = [String(ent.studentId||""), String(ent.date||"").slice(0,10), String(ent.contentCode||""), String(ent.type||""), String(ent.times||1)].join("|");
+      window._deletedEntryFingerprints[fp] = Date.now();
+      try { sessionStorage.setItem("qlnn_deleted_fp", JSON.stringify(window._deletedEntryFingerprints)); } catch (err) {}
+    }
     try { sessionStorage.setItem("qlnn_deleted_ids", JSON.stringify(window._deletedEntryIds)); } catch (err) {}
 
     // Xóa local ngay
@@ -4442,7 +4460,7 @@ function editEntry(eid) {
       }
     }
     if (!subjects.length) {
-      subjects = ["NỀ NẾP", "SINH HOẠT 15'", "Chào cờ", "Toán", "Ngữ văn", "Tiếng Anh", "Vật lí", "Hóa học", "Sinh học", "Lịch sử", "Địa lí", "GDCD", "Tin học", "Công nghệ", "GDTC- cầu lông", "GDTC- bóng chuyền", "GDTC- bóng rổ", "GDTC- bóng đá", "XIN VỀ", "IM LẶNG"];
+      subjects = ["NỀ NẾP", "Chào cờ", "Toán", "Ngữ văn", "Tiếng Anh", "Vật lí", "Hóa học", "Sinh học", "Lịch sử", "Địa lí", "GDCD", "Tin học", "Công nghệ", "GDTC- cầu lông", "GDTC- bóng chuyền", "GDTC- bóng rổ", "GDTC- bóng đá", "XIN VỀ", "IM LẶNG"];
     }
     var subOpts = '<option value="">—</option>';
     subjects.forEach(function(s) {
@@ -5238,6 +5256,11 @@ function violStatsHtml(list, poolIds, weekScoreMap) {
 
   var viols = (list || []).filter(function(e) {
     if (e.type !== "violation") return false;
+    if (window._deletedEntryIds && e.id && window._deletedEntryIds[String(e.id)]) return false;
+    if (window._deletedEntryFingerprints) {
+      var fp2 = [String(e.studentId||""), String(e.date||"").slice(0,10), String(e.contentCode||""), String(e.type||""), String(e.times||1)].join("|");
+      if (window._deletedEntryFingerprints[fp2]) return false;
+    }
     if (poolIds && !poolIds.has(String(e.studentId))) return false;
     if (curW && e.weekNo != null && e.weekNo !== "") {
       var wn = Number(e.weekNo);
@@ -5829,14 +5852,17 @@ function renderWeekMonthBoards(list, agg) {
       } else {
         posMap = rankByScoreWithTies(rowData, "score");
       }
+      // Vị thứ lớp (cả lớp / nhóm đang hiển thị)
+      var classPosMap = rankByScoreWithTies(rowData, "score");
       html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
       html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
-      html += '<th class="py-2 px-1 text-center" style="width:8%">Tổ</th>';
-      html += '<th class="py-2 px-2" style="width:36%;text-align:left">Họ tên HS</th>';
-      html += '<th class="py-2 px-1 text-center" style="width:12%">Điểm + (ƯĐ)</th>';
-      html += '<th class="py-2 px-1 text-center" style="width:12%">Điểm – (VP)</th>';
-      html += '<th class="py-2 px-1 text-center" style="width:12%">Điểm tuần</th>';
-      html += '<th class="py-2 px-1 text-center" style="width:12%">Vị thứ tổ</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:7%">Tổ</th>';
+      html += '<th class="py-2 px-2" style="width:28%;text-align:left">Họ tên HS</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:11%">Điểm + (ƯĐ)</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:11%">Điểm – (VP)</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:11%">Điểm tuần</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:11%">Vị thứ tổ</th>';
+      html += '<th class="py-2 px-1 text-center" style="width:11%">Vị thứ lớp</th>';
       html += '</tr></thead><tbody>';
       rowData.forEach(function(r) {
         html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
@@ -5846,6 +5872,7 @@ function renderWeekMonthBoards(list, agg) {
         html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + (r.minus || "0") + '</td>';
         html += '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + r.score + '</td>';
         html += '<td class="py-1.5 text-center font-bold" style="color:#0369a1">' + (posMap[String(r.s.id)] || "—") + '</td>';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#0f766e">' + (classPosMap[String(r.s.id)] || "—") + '</td>';
         html += '</tr>';
       });
       html += '</tbody></table></div>';
@@ -5997,6 +6024,7 @@ function renderWeekMonthBoards(list, agg) {
     function weekEntriesOf(sid) {
       return list.filter(function(e) {
         if (String(e.studentId) !== String(sid)) return false;
+        if (window._deletedEntryIds && e.id && window._deletedEntryIds[String(e.id)]) return false;
         if (String(e.weekNo) === String(weekNo)) return true;
         if (wmeta && e.date && String(e.date).slice(0,10) >= wmeta.from && String(e.date).slice(0,10) <= wmeta.to) return true;
         return false;
@@ -6038,11 +6066,34 @@ function renderWeekMonthBoards(list, agg) {
     html += '<th class="py-2 text-center" style="width:9%">Ngày</th>';
     html += '<th class="py-2 text-center" style="width:10%">Môn</th>';
     html += '<th class="py-2 text-center" style="width:6%">Số lần</th>';
-    html += '<th class="py-2 text-left" style="width:30%">Nội dung (ƯĐ/ VP)</th>';
-    html += '<th class="py-2 text-center" style="width:10%">VP tuần trước</th>';
+    html += '<th class="py-2 text-left" style="width:18%">Nội dung (ƯĐ/ VP)</th>';
+    html += '<th class="py-2 text-center" style="width:8%">VP tuần trước</th>';
+    html += '<th class="py-2 text-center" style="width:8%">Điểm tuần</th>';
+    html += '<th class="py-2 text-center" style="width:7%">Vị thứ tổ</th>';
+    html += '<th class="py-2 text-center" style="width:7%">Vị thứ lớp</th>';
     html += '</tr></thead><tbody>';
     var scoredYw = [];
     var scoreMapY = {};
+    // Tính điểm + hạng trước khi vẽ hàng
+    var rankRows = poolSorted.map(function(s) {
+      var b = 0, v = 0;
+      weekEntriesOf(s.id).forEach(function(e) {
+        if (e.type === "silent") return;
+        if (window._deletedEntryIds && e.id && window._deletedEntryIds[String(e.id)]) return;
+        var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+        if (e.type === "bonus" || tt > 0) b += Math.abs(tt);
+        else if (e.type === "violation") v += (tt > 0 ? -Math.abs(tt) : tt);
+        else if (tt > 0) b += tt; else v += tt;
+      });
+      return { id: s.id, team: s.team, score: 100 + b + v };
+    });
+    var classRankMapY = typeof rankByScoreWithTies === "function" ? rankByScoreWithTies(rankRows, "score") : {};
+    var teamRankMapY = {};
+    [1,2,3,4].forEach(function(tn) {
+      var arr = rankRows.filter(function(r) { return String(r.team) === String(tn); });
+      var m = typeof rankByScoreWithTies === "function" ? rankByScoreWithTies(arr, "score") : {};
+      Object.keys(m).forEach(function(k) { teamRankMapY[k] = m[k]; });
+    });
     poolSorted.forEach(function(s) {
       var we = weekEntriesOf(s.id).filter(function(e) { return e.type !== "silent"; });
       var prior = priorViolTimes(s.id);
@@ -6065,7 +6116,10 @@ function renderWeekMonthBoards(list, agg) {
         html += '<td class="py-1.5 px-2 font-medium" style="text-align:left">' + s.name + '</td>';
         html += '<td class="py-1.5 text-center">—</td><td class="py-1.5 text-center">—</td><td class="py-1.5 text-center">—</td>';
         html += '<td class="py-1.5 px-2" style="text-align:left;color:#64748b;font-style:italic">HS ngồi im lặng</td>';
-        html += '<td class="py-1.5 text-center" style="color:#b91c1c">' + (prior || "0") + '</td></tr>';
+        html += '<td class="py-1.5 text-center" style="color:#b91c1c">' + (prior || "0") + '</td>';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + sc + '</td>';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#0369a1">' + (teamRankMapY[String(s.id)] || "—") + '</td>';
+        html += '<td class="py-1.5 text-center font-bold" style="color:#0f766e">' + (classRankMapY[String(s.id)] || "—") + '</td></tr>';
       } else {
         we.forEach(function(e, li) {
           var mon = (e.subject && e.subject !== "IM LẶNG" && e.subject !== "NỀ NẾP") ? e.subject : "—";
@@ -6082,6 +6136,9 @@ function renderWeekMonthBoards(list, agg) {
           html += '<td class="py-1.5 px-2" style="text-align:left;color:' + color + '">' + contentPlain(e) + '</td>';
           if (li === 0) {
             html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c" rowspan="' + we.length + '">' + (prior || "0") + '</td>';
+            html += '<td class="py-1.5 text-center font-bold" style="color:#a16207" rowspan="' + we.length + '">' + sc + '</td>';
+            html += '<td class="py-1.5 text-center font-bold" style="color:#0369a1" rowspan="' + we.length + '">' + (teamRankMapY[String(s.id)] || "—") + '</td>';
+            html += '<td class="py-1.5 text-center font-bold" style="color:#0f766e" rowspan="' + we.length + '">' + (classRankMapY[String(s.id)] || "—") + '</td>';
           }
           html += '</tr>';
         });
@@ -7348,7 +7405,10 @@ function renderClassViolTableOnce(listOpt) {
       if (hide) hide.style.display = "none";
       return;
     }
-    var listViol = listOpt || (entries || []).slice();
+    var listViol = (listOpt || entries || []).slice().filter(function(e) {
+      if (window._deletedEntryIds && e && e.id && window._deletedEntryIds[String(e.id)]) return false;
+      return true;
+    });
     var curW = null;
     try {
       var rw = (document.getElementById("rWeek") || {}).value;
