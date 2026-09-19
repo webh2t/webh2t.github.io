@@ -1830,6 +1830,7 @@ function pullFirebaseThen(cb) {
   });
 }
 function mergeEntryLists(a, b) {
+  if (!window._deletedEntryIds) window._deletedEntryIds = {};
   const map = {};
   (a || []).concat(b || []).forEach(function(e) {
     if (!e) return;
@@ -1838,6 +1839,8 @@ function mergeEntryLists(a, b) {
       id = [e.studentId, e.date, e.contentCode, e.type, e.inputBy, e.createdAt].join("_");
     }
     id = String(id);
+    // Không gộp lại bản ghi vừa xóa (tránh onSnapshot / saveClassData kéo về)
+    if (window._deletedEntryIds[id]) return;
     var prev = map[id];
     if (!prev) { map[id] = e; return; }
     var ta = String(prev.createdAt || prev.updatedAt || prev.date || "");
@@ -1909,7 +1912,7 @@ function subscribeClassData(cid) {
       // gộp với local, không xóa local chỉ vì remote tạm trống lần đầu
       if (remote.length) {
         var before = entries.length;
-        entries = mergeEntryLists(entries, remote);
+        entries = mergeEntryLists(entries, remote).filter(function(e){ return !window._deletedEntryIds || !window._deletedEntryIds[String(e.id)]; });
         try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
         if (entries.length !== before) {
           try {
@@ -2046,7 +2049,7 @@ function loadEntriesSubcollection(cid, cb) {
       }
     });
     if (remote.length) {
-      entries = mergeEntryLists(entries, remote);
+      entries = mergeEntryLists(entries, remote).filter(function(e){ return !window._deletedEntryIds || !window._deletedEntryIds[String(e.id)]; });
       try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch (e) {}
       console.info("[QLNN] entries subcollection:", remote.length, "→ tổng", entries.length);
     }
@@ -2098,7 +2101,7 @@ function saveClassData(opts) {
         if (Array.isArray(d.entries)) remoteEntries = d.entries;
         if (Array.isArray(d.students) && d.students.length) remoteStudents = d.students;
       }
-      entries = mergeEntryLists(remoteEntries, entries);
+      entries = mergeEntryLists(remoteEntries, entries).filter(function(e){ return !window._deletedEntryIds || !window._deletedEntryIds[String(e.id)]; });
       if (remoteStudents && remoteStudents.length && (!students || !students.length)) students = remoteStudents;
       var payload = {
         students: students,
@@ -3730,8 +3733,8 @@ function renderRecent() {
     const when = e.createdAt || (e.date + "T12:00:00");
     const canEdit = currentUser && (currentUser.role === "gvcn" || currentUser.role === "leader" || currentUser.role === "super");
     const actions = canEdit
-      ? '<button type="button" class="btn-sua" onclick="editEntry(\'' + e.id + '\')">Sửa</button> '
-        + '<button type="button" class="btn-xoa" onclick="deleteEntry(\'' + e.id + '\')">Xóa</button>'
+      ? '<button type="button" class="btn-sua" data-eid="' + String(e.id).replace(/"/g,'') + '" onclick="editEntry(this.getAttribute(\'data-eid\'))">Sửa</button> '
+        + '<button type="button" class="btn-xoa" data-eid="' + String(e.id).replace(/"/g,'') + '" onclick="deleteEntry(this.getAttribute(\'data-eid\'))">Xóa</button>'
       : "";
     const dateDisp = e.date ? (typeof formatDate === "function" ? formatDate(String(e.date).slice(0,10)) : String(e.date).slice(0,10)) : "—";
     const monDisp = (e.subject && e.subject !== "IM LẶNG") ? e.subject : "";
@@ -3856,7 +3859,16 @@ window._tongKetRows = sums.map(function(s) {
     });
   }
   body.innerHTML = html;
-  try { renderLeaderMissingReport(activeWeek, activeFrom, activeTo); } catch (err) { console.warn(err); }
+  try {
+    if (currentUser && (currentUser.role === "gvcn" || currentUser.role === "super")) {
+      renderLeaderMissingReport(activeWeek, activeFrom, activeTo);
+    } else if (currentUser && currentUser.role === "leader") {
+      updateMissingAssigned();
+    } else {
+      var el = document.getElementById("missingAssigned");
+      if (el) el.innerHTML = "";
+    }
+  } catch (err) { console.warn(err); }
 }
 
 function renderLeaderMissingReport(activeWeek, activeFrom, activeTo) {
@@ -4150,57 +4162,201 @@ function downloadTongKetJpg() {
   });
 }
 
+
 function deleteEntry(eid) {
-  if (!currentUser) return;
-  const ent = entries.find(x => String(x.id) === String(eid));
-  const ok = currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader";
-  if (!ok) { alert("Không có quyền xóa bản ghi này"); return; }
-  if (!confirm("Xóa bản ghi này?")) return;
-  try { deleteOneEntryFromCloud(eid); } catch(e) {}
-  entries = entries.filter(e => String(e.id) !== String(eid));
-  saveClassData();
-  renderRecent();
-  updateMissingAssigned();
-}
-function editEntry(eid) {
-  if (!currentUser) return;
-  const ent0 = entries.find(x => String(x.id) === String(eid));
-  const ok = currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader";
-  if (!ok) { alert("Không có quyền sửa bản ghi này"); return; }
-  const e = entries.find(x => String(x.id) === String(eid));
-  if (!e) return;
-  // Điền form
-  const fw = document.getElementById("fWeekNo");
-  if (fw && e.weekNo) { fw.value = e.weekNo; onWeekSelect(); }
-  const fd = document.getElementById("fDate");
-  if (fd) {
-    if (fd.tagName === "SELECT") {
-      // ensure option exists
-      let ok = false;
-      for (let i = 0; i < fd.options.length; i++) if (fd.options[i].value === e.date) ok = true;
-      if (!ok && e.date) {
-        const opt = document.createElement("option");
-        opt.value = e.date; opt.textContent = e.date;
-        fd.appendChild(opt);
+  try {
+    if (!currentUser) { alert("Chưa đăng nhập"); return; }
+    eid = String(eid == null ? "" : eid).trim();
+    if (!eid) { alert("Không tìm thấy mã bản ghi"); return; }
+    var ok = currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader";
+    if (!ok) { alert("Không có quyền xóa bản ghi này"); return; }
+
+    var ent = null;
+    for (var i = 0; i < (entries || []).length; i++) {
+      if (String(entries[i].id) === eid) { ent = entries[i]; break; }
+    }
+    var label = ent ? ((ent.studentName || "") + " · " + (ent.contentText || ent.contentCode || "")) : eid;
+    if (!confirm("Xóa bản ghi?\n" + label)) return;
+
+    if (!window._deletedEntryIds) window._deletedEntryIds = {};
+    window._deletedEntryIds[eid] = Date.now();
+    try { sessionStorage.setItem("qlnn_deleted_ids", JSON.stringify(window._deletedEntryIds)); } catch (err) {}
+
+    // Xóa local ngay
+    entries = (entries || []).filter(function(e) { return String(e.id) !== eid; });
+
+    // Lưu localStorage trực tiếp (không merge remote)
+    try {
+      if (typeof ensureUserClassId === "function") ensureUserClassId(currentUser);
+      var cid = currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "");
+      if (cid) {
+        localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
       }
-      fd.value = e.date;
-    } else fd.value = e.date;
+    } catch (err) { console.warn(err); }
+
+    // Cập nhật UI tức thì
+    try {
+      renderRecent();
+      if (typeof updateMissingAssigned === "function") updateMissingAssigned();
+      if (typeof updateOverviewStats === "function") updateOverviewStats();
+      if (typeof qlnnUxRefreshProgress === "function") qlnnUxRefreshProgress();
+    } catch (err) { console.warn(err); }
+
+    var msg = document.getElementById("formMsg");
+    if (msg) {
+      msg.textContent = "Đã xóa: " + label;
+      msg.className = "mt-3 text-sm font-semibold text-red-600";
+      msg.classList.remove("hidden");
+    }
+
+    // Cloud delete + đồng bộ mảng entries (sau UI)
+    try {
+      var cid2 = currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "");
+      if (cid2 && typeof firebaseReady !== "undefined" && firebaseReady && typeof db !== "undefined" && db) {
+        db.collection("qlnn_classes").doc(cid2).collection("entries").doc(eid).delete()
+          .then(function() {
+            console.log("[QLNN] cloud deleted", eid);
+            // Cập nhật mảng entries trên document lớp (nếu còn lưu)
+            return db.collection("qlnn_classes").doc(cid2).set({
+              entries: entries,
+              updatedAt: new Date().toISOString()
+            }, { merge: true });
+          })
+          .then(function() {
+            if (typeof setSyncStatus === "function") setSyncStatus("Đã xóa & đồng bộ cloud", true);
+          })
+          .catch(function(err) {
+            console.warn("[QLNN] cloud delete", err);
+            if (typeof setSyncStatus === "function") setSyncStatus("Đã xóa máy · Cloud: " + (err.message || err), false);
+          });
+      } else {
+        try { saveClassData({ skipRemoteMerge: true }); } catch (err) {}
+      }
+    } catch (err) { console.warn(err); }
+  } catch (err) {
+    console.error(err);
+    alert("Lỗi xóa: " + (err.message || err));
   }
-  autoWeekday();
-  const fs = document.getElementById("fSubject"); if (fs) fs.value = e.subject || "";
-  const ft = document.getElementById("fTeam"); if (ft) { ft.value = e.team || ""; filterStudentsByTeam(); }
-  const fstu = document.getElementById("fStudent"); if (fstu) fstu.value = e.studentId;
-  pickClassify(e.type === "bonus" ? "bonus" : "violation");
-  setTimeout(function() {
-    document.getElementById("fContent").value = e.contentCode || "";
-    document.getElementById("fPoints").value = e.points;
-    document.getElementById("fContentLabel").textContent = "Đã chọn: " + (e.contentText || e.contentCode);
-    const ftm = document.getElementById("fTimes"); if (ftm) ftm.value = e.times || 1;
-  }, 100);
-  // Xóa bản ghi cũ khi lưu mới — đánh dấu
-  window._editingEntryId = eid;
-  alert("Đã nạp bản ghi lên form. Sửa xong bấm Lưu — sẽ cập nhật bản ghi.");
 }
+
+
+function editEntry(eid) {
+  try {
+    if (!currentUser) return;
+    eid = String(eid || "").trim();
+    var ok = currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader";
+    if (!ok) { alert("Không có quyền sửa bản ghi này"); return; }
+    var e = null;
+    for (var i = 0; i < entries.length; i++) {
+      if (String(entries[i].id) === eid) { e = entries[i]; break; }
+    }
+    if (!e) { alert("Không tìm thấy bản ghi"); return; }
+
+    // Đóng panel cũ nếu có
+    var old = document.getElementById("quickEditPanel");
+    if (old) old.remove();
+
+    var weekNo = e.weekNo || (document.getElementById("fWeekNo") || {}).value || "";
+    var dateOpts = "";
+    var sw = (typeof SCHOOL_WEEKS !== "undefined") ? SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(weekNo); }) : null;
+    if (sw && sw.from && sw.to) {
+      var d0 = new Date(sw.from + "T12:00:00");
+      var d1 = new Date(sw.to + "T12:00:00");
+      for (var d = new Date(d0); d <= d1; d.setDate(d.getDate() + 1)) {
+        var y = d.getFullYear();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        var iso = y + "-" + m + "-" + day;
+        var selected = (String(e.date || "").slice(0, 10) === iso) ? " selected" : "";
+        dateOpts += '<option value="' + iso + '"' + selected + ">" + day + "/" + m + "/" + y + "</option>";
+      }
+    }
+    if (!dateOpts) {
+      dateOpts = '<option value="' + (e.date || "") + '" selected>' + (e.date || "—") + "</option>";
+    }
+
+    var subjects = [];
+    var fSub = document.getElementById("fSubject");
+    if (fSub && fSub.options) {
+      for (var si = 0; si < fSub.options.length; si++) {
+        if (fSub.options[si].value) subjects.push(fSub.options[si].value);
+      }
+    }
+    if (!subjects.length) {
+      subjects = ["NỀ NẾP", "SINH HOẠT 15'", "Chào cờ", "Toán", "Ngữ văn", "Tiếng Anh", "Vật lí", "Hóa học", "Sinh học", "Lịch sử", "Địa lí", "GDCD", "Tin học", "Công nghệ", "GDTC- cầu lông", "GDTC- bóng chuyền", "GDTC- bóng rổ", "GDTC- bóng đá", "XIN VỀ", "IM LẶNG"];
+    }
+    var subOpts = '<option value="">—</option>';
+    subjects.forEach(function(s) {
+      subOpts += '<option value="' + s + '"' + (String(e.subject || "") === s ? " selected" : "") + ">" + s + "</option>";
+    });
+
+    var timesOpts = "";
+    for (var ti = 1; ti <= 10; ti++) {
+      timesOpts += '<option value="' + ti + '"' + (Number(e.times || 1) === ti ? " selected" : "") + ">" + ti + "</option>";
+    }
+
+    var panel = document.createElement("div");
+    panel.id = "quickEditPanel";
+    panel.style.cssText = "position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:200;background:#fff;border:2px solid #2563eb;border-radius:16px;padding:1.1rem 1.25rem;box-shadow:0 20px 50px rgba(15,23,42,0.25);max-width:420px;width:92%;color:#0f172a";
+    panel.innerHTML =
+      '<div style="font-weight:800;color:#1d4ed8;margin-bottom:0.5rem">Sửa nhanh bản ghi</div>' +
+      '<div style="font-size:0.9rem;margin-bottom:0.75rem"><b>' + (e.studentName || "") + '</b><br/><span style="color:#64748b">' + (e.contentText || e.contentCode || "") + "</span></div>" +
+      '<label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:0.2rem">Ngày</label>' +
+      '<select id="qeDate" style="width:100%;margin-bottom:0.6rem;padding:0.5rem;border:1.5px solid #cbd5e1;border-radius:10px">' + dateOpts + "</select>" +
+      '<label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:0.2rem">Môn</label>' +
+      '<select id="qeSubject" style="width:100%;margin-bottom:0.6rem;padding:0.5rem;border:1.5px solid #cbd5e1;border-radius:10px">' + subOpts + "</select>" +
+      '<label style="display:block;font-size:0.8rem;font-weight:700;margin-bottom:0.2rem">Số lần</label>' +
+      '<select id="qeTimes" style="width:100%;margin-bottom:0.85rem;padding:0.5rem;border:1.5px solid #cbd5e1;border-radius:10px">' + timesOpts + "</select>" +
+      '<div style="display:flex;gap:0.5rem;justify-content:flex-end">' +
+      '<button type="button" id="qeCancel" style="padding:0.5rem 1rem;border-radius:10px;border:1px solid #cbd5e1;background:#f8fafc;font-weight:600">Hủy</button>' +
+      '<button type="button" id="qeSave" style="padding:0.5rem 1rem;border-radius:10px;border:none;background:#2563eb;color:#fff;font-weight:700">Lưu sửa</button>' +
+      "</div>";
+    document.body.appendChild(panel);
+
+    document.getElementById("qeCancel").onclick = function() { panel.remove(); };
+    document.getElementById("qeSave").onclick = function() {
+      var nd = (document.getElementById("qeDate") || {}).value || e.date;
+      var ns = (document.getElementById("qeSubject") || {}).value;
+      var nt = Number((document.getElementById("qeTimes") || {}).value || e.times || 1) || 1;
+      var pts = Number(e.points || 0);
+      e.date = nd;
+      e.subject = ns;
+      e.times = nt;
+      e.total = pts * nt;
+      e.updatedAt = new Date().toISOString();
+      // Cập nhật thứ nếu có
+      try {
+        if (nd) {
+          var dt = new Date(nd + "T12:00:00");
+          var days = ["Chủ nhật", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+          e.weekday = days[dt.getDay()];
+        }
+      } catch (err) {}
+
+      try { saveClassData(); } catch (err) { console.warn(err); }
+      try {
+        if (typeof ensureUserClassId === "function") ensureUserClassId(currentUser);
+        var cid = currentUser.classId;
+        if (cid && firebaseReady && db) {
+          db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(e.id)).set(e, { merge: true }).catch(function(err) { console.warn(err); });
+        }
+      } catch (err) { console.warn(err); }
+
+      panel.remove();
+      try { renderRecent(); updateMissingAssigned(); } catch (err) {}
+      var msg = document.getElementById("formMsg");
+      if (msg) {
+        msg.textContent = "Đã cập nhật: " + (e.studentName || "") + " · Ngày " + nd + " · " + (ns || "—") + " · ×" + nt;
+        msg.className = "mt-3 text-sm font-semibold text-green-700";
+        msg.classList.remove("hidden");
+      }
+    };
+  } catch (err) {
+    console.error(err);
+    alert("Lỗi sửa: " + (err.message || err));
+  }
+}
+
 
 function downloadEntriesTemplate() {
   const cls = (currentUser && currentUser.className) || "11B9";
@@ -4300,7 +4456,7 @@ function updateMissingAssigned() {
     if (ok && e.studentId != null) covered.add(String(e.studentId));
   });
   // assigned: inputBy khớp id (string)
-  const assigned2 = assigned2.length ? assigned : students.filter(s => String(s.team) === String(currentUser.team));
+  const assigned2 = assigned.length ? assigned : students.filter(s => String(s.team) === String(currentUser.team));
   const missing = assigned2.filter(s => !covered.has(String(s.id)));
   if (!missing.length) {
     el.innerHTML = '<span class="text-green-400">✅ Đã nhập đủ ' + assigned2.length + ' HS được giao trong tuần ' + (aw || "") + '.</span>';
@@ -4479,6 +4635,10 @@ function savePenaltyAssign() {
 
 function getFilteredEntries() {
   let list = [...entries];
+  // Leader: chỉ dữ liệu tổ mình
+  if (currentUser && currentUser.role === "leader" && currentUser.team) {
+    list = list.filter(function(e) { return String(e.team) === String(currentUser.team); });
+  }
   const period = (document.getElementById("rPeriod") || {}).value || "week";
   const month = (document.getElementById("rMonth") || {}).value || "";
   const week = (document.getElementById("rWeek") || {}).value || "";
@@ -4901,48 +5061,149 @@ function rankStatsHtml(scoredList) {
   return h;
 }
 function violStatsHtml(list, poolIds, weekScoreMap) {
-  const viols = (list || []).filter(function(e) {
-    return e.type === "violation" && (!poolIds || poolIds.has(String(e.studentId)));
+  // Viewer / báo cáo: gộp theo HS như mẫu HSVP — 5 cột
+  var curW = null;
+  try {
+    var rw = (document.getElementById("rWeek") || {}).value;
+    if (rw) curW = Number(rw);
+    else if (typeof currentSchoolWeek === "function") {
+      var c = currentSchoolWeek();
+      if (c) curW = Number(c.w);
+    }
+  } catch (err) {}
+
+  var viols = (list || []).filter(function(e) {
+    if (e.type !== "violation") return false;
+    if (poolIds && !poolIds.has(String(e.studentId))) return false;
+    if (curW && e.weekNo != null && e.weekNo !== "") {
+      var wn = Number(e.weekNo);
+      if (!isNaN(wn) && wn > curW) return false;
+    }
+    return true;
   });
+
+  var cls = (currentUser && currentUser.className) || "";
+  var title = "HS VI PHẠM TRONG LỚP";
+  if (curW) title += " <span style=\"color:#2563eb;font-weight:700\">(đến tuần " + curW + ")</span>";
+  if (cls) title += " <span style=\"color:#2563eb;font-weight:700\">LỚP " + cls + "</span>";
+
   if (!viols.length) {
-    return '<div class="legend-box mt-2 text-sm" style="color:#0f172a"><b style="color:#b91c1c">HS VI PHẠM TRONG LỚP:</b> Không có</div>';
+    return '<div class="legend-box mt-2 text-sm" style="color:#0f172a"><b style="color:#b91c1c">' + title + ':</b> Không có</div>';
   }
-  const rows = viols.slice().sort(function(a, b) {
-    const ta = String((students.find(function(s){ return String(s.id) === String(a.studentId); }) || {}).team || a.team || "");
-    const tb = String((students.find(function(s){ return String(s.id) === String(b.studentId); }) || {}).team || b.team || "");
-    if (ta !== tb) return ta.localeCompare(tb, "vi", { numeric: true });
-    return String(a.studentName || "").localeCompare(String(b.studentName || ""), "vi");
+
+  // STT theo danh sách lớp (ID tăng dần)
+  var idOrder = {};
+  (students || []).slice().sort(function(a, b) {
+    return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+  }).forEach(function(s, idx) {
+    idOrder[String(s.id)] = idx + 1;
   });
-  let h = '<div class="legend-box mt-2 text-sm" style="color:#0f172a"><b style="color:#b91c1c">HS VI PHẠM TRONG LỚP</b>';
-  h += '<div class="overflow-x-auto mt-2"><table class="w-full text-xs" style="border-collapse:collapse">';
-  h += '<thead><tr style="background:#fef2f2;color:#b91c1c;text-align:left">';
-  h += '<th class="py-1 px-2" style="text-align:left">Tổ</th><th class="py-1 px-2" style="text-align:left">Họ tên HS</th>';
-  h += '<th class="py-1 px-2" style="text-align:left">Ngày vi phạm</th><th class="py-1 px-2" style="text-align:left">Môn</th>';
-  h += '<th class="py-1 px-2" style="text-align:left">Nội dung vi phạm</th><th class="py-1 px-2" style="text-align:left">Điểm tuần</th>';
-  h += '</tr></thead><tbody>';
-  rows.forEach(function(e) {
-    const st = students.find(function(s){ return String(s.id) === String(e.studentId); });
-    const team = (st && st.team) || e.team || "—";
-    let content = String(e.contentText || e.contentCode || "");
-    content = content.replace(/^Đã chọn:\s*/i, "");
-    content = content.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || content;
-    content = content.replace(/\s*\([+\-]?\d+\)\s*$/g, "").trim();
-    let dateStr = e.date || "—";
-    try {
-      if (e.date && typeof formatDate === "function") dateStr = formatDate(String(e.date).slice(0, 10));
-    } catch (err) {}
-    let weekScore = "—";
-    if (weekScoreMap && weekScoreMap[String(e.studentId)] != null) weekScore = weekScoreMap[String(e.studentId)];
-    h += '<tr style="border-bottom:1px solid #fecaca;text-align:left">';
-    h += '<td class="py-1 px-2 text-left font-bold" style="color:#7e22ce;text-align:left">' + team + '</td>';
-    h += '<td class="py-1 px-2 font-medium" style="text-align:left">' + (e.studentName || (st && st.name) || e.studentId) + '</td>';
-    h += '<td class="py-1 px-2" style="text-align:left">' + dateStr + '</td>';
-    h += '<td class="py-1 px-2" style="text-align:left">' + (e.subject || "—") + '</td>';
-    h += '<td class="py-1 px-2">' + content + '</td>';
-    h += '<td class="py-1 px-2 text-left font-bold" style="color:#a16207">' + weekScore + '</td>';
-    h += '</tr>';
+
+  // Gộp theo studentId
+  var byStu = {};
+  viols.forEach(function(e) {
+    var sid = String(e.studentId);
+    if (!byStu[sid]) byStu[sid] = [];
+    byStu[sid].push(e);
   });
-  h += '</tbody></table></div></div>';
+
+  var groups = Object.keys(byStu).map(function(sid) {
+    var arr = byStu[sid];
+    var st = (students || []).find(function(s) { return String(s.id) === sid; });
+    var name = (arr[0] && arr[0].studentName) || (st && st.name) || sid;
+    var team = (st && st.team) || (arr[0] && arr[0].team) || "—";
+    var stt = idOrder[sid] != null ? idOrder[sid] : 9999;
+    var totalTimes = 0;
+    var lines = arr.map(function(e) {
+      var times = Number(e.times) || 1;
+      totalTimes += times;
+      var content = String(e.contentText || e.contentCode || "");
+      content = content.replace(/^Đã chọn:\s*/i, "");
+      content = content.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || content;
+      content = content.replace(/\s*\([+\-]?\d+\)\s*$/g, "").trim();
+      var dateStr = "";
+      try {
+        if (e.date && typeof formatDate === "function") {
+          var fd = formatDate(String(e.date).slice(0, 10));
+          // dd/mm/yyyy -> d/m ngắn
+          dateStr = fd.replace(/^0/, "").replace(/\/0/g, "/");
+          if (fd.indexOf("/") >= 0) {
+            var p = String(e.date).slice(0, 10).split("-");
+            if (p.length === 3) dateStr = parseInt(p[2], 10) + "/" + parseInt(p[1], 10);
+          }
+        } else if (e.date) dateStr = String(e.date).slice(0, 10);
+      } catch (err) { dateStr = e.date || ""; }
+      var subj = (e.subject || "").trim();
+      // Dòng: Ngày - Môn - Nội dung (bỏ môn nếu trống)
+      var parts = [];
+      if (dateStr) parts.push(dateStr);
+      if (subj && subj !== "—" && subj.toUpperCase() !== "NỀ NẾP") parts.push(subj);
+      if (content) parts.push(content);
+      return parts.join(" - ");
+    });
+    // Sắp dòng theo ngày
+    arr.sort(function(a, b) {
+      return String(a.date || "").localeCompare(String(b.date || ""));
+    });
+    lines = arr.map(function(e) {
+      var content = String(e.contentText || e.contentCode || "");
+      content = content.replace(/^Đã chọn:\s*/i, "");
+      content = content.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || content;
+      content = content.replace(/\s*\([+\-]?\d+\)\s*$/g, "").trim();
+      var dateStr = "";
+      try {
+        if (e.date) {
+          var p = String(e.date).slice(0, 10).split("-");
+          if (p.length === 3) dateStr = parseInt(p[2], 10) + "/" + parseInt(p[1], 10);
+          else if (typeof formatDate === "function") dateStr = formatDate(String(e.date).slice(0, 10));
+        }
+      } catch (err) {}
+      var subj = (e.subject || "").trim();
+      var parts = [];
+      if (dateStr) parts.push(dateStr);
+      if (subj && subj !== "—") parts.push(subj);
+      if (content) parts.push(content);
+      return parts.join(" - ");
+    });
+    totalTimes = 0;
+    arr.forEach(function(e) { totalTimes += Number(e.times) || 1; });
+    return { sid: sid, stt: stt, team: team, name: name, lines: lines, totalTimes: totalTimes };
+  });
+
+  groups.sort(function(a, b) { return a.stt - b.stt; });
+
+  var h = '<div class="legend-box mt-2 text-sm" style="color:#0f172a">';
+  h += '<div style="font-weight:800;color:#dc2626;margin-bottom:0.5rem;font-size:0.95rem">' + title + "</div>";
+  h += '<div class="overflow-x-auto"><table class="w-full text-sm" style="border-collapse:collapse;width:100%;table-layout:fixed;border:1px solid #93c5fd">';
+  h += "<colgroup>";
+  h += '<col style="width:6%"/><col style="width:6%"/><col style="width:22%"/><col style="width:52%"/><col style="width:14%"/>';
+  h += "</colgroup>";
+  h += '<thead><tr style="background:#eff6ff;color:#1e3a8a">';
+  h += '<th class="py-2 px-1 text-center" style="border:1px solid #93c5fd">STT</th>';
+  h += '<th class="py-2 px-1 text-center" style="border:1px solid #93c5fd">Tổ</th>';
+  h += '<th class="py-2 px-2 text-center" style="border:1px solid #93c5fd">Họ tên HS</th>';
+  h += '<th class="py-2 px-2 text-center" style="border:1px solid #93c5fd">Ngày vi phạm - Môn - Vi phạm</th>';
+  h += '<th class="py-2 px-1 text-center" style="border:1px solid #93c5fd">Tổng Số Lần</th>';
+  h += "</tr></thead><tbody>";
+
+  groups.forEach(function(g) {
+    var nRows = Math.max(g.lines.length, 1);
+    g.lines.forEach(function(line, li) {
+      h += '<tr style="color:#dc2626">';
+      if (li === 0) {
+        h += '<td class="py-1.5 px-1 text-center font-semibold" style="border:1px solid #93c5fd;vertical-align:middle" rowspan="' + nRows + '">' + g.stt + "</td>";
+        h += '<td class="py-1.5 px-1 text-center font-bold" style="border:1px solid #93c5fd;vertical-align:middle;color:#7e22ce" rowspan="' + nRows + '">' + g.team + "</td>";
+        h += '<td class="py-1.5 px-2 text-left font-bold" style="border:1px solid #93c5fd;vertical-align:middle;color:#dc2626" rowspan="' + nRows + '">' + g.name + "</td>";
+      }
+      h += '<td class="py-1.5 px-2 text-left" style="border:1px solid #93c5fd;color:#dc2626">' + (line || "—") + "</td>";
+      if (li === 0) {
+        h += '<td class="py-1.5 px-1 text-center font-bold" style="border:1px solid #93c5fd;vertical-align:middle;color:#1d4ed8;font-size:1.05rem" rowspan="' + nRows + '">' + g.totalTimes + "</td>";
+      }
+      h += "</tr>";
+    });
+  });
+
+  h += "</tbody></table></div></div>";
   return h;
 }
 
@@ -5296,6 +5557,9 @@ function downloadReportMonthXlsx() {
 }
 
 function renderWeekMonthBoards(list, agg) {
+  // Viewer: không nhúng bảng VP trong từng board (chỉ giữ 1 bảng cuối trang)
+  var _skipViolBoard = currentUser && (currentUser.role === "viewer" || currentUser.role === "gvcn" || currentUser.role === "super");
+
   const box = document.getElementById("reportWeekBoard");
   if (!box) return;
   const period = (document.getElementById("rPeriod") || {}).value || "year";
@@ -5428,7 +5692,7 @@ function renderWeekMonthBoards(list, agg) {
       rowData.forEach(function(r) { window._weekScoreMap[String(r.s.id)] = r.score; });
       const poolIds = new Set(members.map(s => String(s.id)));
       html += rankStatsHtml(scored);
-      html += violStatsHtml(list, poolIds, window._weekScoreMap || null);
+      html += (_skipViolBoard ? "" : violStatsHtml(list, poolIds, window._weekScoreMap || null));
       html += '</div>';
     });
     box.innerHTML = html || '<p class="text-slate-400">Chọn tuần và (tuỳ chọn) tổ để xem bảng. Không chọn tổ = cả lớp (sắp xếp A–Z).</p>';
@@ -5482,7 +5746,7 @@ function renderWeekMonthBoards(list, agg) {
     });
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredM);
-    html += violStatsHtml(list, new Set(pool.map(s => String(s.id))));
+    html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
     html += '<div class="legend-box mt-1 text-xs"><b>Thang tháng (' + nW + ' tuần):</b> ≥' + (120*nW) + ' XS · ≥' + (110*nW) + ' Tốt · ≥' + (100*nW) + ' HTT · ≥' + (90*nW) + ' Cố gắng · &lt;' + (90*nW) + ' Hỗ trợ GĐ</div></div>';
     box.innerHTML = html;
     box.classList.remove("hidden");
@@ -5533,7 +5797,7 @@ function renderWeekMonthBoards(list, agg) {
     });
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredH);
-    html += violStatsHtml(list, new Set(pool.map(s => String(s.id))));
+    html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
     html += '<div class="legend-box mt-1 text-xs"><b>Thang HK (' + nW + ' tuần):</b> ≥' + (120*nW) + ' XS · ≥' + (110*nW) + ' Tốt · ≥' + (100*nW) + ' HTT · ≥' + (90*nW) + ' Cố gắng · &lt;' + (90*nW) + ' Hỗ trợ GĐ</div></div>';
     box.innerHTML = html;
     box.classList.remove("hidden");
@@ -5661,9 +5925,9 @@ function renderWeekMonthBoards(list, agg) {
     });
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredYw);
-    html += violStatsHtml(list.filter(function(e){
+    html += (_skipViolBoard ? "" : violStatsHtml(list.filter(function(e){
       return String(e.weekNo) === String(weekNo) || (wmeta && e.date >= wmeta.from && e.date <= wmeta.to);
-    }), new Set(pool.map(function(s){ return String(s.id); })), scoreMapY);
+    }), new Set(pool.map(function(s){ return String(s.id); })), scoreMapY));
     html += '</div></div>';
     // Month current
     const weekNos = weeksForMonth(mon);
@@ -5747,7 +6011,7 @@ function renderWeekMonthBoards(list, agg) {
     html += '</tbody></table></div>';
     window._reportMonthExport = { mon: mon, range: mRangeY || "", rows: monthRows };
     html += rankStatsHtml(scoredYm);
-    html += violStatsHtml(list, new Set(pool.map(function(s){ return String(s.id); })));
+    html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(function(s){ return String(s.id); }))));
     html += '</div></div>';
     // HK current
     const months = hk === "hk1" ? [9,10,11,12] : [1,2,3,4];
@@ -5773,7 +6037,7 @@ function renderWeekMonthBoards(list, agg) {
     });
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredYh);
-    html += violStatsHtml(list, new Set(pool.map(s => String(s.id))));
+    html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
     html += '</div>';
     box.innerHTML = html;
     box.classList.remove("hidden");
@@ -6813,6 +7077,226 @@ function downloadSelfDoc() {
   URL.revokeObjectURL(url);
 }
 
+
+function renderLeaderMonthSummary(list) {
+  // Tháng hiện tại — chỉ tổ Leader
+  var host = document.getElementById("reportWeekBoard") || document.getElementById("soKetBox") || document.getElementById("tab-report");
+  // Gắn sau sơ kết nếu có
+  var box = document.getElementById("leaderMonthSummary");
+  if (!box) {
+    box = document.createElement("div");
+    box.id = "leaderMonthSummary";
+    box.className = "mt-4 p-4 rounded-xl border";
+    box.style.cssText = "background:#fff;border-color:#e2e8f0;color:#0f172a";
+    var sk = document.getElementById("soKetContainer") || document.querySelector("#tab-report .bg-slate-800:last-of-type");
+    var tab = document.getElementById("tab-report");
+    if (tab) tab.appendChild(box);
+  }
+  var team = currentUser && currentUser.team ? String(currentUser.team) : "";
+  var mon = new Date().getMonth() + 1;
+  if (mon >= 5 && mon <= 8) mon = 9;
+  var rMon = document.getElementById("rMonth");
+  if (rMon && rMon.value) mon = Number(rMon.value) || mon;
+  var weekNos = typeof weeksForMonth === "function" ? weeksForMonth(mon) : [];
+  var pool = (students || []).filter(function(s) { return String(s.team) === team; });
+  var rows = pool.map(function(s) {
+    var sum = 0, ud = 0, vp = 0;
+    weekNos.forEach(function(wn) {
+      var wm = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(wn); });
+      var we = (list || []).filter(function(e) {
+        return String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to));
+      });
+      var b = 0, v = 0;
+      we.forEach(function(e) {
+        if (e.type === "silent") return;
+        var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+        if (e.type === "bonus" || tt > 0) { b += Math.abs(tt); ud += (e.times || 1); }
+        else { v += (tt > 0 ? -Math.abs(tt) : tt); vp += (e.times || 1); }
+      });
+      sum += 100 + b + v;
+    });
+    var nW = weekNos.length || 1;
+    var rk = typeof rankClassScaled === "function" ? rankClassScaled(sum, nW) : { label: "—", stars: "" };
+    return { s: s, sum: sum, ud: ud, vp: vp, rk: rk };
+  });
+  rows.sort(function(a, b) { return b.sum - a.sum; });
+  var html = '<div class="font-bold mb-2" style="color:#1d4ed8">SƠ KẾT THÁNG ' + mon + ' · Tổ ' + team + '</div>';
+  html += '<div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr style="background:#f0f9ff;color:#0c4a6e">';
+  html += '<th class="py-2">STT</th><th class="text-left">Họ tên</th><th>Điểm tháng</th><th>Xếp loại</th></tr></thead><tbody>';
+  rows.forEach(function(r, idx) {
+    html += '<tr style="border-bottom:1px solid #e2e8f0"><td class="py-1.5 text-center">' + (idx + 1) + '</td>';
+    html += '<td class="py-1.5 text-left font-medium">' + r.s.name + '</td>';
+    html += '<td class="py-1.5 text-center font-bold">' + r.sum + '</td>';
+    html += '<td class="py-1.5 text-center">' + (r.rk.label || "—") + (r.rk.stars ? " " + r.rk.stars : "") + '</td></tr>';
+  });
+  html += '</tbody></table></div>';
+  if (!rows.length) html += '<p class="text-sm" style="color:#64748b">Chưa có dữ liệu tổ.</p>';
+  box.innerHTML = html;
+  box.style.display = "";
+}
+
+
+/** Tổng quan lớp cho PH/HS (viewer) — dữ liệu thật */
+function renderViewerClassOverview(list) {
+  var host = document.getElementById("reportHighlights");
+  if (!host) return;
+  host.style.display = "";
+  host.classList.remove("hidden");
+  var pool = students || [];
+  var entriesList = list || entries || [];
+  var ud = 0, vp = 0, n = 0;
+  entriesList.forEach(function(e) {
+    if (e.type === "silent") return;
+    n++;
+    var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+    if (e.type === "bonus" || tt > 0) ud += Math.abs(tt);
+    else if (e.type === "violation" || tt < 0) vp += Math.abs(tt);
+  });
+  var weekNo = (document.getElementById("rWeek") || {}).value;
+  if (!weekNo && typeof currentSchoolWeek === "function") {
+    var cur = currentSchoolWeek();
+    if (cur) weekNo = cur.w;
+  }
+  var scores = pool.map(function(s) {
+    return typeof studentWeekScore === "function" ? studentWeekScore(s.id) : 100;
+  });
+  var avg = scores.length ? (scores.reduce(function(a, b) { return a + b; }, 0) / scores.length) : 0;
+  var html = '<div style="color:#0f172a">';
+  html += '<div class="font-bold mb-2" style="color:#1d4ed8">Tình hình lớp ' + (currentUser.className || "") + (weekNo ? " · Tuần " + weekNo : "") + "</div>";
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.75rem">';
+  html += '<div style="background:#eff6ff;border-radius:10px;padding:0.6rem"><div style="font-size:1.25rem;font-weight:800;color:#1d4ed8">' + (avg ? avg.toFixed(1) : "—") + '</div><div style="font-size:0.7rem;color:#64748b">Điểm TB tuần</div></div>';
+  html += '<div style="background:#f0fdf4;border-radius:10px;padding:0.6rem"><div style="font-size:1.25rem;font-weight:800;color:#15803d">+' + ud + '</div><div style="font-size:0.7rem;color:#64748b">Tích cực</div></div>';
+  html += '<div style="background:#fef2f2;border-radius:10px;padding:0.6rem"><div style="font-size:1.25rem;font-weight:800;color:#b91c1c">' + (vp ? ("−" + vp) : "0") + '</div><div style="font-size:0.7rem;color:#64748b">Vi phạm</div></div>';
+  html += '<div style="background:#f8fafc;border-radius:10px;padding:0.6rem"><div style="font-size:1.25rem;font-weight:800">' + pool.length + '</div><div style="font-size:0.7rem;color:#64748b">Sĩ số</div></div>';
+  html += "</div>";
+  html += '<p style="font-size:0.8rem;color:#64748b;margin:0">Chọn <b>Họ và tên học sinh</b> ở trên để xem hồ sơ nề nếp chi tiết.</p>';
+  html += "</div>";
+  host.innerHTML = html;
+}
+
+
+/** Một bảng HS VI PHẠM cuối trang + nút Excel (GVCN / viewer / super) */
+function renderClassViolTableOnce(listOpt) {
+  try {
+    var role = currentUser && currentUser.role;
+    if (role !== "viewer" && role !== "gvcn" && role !== "super") {
+      var hide = document.getElementById("classViolAllWrap");
+      if (hide) hide.style.display = "none";
+      return;
+    }
+    var listViol = listOpt || (entries || []).slice();
+    var curW = null;
+    try {
+      var rw = (document.getElementById("rWeek") || {}).value;
+      if (rw) curW = Number(rw);
+      else if (typeof currentSchoolWeek === "function") {
+        var c = currentSchoolWeek();
+        if (c) curW = Number(c.w);
+      }
+    } catch (e) {}
+    if (curW) {
+      listViol = listViol.filter(function(e) {
+        if (e.type !== "violation") return true;
+        if (e.weekNo == null || e.weekNo === "") return true;
+        var wn = Number(e.weekNo);
+        return isNaN(wn) || wn <= curW;
+      });
+    }
+    var wrap = document.getElementById("classViolAllWrap");
+    if (!wrap) {
+      wrap = document.createElement("div");
+      wrap.id = "classViolAllWrap";
+      wrap.className = "mt-4 p-4 rounded-xl";
+      wrap.style.cssText = "background:#fff;border:1px solid #fecaca;color:#0f172a";
+      var tab = document.getElementById("tab-report");
+      if (tab) tab.appendChild(wrap);
+    }
+    var poolIds = new Set((students || []).map(function(s) { return String(s.id); }));
+    var tableHtml = violStatsHtml(listViol, poolIds, null);
+    wrap.innerHTML =
+      '<div class="flex flex-wrap items-center justify-between gap-2 mb-2 no-print">' +
+      '<span style="font-weight:700;color:#b91c1c">Bảng vi phạm tổng hợp (cuối trang)</span>' +
+      '<button type="button" onclick="exportViolTableExcel()" class="px-3 py-2 rounded-lg font-semibold text-sm" style="background:#15803d;color:#fff;border:none">📥 Tải Excel .xlsx</button>' +
+      "</div>" + tableHtml;
+    wrap.style.display = "";
+    window._lastViolListForExport = listViol;
+  } catch (err) { console.warn(err); }
+}
+
+function exportViolTableExcel() {
+  try {
+    if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa sẵn sàng"); return; }
+    var curW = null;
+    try {
+      var rw = (document.getElementById("rWeek") || {}).value;
+      if (rw) curW = Number(rw);
+      else if (typeof currentSchoolWeek === "function") {
+        var c = currentSchoolWeek();
+        if (c) curW = Number(c.w);
+      }
+    } catch (e) {}
+    var list = (window._lastViolListForExport || entries || []).filter(function(e) {
+      if (e.type !== "violation") return false;
+      if (curW && e.weekNo != null && e.weekNo !== "") {
+        var wn = Number(e.weekNo);
+        if (!isNaN(wn) && wn > curW) return false;
+      }
+      return true;
+    });
+    var idOrder = {};
+    (students || []).slice().sort(function(a, b) {
+      return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+    }).forEach(function(s, idx) { idOrder[String(s.id)] = idx + 1; });
+
+    var byStu = {};
+    list.forEach(function(e) {
+      var sid = String(e.studentId);
+      if (!byStu[sid]) byStu[sid] = [];
+      byStu[sid].push(e);
+    });
+    var rows = [["STT", "Tổ", "Họ tên HS", "Ngày vi phạm - Môn - Vi phạm", "Tổng Số Lần"]];
+    Object.keys(byStu).sort(function(a, b) {
+      return (idOrder[a] || 9999) - (idOrder[b] || 9999);
+    }).forEach(function(sid) {
+      var arr = byStu[sid];
+      var st = (students || []).find(function(s) { return String(s.id) === sid; });
+      var name = (arr[0] && arr[0].studentName) || (st && st.name) || sid;
+      var team = (st && st.team) || (arr[0] && arr[0].team) || "";
+      var stt = idOrder[sid] || "";
+      var totalTimes = 0;
+      var lines = [];
+      arr.sort(function(a, b) { return String(a.date || "").localeCompare(String(b.date || "")); });
+      arr.forEach(function(e) {
+        totalTimes += Number(e.times) || 1;
+        var content = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "");
+        content = content.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || content;
+        content = content.replace(/\s*\([+\-]?\d+\)\s*$/g, "").trim();
+        var dateStr = "";
+        if (e.date) {
+          var p = String(e.date).slice(0, 10).split("-");
+          if (p.length === 3) dateStr = parseInt(p[2], 10) + "/" + parseInt(p[1], 10);
+        }
+        var subj = (e.subject || "").trim();
+        var parts = [];
+        if (dateStr) parts.push(dateStr);
+        if (subj && subj !== "—") parts.push(subj);
+        if (content) parts.push(content);
+        lines.push(parts.join(" - "));
+      });
+      rows.push([stt, team, name, lines.join("\n"), totalTimes]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    ws["!cols"] = [{ wch: 6 }, { wch: 6 }, { wch: 28 }, { wch: 55 }, { wch: 12 }];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "HS_Vi_Pham");
+    var cls = (currentUser && currentUser.className) || "lop";
+    XLSX.writeFile(wb, "HS_Vi_Pham_" + cls + (curW ? "_Tuan" + curW : "") + ".xlsx");
+  } catch (err) {
+    console.error(err);
+    alert("Lỗi xuất Excel: " + (err.message || err));
+  }
+}
+
 function renderReport() {
   const rt = document.getElementById("reportTitle");
   const wrap = document.getElementById("superGvcnReportWrap");
@@ -6855,11 +7339,135 @@ function renderReport() {
   fillWeekSelects();
 
   const list = getFilteredEntries();
+
+  // LEADER: chỉ Sơ kết tuần hiện tại của tổ — ẩn HK / cả năm / xếp hạng tổ / sơ kết tháng
+  if (currentUser && currentUser.role === "leader") {
+    try {
+      // Ẩn / xóa các khối không thuộc Leader
+      ["rankChart", "reportHighlights", "reportStudentProfile", "superGvcnReportWrap", "deadlineAlert", "teamSummary", "reportSummary", "leaderMonthSummary"].forEach(function(id) {
+        var n = document.getElementById(id);
+        if (!n) return;
+        if (id === "rankChart") {
+          var grid = n.closest(".grid");
+          if (grid) grid.style.display = "none";
+          else if (n.parentElement) n.parentElement.style.display = "none";
+        } else if (id === "teamSummary" || id === "reportSummary" || id === "leaderMonthSummary") {
+          n.innerHTML = "";
+          n.style.display = "none";
+        } else {
+          n.classList.add("hidden");
+          n.style.display = "none";
+        }
+      });
+      // Ẩn board tuần/tháng/HK nếu có
+      var wb = document.getElementById("reportWeekBoard");
+      if (wb) { wb.innerHTML = ""; wb.style.display = "none"; }
+      document.querySelectorAll("#tab-report .week-board, #tab-report .compact-class").forEach(function(el) {
+        el.style.display = "none";
+        el.innerHTML = "";
+      });
+      // Filter: chỉ tuần
+      var rp = document.getElementById("rPeriod");
+      if (rp) {
+        rp.value = "week";
+        Array.prototype.forEach.call(rp.options, function(opt) {
+          opt.hidden = (opt.value !== "week");
+        });
+        if (rp.parentElement) rp.parentElement.style.display = "none";
+      }
+      var rMonthWrap = document.getElementById("rMonthWrap");
+      if (rMonthWrap) rMonthWrap.style.display = "none";
+      var rTeam = document.getElementById("rTeam");
+      if (rTeam && currentUser.team) {
+        rTeam.value = String(currentUser.team);
+        rTeam.disabled = true;
+      }
+      var rClass = document.getElementById("rClass");
+      if (rClass && rClass.parentElement) rClass.parentElement.style.display = "none";
+      if (rt) rt.textContent = "📊 Sơ kết tuần · Tổ " + (currentUser.team || "");
+      // Hiện lại khung sơ kết tuần
+      var sk = document.getElementById("reportSoKet");
+      if (sk) { sk.style.display = ""; sk.classList.remove("hidden"); }
+    } catch (e) { console.warn(e); }
+    try { renderSoKetTo(list); } catch (err) { console.warn(err); }
+    // Không gọi tháng / HK / cả năm / xếp hạng tổ
+    var lms = document.getElementById("leaderMonthSummary");
+    if (lms) { lms.innerHTML = ""; lms.style.display = "none"; }
+    var ts = document.getElementById("teamSummary");
+    if (ts) { ts.innerHTML = ""; ts.style.display = "none"; }
+    return;
+  }
+
+
+  // Khôi phục UI đầy đủ cho GVCN / viewer / super (sau khi Leader ẩn)
+  try {
+    ["rankChart", "reportHighlights", "reportStudentProfile", "teamSummary", "reportSummary", "reportWeekBoard", "reportSoKet", "leaderMonthSummary", "rMonthWrap", "rWeekWrap"].forEach(function(id) {
+      var n = document.getElementById(id);
+      if (!n) return;
+      n.style.display = "";
+      n.classList.remove("hidden");
+      if (id === "rankChart") {
+        var grid = n.closest(".grid");
+        if (grid) grid.style.display = "";
+        if (n.parentElement) n.parentElement.style.display = "";
+      }
+    });
+    var rp2 = document.getElementById("rPeriod");
+    if (rp2) {
+      if (rp2.parentElement) rp2.parentElement.style.display = "";
+      Array.prototype.forEach.call(rp2.options, function(opt) { opt.hidden = false; });
+    }
+    var rTeam2 = document.getElementById("rTeam");
+    if (rTeam2) { rTeam2.disabled = false; }
+    var rClass2 = document.getElementById("rClass");
+    if (rClass2 && rClass2.parentElement) rClass2.parentElement.style.display = "";
+  } catch (e) {}
+
+  // VIEWER (PH/HS): ưu tiên hồ sơ + tuần/tháng/cả lớp dễ đọc
+  if (currentUser && currentUser.role === "viewer") {
+    try {
+      if (rt) rt.textContent = "📊 Báo cáo nề nếp · Lớp " + (currentUser.className || "") + (currentUser.school ? " · " + currentUser.school : "");
+      // Viewer: hiện Excel ẩn nhưng hiện in nếu cần — giữ ẩn export như trước
+      var sk = document.getElementById("reportSoKet");
+      if (sk) { sk.style.display = ""; }
+      renderReportStudentProfile(list);
+      renderViewerClassOverview(list);
+      // Vi phạm: tất cả từ đầu năm đến tuần hiện tại
+      var listViol = (entries || []).slice();
+      var curW2 = null;
+      try {
+        var rw2 = (document.getElementById("rWeek") || {}).value;
+        if (rw2) curW2 = Number(rw2);
+        else if (typeof currentSchoolWeek === "function") {
+          var c2 = currentSchoolWeek();
+          if (c2) curW2 = Number(c2.w);
+        }
+      } catch (e2) {}
+      if (curW2) {
+        listViol = listViol.filter(function(e) {
+          if (e.weekNo == null || e.weekNo === "") return true;
+          var wn = Number(e.weekNo);
+          return isNaN(wn) || wn <= curW2;
+        });
+      }
+      var aggV = aggregateByStudent(list).sort(sortByIdAsc);
+      try { renderWeekMonthBoards(list, aggV); } catch (err) { console.warn(err); }
+      try { renderSoKetTo(list); } catch (err) { console.warn(err); }
+      try { renderClassViolTableOnce(listViol); } catch (err) { console.warn(err); }
+      // Thống kê + xếp hạng tổ vẫn hiện cho PH xem tình hình lớp
+      try {
+        if (typeof renderReportStats === "function") renderReportStats(list, aggV);
+      } catch (err) {}
+    } catch (err) { console.warn(err); }
+    return;
+  }
+
   renderReportStudentProfile(list);
   
   const agg = aggregateByStudent(list).sort(sortByIdAsc);
   try { renderWeekMonthBoards(list, agg); } catch (err) { console.warn(err); }
   try { renderSoKetTo(list); } catch (err) { console.warn(err); }
+  try { renderClassViolTableOnce(list); } catch (err) { console.warn(err); }
   // Thống kê tổng hợp theo phạm vi lọc
   const statsBox = document.getElementById("reportPeriodStats");
   if (statsBox) {
