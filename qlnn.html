@@ -1729,9 +1729,21 @@ function findSchoolWeek(isoDate) {
   if (!isoDate) return null;
   return SCHOOL_WEEKS.find(w => isoDate >= w.from && isoDate <= w.to) || null;
 }
+function todayISOLocal() {
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+}
+/** Tuần hiện tại theo khoảng from–to. Ngày giữa hai tuần → giữ tuần vừa kết thúc cho đến khi tuần mới bắt đầu. */
 function currentSchoolWeek() {
-  const today = new Date().toISOString().slice(0, 10);
-  return findSchoolWeek(today) || SCHOOL_WEEKS[0];
+  var today = todayISOLocal();
+  var exact = findSchoolWeek(today);
+  if (exact) return exact;
+  var best = null;
+  for (var i = 0; i < SCHOOL_WEEKS.length; i++) {
+    if (SCHOOL_WEEKS[i].from <= today) best = SCHOOL_WEEKS[i];
+    else break;
+  }
+  return best || SCHOOL_WEEKS[0];
 }
 function parseVNDate(s) {
   if (!s) return "";
@@ -1892,15 +1904,16 @@ function pullFirebaseThen(cb) {
 }
 function mergeEntryLists(a, b) {
   if (!window._deletedEntryIds) window._deletedEntryIds = {};
+  if (!window._deletedEntryFingerprints) window._deletedEntryFingerprints = {};
   const map = {};
   (a || []).concat(b || []).forEach(function(e) {
     if (!e) return;
+    if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
     var id = e.id;
     if (!id) {
       id = [e.studentId, e.date, e.contentCode, e.type, e.inputBy, e.createdAt].join("_");
     }
     id = String(id);
-    // Không gộp lại bản ghi vừa xóa (tránh onSnapshot / saveClassData kéo về)
     if (window._deletedEntryIds[id]) return;
     var prev = map[id];
     if (!prev) { map[id] = e; return; }
@@ -1908,7 +1921,9 @@ function mergeEntryLists(a, b) {
     var tb = String(e.createdAt || e.updatedAt || e.date || "");
     if (tb >= ta) map[id] = e;
   });
-  return Object.values(map);
+  return Object.values(map).filter(function(e) {
+    return typeof isEntryDeleted !== "function" || !isEntryDeleted(e);
+  });
 }
 
 function normalizeClassId(u) {
@@ -1973,7 +1988,7 @@ function subscribeClassData(cid) {
       // gộp với local, không xóa local chỉ vì remote tạm trống lần đầu
       if (remote.length) {
         var before = entries.length;
-        entries = mergeEntryLists(entries, remote).filter(function(e){ return !window._deletedEntryIds || !window._deletedEntryIds[String(e.id)]; });
+        entries = mergeEntryLists(entries, remote); try { purgeDeletedEntries(); } catch (e) {}
         try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
         if (entries.length !== before) {
           try {
@@ -1996,10 +2011,17 @@ function subscribeClassData(cid) {
     if (!snap.exists) return;
     var d = snap.data() || {};
     var changed = false;
+    if (d.deletedEntryIds && typeof d.deletedEntryIds === "object") {
+      window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, d.deletedEntryIds);
+    }
+    if (d.deletedFingerprints && typeof d.deletedFingerprints === "object") {
+      window._deletedEntryFingerprints = Object.assign({}, window._deletedEntryFingerprints || {}, d.deletedFingerprints);
+    }
     if (Array.isArray(d.entries)) {
       var merged = mergeEntryLists(entries, d.entries);
-      if (merged.length !== entries.length) changed = true;
-      entries = merged;
+      try { purgeDeletedEntries(); } catch(e) {}
+      if (merged.length !== entries.length || entries.length !== merged.length) changed = true;
+      entries = (entries || []).filter(function(e) { return !isEntryDeleted(e); });
       try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
     }
     if (Array.isArray(d.students) && d.students.length) {
@@ -2021,6 +2043,8 @@ function subscribeClassData(cid) {
 }
 
 function loadClassDataFromCloud(cid, cb) {
+  try { loadDeletedMarksForClass(currentUser && currentUser.classId); purgeDeletedEntries(); } catch (e) {}
+
   if (!cid) { if (cb) cb(); return; }
   // luôn nạp local trước
   try {
@@ -2043,8 +2067,17 @@ function loadClassDataFromCloud(cid, cb) {
         students = d.students;
         try { localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students)); } catch(e) {}
       }
+      if (d.deletedEntryIds && typeof d.deletedEntryIds === "object") {
+        window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, d.deletedEntryIds);
+        try { localStorage.setItem("qlnn_deleted_ids_" + cid, JSON.stringify(window._deletedEntryIds)); } catch(e) {}
+      }
+      if (d.deletedFingerprints && typeof d.deletedFingerprints === "object") {
+        window._deletedEntryFingerprints = Object.assign({}, window._deletedEntryFingerprints || {}, d.deletedFingerprints);
+        try { localStorage.setItem("qlnn_deleted_fp_" + cid, JSON.stringify(window._deletedEntryFingerprints)); } catch(e) {}
+      }
       if (Array.isArray(d.entries)) {
         entries = mergeEntryLists(entries, d.entries);
+        try { purgeDeletedEntries(); } catch(e) {}
         try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
       }
       if (Array.isArray(d.bonuses) && d.bonuses.length) bonuses = d.bonuses;
@@ -2110,7 +2143,7 @@ function loadEntriesSubcollection(cid, cb) {
       }
     });
     if (remote.length) {
-      entries = mergeEntryLists(entries, remote).filter(function(e){ return !window._deletedEntryIds || !window._deletedEntryIds[String(e.id)]; });
+      entries = mergeEntryLists(entries, remote); try { purgeDeletedEntries(); } catch (e) {}
       try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch (e) {}
       console.info("[QLNN] entries subcollection:", remote.length, "→ tổng", entries.length);
     }
@@ -2154,17 +2187,9 @@ function saveClassData(opts) {
   var attempt = 0;
   function pushCloud() {
     attempt++;
-    db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
-      var remoteEntries = [];
-      var remoteStudents = null;
-      if (snap.exists) {
-        var d = snap.data() || {};
-        if (Array.isArray(d.entries)) remoteEntries = d.entries;
-        if (Array.isArray(d.students) && d.students.length) remoteStudents = d.students;
-      }
-      entries = mergeEntryLists(remoteEntries, entries).filter(function(e){ return !window._deletedEntryIds || !window._deletedEntryIds[String(e.id)]; });
-      if (remoteStudents && remoteStudents.length && (!students || !students.length)) students = remoteStudents;
-      var payload = {
+    try { purgeDeletedEntries(); } catch (e) {}
+    var basePayload = function() {
+      return {
         students: students,
         entries: entries,
         bonuses: bonuses,
@@ -2172,13 +2197,51 @@ function saveClassData(opts) {
         penalties: penalties,
         penaltyAssigns: penaltyAssigns,
         deadlineCfg: deadlineCfg,
+        deletedEntryIds: window._deletedEntryIds || {},
+        deletedFingerprints: window._deletedEntryFingerprints || {},
         className: currentUser.className || "",
         school: currentUser.school || "",
         updatedAt: new Date().toISOString(),
         updatedBy: currentUser.id || ""
       };
-      return db.collection("qlnn_classes").doc(cid).set(payload, { merge: true });
-    }).then(function() {
+    };
+    // skipRemoteMerge: ghi đè entries đã purge (sau xóa) — không kéo bản ghi remote cũ về
+    var chain;
+    if (opts.skipRemoteMerge) {
+      chain = db.collection("qlnn_classes").doc(cid).set(basePayload(), { merge: true });
+    } else {
+      chain = db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
+        var remoteEntries = [];
+        var remoteStudents = null;
+        if (snap.exists) {
+          var d = snap.data() || {};
+          if (Array.isArray(d.entries)) remoteEntries = d.entries;
+          if (Array.isArray(d.students) && d.students.length) remoteStudents = d.students;
+          // Nạp danh sách đã xóa từ cloud
+          if (d.deletedEntryIds && typeof d.deletedEntryIds === "object") {
+            window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, d.deletedEntryIds);
+            if (window._unmarkedThisSession) {
+              Object.keys(window._unmarkedThisSession).forEach(function(k) {
+                if (k.indexOf("id:") === 0) delete window._deletedEntryIds[k.slice(3)];
+              });
+            }
+          }
+          if (d.deletedFingerprints && typeof d.deletedFingerprints === "object") {
+            window._deletedEntryFingerprints = Object.assign({}, window._deletedEntryFingerprints || {}, d.deletedFingerprints);
+            if (window._unmarkedThisSession) {
+              Object.keys(window._unmarkedThisSession).forEach(function(k) {
+                if (k.indexOf("id:") !== 0) delete window._deletedEntryFingerprints[k];
+              });
+            }
+          }
+        }
+        entries = mergeEntryLists(remoteEntries, entries);
+        try { purgeDeletedEntries(); } catch (e) {}
+        if (remoteStudents && remoteStudents.length && (!students || !students.length)) students = remoteStudents;
+        return db.collection("qlnn_classes").doc(cid).set(basePayload(), { merge: true });
+      });
+    }
+    chain.then(function() {
       try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch(e) {}
       setSyncStatus("✓ Đã lưu & đồng bộ cloud · " + entries.length + " bản ghi · lớp " + cid, true);
       subscribeClassData(cid);
@@ -2281,15 +2344,24 @@ function fillWeekSelects() {
     const to = w.to.slice(8,10) + "/" + w.to.slice(5,7) + "/" + w.to.slice(0,4);
     return '<option value="' + w.w + '">Tuần ' + w.w + " | " + f + " – " + to + "</option>";
   }).join("");
+  var curW = null;
+  try { curW = currentSchoolWeek(); } catch (e) {}
   const fw = document.getElementById("fWeekNo");
-  if (fw && fw.options.length < 3) {
-    fw.innerHTML = '<option value="">— Chọn tuần —</option>' + opts;
+  if (fw) {
+    var keepF = fw.value;
+    if (fw.options.length < 3) {
+      fw.innerHTML = '<option value="">— Chọn tuần —</option>' + opts;
+    }
+    // Mặc định tuần hiện tại theo khoảng ngày
+    if (!keepF && curW) fw.value = String(curW.w);
+    else if (keepF) fw.value = keepF;
   }
   const rw = document.getElementById("rWeek");
   if (rw) {
     const cur = rw.value;
     rw.innerHTML = '<option value="">Tất cả tuần</option>' + opts;
     if (cur) rw.value = cur;
+    else if (curW) rw.value = String(curW.w);
   }
 }
 function onWeekSelect() {
@@ -2404,9 +2476,9 @@ function submitRegister() {
     school, name, phone, email, className: cls, size: +size,
     fee: 100000, months: 12, status: "pending",
     createdAt: new Date().toISOString(),
-    weekNo: document.getElementById("fWeekNo") ? document.getElementById("fWeekNo").value : (findSchoolWeek(document.getElementById("fDate").value)||{}).w || "",
-    weekFrom: document.getElementById("fWeekFrom") ? document.getElementById("fWeekFrom").value : "",
-    weekTo: document.getElementById("fWeekTo") ? document.getElementById("fWeekTo").value : ""
+    weekNo: String((document.getElementById("fWeekNo") && document.getElementById("fWeekNo").value) || weekNoSave || (findSchoolWeek(dateVal)||{}).w || ""),
+    weekFrom: (document.getElementById("fWeekFrom") && document.getElementById("fWeekFrom").value) || (sw2 && sw2.from) || "",
+    weekTo: (document.getElementById("fWeekTo") && document.getElementById("fWeekTo").value) || (sw2 && sw2.to) || ""
   };
   pendingRegs.unshift(item);
   savePending();
@@ -3048,17 +3120,20 @@ function switchTab(name) {
     if (b.dataset.tab === name) b.classList.add("tab-active");
     else b.classList.remove("tab-active");
   });
-  if (name === "report") renderReport();
   if (name === "admin") switchAdminSub(currentUser.role === "super" ? "pending" : "accounts");
   if (name === "overview") renderOverview();
   if (name === "notebook") switchNotebook(window._nbScope || "week");
   if (name === "input") {
     fillWeekSelects();
     filterStudentsByTeam();
-    const cw = currentSchoolWeek();
-    const fw = document.getElementById("fWeekNo");
-    if (fw && cw) { fw.value = cw.w; onWeekSelect(); }
-    const afterLoad = function() {
+    var cw = currentSchoolWeek();
+    var fw = document.getElementById("fWeekNo");
+    if (fw && cw) {
+      window._forceShowWeek = String(cw.w);
+      fw.value = String(cw.w);
+      onWeekSelect();
+    }
+    var afterLoad = function() {
       try {
         renderRecent();
         updateMissingAssigned();
@@ -3076,9 +3151,8 @@ function switchTab(name) {
     } else {
       afterLoad();
     }
-    // Leader: ẩn OCR/Upload/mẫu và ẩn chọn Tổ
-    const tools = document.getElementById("inputToolsRow");
-    const teamW = document.getElementById("fTeamWrap");
+    var tools = document.getElementById("inputToolsRow");
+    var teamW = document.getElementById("fTeamWrap");
     if (currentUser && currentUser.role === "leader") {
       ensureUserClassId(currentUser);
       if (tools) { tools.classList.add("hidden"); tools.style.display = "none"; }
@@ -3086,7 +3160,6 @@ function switchTab(name) {
       if (document.getElementById("fTeam") && currentUser.team) {
         document.getElementById("fTeam").value = String(currentUser.team);
       }
-      // load lại dữ liệu lớp nếu danh sách trống (mobile lần đầu)
       if (!students.length && currentUser.classId) {
         loadClassData();
         loadClassDataFromCloud(currentUser.classId, function() {
@@ -3100,6 +3173,23 @@ function switchTab(name) {
       if (tools) tools.classList.remove("hidden");
       if (teamW) teamW.classList.remove("hidden");
     }
+  }
+  if (name === "report") {
+    try {
+      fillWeekSelects();
+      var cw2 = currentSchoolWeek();
+      var rW = document.getElementById("rWeek");
+      var rP = document.getElementById("rPeriod");
+      if (cw2) {
+        window._forceShowWeek = String(cw2.w);
+        if (rW) rW.value = String(cw2.w);
+      }
+      // Mặc định Cả năm → đủ 3 bảng Sơ kết tuần/tháng/HK + tổng hợp
+      if (rP) rP.value = "year";
+      var sk = document.getElementById("soKetWeek");
+      if (sk && cw2) sk.value = String(cw2.w);
+    } catch (e) {}
+    renderReport();
   }
 }
 
@@ -3541,14 +3631,29 @@ function saveEntryFromForm(e) {
     }
   }
   const sw2 = SCHOOL_WEEKS.find(x => String(x.w) === String(document.getElementById("fWeekNo").value)) || swCheck;
-  if (entryType !== "silent") {
-    if (!dateVal || dateVal < sw2.from || dateVal > sw2.to) {
-      alert("NHẬP SAI NGÀY CỦA TUẦN\nTuần " + document.getElementById("fWeekNo").value + ": " + sw2.from + " → " + sw2.to);
-      return;
-    }
-  } else if (!dateVal && sw2) {
+  // Không chặn lưu tuần trước: tự gán ngày đầu tuần nếu trống / sai khoảng
+  if (sw2 && (!dateVal || dateVal < sw2.from || dateVal > sw2.to)) {
     dateVal = sw2.from;
-    try { document.getElementById("fDate").value = dateVal; } catch (e) {}
+    try {
+      var fdFix = document.getElementById("fDate");
+      if (fdFix) {
+        if (fdFix.tagName === "SELECT") {
+          var found = false;
+          for (var oi = 0; oi < fdFix.options.length; oi++) {
+            if (fdFix.options[oi].value === dateVal) { found = true; break; }
+          }
+          if (!found) {
+            var opt = document.createElement("option");
+            opt.value = dateVal;
+            opt.textContent = dateVal.slice(8,10) + "/" + dateVal.slice(5,7) + "/" + dateVal.slice(0,4);
+            fdFix.appendChild(opt);
+          }
+          fdFix.value = dateVal;
+        } else {
+          fdFix.value = dateVal;
+        }
+      }
+    } catch (e) {}
   }
   // gán lại fDate đã chuẩn hóa
   try { document.getElementById("fDate").value = dateVal; } catch (err) {}
@@ -3574,27 +3679,77 @@ function saveEntryFromForm(e) {
     inputBy: currentUser.id,
     inputByName: currentUser.name,
     createdAt: new Date().toISOString(),
-    weekNo: document.getElementById("fWeekNo") ? document.getElementById("fWeekNo").value : (findSchoolWeek(document.getElementById("fDate").value)||{}).w || "",
-    weekFrom: document.getElementById("fWeekFrom") ? document.getElementById("fWeekFrom").value : "",
-    weekTo: document.getElementById("fWeekTo") ? document.getElementById("fWeekTo").value : ""
+    weekNo: String((document.getElementById("fWeekNo") && document.getElementById("fWeekNo").value) || weekNoSave || (findSchoolWeek(dateVal)||{}).w || ""),
+    weekFrom: (document.getElementById("fWeekFrom") && document.getElementById("fWeekFrom").value) || (sw2 && sw2.from) || "",
+    weekTo: (document.getElementById("fWeekTo") && document.getElementById("fWeekTo").value) || (sw2 && sw2.to) || ""
   };
   if (window._editingEntryId) {
     entries = entries.filter(x => String(x.id) !== String(window._editingEntryId));
     entry.id = window._editingEntryId;
     window._editingEntryId = null;
   }
+  // === LƯU ĐƠN GIẢN & ỔN ĐỊNH (mọi tuần, kể cả tuần 1) ===
+  try { unmarkEntryDeleted(entry); } catch (e) {}
+  // Bỏ khỏi danh sách xóa trên cloud cho fingerprint này
+  try {
+    if (!window._unmarkedThisSession) window._unmarkedThisSession = {};
+    window._unmarkedThisSession[entryFingerprint(entry)] = true;
+    if (entry.id) window._unmarkedThisSession["id:" + entry.id] = true;
+  } catch (e) {}
+
+  entries = (entries || []).filter(function(x) { return String(x.id) !== String(entry.id); });
   entries.unshift(entry);
-  const ok = saveClassData();
+  window._lastSavedEntryId = String(entry.id);
+  window._forceShowWeek = String(entry.weekNo || "");
+
+  // Ghi local ngay
+  try {
+    var cidL = currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "");
+    if (cidL) localStorage.setItem("qlnn_entries_" + cidL, JSON.stringify(entries));
+  } catch (e) {}
+
+  // Cloud: skipRemoteMerge để không kéo deletedFingerprints cũ xóa mất bản ghi mới
+  var ok = false;
+  try {
+    ok = saveClassData({ skipRemoteMerge: true }) !== false;
+  } catch (e) { console.warn(e); ok = true; }
   try { saveOneEntryToCloud(entry); } catch (e) { console.warn(e); }
-  const msg = document.getElementById("formMsg");
+
+  var msg = document.getElementById("formMsg");
   if (msg) {
-    msg.textContent = ok
-      ? ("✅ Đã lưu: " + entry.studentName + " · " + entry.contentText + " · " + (entry.total > 0 ? "+" : "") + entry.total + (firebaseReady ? " (đồng bộ cloud)" : " (chỉ máy này)"))
-      : "⚠️ Lưu trên máy nhưng thiếu classId — báo GVCN";
-    msg.className = "mt-3 text-sm font-semibold " + (ok ? "text-green-700" : "text-amber-600");
+    msg.textContent = "✅ Đã lưu: " + entry.studentName + " · Tuần " + (entry.weekNo || "?") + " · " + (entry.contentText || entry.contentCode || "") + " · " + (entry.total > 0 ? "+" : "") + entry.total + (firebaseReady ? " · đang đồng bộ cloud" : " · chỉ máy này");
+    msg.className = "mt-3 text-sm font-semibold text-green-700";
     msg.classList.remove("hidden");
   }
-  try { renderRecent(); updateMissingAssigned(); updateOverviewStats(); } catch (err) { console.warn(err); }
+
+  // Form giữ tuần vừa nhập — không gọi onWeekSelect (tránh reset)
+  try {
+    var wEl = document.getElementById("fWeekNo");
+    if (wEl && entry.weekNo) wEl.value = String(entry.weekNo);
+  } catch (e) {}
+
+  // Hiển thị ngay
+  try {
+    if (typeof renderRecent === "function") renderRecent();
+    if (typeof updateMissingAssigned === "function") updateMissingAssigned();
+    if (typeof updateOverviewStats === "function") updateOverviewStats();
+    if (typeof renderReport === "function") renderReport();
+    if (typeof renderClassViolTableOnce === "function") renderClassViolTableOnce(entries);
+  } catch (err) { console.warn(err); }
+
+  // Đồng bộ lại cloud sau 1s (vẫn skip merge remote xóa)
+  setTimeout(function() {
+    try {
+      if (!(entries || []).some(function(x) { return String(x.id) === String(entry.id); })) {
+        entries.unshift(entry);
+      }
+      try { unmarkEntryDeleted(entry); } catch (e) {}
+      saveClassData({ skipRemoteMerge: true });
+      saveOneEntryToCloud(entry);
+      if (typeof renderRecent === "function") renderRecent();
+    } catch (e) { console.warn(e); }
+  }, 1000);
+
   // Mobile: cuộn tới bản ghi gần đây
   try {
     const recent = document.getElementById("recentBody");
@@ -3755,6 +3910,7 @@ function renderRecent() {
   if (!body) return;
   const isGvcn = currentUser && (currentUser.role === "gvcn" || currentUser.role === "super");
   let activeWeek = (document.getElementById("fWeekNo") || {}).value || "";
+  if (!activeWeek && window._forceShowWeek) activeWeek = String(window._forceShowWeek);
   let activeFrom = "", activeTo = "";
   if (!activeWeek) {
     const cur = currentSchoolWeek();
@@ -3819,6 +3975,13 @@ function renderRecent() {
   }
   // không cắt bớt khi GVCN — hiện đủ
   if (!isGvcn) mine = mine.slice(0, 80);
+  // Bảo đảm bản ghi vừa lưu luôn hiện (tuần 1 / tuần trước)
+  if (window._lastSavedEntryId) {
+    var lastE = (entries || []).find(function(e) { return String(e.id) === String(window._lastSavedEntryId); });
+    if (lastE && !mine.some(function(e) { return String(e.id) === String(lastE.id); })) {
+      mine.unshift(lastE);
+    }
+  }
   mine.sort(function(a, b) {
     return String(b.createdAt || b.date).localeCompare(String(a.createdAt || a.date));
   });
@@ -4222,6 +4385,7 @@ function downloadRecentEntriesXlsx() {
   if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
   if (!currentUser) { alert("Chưa đăng nhập"); return; }
   let activeWeek = (document.getElementById("fWeekNo") || {}).value || "";
+  if (!activeWeek && window._forceShowWeek) activeWeek = String(window._forceShowWeek);
   let activeFrom = "", activeTo = "";
   if (!activeWeek) {
     const cur = currentSchoolWeek();
@@ -4321,6 +4485,105 @@ function downloadTongKetJpg() {
 }
 
 
+
+/** Chuẩn hóa + nhận diện bản ghi đã xóa (ID + dấu vân tay nội dung) */
+function entryFingerprint(e) {
+  if (!e) return "";
+  var date = String(e.date || "").trim();
+  if (date.indexOf("/") >= 0) {
+    var p = date.split("/");
+    if (p.length === 3) date = p[2] + "-" + String(p[1]).padStart(2, "0") + "-" + String(p[0]).padStart(2, "0");
+  }
+  date = date.slice(0, 10);
+  var text = String(e.contentText || e.contentCode || "").toLowerCase();
+  text = text.replace(/^đã chọn:\s*/i, "");
+  text = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "");
+  text = text.replace(/\s*\([+\-]?\d+\)\s*/g, " ");
+  text = text.replace(/\s+/g, " ").trim();
+  var code = String(e.contentCode || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  return [String(e.studentId || "").toLowerCase(), date, String(e.type || "").toLowerCase(), code, text].join("|");
+}
+
+function isEntryDeleted(e) {
+  if (!e) return true;
+  if (!window._deletedEntryIds) window._deletedEntryIds = {};
+  if (!window._deletedEntryFingerprints) window._deletedEntryFingerprints = {};
+  var fp = entryFingerprint(e);
+  // Phiên này vừa lưu lại → không coi là đã xóa
+  if (window._unmarkedThisSession) {
+    if (e.id != null && window._unmarkedThisSession["id:" + String(e.id)]) return false;
+    if (fp && window._unmarkedThisSession[fp]) return false;
+  }
+  if (window._lastSavedEntryId && e.id != null && String(e.id) === String(window._lastSavedEntryId)) return false;
+  if (e.id != null && window._deletedEntryIds[String(e.id)]) return true;
+  if (fp && window._deletedEntryFingerprints[fp]) return true;
+  return false;
+}
+
+function unmarkEntryDeleted(e) {
+  if (!e) return;
+  if (!window._deletedEntryIds) window._deletedEntryIds = {};
+  if (!window._deletedEntryFingerprints) window._deletedEntryFingerprints = {};
+  if (e.id != null) delete window._deletedEntryIds[String(e.id)];
+  var fp = entryFingerprint(e);
+  if (fp) delete window._deletedEntryFingerprints[fp];
+  try {
+    sessionStorage.setItem("qlnn_deleted_ids", JSON.stringify(window._deletedEntryIds));
+    sessionStorage.setItem("qlnn_deleted_fp", JSON.stringify(window._deletedEntryFingerprints));
+    var cid = currentUser && (currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : ""));
+    if (cid) {
+      localStorage.setItem("qlnn_deleted_ids_" + cid, JSON.stringify(window._deletedEntryIds));
+      localStorage.setItem("qlnn_deleted_fp_" + cid, JSON.stringify(window._deletedEntryFingerprints));
+    }
+  } catch (err) {}
+}
+
+function markEntryDeleted(e) {
+  if (!e) return;
+  if (!window._deletedEntryIds) window._deletedEntryIds = {};
+  if (!window._deletedEntryFingerprints) window._deletedEntryFingerprints = {};
+  if (e.id != null) window._deletedEntryIds[String(e.id)] = Date.now();
+  var fp = entryFingerprint(e);
+  if (fp) window._deletedEntryFingerprints[fp] = Date.now();
+  try {
+    sessionStorage.setItem("qlnn_deleted_ids", JSON.stringify(window._deletedEntryIds));
+    sessionStorage.setItem("qlnn_deleted_fp", JSON.stringify(window._deletedEntryFingerprints));
+    var cid = currentUser && (currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : ""));
+    if (cid) {
+      localStorage.setItem("qlnn_deleted_ids_" + cid, JSON.stringify(window._deletedEntryIds));
+      localStorage.setItem("qlnn_deleted_fp_" + cid, JSON.stringify(window._deletedEntryFingerprints));
+    }
+  } catch (err) {}
+}
+
+function purgeDeletedEntries() {
+  if (!Array.isArray(entries)) return;
+  var before = entries.length;
+  var keepId = window._lastSavedEntryId ? String(window._lastSavedEntryId) : "";
+  entries = entries.filter(function(e) {
+    if (keepId && e && String(e.id) === keepId) return true;
+    return !isEntryDeleted(e);
+  });
+  if (entries.length !== before) {
+    try {
+      var cid = currentUser && (currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : ""));
+      if (cid) localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
+    } catch (err) {}
+  }
+  return before - entries.length;
+}
+
+function loadDeletedMarksForClass(cid) {
+  try {
+    window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, JSON.parse(sessionStorage.getItem("qlnn_deleted_ids") || "{}"));
+    window._deletedEntryFingerprints = Object.assign({}, window._deletedEntryFingerprints || {}, JSON.parse(sessionStorage.getItem("qlnn_deleted_fp") || "{}"));
+    if (cid) {
+      window._deletedEntryIds = Object.assign(window._deletedEntryIds, JSON.parse(localStorage.getItem("qlnn_deleted_ids_" + cid) || "{}"));
+      window._deletedEntryFingerprints = Object.assign(window._deletedEntryFingerprints, JSON.parse(localStorage.getItem("qlnn_deleted_fp_" + cid) || "{}"));
+    }
+  } catch (e) {}
+}
+
 function deleteEntry(eid) {
   try {
     if (!currentUser) { alert("Chưa đăng nhập"); return; }
@@ -4336,18 +4599,20 @@ function deleteEntry(eid) {
     var label = ent ? ((ent.studentName || "") + " · " + (ent.contentText || ent.contentCode || "")) : eid;
     if (!confirm("Xóa bản ghi?\n" + label)) return;
 
-    if (!window._deletedEntryIds) window._deletedEntryIds = {};
-    window._deletedEntryIds[eid] = Date.now();
-    if (!window._deletedEntryFingerprints) window._deletedEntryFingerprints = {};
-    if (ent) {
-      var fp = [String(ent.studentId||""), String(ent.date||"").slice(0,10), String(ent.contentCode||""), String(ent.type||""), String(ent.times||1)].join("|");
-      window._deletedEntryFingerprints[fp] = Date.now();
-      try { sessionStorage.setItem("qlnn_deleted_fp", JSON.stringify(window._deletedEntryFingerprints)); } catch (err) {}
+    // Đánh dấu xóa bền vững (ID + fingerprint)
+    if (ent) markEntryDeleted(ent);
+    else {
+      if (!window._deletedEntryIds) window._deletedEntryIds = {};
+      window._deletedEntryIds[eid] = Date.now();
     }
-    try { sessionStorage.setItem("qlnn_deleted_ids", JSON.stringify(window._deletedEntryIds)); } catch (err) {}
 
-    // Xóa local ngay
-    entries = (entries || []).filter(function(e) { return String(e.id) !== eid; });
+    // Xóa local ngay (mọi bản ghi trùng id hoặc cùng fingerprint)
+    entries = (entries || []).filter(function(e) {
+      if (String(e.id) === eid) return false;
+      if (ent && isEntryDeleted(e)) return false;
+      return true;
+    });
+    try { purgeDeletedEntries(); } catch (err) {}
 
     // Lưu localStorage trực tiếp (không merge remote)
     try {
@@ -4357,6 +4622,9 @@ function deleteEntry(eid) {
         localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
       }
     } catch (err) { console.warn(err); }
+
+    // Ghi cloud ngay (không merge remote cũ)
+    try { saveClassData({ skipRemoteMerge: true }); } catch (errSave) { console.warn(errSave); }
 
     // Cập nhật UI tức thì: Bản ghi + TỔNG KẾT + Báo cáo
     try {
@@ -4396,10 +4664,14 @@ function deleteEntry(eid) {
             // Cập nhật mảng entries trên document lớp (nếu còn lưu)
             return db.collection("qlnn_classes").doc(cid2).set({
               entries: entries,
-              updatedAt: new Date().toISOString()
+              deletedEntryIds: window._deletedEntryIds || {},
+              deletedFingerprints: window._deletedEntryFingerprints || {},
+              updatedAt: new Date().toISOString(),
+              updatedBy: (currentUser && currentUser.id) || ""
             }, { merge: true });
           })
           .then(function() {
+            try { saveClassData({ skipRemoteMerge: true }); } catch (e) {}
             if (typeof setSyncStatus === "function") setSyncStatus("Đã xóa & đồng bộ cloud", true);
           })
           .catch(function(err) {
@@ -5254,13 +5526,10 @@ function violStatsHtml(list, poolIds, weekScoreMap) {
     }
   } catch (err) {}
 
-  var viols = (list || []).filter(function(e) {
+  try { purgeDeletedEntries(); } catch (err) {}
+  var viols = (list || entries || []).filter(function(e) {
     if (e.type !== "violation") return false;
-    if (window._deletedEntryIds && e.id && window._deletedEntryIds[String(e.id)]) return false;
-    if (window._deletedEntryFingerprints) {
-      var fp2 = [String(e.studentId||""), String(e.date||"").slice(0,10), String(e.contentCode||""), String(e.type||""), String(e.times||1)].join("|");
-      if (window._deletedEntryFingerprints[fp2]) return false;
-    }
+    if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
     if (poolIds && !poolIds.has(String(e.studentId))) return false;
     if (curW && e.weekNo != null && e.weekNo !== "") {
       var wn = Number(e.weekNo);
@@ -5409,6 +5678,7 @@ function monthDateRange(month) {
 function renderSoKetTo(list) {
   var box = document.getElementById("reportSoKet");
   if (!box) return;
+  // SƠ KẾT TUẦN theo 4 tổ (đầu trang Báo cáo) — GVCN / Leader / viewer / super
   if (!currentUser || (currentUser.role !== "gvcn" && currentUser.role !== "leader" && currentUser.role !== "viewer" && currentUser.role !== "super")) {
     box.innerHTML = "";
     return;
@@ -5654,8 +5924,10 @@ function renderSoKetTo(list) {
   /* XẾP VỊ THỨ LỚP THEO TỔ đã bỏ */
   if (!teams.length) html += '<p class="text-sm text-slate-500">Chưa có danh sách học sinh.</p>';
   html += '</div>';
+
   box.innerHTML = html;
 }
+
 
 function downloadSoKetXlsx() {
   if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
@@ -5713,6 +5985,53 @@ function downloadReportWeekXlsx() {
   if (!table) { alert("Chưa có bảng tuần"); return; }
   var wb = XLSX.utils.table_to_book(table, { sheet: "Tuan" });
   XLSX.writeFile(wb, "BaoCao_Tuan_hien_tai.xlsx");
+}
+
+
+
+function downloadReportYearXlsx() {
+  if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
+  var data = window._reportYearExport;
+  if (!data || !data.rows) { alert("Chưa có dữ liệu cả năm"); return; }
+  var aoa = [
+    ["TỔNG HỢP CẢ NĂM"],
+    [],
+    ["STT", "Tổ", "Họ tên HS", "Ngày sinh", "GT", "Số lần ƯĐ +", "Số lần VP −", "Điểm cả năm", "Vị thứ", "Xếp loại"]
+  ];
+  data.rows.forEach(function(r, idx) {
+    aoa.push([idx+1, r.s.team||"", r.s.name, r.s.dob||"", r.s.gender||"", r.udTimes, r.vpTimes, r.score, r.pos, (r.rk&&r.rk.label)||""]);
+  });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "CaNam");
+  XLSX.writeFile(wb, "BaoCao_CaNam.xlsx");
+}
+
+function downloadReportHkXlsx() {
+  if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
+  var data = window._reportHkExport;
+  if (!data || !data.rows) { alert("Chưa có dữ liệu học kỳ"); return; }
+  var aoa = [
+    [data.hk === "hk1" ? "HK1 từ THÁNG 9 đến THÁNG 12" : "HK2 từ THÁNG 1 đến THÁNG 4"],
+    [],
+    ["STT", "Tổ", "Họ tên HS", "Ngày sinh", "GT", "Số lần ƯĐ +", "Số lần VP −", "Điểm học kì", "Vị thứ", "Xếp loại"]
+  ];
+  data.rows.forEach(function(r, idx) {
+    aoa.push([
+      idx + 1,
+      r.s.team || "",
+      r.s.name,
+      r.s.dob || "",
+      r.s.gender || "",
+      r.udTimes,
+      r.vpTimes,
+      r.score,
+      r.pos,
+      (r.rk && r.rk.label) || ""
+    ]);
+  });
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "HocKy");
+  XLSX.writeFile(wb, "BaoCao_" + (data.hk === "hk1" ? "HK1" : "HK2") + ".xlsx");
 }
 
 function downloadReportMonthXlsx() {
@@ -5993,24 +6312,27 @@ function renderWeekMonthBoards(list, agg) {
     box.innerHTML = html;
     box.classList.remove("hidden");
   } else if (period === "year") {
-    // Cả năm: hiện tuần hiện tại + tháng hiện tại + HK hiện tại (tóm tắt cả lớp)
+    // Cả năm: tuần / tháng / HK hiện tại — đúng cột mẫu tuan/thang/hk.png
     const cur = currentSchoolWeek() || { w: "1" };
-    const now = new Date();
-    let mon = now.getMonth() + 1;
+    let mon = 9;
+    if (cur && cur.from) mon = Number(String(cur.from).slice(5, 7)) || 9;
+    else {
+      try { mon = Number(todayISOLocal().slice(5, 7)); } catch (e) { mon = 9; }
+    }
     if (mon >= 5 && mon <= 8) mon = 9;
     const hk = (mon >= 9 && mon <= 12) ? "hk1" : "hk2";
     // Tái sử dụng: set selects temporarily? Thay bằng render 3 khối gọn
     let pool = students.slice().sort(sortByIdAsc);
     if (teamFilter) pool = students.filter(s => String(s.team) === String(teamFilter)).slice().sort(sortByIdAsc);
     // Week scores current
-    const weekNo = cur.w;
+    const weekNo = String(cur.w);
     const wmeta = SCHOOL_WEEKS.find(x => String(x.w) === String(weekNo));
     const fromY = wmeta ? formatDate(wmeta.from) : "";
     const toY = wmeta ? formatDate(wmeta.to) : "";
-    let html = headHtml;
+    let html = headHtml || "";
     html += '<div class="week-board mb-3 compact-class">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
-    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">Tuần hiện tại ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS</b></div>';
+    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">SƠ KẾT TUẦN ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS</b></div>';
     html += '<div class="no-print flex gap-2">';
     html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportWeekCapture\',\'Tuan' + weekNo + '\')">📷 Tải ảnh .jpg</button>';
     html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportWeekXlsx()">📊 Tải .xlsx</button>';
@@ -6156,7 +6478,7 @@ function renderWeekMonthBoards(list, agg) {
     const mRangeY = monthDateRange(mon);
     html += '<div class="week-board mb-3 compact-class">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
-    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">Tháng hiện tại ' + mon + (mRangeY ? ': ' + mRangeY : '') + '</b></div>';
+    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">SƠ KẾT THÁNG ' + mon + (mRangeY ? ': ' + mRangeY : '') + '</b></div>';
     html += '<div class="no-print flex gap-2">';
     html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportMonthCapture\',\'Thang' + mon + '\')">📷 Tải ảnh .jpg</button>';
     html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportMonthXlsx()">📊 Tải .xlsx</button>';
@@ -6240,24 +6562,163 @@ function renderWeekMonthBoards(list, agg) {
     months.forEach(m => { allW = allW.concat(weeksForMonth(m)); });
     const nWh = allW.length || 1;
     html += '<div class="week-board mb-3 compact-class">';
-    html += '<div class="text-center mb-1"><b style="color:#0c4a6e">' + (hk === "hk1" ? "HK1 từ THÁNG 9 đến THÁNG 12" : "HK2 từ THÁNG 1 đến THÁNG 4") + '</b></div>';
-    html += '<div class="overflow-x-auto"><table><thead><tr><th>STT</th><th class="name-col">Họ tên</th><th>Ngày sinh</th><th>GT</th><th>Tổ</th><th>Tổng HK</th><th>Xếp loại</th></tr></thead><tbody>';
-    const scoredYh = [];
-    pool.forEach((s, idx) => {
-      let sumHK = 0;
-      allW.forEach(wn => {
-        const wm = SCHOOL_WEEKS.find(x => String(x.w) === String(wn));
-        const we = list.filter(e => String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to)));
-        let b = 0, v = 0;
-        we.forEach(e => { const tt = e.total != null ? e.total : e.points * e.times; if (tt > 0) b += tt; else v += tt; });
-        sumHK += 100 + b + v;
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">' + (hk === "hk1" ? "SƠ KẾT HỌC KỲ 1 (THÁNG 9 – 12)" : "SƠ KẾT HỌC KỲ 2 (THÁNG 1 – 4)") + '</b></div>';
+    html += '<div class="no-print flex gap-2">';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportHkCapture\',\'' + (hk === "hk1" ? "HK1" : "HK2") + '\')">📷 Tải ảnh .jpg</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportHkXlsx()">📊 Tải .xlsx</button>';
+    html += '</div></div>';
+    html += '<div id="reportHkCapture">';
+    // Tính điểm HK + số lần ƯĐ/VP (cùng công thức tháng, gộp allW)
+    var hkRows = pool.map(function(s) {
+      var sum = 0, udTimes = 0, vpTimes = 0;
+      allW.forEach(function(wn) {
+        var wm = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(wn); });
+        var we = list.filter(function(e) {
+          if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
+          return String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to));
+        });
+        var b = 0, v = 0;
+        we.forEach(function(e) {
+          if (e.type === "silent") return;
+          var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+          var n = e.times || 1;
+          if (e.type === "bonus" || tt > 0) { b += Math.abs(tt); udTimes += n; }
+          else if (e.type === "violation") { v += (tt > 0 ? -Math.abs(tt) : tt); vpTimes += n; }
+          else if (tt > 0) { b += tt; udTimes += n; }
+          else { v += tt; vpTimes += n; }
+        });
+        sum += 100 + b + v;
       });
-      const rk = rankClassScaled(sumHK, nWh);
-      scoredYh.push({ name: s.name, id: s.id, score: sumHK, rk: rk });
-      html += '<tr><td>' + (idx+1) + '</td><td class="name-col">' + s.name + '</td><td class="text-xs">' + (s.dob||"—") + '</td><td class="text-xs">' + (s.gender||"—") + '</td><td>' + (s.team||"") + '</td><td style="font-weight:800">' + sumHK + '</td><td class="' + rk.cls + '">' + rk.label + '</td></tr>';
+      var rk = rankClassScaled(sum, nWh);
+      return { s: s, score: sum, udTimes: udTimes, vpTimes: vpTimes, rk: rk };
+    });
+    hkRows.sort(function(a, b) { return b.score - a.score; });
+    var rankH = 0, prevH = null;
+    hkRows.forEach(function(r) {
+      if (prevH === null || r.score !== prevH) { rankH += 1; prevH = r.score; }
+      r.pos = rankH;
+    });
+    hkRows.sort(function(a, b) {
+      if (a.pos !== b.pos) return a.pos - b.pos;
+      return String(a.s.id).localeCompare(String(b.s.id), "vi", { numeric: true });
+    });
+    var topColorsH = { 1: "#dc2626", 2: "#ea580c", 3: "#ca8a04" };
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
+    html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
+    html += '<th class="py-2 text-center" style="width:5%">STT</th>';
+    html += '<th class="py-2 text-center" style="width:5%">Tổ</th>';
+    html += '<th class="py-2 text-left" style="width:18%">Họ tên HS</th>';
+    html += '<th class="py-2 text-center" style="width:10%">Ngày sinh</th>';
+    html += '<th class="py-2 text-center" style="width:5%">GT</th>';
+    html += '<th class="py-2 text-center" style="width:9%">Số lần ƯĐ +</th>';
+    html += '<th class="py-2 text-center" style="width:9%">Số lần VP −</th>';
+    html += '<th class="py-2 text-center" style="width:10%">Điểm học kì</th>';
+    html += '<th class="py-2 text-center" style="width:8%">Vị thứ</th>';
+    html += '<th class="py-2 text-center" style="width:14%">Xếp loại</th>';
+    html += '</tr></thead><tbody>';
+    var scoredYh = [];
+    hkRows.forEach(function(r, idx) {
+      scoredYh.push({ name: r.s.name, id: r.s.id, score: r.score, rk: r.rk });
+      var posColor = topColorsH[r.pos] || "#0f172a";
+      var star = r.pos === 1 ? " ★★★" : (r.pos === 2 ? " ★★" : (r.pos === 3 ? " ★" : ""));
+      html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+      html += '<td class="py-1.5 text-center">' + (idx + 1) + '</td>';
+      html += '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + (r.s.team || "—") + '</td>';
+      html += '<td class="py-1.5 px-2 font-medium" style="text-align:left">' + r.s.name + '</td>';
+      html += '<td class="py-1.5 text-center text-xs">' + (r.s.dob || "—") + '</td>';
+      html += '<td class="py-1.5 text-center text-xs">' + (r.s.gender || "—") + '</td>';
+      html += '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + r.udTimes + '</td>';
+      html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + r.vpTimes + '</td>';
+      html += '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + r.score + '</td>';
+      html += '<td class="py-1.5 text-center font-extrabold" style="color:' + posColor + '">' + r.pos + star + '</td>';
+      html += '<td class="py-1.5 text-center font-bold ' + r.rk.cls + '">' + r.rk.label + (r.rk.stars ? " " + r.rk.stars : "") + '</td>';
+      html += '</tr>';
     });
     html += '</tbody></table></div>';
+    window._reportHkExport = { hk: hk, rows: hkRows };
     html += rankStatsHtml(scoredYh);
+    // TỔNG HỢP CẢ NĂM — 10 cột + tải jpg/xlsx
+    var allYearWeeks = SCHOOL_WEEKS.map(function(w) { return String(w.w); });
+    var nYearW = allYearWeeks.length || 1;
+    var yearRows = pool.map(function(s) {
+      var sum = 0, udTimes = 0, vpTimes = 0;
+      allYearWeeks.forEach(function(wn) {
+        var wm = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(wn); });
+        var we = list.filter(function(e) {
+          if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
+          return String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to));
+        });
+        var b = 0, v = 0;
+        we.forEach(function(e) {
+          if (e.type === "silent") return;
+          var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+          var n = e.times || 1;
+          if (e.type === "bonus" || tt > 0) { b += Math.abs(tt); udTimes += n; }
+          else if (e.type === "violation") { v += (tt > 0 ? -Math.abs(tt) : tt); vpTimes += n; }
+          else if (tt > 0) { b += tt; udTimes += n; }
+          else { v += tt; vpTimes += n; }
+        });
+        sum += 100 + b + v;
+      });
+      var rk = rankClassScaled(sum, nYearW);
+      return { s: s, score: sum, udTimes: udTimes, vpTimes: vpTimes, rk: rk };
+    });
+    yearRows.sort(function(a, b) { return b.score - a.score; });
+    var rankY = 0, prevY = null;
+    yearRows.forEach(function(r) {
+      if (prevY === null || r.score !== prevY) { rankY += 1; prevY = r.score; }
+      r.pos = rankY;
+    });
+    yearRows.sort(function(a, b) {
+      if (a.pos !== b.pos) return a.pos - b.pos;
+      return String(a.s.id).localeCompare(String(b.s.id), "vi", { numeric: true });
+    });
+    var topColorsY = { 1: "#dc2626", 2: "#ea580c", 3: "#ca8a04" };
+    html += '<div class="week-board mb-3 compact-class mt-4">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">TỔNG HỢP CẢ NĂM · Lớp ' + (clsName || "") + ' · ' + pool.length + ' HS</b></div>';
+    html += '<div class="no-print flex gap-2">';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportYearCapture\',\'CaNam\')">📷 Tải ảnh .jpg</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportYearXlsx()">📊 Tải .xlsx</button>';
+    html += '</div></div>';
+    html += '<div id="reportYearCapture">';
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
+    html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
+    html += '<th class="py-2 text-center" style="width:5%">STT</th>';
+    html += '<th class="py-2 text-center" style="width:5%">Tổ</th>';
+    html += '<th class="py-2 text-left" style="width:18%">Họ tên HS</th>';
+    html += '<th class="py-2 text-center" style="width:10%">Ngày sinh</th>';
+    html += '<th class="py-2 text-center" style="width:5%">GT</th>';
+    html += '<th class="py-2 text-center" style="width:9%">Số lần ƯĐ +</th>';
+    html += '<th class="py-2 text-center" style="width:9%">Số lần VP −</th>';
+    html += '<th class="py-2 text-center" style="width:10%">Điểm cả năm</th>';
+    html += '<th class="py-2 text-center" style="width:8%">Vị thứ</th>';
+    html += '<th class="py-2 text-center" style="width:14%">Xếp loại</th>';
+    html += '</tr></thead><tbody>';
+    var scoredYy = [];
+    yearRows.forEach(function(r, idx) {
+      scoredYy.push({ name: r.s.name, id: r.s.id, score: r.score, rk: r.rk });
+      var posColor = topColorsY[r.pos] || "#0f172a";
+      var star = r.pos === 1 ? " ★★★" : (r.pos === 2 ? " ★★" : (r.pos === 3 ? " ★" : ""));
+      html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+      html += '<td class="py-1.5 text-center">' + (idx + 1) + '</td>';
+      html += '<td class="py-1.5 text-center font-bold" style="color:#7e22ce">' + (r.s.team || "—") + '</td>';
+      html += '<td class="py-1.5 px-2 font-medium" style="text-align:left">' + r.s.name + '</td>';
+      html += '<td class="py-1.5 text-center text-xs">' + (r.s.dob || "—") + '</td>';
+      html += '<td class="py-1.5 text-center text-xs">' + (r.s.gender || "—") + '</td>';
+      html += '<td class="py-1.5 text-center font-semibold" style="color:#15803d">' + r.udTimes + '</td>';
+      html += '<td class="py-1.5 text-center font-semibold" style="color:#b91c1c">' + r.vpTimes + '</td>';
+      html += '<td class="py-1.5 text-center font-bold" style="color:#a16207">' + r.score + '</td>';
+      html += '<td class="py-1.5 text-center font-extrabold" style="color:' + posColor + '">' + r.pos + star + '</td>';
+      html += '<td class="py-1.5 text-center font-bold ' + r.rk.cls + '">' + r.rk.label + (r.rk.stars ? " " + r.rk.stars : "") + '</td>';
+      html += '</tr>';
+    });
+    html += '</tbody></table></div></div>';
+    window._reportYearExport = { rows: yearRows };
+    html += rankStatsHtml(scoredYy);
+    html += '</div>';
+
     html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
     html += '</div>';
     box.innerHTML = html;
@@ -7405,9 +7866,9 @@ function renderClassViolTableOnce(listOpt) {
       if (hide) hide.style.display = "none";
       return;
     }
-    var listViol = (listOpt || entries || []).slice().filter(function(e) {
-      if (window._deletedEntryIds && e && e.id && window._deletedEntryIds[String(e.id)]) return false;
-      return true;
+    try { purgeDeletedEntries(); } catch (err) {}
+    var listViol = (entries || []).slice().filter(function(e) {
+      return !(typeof isEntryDeleted === "function" && isEntryDeleted(e));
     });
     var curW = null;
     try {
