@@ -5826,7 +5826,9 @@ function renderSoKetTo(list) {
   html += '<label class="text-sm font-semibold">Chọn tuần <select id="soKetWeek" class="ml-1 border rounded px-2 py-1" onchange="renderSoKetTo(typeof getFilteredEntries===\'function\'?getFilteredEntries():entries)">' + weekOpts + '</select></label>';
   html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0369a1" onclick="window.print()">🖨️ In sơ kết</button>';
   html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#16a34a" onclick="downloadSoKetXlsx()">📊 Tải về .xlsx</button>';
+  html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0ea5e9" onclick="downloadSoKetJpg()">📷 Tải về .jpg</button>';
   html += '</div>';
+  html += '<div id="reportSoKetCapture">';
   html += '<div class="text-center mb-3">';
   html += '<div class="font-bold text-lg" style="color:#9f1239">SƠ KẾT TUẦN ' + weekNo;
   if (fromTxt) html += ' từ ngày ' + fromTxt + ' đến ngày ' + toTxt;
@@ -5929,6 +5931,12 @@ function renderSoKetTo(list) {
 }
 
 
+
+function downloadSoKetJpg() {
+  var data = window._soKetExport || {};
+  var sub = "SƠ KẾT TUẦN " + (data.weekNo || "") + (data.fromTxt ? ": " + data.fromTxt + " – " + data.toTxt : "") + (data.cls ? " · Lớp " + data.cls : "");
+  downloadReportBoardJpg("reportSoKetCapture", "SoKet_Tuan" + (data.weekNo || ""), sub);
+}
 function downloadSoKetXlsx() {
   if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
   var data = window._soKetExport;
@@ -5937,12 +5945,10 @@ function downloadSoKetXlsx() {
     return;
   }
   var wb = XLSX.utils.book_new();
-  var summary = [
-    ["SƠ KẾT TUẦN " + data.weekNo + (data.fromTxt ? " từ " + data.fromTxt + " đến " + data.toTxt : "")],
-    ["Lớp", data.cls || ""],
-    [],
+  var sub = "SƠ KẾT TUẦN " + data.weekNo + (data.fromTxt ? ": " + data.fromTxt + " – " + data.toTxt : "") + (data.cls ? " · " + data.cls : "");
+  var summary = prependExportHeader([
     ["Tổ", "Tổng điểm tổ", "Vị thứ lớp (theo tổ)"]
-  ];
+  ], sub);
   data.sheets.slice().sort(function(a, b) {
     return (Number(a.classRank) || 99) - (Number(b.classRank) || 99);
   }).forEach(function(sh) {
@@ -5967,24 +5973,89 @@ function downloadSoKetXlsx() {
 
 
 
-function downloadReportBoardJpg(elId, namePrefix) {
+function getReportMeta() {
+  var gvcnLabel = (currentUser && currentUser.name) || "";
+  var clsName = (currentUser && currentUser.className) || "";
+  var schoolName = (currentUser && currentUser.school) || "";
+  var yearLabel = (currentUser && currentUser.year) || "2026-2027";
+  try {
+    Object.values(accounts || {}).forEach(function(a) {
+      if (a && a.role === "gvcn" && currentUser && a.classId === currentUser.classId) {
+        if (a.name) gvcnLabel = a.name;
+        if (a.school) schoolName = a.school;
+        if (a.className) clsName = a.className;
+        if (a.year) yearLabel = a.year;
+      }
+    });
+  } catch (e) {}
+  return {
+    school: (schoolName || "THPT HÀ HUY TẬP").toUpperCase(),
+    gvcn: (gvcnLabel || "—").toUpperCase(),
+    lop: (clsName || "—").toUpperCase(),
+    year: yearLabel || "2026-2027"
+  };
+}
+
+function reportExportHeaderLines(subtitle) {
+  var m = getReportMeta();
+  return [
+    m.school,
+    "GVCN: " + m.gvcn + "    LỚP: " + m.lop + "    NH: " + m.year,
+    subtitle || ""
+  ];
+}
+
+/** Tải JPG: chèn tiêu đề căn giữa phía trên bảng */
+function downloadReportBoardJpg(elId, namePrefix, subtitle) {
   var el = document.getElementById(elId);
   if (!el) { alert("Chưa có bảng để tải"); return; }
   if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
-  html2canvas(el, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
+  var lines = reportExportHeaderLines(subtitle || namePrefix || "");
+  var wrap = document.createElement("div");
+  wrap.style.cssText = "background:#fff;padding:16px 20px;font-family:system-ui,sans-serif;color:#0f172a;";
+  var head = document.createElement("div");
+  head.style.cssText = "text-align:center;margin-bottom:12px;border-bottom:2px solid #0c4a6e;padding-bottom:10px;";
+  head.innerHTML =
+    '<div style="font-size:18px;font-weight:900;color:#7f1d1d;letter-spacing:0.04em">' + lines[0] + "</div>" +
+    '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-top:4px">' + lines[1] + "</div>" +
+    (lines[2] ? '<div style="font-size:14px;font-weight:800;color:#0369a1;margin-top:6px">' + lines[2] + "</div>" : "");
+  wrap.appendChild(head);
+  var clone = el.cloneNode(true);
+  clone.querySelectorAll(".no-print").forEach(function(n) { n.remove(); });
+  wrap.appendChild(clone);
+  wrap.style.position = "fixed";
+  wrap.style.left = "-9999px";
+  wrap.style.top = "0";
+  wrap.style.width = Math.max(el.scrollWidth, 900) + "px";
+  document.body.appendChild(wrap);
+  html2canvas(wrap, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
+    document.body.removeChild(wrap);
     var a = document.createElement("a");
     a.download = (namePrefix || "BaoCao") + ".jpg";
     a.href = canvas.toDataURL("image/jpeg", 0.92);
     a.click();
-  }).catch(function(e) { alert("Lỗi JPG: " + (e.message || e)); });
+  }).catch(function(e) {
+    try { document.body.removeChild(wrap); } catch (err) {}
+    alert("Lỗi JPG: " + (e.message || e));
+  });
 }
 
+
+function prependExportHeader(aoa, subtitle) {
+  var lines = reportExportHeaderLines(subtitle);
+  return [[lines[0]], [lines[1]], [lines[2]], []].concat(aoa || []);
+}
 function downloadReportWeekXlsx() {
   if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
   var table = document.querySelector("#reportWeekCapture table");
   if (!table) { alert("Chưa có bảng tuần"); return; }
   var wb = XLSX.utils.table_to_book(table, { sheet: "Tuan" });
-  XLSX.writeFile(wb, "BaoCao_Tuan_hien_tai.xlsx");
+  var ws = wb.Sheets["Tuan"];
+  var aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  var sub = document.querySelector("#reportWeekCapture") ? (document.querySelector("#reportWeekBoard b") || {}).textContent || "SƠ KẾT TUẦN" : "SƠ KẾT TUẦN";
+  aoa = prependExportHeader(aoa, sub);
+  wb.Sheets["Tuan"] = XLSX.utils.aoa_to_sheet(aoa);
+  XLSX.writeFile(wb, "BaoCao_Tuan.xlsx");
 }
 
 
@@ -5993,11 +6064,9 @@ function downloadReportYearXlsx() {
   if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
   var data = window._reportYearExport;
   if (!data || !data.rows) { alert("Chưa có dữ liệu cả năm"); return; }
-  var aoa = [
-    ["TỔNG HỢP CẢ NĂM"],
-    [],
+  var aoa = prependExportHeader([
     ["STT", "Tổ", "Họ tên HS", "Ngày sinh", "GT", "Số lần ƯĐ +", "Số lần VP −", "Điểm cả năm", "Vị thứ", "Xếp loại"]
-  ];
+  ], "TỔNG HỢP CẢ NĂM");
   data.rows.forEach(function(r, idx) {
     aoa.push([idx+1, r.s.team||"", r.s.name, r.s.dob||"", r.s.gender||"", r.udTimes, r.vpTimes, r.score, r.pos, (r.rk&&r.rk.label)||""]);
   });
@@ -6010,11 +6079,9 @@ function downloadReportHkXlsx() {
   if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
   var data = window._reportHkExport;
   if (!data || !data.rows) { alert("Chưa có dữ liệu học kỳ"); return; }
-  var aoa = [
-    [data.hk === "hk1" ? "HK1 từ THÁNG 9 đến THÁNG 12" : "HK2 từ THÁNG 1 đến THÁNG 4"],
-    [],
+  var aoa = prependExportHeader([
     ["STT", "Tổ", "Họ tên HS", "Ngày sinh", "GT", "Số lần ƯĐ +", "Số lần VP −", "Điểm học kì", "Vị thứ", "Xếp loại"]
-  ];
+  ], data.hk === "hk1" ? "SƠ KẾT HỌC KỲ 1 (THÁNG 9 – 12)" : "SƠ KẾT HỌC KỲ 2 (THÁNG 1 – 4)");
   data.rows.forEach(function(r, idx) {
     aoa.push([
       idx + 1,
@@ -6038,11 +6105,9 @@ function downloadReportMonthXlsx() {
   if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
   var data = window._reportMonthExport;
   if (!data || !data.rows) { alert("Chưa có dữ liệu tháng"); return; }
-  var aoa = [
-    ["Tháng hiện tại " + data.mon + (data.range ? ": " + data.range : "")],
-    [],
+  var aoa = prependExportHeader([
     ["STT", "Tổ", "Họ tên HS", "Ngày sinh", "GT", "Số lần ƯĐ +", "Số lần VP −", "Điểm tháng", "Vị thứ", "Xếp loại"]
-  ];
+  ], "SƠ KẾT THÁNG " + data.mon + (data.range ? ": " + data.range : ""));
   data.rows.forEach(function(r, idx) {
     aoa.push([
       idx + 1,
@@ -6334,7 +6399,7 @@ function renderWeekMonthBoards(list, agg) {
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
     html += '<div class="text-center flex-1"><b style="color:#0c4a6e">SƠ KẾT TUẦN ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS</b></div>';
     html += '<div class="no-print flex gap-2">';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportWeekCapture\',\'Tuan' + weekNo + '\')">📷 Tải ảnh .jpg</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportWeekCapture\',\'Tuan' + weekNo + '\',\'SƠ KẾT TUẦN ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS\')">📷 Tải ảnh .jpg</button>';
     html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportWeekXlsx()">📊 Tải .xlsx</button>';
     html += '</div></div>';
     html += '<div id="reportWeekCapture">';
@@ -6353,18 +6418,29 @@ function renderWeekMonthBoards(list, agg) {
       });
     }
     function priorViolTimes(sid) {
-      // Tổng số lần VP các tuần trước tuần hiện tại
+      // Tổng số lần VP các tuần TRƯỚC tuần hiện tại (đã lọc bản ghi xóa)
       var n = 0;
+      var curW = Number(weekNo);
+      var seen = {};
       list.forEach(function(e) {
         if (String(e.studentId) !== String(sid)) return;
         if (e.type !== "violation") return;
-        var wn = e.weekNo != null ? Number(e.weekNo) : null;
-        if (wn != null && !isNaN(wn) && wn < Number(weekNo)) {
-          n += (e.times || 1);
+        if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+        var eid = e.id ? String(e.id) : entryFingerprint(e);
+        if (seen[eid]) return;
+        var wn = (e.weekNo != null && e.weekNo !== "") ? Number(e.weekNo) : NaN;
+        if (!isNaN(wn) && !isNaN(curW) && wn < curW) {
+          n += Number(e.times) || 1;
+          seen[eid] = true;
           return;
         }
-        if (wmeta && e.date && String(e.date).slice(0,10) < wmeta.from) {
-          n += (e.times || 1);
+        // Không có weekNo: suy từ ngày
+        if (isNaN(wn) && wmeta && e.date) {
+          var d = String(e.date).slice(0, 10);
+          if (d && d < wmeta.from) {
+            n += Number(e.times) || 1;
+            seen[eid] = true;
+          }
         }
       });
       return n;
