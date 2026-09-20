@@ -1225,7 +1225,7 @@ button[onclick="doParentReportLogin()"] {
 </div>
 <div class="md:col-span-3" id="rWeekWrap">
 <label class="text-sm font-medium mb-1 block" style="color:#111">Tuần NH</label>
-<select id="rWeek" class="input-field text-base py-3 w-full" style="min-width:260px">
+<select id="rWeek" class="input-field text-base py-3 w-full" style="min-width:260px" onchange="onReportWeekChange()">
 <option value="">Tất cả tuần</option>
 </select>
 </div>
@@ -3181,13 +3181,16 @@ function switchTab(name) {
       var rW = document.getElementById("rWeek");
       var rP = document.getElementById("rPeriod");
       if (cw2) {
-        window._forceShowWeek = String(cw2.w);
-        if (rW) rW.value = String(cw2.w);
+        if (rW && !rW.value) rW.value = String(cw2.w);
+        window._forceShowWeek = String((rW && rW.value) || cw2.w);
       }
-      // Mặc định Cả năm → đủ 3 bảng Sơ kết tuần/tháng/HK + tổng hợp
-      if (rP) rP.value = "year";
+      if (rP && !rP.value) rP.value = "year";
+      if (rP) rP.value = rP.value || "year";
       var sk = document.getElementById("soKetWeek");
-      if (sk && cw2) sk.value = String(cw2.w);
+      if (sk) {
+        if (rW && rW.value) sk.value = rW.value;
+        else if (!sk.value && cw2) sk.value = String(cw2.w);
+      }
     } catch (e) {}
     renderReport();
   }
@@ -3549,6 +3552,44 @@ function ensureUserClassId(u) {
   return u.classId || null;
 }
 
+
+/** Khóa trùng: ngày + môn + tổ + HS + nội dung */
+function entryDedupeKey(e) {
+  if (!e) return "";
+  return [
+    String(e.date || "").slice(0, 10),
+    String(e.subject || "").trim().toLowerCase(),
+    String(e.team || "").trim(),
+    String(e.studentId || "").trim().toLowerCase(),
+    String(e.type || ""),
+    String(e.contentCode || e.contentText || "").trim().toLowerCase().replace(/\s+/g, " ")
+  ].join("|");
+}
+
+function dedupeEntriesInMemory() {
+  if (!Array.isArray(entries)) return 0;
+  var seen = {};
+  var out = [];
+  var removed = 0;
+  // Ưu tiên bản ghi mới hơn (đầu mảng)
+  entries.forEach(function(e) {
+    if (!e) return;
+    if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+    var k = entryDedupeKey(e);
+    if (!k || k === "|||||" ) { out.push(e); return; }
+    if (seen[k]) {
+      removed++;
+      // đánh dấu xóa bản trùng cũ
+      try { markEntryDeleted(e); } catch (err) {}
+      return;
+    }
+    seen[k] = true;
+    out.push(e);
+  });
+  entries = out;
+  return removed;
+}
+
 function saveEntryFromForm(e) {
   if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
   try {
@@ -3698,8 +3739,18 @@ function saveEntryFromForm(e) {
   } catch (e) {}
 
   entries = (entries || []).filter(function(x) { return String(x.id) !== String(entry.id); });
+  // Xóa bản trùng ngày/môn/tổ/HS/nội dung
+  var newKey = entryDedupeKey(entry);
+  entries = (entries || []).filter(function(x) {
+    if (entryDedupeKey(x) === newKey) {
+      try { markEntryDeleted(x); } catch (err) {}
+      return false;
+    }
+    return true;
+  });
   entries.unshift(entry);
   window._lastSavedEntryId = String(entry.id);
+  try { dedupeEntriesInMemory(); } catch (e) {}
   window._forceShowWeek = String(entry.weekNo || "");
 
   // Ghi local ngay
@@ -5500,20 +5551,73 @@ function rankByScoreWithTies(items, scoreKey) {
 }
 function rankStatsHtml(scoredList) {
   const counts = { "XUẤT SẮC": 0, "TỐT": 0, "KHÁ": 0, "ĐẠT": 0, "CHƯA ĐẠT": 0 };
-  scoredList.forEach(x => {
+  (scoredList || []).forEach(function(x) {
     const lb = (x.rk && x.rk.label) || rankClass(x.score).label;
     if (counts[lb] != null) counts[lb]++;
   });
-  const top = scoredList.filter(function(x){ return Number(x.score) >= 110; }).slice().sort(function(a,b){ return b.score - a.score; }).slice(0, 3);
-  let h = '<div class="legend-box mt-2 text-xs">';
+  (scoredList || []).forEach(function(x) {
+    if (!x.team && x.id) {
+      var st = (students || []).find(function(s) { return String(s.id) === String(x.id); });
+      if (st) x.team = st.team;
+    }
+  });
+  const top = (scoredList || []).filter(function(x) { return Number(x.score) >= 110; })
+    .slice().sort(function(a, b) { return Number(b.score) - Number(a.score); }).slice(0, 3);
+
+  var teamSum = {};
+  (scoredList || []).forEach(function(x) {
+    var tm = String(x.team || "");
+    if (!tm && x.id) {
+      var st2 = (students || []).find(function(s) { return String(s.id) === String(x.id); });
+      tm = st2 ? String(st2.team || "") : "";
+    }
+    if (!tm) tm = "?";
+    teamSum[tm] = (teamSum[tm] || 0) + Number(x.score || 0);
+  });
+  if ((Object.keys(teamSum).length <= 1 || teamSum["?"]) && students && students.length) {
+    var scoreById = {};
+    (scoredList || []).forEach(function(x) { if (x.id != null) scoreById[String(x.id)] = Number(x.score); });
+    teamSum = {};
+    students.forEach(function(s) {
+      var tm = String(s.team || "?");
+      var sc = scoreById[String(s.id)];
+      if (sc == null || isNaN(sc)) sc = 100;
+      teamSum[tm] = (teamSum[tm] || 0) + sc;
+    });
+  }
+  var teamRank = Object.keys(teamSum).filter(function(k) { return k && k !== "?"; }).sort(function(a, b) {
+    return teamSum[b] - teamSum[a];
+  });
+
+  var h = '<div class="legend-box mt-2 text-xs" style="color:#0f172a">';
   h += '<b style="color:#0c4a6e">THỐNG KÊ XẾP LOẠI:</b> ';
-  h += Object.keys(counts).map(k => k + ' <b>(' + counts[k] + ')</b>').join(' · ');
-  h += '<br/><b style="color:#15803d">TOP 3 DẪN ĐẦU:</b> ';
-  if (top.length) h += top.map((x,i) => (i+1) + '. ' + x.name + ' (' + x.score + 'đ · ' + ((x.rk&&x.rk.label)||rankClass(x.score).label) + ')').join('; ');
-  else h += 'Không có HS ≥ 110 điểm';
-  h += '</div>';
+  h += Object.keys(counts).map(function(k) { return k + " <b>(" + counts[k] + ")</b>"; }).join(" · ");
+  h += '<br/><b style="color:#15803d">TOP 3 HS DẪN ĐẦU:</b><br/>';
+  if (top.length) {
+    h += top.map(function(x, i) {
+      var team = x.team || "";
+      if (!team && x.id) {
+        var st = (students || []).find(function(s) { return String(s.id) === String(x.id); });
+        if (st) team = st.team || "";
+      }
+      var lb = (x.rk && x.rk.label) || rankClass(x.score).label;
+      return (i + 1) + ". " + x.name + ": Tổ " + (team || "?") + " - " + x.score + "đ · " + lb;
+    }).join("<br/>");
+  } else {
+    h += "Không có HS ≥ 110 điểm";
+  }
+  h += '<br/><b style="color:#9f1239">XẾP LOẠI TỔ:</b><br/>';
+  if (teamRank.length) {
+    h += teamRank.map(function(tm, i) {
+      return (i + 1) + ". TỔ " + tm + " — <b style=\"color:#a16207\">" + teamSum[tm] + "đ</b>";
+    }).join("<br/>");
+  } else {
+    h += "—";
+  }
+  h += "</div>";
   return h;
 }
+
 function violStatsHtml(list, poolIds, weekScoreMap) {
   // Viewer / báo cáo: gộp theo HS như mẫu HSVP — 5 cột
   var curW = null;
@@ -5531,16 +5635,26 @@ function violStatsHtml(list, poolIds, weekScoreMap) {
     if (e.type !== "violation") return false;
     if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
     if (poolIds && !poolIds.has(String(e.studentId))) return false;
-    if (curW && e.weekNo != null && e.weekNo !== "") {
-      var wn = Number(e.weekNo);
-      if (!isNaN(wn) && wn > curW) return false;
+    // Chỉ tuần hiện tại
+    if (curW != null && !isNaN(curW)) {
+      var wn = (e.weekNo != null && e.weekNo !== "") ? Number(e.weekNo) : NaN;
+      if (!isNaN(wn)) return wn === Number(curW);
+      // suy từ ngày
+      try {
+        var sw = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(curW); });
+        if (sw && e.date) {
+          var d = String(e.date).slice(0, 10);
+          return d >= sw.from && d <= sw.to;
+        }
+      } catch (err) {}
+      return false;
     }
     return true;
   });
 
   var cls = (currentUser && currentUser.className) || "";
   var title = "HS VI PHẠM TRONG LỚP";
-  if (curW) title += " <span style=\"color:#2563eb;font-weight:700\">(đến tuần " + curW + ")</span>";
+  if (curW) title += " <span style=\"color:#2563eb;font-weight:700\">(tuần " + curW + ")</span>";
   if (cls) title += " <span style=\"color:#2563eb;font-weight:700\">LỚP " + cls + "</span>";
 
   if (!viols.length) {
@@ -5629,8 +5743,14 @@ function violStatsHtml(list, poolIds, weekScoreMap) {
   groups.sort(function(a, b) { return a.stt - b.stt; });
 
   var h = '<div class="legend-box mt-2 text-sm" style="color:#0f172a">';
-  h += '<div style="font-weight:800;color:#dc2626;margin-bottom:0.5rem;font-size:0.95rem">' + title + "</div>";
-  h += '<div class="overflow-x-auto"><table class="w-full text-sm" style="border-collapse:collapse;width:100%;table-layout:fixed;border:1px solid #93c5fd">';
+  h += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+  h += '<div style="font-weight:800;color:#dc2626;font-size:0.95rem">' + title + "</div>";
+  h += '<div class="no-print flex flex-wrap gap-2">';
+  h += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadViolTableJpg()">📷 Tải .jpg</button>';
+  h += '<label class="px-3 py-1 rounded text-xs font-bold text-white cursor-pointer" style="background:#16a34a">📥 Upload mẫu .xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadViolExcel(event)"/></label>';
+  h += '<button type="button" class="px-3 py-1 rounded text-xs font-bold" style="background:#fff;border:1px solid #16a34a;color:#15803d" onclick="downloadViolTemplateXlsx()">📋 Tải mẫu .xlsx</button>';
+  h += '</div></div>';
+  h += '<div id="reportViolCapture" class="overflow-x-auto"><table class="w-full text-sm" style="border-collapse:collapse;width:100%;table-layout:fixed;border:1px solid #93c5fd">';
   h += "<colgroup>";
   h += '<col style="width:6%"/><col style="width:6%"/><col style="width:22%"/><col style="width:52%"/><col style="width:14%"/>';
   h += "</colgroup>";
@@ -5663,6 +5783,111 @@ function violStatsHtml(list, poolIds, weekScoreMap) {
   return h;
 }
 
+function downloadViolTableJpg() {
+  var curW = "";
+  try {
+    var c = currentSchoolWeek();
+    if (c) curW = c.w;
+  } catch (e) {}
+  var cls = (currentUser && currentUser.className) || "";
+  downloadReportBoardJpg("reportViolCapture", "HS_ViPham_Tuan" + curW, "HS VI PHẠM TRONG LỚP (đến tuần " + curW + ") · LỚP " + cls);
+}
+
+function downloadViolTemplateXlsx() {
+  if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
+  var aoa = prependExportHeader([
+    ["ID HS", "Họ tên HS", "Tổ", "Ngày (yyyy-mm-dd)", "Môn", "Mã VP (vd v01)", "Nội dung", "Số lần", "Điểm (âm)"]
+  ], "MẪU NHẬP VI PHẠM");
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(aoa), "MauVP");
+  XLSX.writeFile(wb, "QLNN_Mau_ViPham.xlsx");
+}
+
+function uploadViolExcel(ev) {
+  var file = ev.target && ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, { type: "array" });
+      var sheet = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      // skip header rows until find ID HS
+      var start = 0;
+      for (var i = 0; i < Math.min(rows.length, 10); i++) {
+        if (String(rows[i][0]).toLowerCase().indexOf("id") >= 0) { start = i + 1; break; }
+      }
+      var added = 0;
+      for (var r = start; r < rows.length; r++) {
+        var row = rows[r];
+        if (!row || !row[0]) continue;
+        var sid = String(row[0]).trim();
+        var st = (students || []).find(function(s) { return String(s.id) === sid || String(s.name).toLowerCase() === String(row[1] || "").toLowerCase(); });
+        var entry = {
+          id: Date.now() + Math.random().toString(36).slice(2, 6),
+          date: String(row[3] || "").slice(0, 10),
+          subject: String(row[4] || ""),
+          team: (st && st.team) || String(row[2] || ""),
+          studentId: st ? st.id : sid,
+          studentName: st ? st.name : String(row[1] || ""),
+          type: "violation",
+          contentCode: String(row[5] || ""),
+          contentText: String(row[6] || row[5] || ""),
+          points: Number(row[8]) || -1,
+          times: Number(row[7]) || 1,
+          total: (Number(row[8]) || -1) * (Number(row[7]) || 1),
+          weekNo: "",
+          inputBy: currentUser && currentUser.id,
+          inputByName: currentUser && currentUser.name,
+          createdAt: new Date().toISOString()
+        };
+        if (entry.date && typeof findSchoolWeek === "function") {
+          var sw = findSchoolWeek(entry.date);
+          if (sw) entry.weekNo = String(sw.w);
+        }
+        entries.unshift(entry);
+        added++;
+      }
+      try { dedupeEntriesInMemory(); } catch (err) {}
+      try { saveClassData({ skipRemoteMerge: true }); } catch (err) {}
+      alert("Đã import " + added + " dòng VP · đồng bộ cloud");
+      try { if (typeof renderReport === "function") renderReport(); } catch (err) {}
+    } catch (err) {
+      alert("Lỗi đọc Excel: " + (err.message || err));
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  ev.target.value = "";
+}
+
+function editViolFromReport(eid) {
+  eid = String(eid || "");
+  var ent = (entries || []).find(function(e) { return String(e.id) === eid; });
+  if (!ent) { alert("Không tìm thấy bản ghi"); return; }
+  try {
+    if (typeof switchTab === "function") switchTab("input");
+    setTimeout(function() {
+      try {
+        if (document.getElementById("fWeekNo") && ent.weekNo) {
+          document.getElementById("fWeekNo").value = String(ent.weekNo);
+          if (typeof onWeekSelect === "function") onWeekSelect();
+        }
+        if (document.getElementById("fDate") && ent.date) document.getElementById("fDate").value = String(ent.date).slice(0, 10);
+        if (document.getElementById("fTeam") && ent.team) document.getElementById("fTeam").value = String(ent.team);
+        if (document.getElementById("fStudent")) document.getElementById("fStudent").value = String(ent.studentId);
+        if (document.getElementById("fType")) document.getElementById("fType").value = "violation";
+        if (document.getElementById("fSubject") && ent.subject) document.getElementById("fSubject").value = ent.subject;
+        if (document.getElementById("fContent")) document.getElementById("fContent").value = ent.contentCode || ent.contentText || "";
+        if (document.getElementById("fPoints")) document.getElementById("fPoints").value = ent.points;
+        if (document.getElementById("fTimes")) document.getElementById("fTimes").value = ent.times || 1;
+        window._editingEntryId = eid;
+        alert("Đã nạp bản ghi để sửa · chỉnh rồi bấm Lưu");
+      } catch (e) { console.warn(e); }
+    }, 200);
+  } catch (e) { alert(e.message || e); }
+}
+
 
 function monthDateRange(month) {
   const wnos = weeksForMonth(month);
@@ -5675,6 +5900,41 @@ function monthDateRange(month) {
 
 
 /** Sơ kết theo tổ — mẫu sổ: STT | Họ tên | Nội dung ƯĐ/VP | Số lần | Điểm tuần | Vị thứ */
+
+
+function downloadSoKetTeamJpg(team) {
+  var data = window._soKetExport || {};
+  var sub = "SƠ KẾT TUẦN " + (data.weekNo || "") + (data.fromTxt ? ": " + data.fromTxt + " – " + data.toTxt : "") + " · TỔ " + team + (data.cls ? " · Lớp " + data.cls : "");
+  if (typeof downloadReportBoardJpg === "function") {
+    downloadReportBoardJpg("soKetTeam" + team, "SoKet_Tuan" + (data.weekNo || "") + "_To" + team, sub);
+  } else {
+    alert("Chức năng tải ảnh chưa sẵn sàng");
+  }
+}
+function refreshReportViolBlock(list) {
+  var box = document.getElementById("reportViolBlock");
+  if (!box) return;
+  if (!currentUser || (currentUser.role !== "gvcn" && currentUser.role !== "super" && currentUser.role !== "viewer" && currentUser.role !== "leader")) {
+    box.innerHTML = "";
+    return;
+  }
+  try {
+    var cur = currentSchoolWeek();
+    var rW = document.getElementById("rWeek");
+    var sk = document.getElementById("soKetWeek");
+    // Chỉ gán mặc định khi chưa chọn; tôn trọng tuần user chọn
+    if (rW && !rW.value && cur) rW.value = String(cur.w);
+    if (sk && !sk.value && rW && rW.value) sk.value = rW.value;
+    if (sk && !sk.value && cur) sk.value = String(cur.w);
+    if (rW && sk && sk.value && !rW.value) rW.value = sk.value;
+    var poolIds = new Set((students || []).map(function(s) { return String(s.id); }));
+    box.innerHTML = typeof violStatsHtml === "function" ? violStatsHtml(list || entries, poolIds, null) : "";
+  } catch (e) {
+    console.warn(e);
+    box.innerHTML = "";
+  }
+}
+
 function renderSoKetTo(list) {
   var box = document.getElementById("reportSoKet");
   if (!box) return;
@@ -5760,7 +6020,7 @@ function renderSoKetTo(list) {
       if (day) display += day + ". ";
       display += text;
       if (subj) display += " – môn " + subj;
-      lines.push({ kind: kind, text: display, times: times });
+      lines.push({ kind: kind, text: display, times: times, entryId: e.id });
     });
     return lines;
   }
@@ -5823,7 +6083,7 @@ function renderSoKetTo(list) {
 
   var html = '<div class="rounded-xl border-2 p-4 mb-4" style="border-color:#0369a1;background:#fff;color:#0f172a">';
   html += '<div class="flex flex-wrap gap-3 items-end mb-3 no-print">';
-  html += '<label class="text-sm font-semibold">Chọn tuần <select id="soKetWeek" class="ml-1 border rounded px-2 py-1" onchange="renderSoKetTo(typeof getFilteredEntries===\'function\'?getFilteredEntries():entries)">' + weekOpts + '</select></label>';
+  html += '<label class="text-sm font-semibold">Chọn tuần <select id="soKetWeek" class="ml-1 border rounded px-2 py-1" onchange="(function(){var sk=document.getElementById(\'soKetWeek\');var rW=document.getElementById(\'rWeek\');if(sk&&rW&&sk.value)rW.value=sk.value;if(typeof renderReport===\'function\')renderReport();else renderSoKetTo(typeof getFilteredEntries===\'function\'?getFilteredEntries():entries);})()">' + weekOpts + '</select></label>';
   html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0369a1" onclick="window.print()">🖨️ In sơ kết</button>';
   html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#16a34a" onclick="downloadSoKetXlsx()">📊 Tải về .xlsx</button>';
   html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0ea5e9" onclick="downloadSoKetJpg()">📷 Tải về .jpg</button>';
@@ -5844,11 +6104,12 @@ function renderSoKetTo(list) {
     var vtLopTo = teamClassRank[team] || "—";
     var sheetRows = [];
 
-    html += '<div class="mb-5">';
+    html += '<div class="mb-5" id="soKetTeam' + team + '">';
     html += '<div class="font-bold py-1 px-2 mb-1 rounded flex flex-wrap gap-4 items-center" style="background:#e0f2fe;color:#0c4a6e">';
     html += '<span>TỔ ' + team + '</span>';
     html += '<span style="color:#a16207">Tổng điểm tổ: <b>' + tongTo + '</b></span>';
     html += '<span style="color:#9f1239">Xếp vị thứ lớp (tổ): <b>' + vtLopTo + '</b></span>';
+    html += '<button type="button" class="no-print ml-auto px-2 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadSoKetTeamJpg(\'' + team + '\')">📷 Tải tổ ' + team + ' .jpg</button>';
     html += '</div>';
     html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="border-collapse:collapse">';
     html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
@@ -5889,7 +6150,14 @@ function renderSoKetTo(list) {
             html += '<td class="border py-1.5 text-center" rowspan="' + lines.length + '">' + stt + '</td>';
             html += '<td class="border py-1.5 px-2" style="text-align:left" rowspan="' + lines.length + '">' + s.name + '</td>';
           }
-          html += '<td class="border py-1.5 px-2" style="text-align:left;color:' + color + '">' + ln.text + '</td>';
+          html += '<td class="border py-1.5 px-2" style="text-align:left;color:' + color + '">' + ln.text;
+          if (ln.entryId && currentUser && (currentUser.role === "gvcn" || currentUser.role === "super" || currentUser.role === "leader")) {
+            html += ' <span class="no-print" style="float:right;white-space:nowrap">';
+            html += '<button type="button" title="Sửa" onclick="editViolFromReport(\'' + ln.entryId + '\')" style="border:none;background:transparent;cursor:pointer;color:#0369a1">✏️</button>';
+            html += '<button type="button" title="Xóa" onclick="deleteEntry(\'' + ln.entryId + '\')" style="border:none;background:transparent;cursor:pointer;color:#b91c1c">🗑️</button>';
+            html += '</span>';
+          }
+          html += '</td>';
           html += '<td class="border py-1.5 text-center">' + ln.times + '</td>';
           if (li === 0) {
             html += '<td class="border py-1.5 text-center font-bold" style="color:#a16207" rowspan="' + lines.length + '">' + score + '</td>';
@@ -6377,8 +6645,14 @@ function renderWeekMonthBoards(list, agg) {
     box.innerHTML = html;
     box.classList.remove("hidden");
   } else if (period === "year") {
-    // Cả năm: tuần / tháng / HK hiện tại — đúng cột mẫu tuan/thang/hk.png
-    const cur = currentSchoolWeek() || { w: "1" };
+    // Tuần chọn trên bộ lọc (rWeek / soKetWeek), không ép tuần máy
+    var selW = (document.getElementById("rWeek") || {}).value
+      || (document.getElementById("soKetWeek") || {}).value || "";
+    var cur = null;
+    if (selW) {
+      cur = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(selW); }) || null;
+    }
+    if (!cur) cur = currentSchoolWeek() || { w: "1" };
     let mon = 9;
     if (cur && cur.from) mon = Number(String(cur.from).slice(5, 7)) || 9;
     else {
@@ -6386,11 +6660,9 @@ function renderWeekMonthBoards(list, agg) {
     }
     if (mon >= 5 && mon <= 8) mon = 9;
     const hk = (mon >= 9 && mon <= 12) ? "hk1" : "hk2";
-    // Tái sử dụng: set selects temporarily? Thay bằng render 3 khối gọn
     let pool = students.slice().sort(sortByIdAsc);
     if (teamFilter) pool = students.filter(s => String(s.team) === String(teamFilter)).slice().sort(sortByIdAsc);
-    // Week scores current
-    const weekNo = String(cur.w);
+    const weekNo = String(cur.w || selW || "1");
     const wmeta = SCHOOL_WEEKS.find(x => String(x.w) === String(weekNo));
     const fromY = wmeta ? formatDate(wmeta.from) : "";
     const toY = wmeta ? formatDate(wmeta.to) : "";
@@ -7186,24 +7458,40 @@ var DUTY_PRIORITY_IDS = ["b919", "b920"];
  * - ≥2 lần hoặc mã nặng v04/v05/v03…: 2 công việc
  */
 
-function dutyWorkloadFromViols(stuId, weekViols) {
-  // Trả về số BUỔI trực theo mã VP tuần nguồn
-  // v01: 2 buổi · v03: 3 buổi · mã khác: 6 buổi · không VP: 0
-  var mine = weekViols.filter(function(e) {
+function dutyWorkloadFromViols(stuId, weekViols, sourceWeekNo) {
+  // v01: 2 buổi · v03: 3 buổi · mã khác: 6 buổi
+  // VP 2 tuần liên tiếp → 6 buổi (2 việc khác nhau), áp 3 tuần liên tiếp
+  var mine = (weekViols || []).filter(function(e) {
     return String(e.studentId) === String(stuId) && e.type === "violation";
   });
-  if (!mine.length) return 0;
   var hasV01 = false, hasV03 = false, hasOther = false;
   mine.forEach(function(e) {
     var code = normalizeViolCode(e);
     if (code === "v01" || code === "v1") hasV01 = true;
     else if (code === "v03" || code === "v3") hasV03 = true;
-    else if (code) hasOther = true;
-    else hasOther = true; // VP không mã cũng tính khác
+    else hasOther = true;
   });
-  if (hasOther) return 6;
+  // Kiểm tra VP tuần trước nguồn (2 tuần liên tiếp)
+  var consec = false;
+  try {
+    var prevW = Number(sourceWeekNo) - 1;
+    if (prevW >= 1) {
+      var swp = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(prevW); });
+      var prevViols = (entries || []).filter(function(e) {
+        if (e.type !== "violation") return false;
+        if (String(e.studentId) !== String(stuId)) return false;
+        if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
+        if (String(e.weekNo) === String(prevW)) return true;
+        if (swp && e.date && String(e.date).slice(0,10) >= swp.from && String(e.date).slice(0,10) <= swp.to) return true;
+        return false;
+      });
+      if (prevViols.length && mine.length) consec = true;
+    }
+  } catch (err) {}
+  if (consec || hasOther) return 6;
   if (hasV03) return 3;
   if (hasV01) return 2;
+  if (!mine.length) return 0;
   return 0;
 }
 
@@ -7252,7 +7540,7 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
   });
 
   Object.keys(byId).forEach(function(sid) {
-    byId[sid].sessions = dutyWorkloadFromViols(sid, weekViols);
+    byId[sid].sessions = dutyWorkloadFromViols(sid, weekViols, sourceWeekNo);
   });
 
   var pool = Object.keys(byId).map(function(k) { return byId[k]; }).filter(function(s) { return s.sessions > 0; });
@@ -7413,6 +7701,55 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
 
 
 
+
+function downloadDutyJpg() {
+  var planW = (document.getElementById("dutyPlanWeek") || {}).value || "";
+  var cls = (currentUser && currentUser.className) || "";
+  var sub = "PHÂN CÔNG TRỰC NHẬT · Tuần " + planW + (cls ? " · Lớp " + cls : "");
+  var id = document.getElementById("dutyRosterCapture") ? "dutyRosterCapture" : "notebookContent";
+  downloadReportBoardJpg(id, "TrucNhat_Tuan" + planW, sub);
+}
+
+function downloadDutyXlsx() {
+  if (typeof XLSX === "undefined") { alert("Chưa tải Excel"); return; }
+  var plan = window._dutyPlanLive || window._dutyPlanManual || window._dutyLastPlan;
+  if (!plan) { alert("Chưa có lịch trực"); return; }
+  var tasks = ["1. Quét lớp", "2. Quét hành lang", "3. Đổ rác đầu/cuối buổi", "4. Lau bảng & giặt khăn", "5. Đóng cửa sổ/khóa cửa/tắt điện quạt", "6. Xích xếp xe"];
+  var days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+  var dayKeys = ["T2", "T3", "T4", "T5", "T6", "T7"];
+  var asg = plan.assignments || [];
+  var aoa = (typeof prependExportHeader === "function" ? prependExportHeader : function(a){return a;})(
+    [["Công việc"].concat(days)],
+    "PHÂN CÔNG TRỰC NHẬT · Tuần " + (plan.planWeek || "")
+  );
+  // Rebuild rows from DOM if assignments day/task labels mismatch
+  var table = document.querySelector("#dutyRosterCapture table");
+  if (table) {
+    var wb = XLSX.utils.table_to_book(table, { sheet: "TrucNhat" });
+    var ws = wb.Sheets["TrucNhat"];
+    var raw = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+    aoa = (typeof prependExportHeader === "function" ? prependExportHeader(raw, "PHÂN CÔNG TRỰC NHẬT · Tuần " + (plan.planWeek || "")) : raw);
+    wb.Sheets["TrucNhat"] = XLSX.utils.aoa_to_sheet(aoa);
+    XLSX.writeFile(wb, "TrucNhat_Tuan" + (plan.planWeek || "") + ".xlsx");
+    return;
+  }
+  tasks.forEach(function(task) {
+    var row = [task];
+    dayKeys.forEach(function(dk) {
+      var names = asg.filter(function(a) {
+        return String(a.day).indexOf(dk.replace("T", "")) >= 0 || a.day === dk;
+      }).filter(function(a) {
+        return String(a.task || "").indexOf(task.slice(3, 8)) >= 0 || a.task === task;
+      }).map(function(a) { return (a.student && a.student.name) || ""; });
+      row.push(names.filter(Boolean).join(", "));
+    });
+    aoa.push(row);
+  });
+  var wb2 = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb2, XLSX.utils.aoa_to_sheet(aoa), "TrucNhat");
+  XLSX.writeFile(wb2, "TrucNhat_Tuan" + (plan.planWeek || "") + ".xlsx");
+}
+
 function renderDutyRoster() {
   var box = document.getElementById("notebookContent");
   if (!box) return;
@@ -7434,6 +7771,7 @@ function renderDutyRoster() {
     plan.planWeek = planWeek;
     window._dutyPlanManual = null;
   }
+  window._dutyLastPlan = plan;
 
   var cls = (currentUser && currentUser.className) || "";
   var school = (currentUser && currentUser.school) || "";
@@ -7459,8 +7797,10 @@ function renderDutyRoster() {
   for (var w = 1; w <= 35; w++) html += '<option value="' + w + '"' + (w === Number(planWeek) ? " selected" : "") + '>Tuần ' + w + '</option>';
   html += '</select></label>';
   html += '<button type="button" class="px-4 py-2 rounded-lg font-bold text-white" style="background:#b45309" onclick="window._dutyPlanManual=null;renderDutyRoster()">🔄 TẠO LỊCH TỰ ĐỘNG</button>';
-  html += '<button type="button" class="px-3 py-2 rounded-lg font-semibold" style="background:#fff;border:1px solid #b45309;color:#9f1239" onclick="downloadDutyJpg && downloadDutyJpg()">📷 Tải ảnh</button>';
+  html += '<button type="button" class="px-3 py-2 rounded-lg font-semibold" style="background:#fff;border:1px solid #b45309;color:#9f1239" onclick="downloadDutyJpg()">📷 Tải ảnh</button>';
+  html += '<button type="button" class="px-3 py-2 rounded-lg font-semibold" style="background:#16a34a;color:#fff" onclick="downloadDutyXlsx()">📊 Tải Excel .xlsx</button>';
   html += '</div>';
+  html += '<div id="dutyRosterCapture">';
 
   html += '<div class="text-xs mb-3 p-2 rounded border" style="border-color:#fde68a;background:#fff;color:#78350f;text-align:left">';
   html += '<b>Quy tắc:</b> Việc 1–2 cần <b>2 HS/buổi</b> · Việc 3–6 cần <b>1 HS/buổi</b> (5–6 ưu tiên nam). ';
@@ -7546,24 +7886,28 @@ window.dutyDrop = function(ev) {
   var toDay = cell.getAttribute("data-day");
   var toTask = cell.getAttribute("data-task");
   var tmax = Number(cell.getAttribute("data-tmax") || 1);
-  var asg = window._dutyPlanLive.assignments;
-  // Đếm người trong ô đích
+  var asg = window._dutyPlanLive.assignments.slice();
+  // Đã có trong ô đích → thôi
+  if (asg.some(function(a) { return a.day === toDay && a.task === toTask && String(a.student.id) === String(data.sid); })) return;
   var inTarget = asg.filter(function(a) { return a.day === toDay && a.task === toTask; });
-  if (inTarget.some(function(a) { return String(a.student.id) === String(data.sid); })) return;
+  // Cho phép thả vào ô đã có HS: nếu đầy → đổi chỗ 1 HS trong ô với HS đang kéo
   if (inTarget.length >= tmax) {
-    alert("Ô này đã đủ " + tmax + " học sinh.");
-    return;
+    var swap = inTarget[0];
+    asg = asg.filter(function(a) {
+      return !(a.day === toDay && a.task === toTask && String(a.student.id) === String(swap.student.id));
+    });
+    asg = asg.filter(function(a) {
+      return !(a.day === data.fromDay && a.task === data.fromTask && String(a.student.id) === String(data.sid));
+    });
+    asg.push({ day: toDay, task: toTask, student: { id: data.sid, name: data.sname } });
+    asg.push({ day: data.fromDay, task: data.fromTask, student: { id: swap.student.id, name: swap.student.name } });
+  } else {
+    asg = asg.filter(function(a) {
+      return !(a.day === data.fromDay && a.task === data.fromTask && String(a.student.id) === String(data.sid));
+    });
+    asg.push({ day: toDay, task: toTask, student: { id: data.sid, name: data.sname } });
   }
-  // Xóa khỏi ô nguồn
-  window._dutyPlanLive.assignments = asg.filter(function(a) {
-    return !(a.day === data.fromDay && a.task === data.fromTask && String(a.student.id) === String(data.sid));
-  });
-  // Thêm vào ô đích
-  window._dutyPlanLive.assignments.push({
-    day: toDay,
-    task: toTask,
-    student: { id: data.sid, name: data.sname }
-  });
+  window._dutyPlanLive.assignments = asg;
   window._dutyPlanManual = window._dutyPlanLive;
   renderDutyRoster();
 };
@@ -8058,6 +8402,13 @@ function exportViolTableExcel() {
   }
 }
 
+
+function onReportWeekChange() {
+  var rW = document.getElementById("rWeek");
+  var sk = document.getElementById("soKetWeek");
+  if (rW && sk && rW.value) sk.value = rW.value;
+  try { if (typeof renderReport === "function") renderReport(); } catch (e) {}
+}
 function renderReport() {
   const rt = document.getElementById("reportTitle");
   const wrap = document.getElementById("superGvcnReportWrap");
@@ -8151,6 +8502,7 @@ function renderReport() {
       if (sk) { sk.style.display = ""; sk.classList.remove("hidden"); }
     } catch (e) { console.warn(e); }
     try { renderSoKetTo(list); } catch (err) { console.warn(err); }
+    try { refreshReportViolBlock(list); } catch (err) { console.warn(err); }
     // Không gọi tháng / HK / cả năm / xếp hạng tổ
     var lms = document.getElementById("leaderMonthSummary");
     if (lms) { lms.innerHTML = ""; lms.style.display = "none"; }
@@ -8214,6 +8566,7 @@ function renderReport() {
       var aggV = aggregateByStudent(list).sort(sortByIdAsc);
       try { renderWeekMonthBoards(list, aggV); } catch (err) { console.warn(err); }
       try { renderSoKetTo(list); } catch (err) { console.warn(err); }
+    try { refreshReportViolBlock(list); } catch (err) { console.warn(err); }
       try { renderClassViolTableOnce(listViol); } catch (err) { console.warn(err); }
       // Thống kê + xếp hạng tổ vẫn hiện cho PH xem tình hình lớp
       try {
@@ -8228,6 +8581,7 @@ function renderReport() {
   const agg = aggregateByStudent(list).sort(sortByIdAsc);
   try { renderWeekMonthBoards(list, agg); } catch (err) { console.warn(err); }
   try { renderSoKetTo(list); } catch (err) { console.warn(err); }
+    try { refreshReportViolBlock(list); } catch (err) { console.warn(err); }
   try { renderClassViolTableOnce(list); } catch (err) { console.warn(err); }
   // Thống kê tổng hợp theo phạm vi lọc
   const statsBox = document.getElementById("reportPeriodStats");
