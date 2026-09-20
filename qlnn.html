@@ -3554,36 +3554,54 @@ function ensureUserClassId(u) {
 
 
 /** Khóa trùng: ngày + môn + tổ + HS + nội dung */
+function normalizeContentKey(text) {
+  var s = String(text || "").replace(/^Đã chọn:\s*/i, "");
+  s = s.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || s;
+  s = s.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+/g, "").trim();
+  return s.toLowerCase().replace(/\s+/g, " ");
+}
+
+/** Khóa trùng: ngày + HS + loại + nội dung (không phụ thuộc môn trống/—) */
 function entryDedupeKey(e) {
   if (!e) return "";
+  var content = normalizeContentKey(e.contentText || e.contentCode || "");
   return [
     String(e.date || "").slice(0, 10),
-    String(e.subject || "").trim().toLowerCase(),
-    String(e.team || "").trim(),
     String(e.studentId || "").trim().toLowerCase(),
     String(e.type || ""),
-    String(e.contentCode || e.contentText || "").trim().toLowerCase().replace(/\s+/g, " ")
+    content
   ].join("|");
 }
 
+function mergeEntryTimes(into, from) {
+  // Gộp trùng → 1 bản ghi · Số lần = 1 · Tổng điểm = điểm × 1
+  if (!into || !from) return into;
+  var pts = into.points != null ? Number(into.points) : (from.points != null ? Number(from.points) : 0);
+  into.points = pts;
+  into.times = 1;
+  into.total = pts * 1;
+  return into;
+}
+
+/** Gộp số lần các bản trùng (cùng HS + ngày + nội dung) → 1 bản ghi */
 function dedupeEntriesInMemory() {
   if (!Array.isArray(entries)) return 0;
   var seen = {};
   var out = [];
   var removed = 0;
-  // Ưu tiên bản ghi mới hơn (đầu mảng)
   entries.forEach(function(e) {
     if (!e) return;
     if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
     var k = entryDedupeKey(e);
-    if (!k || k === "|||||" ) { out.push(e); return; }
-    if (seen[k]) {
+    if (!k || k === "|||") { out.push(e); return; }
+    if (seen[k] != null) {
+      var keep = out[seen[k]];
+      mergeEntryTimes(keep, e);
       removed++;
-      // đánh dấu xóa bản trùng cũ
       try { markEntryDeleted(e); } catch (err) {}
       return;
     }
-    seen[k] = true;
+    seen[k] = out.length;
     out.push(e);
   });
   entries = out;
@@ -3739,14 +3757,16 @@ function saveEntryFromForm(e) {
   } catch (e) {}
 
   entries = (entries || []).filter(function(x) { return String(x.id) !== String(entry.id); });
-  // Xóa bản trùng ngày/môn/tổ/HS/nội dung
+  // Gộp số lần nếu trùng HS + ngày + nội dung
   var newKey = entryDedupeKey(entry);
-  entries = (entries || []).filter(function(x) {
+  (entries || []).forEach(function(x) {
     if (entryDedupeKey(x) === newKey) {
+      mergeEntryTimes(entry, x);
       try { markEntryDeleted(x); } catch (err) {}
-      return false;
     }
-    return true;
+  });
+  entries = (entries || []).filter(function(x) {
+    return entryDedupeKey(x) !== newKey;
   });
   entries.unshift(entry);
   window._lastSavedEntryId = String(entry.id);
@@ -3956,7 +3976,16 @@ function buildTongKetWeekHtml(activeWeek, rangeTxt, sums) {
   return h;
 }
 
-function renderRecent() {
+function renderRecent(list) {
+  try {
+    var n = typeof dedupeEntriesInMemory === "function" ? dedupeEntriesInMemory() : 0;
+    if (n > 0 && typeof saveClassData === "function") {
+      try { saveClassData({ skipRemoteMerge: true }); } catch (err) {}
+    }
+  } catch (e) {}
+  return _renderRecentImpl(list);
+}
+function _renderRecentImpl() {
   const body = document.getElementById("recentBody");
   if (!body) return;
   const isGvcn = currentUser && (currentUser.role === "gvcn" || currentUser.role === "super");
@@ -8410,6 +8439,12 @@ function onReportWeekChange() {
   try { if (typeof renderReport === "function") renderReport(); } catch (e) {}
 }
 function renderReport() {
+  try {
+    var n = typeof dedupeEntriesInMemory === "function" ? dedupeEntriesInMemory() : 0;
+    if (n > 0 && typeof saveClassData === "function") {
+      try { saveClassData({ skipRemoteMerge: true }); } catch (err) {}
+    }
+  } catch (e) {}
   const rt = document.getElementById("reportTitle");
   const wrap = document.getElementById("superGvcnReportWrap");
   if (currentUser && currentUser.role === "super") {
