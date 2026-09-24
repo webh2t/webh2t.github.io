@@ -7488,19 +7488,21 @@ var DUTY_PRIORITY_IDS = ["b919", "b920"];
  */
 
 function dutyWorkloadFromViols(stuId, weekViols, sourceWeekNo) {
-  // v01: 2 buổi · v03: 3 buổi · mã khác: 6 buổi
-  // VP 2 tuần liên tiếp → 6 buổi (2 việc khác nhau), áp 3 tuần liên tiếp
+  // v01: 2 buổi / 2 việc · v03: 3 buổi / 2 việc · mã khác (kể cả v26): 6 buổi / 2 việc
+  // v26 hoặc VP 2 tuần liên tiếp: 6 buổi, ghi nhận 3 tuần trực liên tiếp
   var mine = (weekViols || []).filter(function(e) {
     return String(e.studentId) === String(stuId) && e.type === "violation";
   });
-  var hasV01 = false, hasV03 = false, hasOther = false;
+  var hasV01 = false, hasV03 = false, hasV26 = false, hasOther = false;
+  var totalTimes = 0;
   mine.forEach(function(e) {
     var code = normalizeViolCode(e);
+    totalTimes += Number(e.times) || 1;
     if (code === "v01" || code === "v1") hasV01 = true;
     else if (code === "v03" || code === "v3") hasV03 = true;
+    else if (code === "v26") hasV26 = true;
     else hasOther = true;
   });
-  // Kiểm tra VP tuần trước nguồn (2 tuần liên tiếp)
   var consec = false;
   try {
     var prevW = Number(sourceWeekNo) - 1;
@@ -7517,12 +7519,13 @@ function dutyWorkloadFromViols(stuId, weekViols, sourceWeekNo) {
       if (prevViols.length && mine.length) consec = true;
     }
   } catch (err) {}
-  if (consec || hasOther) return 6;
-  if (hasV03) return 3;
+  if (hasV26 || consec || hasOther) return 6;
+  if (hasV03) return Math.max(3, Math.min(6, totalTimes >= 2 ? 4 : 3));
   if (hasV01) return 2;
   if (!mine.length) return 0;
-  return 0;
+  return 2;
 }
+
 
 function dutyStudentGender(st) {
   var g = String((st && (st.gender || st.gioiTinh || "")) || "").toLowerCase();
@@ -7813,9 +7816,9 @@ function renderDutyRoster() {
 
   var html = '<div class="rounded-xl border-2 p-4 mb-4" style="border-color:#b45309;background:#fffbeb;color:#0f172a">';
   html += '<div class="text-center mb-3">';
-  html += '<div class="font-bold text-lg" style="color:#9f1239">PHÂN CÔNG TRỰC NHẬT LỚP ' + (cls || "…") + '</div>';
-  if (school) html += '<div class="text-sm" style="color:#78350f">' + school + (gvcn ? " · GVCN: " + gvcn : "") + '</div>';
-  html += '<div class="text-sm font-semibold mt-1" style="color:#0c4a6e">Tuần đang trực: <b>' + planWeek + '</b>' + (rangeTxt ? " · " + rangeTxt : "") + ' · Nguồn VP: tuần <b>' + srcWeek + '</b></div>';
+  html += '<div class="font-bold text-lg text-center" style="color:#1d4ed8">PHÂN CÔNG TRỰC NHẬT · Tuần ' + planWeek + ' - LỚP: ' + (cls || "…") + '  NH: 2026-2027</div>';
+  if (school) html += '<div class="text-sm text-center" style="color:#78350f">' + school + (gvcn ? " · GVCN: " + gvcn : "") + '</div>';
+  html += '<div class="text-sm font-semibold mt-1 text-center" style="color:#0c4a6e">Nguồn VP: tuần <b>' + srcWeek + '</b>' + (rangeTxt ? " · Trực " + rangeTxt : "") + '</div>';
   html += '</div>';
 
   html += '<div class="flex flex-wrap gap-3 items-end mb-3 text-sm">';
@@ -7832,9 +7835,9 @@ function renderDutyRoster() {
   html += '<div id="dutyRosterCapture">';
 
   html += '<div class="text-xs mb-3 p-2 rounded border" style="border-color:#fde68a;background:#fff;color:#78350f;text-align:left">';
-  html += '<b>Quy tắc:</b> Việc 1–2 cần <b>2 HS/buổi</b> · Việc 3–6 cần <b>1 HS/buổi</b> (5–6 ưu tiên nam). ';
-  html += 'v01 → 2 buổi / 2 việc · v03 → 3 buổi / 2 việc · VP khác → 6 buổi / 2 việc. ';
-  html += 'Kéo thả tên HS giữa các ô để chỉnh tay.';
+  html += '<b>Quy tắc:</b> Việc 1–2: <b>2 HS/buổi</b> · Việc 3–6: <b>1 HS/buổi</b> (5–6 ưu tiên HS nam). ';
+  html += 'v01 → 2 buổi / 2 việc · v03 → 3 buổi / 2 việc · VP khác & v26 → 6 buổi / 2 việc (v26 hoặc VP 2 tuần liên tiếp: trực 3 tuần liên tiếp). ';
+  html += 'Kéo thả tên HS vào bất kỳ ô nào để chỉnh tay.';
   html += '</div>';
 
   // Pool HS + số buổi
@@ -7849,31 +7852,69 @@ function renderDutyRoster() {
 
   html += '<div id="dutyTableCapture" class="overflow-x-auto rounded-lg border" style="border-color:#f59e0b;background:#fffbeb">';
   html += '<div class="text-center font-bold mb-2 pt-2" style="color:#9f1239">PHÂN CÔNG TRỰC NHẬT · Tuần ' + planWeek + (rangeTxt ? " · " + rangeTxt : "") + ' · Lớp ' + (cls || "") + '</div>';
-  html += '<table class="w-full text-sm" style="border-collapse:collapse;background:#fff" id="dutyAssignTable">';
-  html += '<thead><tr style="background:#fef3c7;color:#92400e">';
-  html += '<th class="py-2 px-2 text-left border">Công việc</th>';
-  allDays.forEach(function(d) { html += '<th class="py-2 px-2 text-center border">' + d + '</th>'; });
+  // Bảng 2 hàng / công việc · màu xen kẽ · căn giữa header
+  var rowPairColors = [
+    ["#dbeafe", "#bfdbfe"],
+    ["#dcfce7", "#bbf7d0"],
+    ["#fce7f3", "#fbcfe8"],
+    ["#e0e7ff", "#c7d2fe"],
+    ["#ffedd5", "#fed7aa"],
+    ["#fef3c7", "#fde68a"]
+  ];
+  html += '<table class="w-full text-sm" style="border-collapse:collapse;background:#fff;border:2px solid #1e3a8a;margin:0 auto;max-width:100%" id="dutyAssignTable">';
+  html += '<thead><tr>';
+  html += '<th class="py-2 px-2 text-center border" style="background:#93c5fd;color:#1e3a8a;font-weight:800;border:1px solid #1e3a8a">Công việc</th>';
+  allDays.forEach(function(d) {
+    html += '<th class="py-2 px-2 text-center border" style="background:#fde047;color:#1e3a8a;font-weight:800;border:1px solid #1e3a8a">' + d + '</th>';
+  });
   html += '</tr></thead><tbody>';
 
   DUTY_TASKS.forEach(function(task, ti) {
-    var bg = rowColors[ti % rowColors.length];
-    html += '<tr style="background:' + bg + '">';
-    html += '<td class="py-2 px-2 border font-semibold text-left" style="color:#78350f">' + (ti + 1) + '. ' + task + (ti < 2 ? " <span style='color:#b45309'>(2 HS)</span>" : " <span style='color:#64748b'>(1 HS)</span>") + '</td>';
-    allDays.forEach(function(day, di) {
-      var cell = plan.assignments.filter(function(a) { return a.day === day && a.task === task; });
-      var color = colColors[di % colColors.length];
-      html += '<td class="py-2 px-1 border text-center text-xs duty-cell" data-day="' + day + '" data-task="' + task.replace(/"/g, "&quot;") + '" data-tmax="' + (ti < 2 ? 2 : 1) + '" ondragover="event.preventDefault()" ondrop="dutyDrop(event)" style="color:' + color + ';background:' + bg + ';min-height:2.5rem;vertical-align:top">';
-      if (cell.length) {
-        cell.forEach(function(a) {
-          html += '<div class="duty-chip" draggable="true" ondragstart="dutyDragStart(event)" data-sid="' + a.student.id + '" data-sname="' + String(a.student.name || "").replace(/"/g, "&quot;") + '" data-day="' + day + '" data-task="' + task.replace(/"/g, "&quot;") + '" style="display:inline-block;margin:2px;padding:2px 6px;border-radius:8px;background:#fff;border:1px solid #cbd5e1;cursor:grab;font-weight:700">' + a.student.name + '</div>';
-        });
-      } else {
-        html += '<span style="color:#94a3b8">—</span>';
-      }
-      html += '</td>';
+    var pair = rowPairColors[ti % rowPairColors.length];
+    var tmax = (ti < 2) ? 2 : 1;
+    // Gom theo ngày: tối đa 2 slot
+    var byDay = {};
+    allDays.forEach(function(day) {
+      byDay[day] = plan.assignments.filter(function(a) { return a.day === day && a.task === task; });
     });
-    html += '</tr>';
+    // 2 hàng: slot 0 và slot 1
+    for (var slot = 0; slot < 2; slot++) {
+      // Việc 3–6 chỉ 1 HS: hàng 2 có thể trống hoặc ẩn nếu không có người thứ 2 — vẫn hiện 2 hàng như mẫu
+      html += '<tr style="background:' + pair[slot] + '">';
+      if (slot === 0) {
+        html += '<td class="py-1.5 px-2 border font-bold text-left" rowspan="2" style="color:#0f172a;border:1px solid #1e3a8a;vertical-align:middle;background:' + pair[0] + '">' + (ti + 1) + '. ' + task + '</td>';
+      }
+      allDays.forEach(function(day) {
+        var cell = byDay[day] || [];
+        var a = cell[slot] || null;
+        html += '<td class="py-1.5 px-1 border text-left text-xs duty-cell" data-day="' + day + '" data-task="' + task.replace(/"/g, "&quot;") + '" data-slot="' + slot + '" data-tmax="' + tmax + '" ondragover="event.preventDefault()" ondrop="dutyDrop(event)" style="border:1px solid #1e3a8a;min-height:1.8rem;vertical-align:middle;background:' + pair[slot] + '">';
+        if (a && a.student) {
+          html += '<div class="duty-chip" draggable="true" ondragstart="dutyDragStart(event)" data-sid="' + a.student.id + '" data-sname="' + String(a.student.name || "").replace(/"/g, "&quot;") + '" data-day="' + day + '" data-task="' + task.replace(/"/g, "&quot;") + '" style="display:block;padding:2px 4px;cursor:grab;font-weight:700;color:#0f172a;text-align:left">' + a.student.name + '</div>';
+        } else {
+          html += '<span style="color:#94a3b8;padding:2px 4px"> </span>';
+        }
+        html += '</td>';
+      });
+      html += '</tr>';
+    }
   });
+
+  // Hàng ghi chú: HS trực 3 tuần liên tiếp (v26 / VP 2 tuần liên tiếp)
+  var longDuty = (plan.pool || []).filter(function(s) {
+    var codes = Object.keys(s.codes || {});
+    return codes.indexOf("v26") >= 0 || s.sessions >= 6;
+  });
+  if (longDuty.length) {
+    html += '<tr style="background:#f8fafc">';
+    html += '<td class="py-2 px-2 border text-left font-semibold" style="border:1px solid #1e3a8a;color:#0f172a" colspan="1">Ghi chú</td>';
+    html += '<td class="py-2 px-2 border text-left text-xs" style="border:1px solid #1e3a8a;color:#0c4a6e" colspan="' + allDays.length + '">';
+    var untilW = Number(planWeek) + 2;
+    html += longDuty.map(function(s) {
+      return '<b>' + s.name + '</b>: trực đến tuần ' + untilW;
+    }).join(' · ');
+    html += '</td></tr>';
+  }
+
   html += '</tbody></table></div>';
 
   if (!plan.assignments.length) {
@@ -7996,98 +8037,414 @@ function renderNotebook() {
   const box = document.getElementById("notebookContent");
   if (!box || !currentUser || currentUser.role !== "gvcn") return;
   const scope = window._nbScope || "week";
-  const { cur, mon, hk } = notebookContext();
+  const ctx = notebookContext();
   const school = currentUser.school || "";
   const gvcn = currentUser.name || "";
   const cls = currentUser.className || "";
   const year = currentUser.year || "2026 - 2027";
-  let weekNos = [], title = "", dateNote = "";
+
+  // --- Bộ chọn tuần / tháng / học kỳ ---
+  let weekNos = [], title = "", dateNote = "", scoreLabel = "Điểm tuần";
+  let selWeek = (document.getElementById("nbWeekSel") || {}).value || "";
+  let selMon = (document.getElementById("nbMonthSel") || {}).value || "";
+  let selHk = (document.getElementById("nbHkSel") || {}).value || "";
+
   if (scope === "week") {
-    weekNos = [String(cur.w)];
-    title = "BÁO CÁO TUẦN " + cur.w;
-    dateNote = formatDate(cur.from) + " – " + formatDate(cur.to);
+    if (!selWeek) selWeek = String(ctx.cur.w);
+    const sw = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(selWeek); }) || ctx.cur;
+    weekNos = [String(sw.w)];
+    title = "BÁO CÁO TUẦN " + sw.w;
+    dateNote = formatDate(sw.from) + " – " + formatDate(sw.to);
+    scoreLabel = "Điểm tuần";
+    window._nbSelWeek = String(sw.w);
   } else if (scope === "month") {
-    weekNos = weeksForMonth(mon);
+    let mon = selMon ? Number(selMon) : ctx.mon;
+    if (!mon || mon < 1) mon = ctx.mon;
+    weekNos = (typeof weeksForMonth === "function" ? weeksForMonth(mon) : []).map(String);
     title = "BÁO CÁO THÁNG " + mon;
-    dateNote = monthDateRange(mon) || ("Tuần " + weekNos.join(", "));
+    dateNote = (typeof monthDateRange === "function" ? monthDateRange(mon) : "") || ("Tuần " + weekNos.join(", "));
+    scoreLabel = "Điểm tháng";
+    window._nbSelMon = mon;
   } else {
-    const months = hk === "hk1" ? [9,10,11,12] : [1,2,3,4];
-    months.forEach(m => { weekNos = weekNos.concat(weeksForMonth(m)); });
-    title = hk === "hk1" ? "BÁO CÁO HỌC KỲ 1 (T9–T12)" : "BÁO CÁO HỌC KỲ 2 (T1–T4)";
-    dateNote = hk === "hk1" ? "Từ tháng 9 đến tháng 12" : "Từ tháng 1 đến tháng 4";
-  }
-  const nW = weekNos.length || 1;
-  const list = entriesInWeeks(weekNos);
-  const viols = list.filter(e => e.type === "violation");
-
-  let html = '<div class="week-board mb-4" id="nbPrintArea">';
-  html += reportHeaderHtml(gvcn, cls, school, year);
-  html += '<div class="text-center mb-3"><div style="font-size:1.2rem;font-weight:800;color:#0c4a6e">' + title + '</div>';
-  html += '<div style="font-size:0.85rem;color:#9f1239;font-weight:700">' + dateNote + '</div></div>';
-
-  // Violations by team
-  html += '<h3 class="font-bold text-red-700 mb-2">1. Danh sách học sinh vi phạm theo tổ</h3>';
-  for (let team = 1; team <= 4; team++) {
-    const tv = viols.filter(e => {
-      const s = students.find(x => String(x.id) === String(e.studentId));
-      return s && String(s.team) === String(team);
-    });
-    html += '<div class="mb-3"><b style="color:#000">Tổ ' + team + '</b>';
-    if (!tv.length) {
-      html += '<p class="text-sm ml-2" style="color:#000">Không có vi phạm</p></div>';
-      continue;
+    // hk: hk1 | hk2 | year
+    let mode = selHk || "hk1";
+    if (mode !== "hk1" && mode !== "hk2" && mode !== "year") mode = (ctx.hk === "hk2" ? "hk2" : "hk1");
+    window._nbSelHk = mode;
+    if (mode === "year") {
+      [9,10,11,12,1,2,3,4,5].forEach(function(m) {
+        weekNos = weekNos.concat((typeof weeksForMonth === "function" ? weeksForMonth(m) : []).map(String));
+      });
+      title = "BÁO CÁO CẢ NĂM";
+      dateNote = "Học kỳ 1 + Học kỳ 2";
+      scoreLabel = "Tổng Điểm";
+    } else if (mode === "hk2") {
+      [1,2,3,4,5].forEach(function(m) {
+        weekNos = weekNos.concat((typeof weeksForMonth === "function" ? weeksForMonth(m) : []).map(String));
+      });
+      title = "BÁO CÁO HỌC KỲ 2 (T1–T5)";
+      dateNote = "Từ tháng 1 đến tháng 5";
+      scoreLabel = "Tổng Điểm";
+    } else {
+      [9,10,11,12].forEach(function(m) {
+        weekNos = weekNos.concat((typeof weeksForMonth === "function" ? weeksForMonth(m) : []).map(String));
+      });
+      title = "BÁO CÁO HỌC KỲ 1 (T9–T12)";
+      dateNote = "Từ tháng 9 đến tháng 12";
+      scoreLabel = "Tổng Điểm";
     }
-    html += '<table class="w-full text-sm mt-1" style="color:#000"><thead><tr><th class="text-left" style="color:#000">Họ và tên</th><th class="text-left" style="color:#000">Nội dung</th><th style="color:#000">Số lần</th></tr></thead><tbody>';
-    const map = {};
-    tv.forEach(e => {
-      const key = e.studentId + "||" + (e.contentText || e.contentCode || "");
-      if (!map[key]) map[key] = { name: e.studentName, text: e.contentText || e.contentCode || "", times: 0 };
-      map[key].times += (e.times || 1);
-    });
-    Object.values(map).sort((a,b) => a.name.localeCompare(b.name, "vi")).forEach(r => {
-      html += '<tr><td class="name-col" style="color:#000">' + r.name + '</td><td style="color:#000">' + r.text + '</td><td class="text-center font-bold" style="color:#000">' + r.times + '</td></tr>';
-    });
-    html += '</tbody></table></div>';
   }
-
-  // Team scores ranking
-  html += '<h3 class="font-bold text-sky-800 mb-2 mt-4">2. Tổng điểm & xếp hạng tổ</h3>';
-  const teamRows = [];
-  for (let team = 1; team <= 4; team++) {
-    const members = students.filter(s => String(s.team) === String(team)).slice().sort(sortByIdAsc);
-    if (!members.length) continue;
-    let teamSum = 0;
-    const memberScores = members.map(s => {
-      const sc = studentWeekScoreInWeeks(s.id, weekNos);
-      teamSum += sc;
-      const rk = scope === "week" ? rankClass(sc) : rankClassScaled(sc, nW);
-      return { name: s.name, score: sc, rk };
-    });
-    teamRows.push({ team, teamSum, members: memberScores, avg: members.length ? teamSum / members.length : 0 });
-  }
-  teamRows.sort((a, b) => b.teamSum - a.teamSum);
-  teamRows.forEach((tr, idx) => {
-    html += '<div class="mb-3 p-2 border border-slate-300 rounded-lg">';
-    html += '<div class="font-bold" style="color:#000">Hạng ' + (idx + 1) + ' · Tổ ' + tr.team + ' · Tổng tổ: <b>' + tr.teamSum + '</b> · TB: ' + tr.avg.toFixed(1) + '</div>';
-    html += '<table class="w-full text-sm mt-1" style="color:#000"><thead><tr><th style="color:#000">STT</th><th class="text-left" style="color:#000">Họ và tên</th><th style="color:#000">Điểm</th><th style="color:#000">Xếp loại</th></tr></thead><tbody>';
-    tr.members.slice().sort((a,b) => b.score - a.score).forEach((m, i) => {
-      html += '<tr><td style="color:#000">' + (i+1) + '</td><td class="name-col" style="color:#000">' + m.name + '</td><td style="font-weight:700;color:#000">' + m.score + '</td><td style="color:#000;font-weight:700">' + m.rk.label + '</td></tr>';
-    });
-    html += '</tbody></table></div>';
+  // unique weekNos
+  var seenW = {};
+  weekNos = weekNos.filter(function(w) {
+    if (seenW[w]) return false;
+    seenW[w] = true;
+    return true;
   });
+  const nW = weekNos.length || 1;
+  const list = typeof entriesInWeeks === "function" ? entriesInWeeks(weekNos) : (entries || []).filter(function(e) {
+    return weekNos.indexOf(String(e.weekNo)) >= 0;
+  });
+  const firstWeek = weekNos.length ? Number(weekNos[0]) : 1;
 
-  html += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
-  html += '<button type="button" onclick="printNotebook()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#0ea5e9;color:#fff">🖨️ In báo cáo sổ</button>';
-  html += '<button type="button" onclick="downloadNotebookPdf()" class="px-4 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 PDF báo cáo</button>';
+  function periodViolCount(sid) {
+    var n = 0;
+    list.forEach(function(e) {
+      if (String(e.studentId) !== String(sid)) return;
+      if (e.type !== "violation") return;
+      if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+      n += Number(e.times) || 1;
+    });
+    return n;
+  }
+  var vpColLabel = scope === "week" ? "Số VP tuần" : (scope === "month" ? "Số VP tháng" : "Số VP kỳ");
+
+  function contentLine(e) {
+    if (e.type === "silent") return "HS ngồi im lặng";
+    var text = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "");
+    text = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || text;
+    text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+/g, "").trim();
+    var day = "";
+    try {
+      if (e.date) {
+        var d = new Date(String(e.date).slice(0, 10) + "T12:00:00");
+        var dm = ["CN", "Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
+        if (!isNaN(d.getTime())) day = dm[d.getDay()] + ". ";
+      }
+    } catch (err) {}
+    var subj = (e.subject && e.subject !== "—") ? (" – môn " + e.subject) : "";
+    return day + text + subj;
+  }
+
+  function scoreOf(sid) {
+    return typeof studentWeekScoreInWeeks === "function" ? studentWeekScoreInWeeks(sid, weekNos) : 100;
+  }
+
+  // Class ranks
+  var allScores = (students || []).map(function(s) {
+    return { id: s.id, name: s.name, team: s.team, score: scoreOf(s.id) };
+  }).sort(function(a, b) { return b.score - a.score; });
+  var classRank = {}, r = 0, prev = null;
+  allScores.forEach(function(x) {
+    if (prev === null || x.score !== prev) { r += 1; prev = x.score; }
+    classRank[String(x.id)] = r;
+  });
+  var idOrder = {};
+  (students || []).slice().sort(typeof sortByIdAsc === "function" ? sortByIdAsc : function(a, b) {
+    return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+  }).forEach(function(s, idx) { idOrder[String(s.id)] = idx + 1; });
+  function periodBonusCount(sid) {
+    var n = 0;
+    list.forEach(function(e) {
+      if (String(e.studentId) !== String(sid)) return;
+      if (e.type !== "bonus") return;
+      if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+      n += Number(e.times) || 1;
+    });
+    return n;
+  }
+
+  // --- Toolbar chọn kỳ ---
+  var html = '<div class="mb-3 no-print flex flex-wrap gap-3 items-end">';
+  if (scope === "week") {
+    html += '<label class="text-sm font-semibold">Chọn tuần <select id="nbWeekSel" class="input-field py-1 ml-1" onchange="renderNotebook()">';
+    (SCHOOL_WEEKS || []).forEach(function(w) {
+      html += '<option value="' + w.w + '"' + (String(w.w) === String(selWeek || window._nbSelWeek) ? " selected" : "") + '>Tuần ' + w.w + ' (' + formatDate(w.from) + ' – ' + formatDate(w.to) + ')</option>';
+    });
+    html += '</select></label>';
+  } else if (scope === "month") {
+    html += '<label class="text-sm font-semibold">Chọn tháng <select id="nbMonthSel" class="input-field py-1 ml-1" onchange="renderNotebook()">';
+    [9,10,11,12,1,2,3,4,5].forEach(function(m) {
+      html += '<option value="' + m + '"' + (Number(selMon || window._nbSelMon) === m ? " selected" : "") + '>Tháng ' + m + '</option>';
+    });
+    html += '</select></label>';
+  } else {
+    html += '<label class="text-sm font-semibold">Chọn kỳ <select id="nbHkSel" class="input-field py-1 ml-1" onchange="renderNotebook()">';
+    [["hk1","Học kỳ 1 (T9–T12)"],["hk2","Học kỳ 2 (T1–T5)"],["year","Cả năm"]].forEach(function(opt) {
+      html += '<option value="' + opt[0] + '"' + ((selHk || window._nbSelHk) === opt[0] ? " selected" : "") + '>' + opt[1] + '</option>';
+    });
+    html += '</select></label>';
+  }
+  html += '</div>';
+
+  html += '<div id="nbPrintArea">';
+
+  // --- 4 tổ ---
+  for (var team = 1; team <= 4; team++) {
+    var members = (students || []).filter(function(s) { return String(s.team) === String(team); })
+      .slice().sort(typeof sortByIdAsc === "function" ? sortByIdAsc : function(a,b){ return String(a.id).localeCompare(String(b.id), "vi", {numeric:true}); });
+    if (!members.length) continue;
+
+    var teamScores = members.map(function(s) {
+      var sc = scoreOf(s.id);
+      var rk = (scope === "week") ? rankClass(sc) : rankClassScaled(sc, nW);
+      return { s: s, score: sc, rk: rk };
+    });
+    teamScores.sort(function(a, b) { return b.score - a.score; });
+
+    // ranking stats in team
+    var counts = { "XUẤT SẮC": 0, "TỐT": 0, "KHÁ": 0, "ĐẠT": 0, "CHƯA ĐẠT": 0 };
+    teamScores.forEach(function(x) {
+      var lb = (x.rk && x.rk.label) || "ĐẠT";
+      if (counts[lb] != null) counts[lb]++;
+    });
+    var top3 = teamScores.slice(0, 3);
+
+    html += '<div class="week-board mb-6" id="nbTeam' + team + '">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+    html += '<div class="text-center flex-1">';
+    html += '<div style="font-size:1.05rem;font-weight:800;color:#0c4a6e">' + title + ' · TỔ ' + team + '</div>';
+    html += '<div style="font-size:0.85rem;color:#9f1239;font-weight:700">' + dateNote + ' · Lớp ' + cls + '</div>';
+    html += '</div>';
+    html += '<div class="no-print flex gap-2">';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadNbTeamXlsx(' + team + ')">📊 Tải .xlsx</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadNbTeamJpg(' + team + ')">📷 Tải .jpg</button>';
+    html += '</div></div>';
+
+    // 11-col table
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse;border:1px solid #94a3b8;text-align:left">';
+    html += '<thead><tr style="background:#e0f2fe;color:#0c4a6e">';
+    html += '<th class="py-1.5 text-center" style="width:4%">TT</th>';
+    html += '<th class="py-1.5 text-left" style="width:18%">Họ tên HS</th>';
+    html += '<th class="py-1.5 text-center" style="width:8%">Ngày</th>';
+    html += '<th class="py-1.5 text-center" style="width:8%">Môn</th>';
+    html += '<th class="py-1.5 text-center" style="width:5%">Số lần</th>';
+    html += '<th class="py-1.5 text-left" style="width:24%">Nội dung (ƯĐ/ VP)</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%">' + (scope === "week" ? "Số ƯĐ tuần" : (scope === "month" ? "Số ƯĐ tháng" : "Số ƯĐ kỳ")) + '</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%">' + vpColLabel + '</th>';
+    html += '<th class="py-1.5 text-center" style="width:8%">' + scoreLabel + '</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%">Vị thứ lớp</th>';
+    html += '<th class="py-1.5 text-center" style="width:10%">Xếp loại</th>';
+    html += '</tr></thead><tbody>';
+
+    // Sắp xếp tăng dần theo Vị thứ lớp
+    var membersById = members.slice().sort(function(a, b) {
+      var ra = Number(classRank[String(a.id)]) || 9999;
+      var rb = Number(classRank[String(b.id)]) || 9999;
+      if (ra !== rb) return ra - rb;
+      return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+    });
+    membersById.forEach(function(s, idx) {
+      var ents = list.filter(function(e) {
+        if (String(e.studentId) !== String(s.id)) return false;
+        if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
+        if (e.type === "silent") return false;
+        return true;
+      });
+      var sc = scoreOf(s.id);
+      var rk = (scope === "week") ? rankClass(sc) : rankClassScaled(sc, nW);
+      var pos = classRank[String(s.id)] || "—";
+      var tt = idOrder[String(s.id)] != null ? idOrder[String(s.id)] : (idx + 1);
+      var udN = periodBonusCount(s.id);
+      var vpN = periodViolCount(s.id);
+
+      if (!ents.length) {
+        html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+        html += '<td class="py-1 text-center">' + tt + '</td>';
+        html += '<td class="py-1 px-1 font-medium" style="text-align:left;white-space:nowrap">' + s.name + '</td>';
+        html += '<td class="py-1 text-center">—</td><td class="py-1 text-center">—</td><td class="py-1 text-center">—</td>';
+        html += '<td class="py-1 px-1" style="text-align:left;color:#64748b;font-style:italic">HS ngồi im lặng</td>';
+        html += '<td class="py-1 text-center" style="color:#15803d">' + udN + '</td>';
+        html += '<td class="py-1 text-center" style="color:#b91c1c">' + vpN + '</td>';
+        html += '<td class="py-1 text-center font-bold">' + sc + '</td>';
+        html += '<td class="py-1 text-center">' + pos + '</td>';
+        html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+        html += '</tr>';
+        return;
+      }
+      var nRows = ents.length;
+      ents.forEach(function(e, li) {
+        html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+        if (li === 0) {
+          html += '<td class="py-1 text-center" rowspan="' + nRows + '">' + tt + '</td>';
+          html += '<td class="py-1 px-1 font-medium" style="text-align:left;white-space:nowrap" rowspan="' + nRows + '">' + s.name + '</td>';
+        }
+        html += '<td class="py-1 text-center text-xs">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
+        html += '<td class="py-1 text-center text-xs">' + (e.subject || "—") + '</td>';
+        html += '<td class="py-1 text-center">' + (e.times || 1) + '</td>';
+        var col = e.type === "bonus" ? "#15803d" : (e.type === "violation" ? "#b91c1c" : "#0f172a");
+        html += '<td class="py-1 px-1" style="text-align:left;color:' + col + '">' + contentLine(e) + '</td>';
+        if (li === 0) {
+          html += '<td class="py-1 text-center" style="color:#15803d" rowspan="' + nRows + '">' + udN + '</td>';
+          html += '<td class="py-1 text-center" style="color:#b91c1c" rowspan="' + nRows + '">' + vpN + '</td>';
+          html += '<td class="py-1 text-center font-bold" rowspan="' + nRows + '">' + sc + '</td>';
+          html += '<td class="py-1 text-center" rowspan="' + nRows + '">' + pos + '</td>';
+          html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+        }
+        html += '</tr>';
+      });
+    });
+
+    html += '</tbody></table></div>';
+
+    // Stats
+    html += '<div class="mt-2 text-xs" style="color:#0f172a">';
+    html += '<b style="color:#0c4a6e">THỐNG KÊ XẾP LOẠI TỔ:</b> ';
+    html += Object.keys(counts).map(function(k) { return k + " <b>(" + counts[k] + ")</b>"; }).join(" · ");
+    html += '<br/><b style="color:#15803d">TOP HS DẪN ĐẦU TỔ:</b><br/>';
+    if (top3.length) {
+      html += top3.map(function(x, i) {
+        return (i + 1) + ". " + x.s.name + ": " + x.score + "đ · " + x.rk.label;
+      }).join("<br/>");
+    } else html += "—";
+    html += '</div></div>';
+  }
+
+  // --- Bảng VP tổng hợp cả lớp ---
+  var viols = list.filter(function(e) {
+    if (e.type !== "violation") return false;
+    if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
+    return true;
+  });
+  html += '<div class="week-board mb-4" id="nbViolBlock">';
+  html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
+  html += '<div style="font-weight:800;color:#dc2626">BẢNG VI PHẠM TỔNG HỢP HS VI PHẠM CẢ LỚP · ' + title + ' · LỚP ' + cls + '</div>';
+  html += '<div class="no-print flex gap-2">';
+  html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadNbViolXlsx()">📊 Tải .xlsx</button>';
+  html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadNbViolJpg()">📷 Tải .jpg</button>';
   html += '</div></div>';
 
-  // Self assessment for month / hk
+  if (!viols.length) {
+    html += '<p class="text-sm" style="color:#64748b">Không có vi phạm trong kỳ này.</p>';
+  } else {
+    // group by student
+    var byStu = {};
+    viols.forEach(function(e) {
+      var sid = String(e.studentId);
+      if (!byStu[sid]) byStu[sid] = [];
+      byStu[sid].push(e);
+    });
+    var gList = Object.keys(byStu).map(function(sid) {
+      var st = (students || []).find(function(s) { return String(s.id) === sid; });
+      return {
+        sid: sid,
+        name: (st && st.name) || (byStu[sid][0].studentName) || sid,
+        team: (st && st.team) || "",
+        rows: byStu[sid]
+      };
+    }).sort(function(a, b) {
+      var ra = Number(classRank[String(a.sid)]) || 9999;
+      var rb = Number(classRank[String(b.sid)]) || 9999;
+      if (ra !== rb) return ra - rb;
+      return String(a.sid).localeCompare(String(b.sid), "vi", { numeric: true });
+    });
+
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
+    html += '<thead><tr style="background:#fef2f2;color:#9f1239">';
+    html += '<th class="py-1.5 text-center" style="width:5%">TT</th>';
+    html += '<th class="py-1.5 text-center" style="width:5%">Tổ</th>';
+    html += '<th class="py-1.5" style="width:20%;text-align:left">Họ tên HS</th>';
+    html += '<th class="py-1.5 text-center" style="width:10%">Ngày</th>';
+    html += '<th class="py-1.5 text-center" style="width:10%">Môn</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%">Số lần</th>';
+    html += '<th class="py-1.5" style="width:28%;text-align:left">Nội dung vi phạm</th>';
+    html += '<th class="py-1.5 text-center" style="width:15%">' + vpColLabel + '</th>';
+    html += '</tr></thead><tbody>';
+    gList.forEach(function(g, gi) {
+      var nRows = g.rows.length;
+      var prior = periodViolCount(g.sid);
+      g.rows.forEach(function(e, li) {
+        html += '<tr style="color:#b91c1c;border-bottom:1px solid #fecaca">';
+        if (li === 0) {
+          html += '<td class="py-1 text-center" rowspan="' + nRows + '">' + (gi + 1) + '</td>';
+          html += '<td class="py-1 text-center font-bold" rowspan="' + nRows + '">' + (g.team || "—") + '</td>';
+          html += '<td class="py-1 px-1 font-bold" style="text-align:left;white-space:nowrap" rowspan="' + nRows + '">' + g.name + '</td>';
+        }
+        html += '<td class="py-1 text-center text-xs">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
+        html += '<td class="py-1 text-center text-xs">' + (e.subject || "—") + '</td>';
+        html += '<td class="py-1 text-center">' + (e.times || 1) + '</td>';
+        html += '<td class="py-1 px-1 text-left">' + contentLine(e) + '</td>';
+        if (li === 0) {
+          html += '<td class="py-1 text-center font-bold" rowspan="' + nRows + '">' + prior + '</td>';
+        }
+        html += '</tr>';
+      });
+    });
+    html += '</tbody></table></div>';
+  }
+  html += '</div>';
+
+  html += '</div>'; // nbPrintArea
+
+  // store export meta
+  window._nbExport = { scope: scope, title: title, dateNote: dateNote, weekNos: weekNos, scoreLabel: scoreLabel, cls: cls };
+
   if (scope === "month" || scope === "hk") {
-    html += renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, school, year);
+    try {
+      html += renderSelfAssessmentForms(scope, window._nbSelMon || ctx.mon, window._nbSelHk || ctx.hk, weekNos, nW, gvcn, cls, school, year);
+    } catch (e) {}
   }
 
   box.innerHTML = html;
 }
+
+function downloadNbTeamJpg(team) {
+  var meta = window._nbExport || {};
+  var sub = (meta.title || "") + " · TỔ " + team + (meta.dateNote ? " · " + meta.dateNote : "");
+  if (typeof downloadReportBoardJpg === "function") {
+    downloadReportBoardJpg("nbTeam" + team, "NB_To" + team + "_" + (meta.scope || "week"), sub);
+  }
+}
+
+function downloadNbTeamXlsx(team) {
+  if (typeof XLSX === "undefined") { alert("Chưa tải Excel"); return; }
+  var el = document.getElementById("nbTeam" + team);
+  if (!el) return;
+  var table = el.querySelector("table");
+  if (!table) { alert("Chưa có bảng"); return; }
+  var meta = window._nbExport || {};
+  var wb = XLSX.utils.table_to_book(table, { sheet: "To" + team });
+  var ws = wb.Sheets["To" + team];
+  var aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  if (typeof prependExportHeader === "function") {
+    aoa = prependExportHeader(aoa, (meta.title || "") + " · TỔ " + team + (meta.dateNote ? " · " + meta.dateNote : ""));
+    wb.Sheets["To" + team] = XLSX.utils.aoa_to_sheet(aoa);
+  }
+  XLSX.writeFile(wb, "NB_To" + team + "_" + (meta.scope || "week") + ".xlsx");
+}
+
+function downloadNbViolJpg() {
+  var meta = window._nbExport || {};
+  var sub = "VP tổng hợp · " + (meta.title || "") + " · Lớp " + (meta.cls || "");
+  if (typeof downloadReportBoardJpg === "function") downloadReportBoardJpg("nbViolBlock", "NB_VP_" + (meta.scope || ""), sub);
+}
+
+function downloadNbViolXlsx() {
+  if (typeof XLSX === "undefined") { alert("Chưa tải Excel"); return; }
+  var el = document.getElementById("nbViolBlock");
+  var table = el && el.querySelector("table");
+  if (!table) { alert("Chưa có bảng VP"); return; }
+  var meta = window._nbExport || {};
+  var wb = XLSX.utils.table_to_book(table, { sheet: "VP" });
+  var ws = wb.Sheets["VP"];
+  var aoa = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
+  if (typeof prependExportHeader === "function") {
+    aoa = prependExportHeader(aoa, "VP · " + (meta.title || ""));
+    wb.Sheets["VP"] = XLSX.utils.aoa_to_sheet(aoa);
+  }
+  XLSX.writeFile(wb, "NB_VP_" + (meta.scope || "") + ".xlsx");
+}
+
+
 function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, school, year) {
   const periodLabel = scope === "month"
     ? ("THÁNG " + mon + " HỌC KỲ " + (mon >= 9 || mon <= 4 ? (mon >= 9 ? "1" : "2") : "") + " NĂM HỌC " + year)
@@ -8104,6 +8461,8 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   h += '<div id="nbSelfForm" class="week-board bg-white text-slate-900"></div>';
   h += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
   h += '<button type="button" onclick="fillSelfAssessment()" class="px-3 py-2 rounded-lg bg-slate-600 text-white text-sm">Làm mới phiếu</button>';
+  h += '<button type="button" onclick="downloadSelfJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#0ea5e9;color:#fff">📷 Tải .jpg</button>';
+  h += '<button type="button" onclick="downloadSelfDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#16a34a;color:#fff">📝 Tải .docx</button>';
   h += '<button type="button" onclick="downloadSelfDoc()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#2563eb;color:#fff">📝 Tải Word (.doc)</button>';
   h += '<button type="button" onclick="downloadSelfPdf()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
   h += '</div></div>';
@@ -8112,6 +8471,34 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   setTimeout(fillSelfAssessment, 50);
   return h;
 }
+
+function downloadSelfJpg() {
+  if (typeof downloadReportBoardJpg === "function") {
+    downloadReportBoardJpg("selfAssessSheet", "TuDanhGia", "BẢN TỰ ĐÁNH GIÁ CÁ NHÂN");
+  } else {
+    alert("Chức năng tải ảnh chưa sẵn sàng");
+  }
+}
+
+function downloadSelfDocx() {
+  // Xuất HTML → file .doc (Word mở được); .docx thuần cần thư viện nặng
+  var el = document.getElementById("selfAssessSheet");
+  if (!el) { alert("Chưa có phiếu"); return; }
+  var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>Tu danh gia</title></head><body>" + el.innerHTML + "</body></html>";
+  var blob = new Blob(["\ufeff", html], { type: "application/msword" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "Ban_Tu_Danh_Gia.doc";
+  a.click();
+  // alias .docx extension for user request
+  setTimeout(function() {
+    var a2 = document.createElement("a");
+    a2.href = URL.createObjectURL(blob);
+    a2.download = "Ban_Tu_Danh_Gia.docx";
+    a2.click();
+  }, 300);
+}
+
 function fillSelfAssessment() {
   const box = document.getElementById("nbSelfForm");
   if (!box || !window._nbSelfCtx) return;
@@ -8123,18 +8510,51 @@ function fillSelfAssessment() {
   let sumScore = ctx.weekNos.length * 100;
   if (st) {
     sumScore = studentWeekScoreInWeeks(st.id, ctx.weekNos);
-    list.filter(e => String(e.studentId) === String(st.id)).forEach(e => {
-      const line = (e.contentCode ? e.contentCode + " · " : "") + (e.contentText || "") +
-        " (" + (e.total != null ? e.total : e.points * e.times) + ", " + (e.times || 1) + " lần)";
-      if (e.type === "bonus") bonusLines.push(line);
-      else if (e.type === "violation") violLines.push(line);
+    // Gộp theo nội dung (bỏ mã u/v) + tổng số lần
+    var bonusMap = {}, violMap = {};
+    list.filter(function(e) { return String(e.studentId) === String(st.id); }).forEach(function(e) {
+      if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+      var text = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "");
+      text = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || text;
+      text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+/g, "").trim();
+      // bỏ prefix "Thứ x." nếu muốn gộp cùng nội dung
+      var key = text.toLowerCase().replace(/^thứ\s*\d+[,.\s]*/i, "").replace(/\s+/g, " ").trim();
+      if (!key) return;
+      var times = Number(e.times) || 1;
+      if (e.type === "bonus") {
+        if (!bonusMap[key]) bonusMap[key] = { text: text, times: 0 };
+        bonusMap[key].times += times;
+      } else if (e.type === "violation") {
+        if (!violMap[key]) violMap[key] = { text: text, times: 0 };
+        violMap[key].times += times;
+      }
+    });
+    bonusLines = Object.keys(bonusMap).map(function(k) {
+      return bonusMap[k].text + " (" + bonusMap[k].times + " lần)";
+    });
+    violLines = Object.keys(violMap).map(function(k) {
+      return violMap[k].text + " (" + violMap[k].times + " lần)";
     });
   }
   const rk = ctx.scope === "week" ? rankClass(sumScore) : rankClassScaled(sumScore, ctx.nW);
+  // Vị thứ lớp
+  var classPos = "…";
+  if (st) {
+    var allSc = (students || []).map(function(s) {
+      return { id: s.id, score: studentWeekScoreInWeeks(s.id, ctx.weekNos) };
+    }).sort(function(a, b) { return b.score - a.score; });
+    var rr = 0, prevS = null;
+    allSc.forEach(function(x) {
+      if (prevS === null || x.score !== prevS) { rr += 1; prevS = x.score; }
+      if (String(x.id) === String(st.id)) classPos = rr;
+    });
+  }
   const monthTxt = ctx.scope === "month" ? String(ctx.mon) : "…";
-  let html = '<div id="selfAssessSheet" style="font-family:Times New Roman,serif;font-size:12pt;color:#000;padding:12px">';
+  let html = '<div id="selfAssessSheet" class="self-a5" style="font-family:\'Times New Roman\',Times,serif;font-size:11pt;color:#000;padding:10mm 12mm;max-width:148mm;margin:0 auto;background:#fff;box-sizing:border-box;line-height:1.45">';
   html += '<div style="text-align:center;font-weight:bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br/>Độc lập - Tự do - Hạnh phúc<br/>---------------</div>';
-  html += '<div style="text-align:center;margin-top:10px;font-weight:bold">' + (ctx.school || "TRƯỜNG").toUpperCase() + '</div>';
+  var schoolTitle = String(ctx.school || "THPT HÀ HUY TẬP").toUpperCase();
+  if (schoolTitle.indexOf("TRƯỜNG") !== 0) schoolTitle = "TRƯỜNG " + schoolTitle;
+  html += '<div style="text-align:center;margin-top:10px;font-weight:bold">' + schoolTitle + '</div>';
   html += '<div style="text-align:center;font-weight:bold;margin-top:8px">BẢN TỰ NHẬN XÉT CÁ NHÂN LỚP ' + (ctx.cls || "") + '</div>';
   html += '<div style="text-align:center;font-weight:bold">' + ctx.periodLabel + '</div>';
   html += '<p style="margin-top:12px"><b>Kính gửi:</b> <i>BGH nhà trường, GV chủ nhiệm lớp</i> <b>' + (ctx.cls || "") + '</b></p>';
@@ -8148,7 +8568,9 @@ function fillSelfAssessment() {
   html += violLines.length ? violLines.map(l => "• " + l).join("<br/>") : ".....................................................................................................................................";
   html += '</p>';
   html += '<p><b>3. Em tự nhận xét về kết quả xếp loại rèn luyện, học tập của ' + (ctx.scope === "month" ? ("tháng " + monthTxt) : "học kỳ") + ' :</b></p>';
-  html += '<ul><li><b>TỔNG ĐIỂM ' + (ctx.scope === "month" ? "THÁNG" : "HỌC KỲ") + ' : ' + (st ? sumScore : "……………….") + '</b></li>';
+  html += '<ul style="list-style:none;padding-left:0">';
+  html += '<li><b>TỔNG ĐIỂM ' + (ctx.scope === "month" ? "THÁNG" : "HỌC KỲ") + ' : ' + (st ? sumScore : "……………….") + '</b></li>';
+  html += '<li><b>Vị thứ trong lớp : ' + (st ? classPos : "…………………") + '</b></li>';
   html += '<li><b>Rèn luyện XẾP LOẠI : ' + (st ? rk.label : "…………………") + '</b></li></ul>';
   html += '<p><b>4. Ý kiến cá nhân HS và mục tiêu học tập cho ' + (ctx.scope === "month" ? "tháng kế tiếp" : "học kỳ kế tiếp") + ' :</b></p>';
   html += '<p>.....................................................................................................................................</p>';
