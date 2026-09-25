@@ -193,11 +193,16 @@ button, input, select, textarea { font-family: inherit; }
   display: flex; border: 1.5px solid #7eb6e8; border-radius: 10px; overflow: hidden; background: #fff;
 }
 .desk-cell {
-  flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center;
-  text-align: center; padding: 4px 2px; font-weight: 700; font-size: 11px; text-transform: uppercase;
-  line-height: 1.15; border-right: 1px solid #bfdbfe; word-break: break-word; color: #1e293b;
-  cursor: grab; position: relative; user-select: none;
+  flex: 1; min-width: 0; text-align: center; padding: 3px 2px;
+  font-size: 11px; font-weight: 700; color: #1e3a5f; line-height: 1.2;
+  border-right: 1px solid #bfdbfe; position: relative; cursor: grab;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  min-height: 42px; word-break: break-word;
 }
+.desk-cell .stt-line { font-size: 10px; font-weight: 800; color: #1e40af; line-height: 1.1; }
+.desk-cell .name-line { font-size: 10px; font-weight: 700; color: #1e3a5f; line-height: 1.15; text-transform: uppercase; }
+.desk-cell.small .name-line { font-size: 9px; }
+.desk-cell.tiny .name-line { font-size: 8px; }
 .desk-cell:last-child { border-right: 0; }
 .desk-cell.empty { color: #cbd5e1; font-weight: 500; cursor: default; }
 .desk-cell.locked { background: #fef3c7; }
@@ -450,6 +455,13 @@ body.present .sheet { transform: scale(1.05); }
     <!-- Xếp chỗ -->
     <div class="tab-panel" id="tabSeat">
       <div class="card">
+        <div class="card-hd">Thêm từng học sinh</div>
+        <div class="card-bd">
+          <div class="field"><input id="oneName" placeholder="Họ và tên rồi Enter"></div>
+          <button class="btn btn-success btn-sm" onclick="addOneStudent()">Thêm & xếp chỗ trống</button>
+        </div>
+      </div>
+      <div class="card">
         <div class="card-hd">Chế độ xếp chỗ</div>
         <div class="card-bd">
           <div class="field" style="margin-bottom:10px">
@@ -479,10 +491,17 @@ body.present .sheet { transform: scale(1.05); }
         </div>
       </div>
       <div class="card">
-        <div class="card-hd">Thêm từng học sinh</div>
+        <div class="card-hd">Tải sơ đồ đã có sẵn</div>
         <div class="card-bd">
-          <div class="field"><input id="oneName" placeholder="Họ và tên rồi Enter"></div>
-          <button class="btn btn-success btn-sm" onclick="addOneStudent()">Thêm & xếp chỗ trống</button>
+          <div class="field">
+            <label>Upload sơ đồ từ máy (JSON sao lưu CLASSROOM hoặc Excel có cột Số chỗ)</label>
+            <input type="file" id="seatPlanFile" accept=".json,.xlsx,.xls,.csv">
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadSeatPlanExcelTemplate()">Tải mẫu Excel sơ đồ (.xlsx)</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="downloadSeatPlanDocxTemplate()">Tải mẫu Word sơ đồ (.docx)</button>
+          </div>
+          <div class="hint">Mẫu Word/Excel: điền <b>STT + Họ và tên + Số chỗ</b>. Upload file <b>Excel</b> (hoặc JSON) vào ô trên. Word dùng để in/điền; chuyển bảng trang 2 sang Excel rồi tải lên.</div>
         </div>
       </div>
     </div>
@@ -537,23 +556,30 @@ body.present .sheet { transform: scale(1.05); }
     <div class="bottom-section">
       <div class="bottom-tabs">
         <button class="tab active" data-btab="btGroups">Nhóm</button>
-        <button class="tab" data-btab="btCommittee">Nhiệm vụ lớp</button>
+        <button class="tab" data-btab="btCommittee">Xếp lại chỗ ngồi</button>
       </div>
       <div id="btGroups" class="bt-panel">
         <div class="card">
-          <div class="card-hd">
-            <span>Phân công vai trò nhóm (4 tổ theo vị trí ngồi)</span>
-          </div>
+          <div class="card-hd"><span>Ban cán sự &amp; tổ chức lớp</span></div>
           <div class="card-bd">
-            <div class="disclaimer">Kết quả mang tính hỗ trợ. Giáo viên quyết định cuối cùng. Có thể chỉnh sửa sau khi tạo phương án.</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px">
-              <button class="btn btn-primary btn-sm" onclick="randomizeToRoles()">CHỌN TỔ TRƯỞNG / TỔ PHÓ</button>
-              <button class="btn btn-secondary btn-sm" onclick="reshuffleWithinGroups()">XẾP LẠI TỔ</button>
+            <div class="disclaimer">Phương án hỗ trợ theo tiêu chí. Giáo viên quyết định cuối cùng.</div>
+            <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
+              <button class="btn btn-primary" style="width:100%" onclick="pickClassLeader()">CHỌN LỚP TRƯỞNG (60 giây)</button>
+              <div class="hint">Tiêu chí: học lực · không vi phạm · năng động / ưu điểm (theo dữ liệu GV nhập).</div>
+              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Lớp phó học tập')">CHỌN LỚP PHÓ HỌC TẬP (60 giây · Giỏi · không vi phạm)</button>
+              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Bí thư Đoàn')">CHỌN BÍ THƯ ĐOÀN (60 giây · Giỏi · không vi phạm)</button>
+              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Phó bí thư Đoàn')">CHỌN PHÓ BÍ THƯ ĐOÀN (60 giây · Giỏi · không vi phạm)</button>
+              <div id="classLeaderArea" style="margin:6px 0"></div>
+              <hr style="border:0;border-top:1px solid var(--border);margin:4px 0">
+              <button class="btn btn-primary" style="width:100%" onclick="pickToRolesSequential()">CHỌN TỔ TRƯỞNG / TỔ PHÓ (từng tổ · 60 giây/tổ)</button>
+              <div class="hint">Lần lượt Tổ 1 → 2 → 3 → 4. Mỗi tổ: 1 Tổ trưởng + 2 Tổ phó theo học lực.</div>
             </div>
-            <div class="hint" style="margin-bottom:8px">Thời gian đếm ngược = sĩ số lớp (vd: 48 HS → 48 giây). Xếp lại tổ: đảo chỗ trong cùng tổ; chỗ đã khóa giữ nguyên.</div>
-            <div id="toResultArea"></div>
+            <div class="card-hd" style="padding-left:0;margin-bottom:8px">Cây sơ đồ tổ chức lớp</div>
+            <div id="orgChartArea" class="org-chart-wrap"></div>
+            <div id="toResultArea" style="margin-top:12px"></div>
             <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-secondary btn-sm" onclick="exportImageOf('toResultSheet','to')">Xuất JPG nhóm</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportImageOf('orgChartSheet','to_chuc')">Xuất JPG tổ chức</button>
+              <button class="btn btn-secondary btn-sm" onclick="exportImageOf('toResultSheet','to')">Xuất JPG tổ</button>
               <button class="btn btn-secondary btn-sm" onclick="exportExcelTo()">Xuất Excel nhóm</button>
             </div>
           </div>
@@ -561,17 +587,16 @@ body.present .sheet { transform: scale(1.05); }
       </div>
       <div id="btCommittee" class="bt-panel" style="display:none">
         <div class="card">
-          <div class="card-hd">
-            <span>Hỗ trợ phân công nhiệm vụ lớp</span>
-            <button class="btn btn-primary btn-sm" onclick="randomizeCommittee()">CHỌN NHIỆM VỤ LỚP</button>
-          </div>
+          <div class="card-hd"><span>Xếp lại chỗ ngồi</span></div>
           <div class="card-bd">
-            <div class="disclaimer">Kết quả chỉ là phương án hỗ trợ. Giáo viên quyết định và có thể điều chỉnh.</div>
-            <div id="committeeResultArea"></div>
-            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap">
-              <button class="btn btn-secondary btn-sm" onclick="exportImageOf('committeeSheet','ban_can_su')">Xuất JPG</button>
-              <button class="btn btn-secondary btn-sm" onclick="exportExcelCommittee()">Xuất Excel</button>
+            <div class="disclaimer">Đảo vị trí trong từng tổ hoặc toàn lớp. Chỗ đã khóa giữ nguyên.</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-primary" style="width:100%" onclick="reshuffleWithinGroups()">XẾP LẠI TRONG TỪNG TỔ</button>
+              <div class="hint">Đếm theo sĩ số lớp · xoay tên · đảo chỗ trong cùng tổ (Tổ 1–4).</div>
+              <button class="btn btn-secondary" style="width:100%" onclick="shuffleAll()">XÁO TRỘN TOÀN LỚP (giữ chỗ đã khóa)</button>
+              <div class="hint">Xáo ngẫu nhiên tất cả chỗ chưa khóa.</div>
             </div>
+            <div id="committeeResultArea" style="display:none"></div>
           </div>
         </div>
       </div>
@@ -1158,6 +1183,13 @@ async function assignBulk() {
 /* =========================
    RENDER PLAN (KEEP name)
 ========================= */
+function shortNameLastTwo(fullName) {
+  if (!fullName) return "";
+  const parts = String(fullName).trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "";
+  if (parts.length === 1) return parts[0].toUpperCase();
+  return (parts[parts.length - 2] + " " + parts[parts.length - 1]).toUpperCase();
+}
 function deskCellHTML(idx) {
   if (idx >= appState.classroom.seatCount) return '<div class="desk-cell empty"></div>';
   const id = appState.seats[idx];
@@ -1166,11 +1198,18 @@ function deskCellHTML(idx) {
   let cls = "desk-cell" + (name ? "" : " empty");
   if (st && st.locked) cls += " locked";
   if (st && isPriorityStudent(st)) cls += " priority";
-  if (name && name.length > 16) cls += " tiny";
-  else if (name && name.length > 10) cls += " small";
-  return '<div class="' + cls + '" draggable="' + (name ? "true" : "false") + '" data-seat="' + idx + '" title="' +
-    (st && isPriorityStudent(st) ? "Đối tượng ưu tiên: " + escapeHTML(st.doiTuong || "") : "") + '">' +
-    (name ? escapeHTML(name) : "") + "</div>";
+  const shortN = shortNameLastTwo(name);
+  if (shortN && shortN.length > 14) cls += " tiny";
+  else if (shortN && shortN.length > 10) cls += " small";
+  const stt = st && st.stt != null ? st.stt : "";
+  const title = name ? (escapeHTML(name) + (st && isPriorityStudent(st) ? " · Ưu tiên: " + escapeHTML(st.doiTuong || "") : "")) : "";
+  let inner = "";
+  if (name) {
+    inner = '<span class="stt-line">' + escapeHTML(String(stt !== "" ? stt : (idx + 1))) + '</span>' +
+      '<span class="name-line">' + escapeHTML(shortN) + '</span>';
+  }
+  return '<div class="' + cls + '" draggable="' + (name ? "true" : "false") + '" data-seat="' + idx + '" title="' + title + '">' +
+    inner + "</div>";
 }
 function deskRowHTML(indices) {
   return '<div class="desk-row">' + indices.map(deskCellHTML).join("") + "</div>";
@@ -1537,9 +1576,445 @@ async function reshuffleWithinGroups() {
   toast("Đã xếp lại trong 4 tổ.");
 }
 
-async function randomizeToRoles() {
+
+/* =========================
+   UPLOAD SƠ ĐỒ ĐÃ CÓ
+========================= */
+
+function downloadSeatPlanExcelTemplate() {
+  if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong."); return; }
+  const school = (document.getElementById("school") && document.getElementById("school").value.trim()) || "TRƯỜNG THPT";
+  const year = (document.getElementById("schoolYear") && document.getElementById("schoolYear").value.trim()) || "2026 – 2027";
+  const cls = (document.getElementById("className") && document.getElementById("className").value.trim()) || "";
+  const header = ["STT", "Họ và tên", "Số chỗ", "Giới tính", "Học lực", "Đối tượng", "Ghi chú"];
+  const rows = [
+    [school],
+    ["Năm học: " + year],
+    ["SƠ ĐỒ LỚP — " + (cls || "……………")],
+    [],
+    header
+  ];
+  const n = appState.classroom.seatCount || 48;
+  for (let i = 1; i <= n; i++) {
+    rows.push([i, "", i, "", "", "", ""]);
+  }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = [{ wch: 6 }, { wch: 24 }, { wch: 10 }, { wch: 10 }, { wch: 10 }, { wch: 14 }, { wch: 24 }];
+  // Merge title rows for display
+  ws["!merges"] = [
+    { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 6 } },
+    { s: { r: 2, c: 0 }, e: { r: 2, c: 6 } }
+  ];
+  const guide = [
+    ["HƯỚNG DẪN — MẪU SƠ ĐỒ LỚP CLASSROOM"],
+    [""],
+    ["Tiêu đề file: TRƯỜNG THPT · Năm học · SƠ ĐỒ LỚP —"],
+    ["1. Điền Họ và tên theo STT."],
+    ["2. Cột «Số chỗ» = vị trí trên sơ đồ (1 = góc trên trái dãy trái; tăng theo hàng)."],
+    ["3. Trên sơ đồ CLASSROOM mỗi ô hiển thị: dòng 1 = STT, dòng 2 = 2 chữ cuối họ tên (vd: NGUYỄN QUANG MINH → QUANG MINH)."],
+    ["4. Đối tượng: ghi «Khuyết tật» nếu ưu tiên đầu bàn Tổ 1 hoặc Tổ 3 (gần bàn GV)."],
+    ["5. Học lực: Giỏi / Khá / TB / Yếu — dùng khi chọn Lớp trưởng, Tổ trưởng theo tiêu chí."],
+    ["6. Lưu file .xlsx → trong CLASSROOM chọn «Tải sơ đồ đã có sẵn» (cuối tab Xếp chỗ)."],
+    [""],
+    ["© WEBH2T · CLASSROOM"]
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(guide);
+  ws2["!cols"] = [{ wch: 90 }];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "So do cho");
+  XLSX.utils.book_append_sheet(wb, ws2, "Huong dan");
+  XLSX.writeFile(wb, "Mau_So_do_lop_CLASSROOM.xlsx");
+  toast("Đã tải mẫu Excel sơ đồ.");
+}
+async function downloadSeatPlanDocxTemplate() {
+  if (typeof docx === "undefined") { toast("Thư viện Word chưa tải xong."); return; }
+  const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, WidthType, AlignmentType, BorderStyle, VerticalAlign, ShadingType, PageBreak } = docx;
+  const thin = { style: BorderStyle.SINGLE, size: 4, color: "3B82F6" };
+  const none = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+  const cb = { top: thin, bottom: thin, left: thin, right: thin };
+  const sb = { top: none, bottom: none, left: none, right: none };
+  const seatCount = appState.classroom.seatCount || 48;
+  const COLS = 8;
+  const totalRows = Math.ceil(seatCount / COLS);
+  const mid = Math.floor((totalRows - 1) / 2);
+  const gridRows = [];
+  for (let r = 0; r < totalRows; r++) {
+    const cells = [];
+    for (let c = 0; c < 4; c++) {
+      const idx = r * COLS + c;
+      const label = idx < seatCount ? ("Chỗ " + (idx + 1) + "\\n………") : "";
+      cells.push(new TableCell({
+        width: { size: 11, type: WidthType.PERCENTAGE }, borders: cb, verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label.replace("\\n", " — "), bold: true, size: 14 })] })]
+      }));
+    }
+    cells.push(new TableCell({
+      width: { size: 8, type: WidthType.PERCENTAGE }, borders: sb, verticalAlign: VerticalAlign.CENTER,
+      shading: { fill: "DDE6F3", type: ShadingType.CLEAR, color: "auto" },
+      children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: r === mid ? "LỐI ĐI" : "", italics: true, size: 12, color: "5B7AA8" })] })]
+    }));
+    for (let c = 4; c < 8; c++) {
+      const idx = r * COLS + c;
+      const label = idx < seatCount ? ("Chỗ " + (idx + 1) + " — ………") : "";
+      cells.push(new TableCell({
+        width: { size: 11, type: WidthType.PERCENTAGE }, borders: cb, verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label, bold: true, size: 14 })] })]
+      }));
+    }
+    gridRows.push(new TableRow({ children: cells }));
+  }
+  const grid = new Table({ rows: gridRows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  // Data table
+  const headerBorder = { style: BorderStyle.SINGLE, size: 4, color: "1E3A5F" };
+  const hb = { top: headerBorder, bottom: headerBorder, left: headerBorder, right: headerBorder };
+  const dataRows = [
+    new TableRow({
+      children: ["STT", "Họ và tên", "Số chỗ", "Giới tính", "Học lực", "Đối tượng"].map(h =>
+        new TableCell({
+          borders: hb, shading: { fill: "1E3A5F", type: ShadingType.CLEAR, color: "auto" },
+          children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: h, bold: true, size: 18, color: "FFFFFF" })] })]
+        })
+      )
+    })
+  ];
+  for (let i = 1; i <= Math.min(seatCount, 48); i++) {
+    dataRows.push(new TableRow({
+      children: [String(i), "", String(i), "", "", ""].map((val, ci) =>
+        new TableCell({
+          borders: cb,
+          children: [new Paragraph({
+            alignment: ci === 1 ? AlignmentType.LEFT : AlignmentType.CENTER,
+            children: [new TextRun({ text: val, size: 18, color: ci === 2 ? "94A3B8" : "000000" })]
+          })]
+        })
+      )
+    }));
+  }
+  const dataTable = new Table({ rows: dataRows, width: { size: 100, type: WidthType.PERCENTAGE } });
+  const className = (document.getElementById("className") && document.getElementById("className").value.trim()) || "……………";
+  const school = (document.getElementById("school") && document.getElementById("school").value.trim()) || "……………………………";
+  const year = (document.getElementById("schoolYear") && document.getElementById("schoolYear").value.trim()) || "2026 – 2027";
+  const gvcn = (document.getElementById("teacherName") && document.getElementById("teacherName").value.trim()) || "……………………………";
+  const doc = new Document({
+    sections: [{
+      children: [
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "TRƯỜNG: " + school, bold: true, size: 24 })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "SƠ ĐỒ LỚP — " + className, bold: true, size: 32, color: "C0392B" })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Năm học: " + year + "  |  GVCN: " + gvcn, size: 20 })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Mẫu điền tên HS + số thứ tự (STT) · Upload Excel cùng cấu trúc lên CLASSROOM", italics: true, size: 16, color: "64748B" })] }),
+        new Paragraph({ text: "" }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "SƠ ĐỒ CHỖ NGỒI (tham chiếu số chỗ)", bold: true, size: 22, color: "1E3A5F" })] }),
+        new Paragraph({ text: "" }),
+        grid,
+        new Paragraph({ text: "" }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "LỐI VÀO  —  BẢNG ĐEN  —  BÀN GIÁO VIÊN", bold: true, size: 18 })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Tổ 1 & 3 gần bàn GV (hàng dưới) | Tổ 2 & 4 hàng trên", size: 16, color: "64748B" })] }),
+        new Paragraph({ children: [new PageBreak()] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "BẢNG ĐIỀN LIỆU ĐỂ UPLOAD", bold: true, size: 28, color: "1E3A5F" })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "Điền Họ và tên; cột Số chỗ = vị trí trên sơ đồ. Chuyển bảng sang Excel (.xlsx) rồi tải lên CLASSROOM.", size: 18, color: "64748B" })] }),
+        new Paragraph({ text: "" }),
+        dataTable,
+        new Paragraph({ text: "" }),
+        new Paragraph({ children: [new TextRun({ text: "Hướng dẫn: (1) Điền tên theo STT (2) Sửa Số chỗ nếu cần (3) Copy sang Excel hoặc dùng mẫu .xlsx (4) Upload trong tab Xếp chỗ → Tải sơ đồ đã có sẵn.", size: 16 })] }),
+        new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: "© WEBH2T · CLASSROOM — Sơ đồ lớp học thông minh", size: 14, color: "888888" })] })
+      ]
+    }]
+  });
+  const blob = await Packer.toBlob(doc);
+  const a = document.createElement("a");
+  a.download = "Mau_So_do_lop_" + currentClassSlug() + ".docx";
+  a.href = URL.createObjectURL(blob);
+  a.click();
+  URL.revokeObjectURL(a.href);
+  toast("Đã tải mẫu Word sơ đồ lớp.");
+}
+
+function handleSeatPlanUpload(file) {
+
+  if (!file) return;
+  const name = (file.name || "").toLowerCase();
+  if (name.endsWith(".json")) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        pushHistory();
+        if (d.students && d.seats) {
+          appState.classroom = Object.assign(appState.classroom, d.classroom || {});
+          appState.students = d.students;
+          appState.seats = d.seats;
+          ensureSeatsSize();
+          // sync seatId
+          appState.students.forEach(s => { s.seatId = null; });
+          appState.seats.forEach((id, i) => {
+            const st = getStudent(id);
+            if (st) st.seatId = i;
+          });
+          lastToRoleResult = d.groups || null;
+          lastCommitteeResult = d.committee || null;
+          logoDataUrl = appState.classroom.logoDataUrl || logoDataUrl;
+          syncStateToForm();
+          renderAll();
+          toast("Đã tải sơ đồ JSON (" + appState.students.length + " HS).");
+        } else if (Array.isArray(d.seats)) {
+          const m = migrateLegacyData(d);
+          appState.classroom = m.classroom;
+          appState.students = m.students;
+          appState.seats = m.seats;
+          syncStateToForm();
+          renderAll();
+          toast("Đã tải sơ đồ (định dạng cũ).");
+        } else {
+          toast("File JSON không đúng định dạng sơ đồ CLASSROOM.");
+        }
+      } catch (e) {
+        toast("Không đọc được file JSON.");
+      }
+    };
+    reader.readAsText(file);
+    return;
+  }
+  // Excel / CSV
+  if (typeof XLSX === "undefined") { toast("Thư viện Excel chưa tải xong."); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1 });
+      if (!rows.length) { toast("File trống."); return; }
+      // Tìm dòng tiêu đề cột (STT / Họ tên) — bỏ qua dòng TRƯỜNG / Năm học / SƠ ĐỒ LỚP
+      let start = 0;
+      for (let ri = 0; ri < Math.min(rows.length, 12); ri++) {
+        const hscan = (rows[ri] || []).map(x => String(x || "").toLowerCase());
+        if (hscan.some(x => x.includes("tên") || x.includes("họ") || x === "stt") &&
+            hscan.some(x => x.includes("chỗ") || x.includes("bàn") || x.includes("stt") || x.includes("tên") || x.includes("họ"))) {
+          start = ri + 1;
+          break;
+        }
+      }
+      const h = (rows[start > 0 ? start - 1 : 0] || []).map(x => String(x || "").toLowerCase());
+      if (start === 0 && h.some(x => x.includes("tên") || x.includes("name") || x.includes("họ") || x.includes("chỗ") || x.includes("bàn"))) start = 1;
+      const idxName = start === 1 ? h.findIndex(x => x.includes("tên") || x.includes("name") || x.includes("họ")) : 1;
+      const idxSeat = start === 1 ? h.findIndex(x => x.includes("chỗ") || x.includes("bàn") || x.includes("seat") || x.includes("vị trí") || x.includes("vi tri")) : -1;
+      const idxG = start === 1 ? h.findIndex(x => x.includes("giới") || x.includes("gender")) : -1;
+      const idxL = start === 1 ? h.findIndex(x => x.includes("học lực") || x.includes("lực")) : -1;
+      const idxD = start === 1 ? h.findIndex(x => x.includes("đối tượng") || x.includes("khuyết") || x.includes("ưu tiên")) : -1;
+      const idxStt = start === 1 ? h.findIndex(x => x === "stt" || x.includes("stt") || x.includes("thứ tự")) : 0;
+      const parsed = [];
+      for (let i = start; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || !row.length) continue;
+        let name = "", seatNum = null, gender = "", level = "", doiTuong = "", sttVal = i - start + 1;
+        if (start === 1) {
+          name = String(row[idxName >= 0 ? idxName : 1] || row[0] || "").trim();
+          if (idxSeat >= 0 && row[idxSeat] != null && String(row[idxSeat]).trim() !== "") {
+            const n = parseInt(String(row[idxSeat]).replace(/\D/g, ""), 10);
+            if (!isNaN(n)) seatNum = n;
+          }
+          if (idxG >= 0) gender = String(row[idxG] || "").trim();
+          if (idxL >= 0) level = String(row[idxL] || "").trim();
+          if (idxD >= 0) doiTuong = String(row[idxD] || "").trim();
+          if (idxStt >= 0 && row[idxStt] != null) {
+            const n = parseInt(String(row[idxStt]), 10);
+            if (!isNaN(n)) sttVal = n;
+          }
+        } else {
+          name = String(row[1] != null ? row[1] : row[0] || "").trim();
+          if (row[2] != null && !isNaN(parseInt(String(row[2]), 10))) seatNum = parseInt(String(row[2]), 10);
+        }
+        if (name && !/^\d+$/.test(name)) parsed.push({ name, seatNum, gender, level, doiTuong, stt: sttVal });
+      }
+      if (!parsed.length) { toast("Không tìm thấy dữ liệu học sinh."); return; }
+      const hasSeats = parsed.some(p => p.seatNum != null);
+      showConfirm(
+        "Tải sơ đồ từ Excel",
+        "Tìm thấy <b>" + parsed.length + "</b> học sinh" + (hasSeats ? " (có số chỗ)." : ".") + " Ghi đè danh sách & sơ đồ hiện tại?",
+        () => {
+          pushHistory();
+          appState.students = [];
+          appState.seats = new Array(appState.classroom.seatCount).fill(null);
+          parsed.forEach(p => {
+            const st = addStudentRecord(p.name, p.gender, p.level, "", p.doiTuong, p.stt);
+            if (st && p.seatNum != null) {
+              const idx = p.seatNum - 1;
+              if (idx >= 0 && idx < appState.classroom.seatCount && !appState.seats[idx]) {
+                appState.seats[idx] = st.id;
+                st.seatId = idx;
+              }
+            }
+          });
+          // Unseated: leave null or optional random fill — leave as is
+          renderAll();
+          toast("Đã tải " + parsed.length + " HS" + (hasSeats ? " kèm vị trí chỗ." : "."));
+        }
+      );
+    } catch (err) {
+      toast("Lỗi đọc file sơ đồ.");
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+/* =========================
+   CHỌN LỚP TRƯỞNG (60s)
+========================= */
+let lastClassLeader = null;
+function scoreLeaderCandidate(st) {
+  // Năng lực học tập + ưu điểm trong ghi chú (năng động, ưu điểm, không vi phạm)
+  let sc = levelScore(st.academicLevel) * 10;
+  const note = ((st.note || "") + " " + (st.doiTuong || "")).toLowerCase();
+  if (note.includes("năng động") || note.includes("nang dong")) sc += 5;
+  if (note.includes("ưu điểm") || note.includes("uu diem")) sc += 4;
+  if (note.includes("không vi phạm") || note.includes("khong vi pham") || note.includes("nề nếp") || note.includes("ne nep")) sc += 4;
+  if (note.includes("vi phạm") || note.includes("vi pham")) sc -= 8;
+  // Sinh trắc học: không có dữ liệu thật — không tự suy đoán; chỉ dùng dữ liệu GV nhập
+  return sc;
+}
+function weightedPickLeader(pool) {
+  if (!pool.length) return null;
+  const weights = pool.map(st => Math.max(1, scoreLeaderCandidate(st)));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < pool.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return pool[i];
+  }
+  return pool[pool.length - 1];
+}
+async function pickClassLeader() {
+  const pool = appState.students.filter(s => s.seatId != null);
+  if (pool.length < 1) { toast("Cần có học sinh đã xếp chỗ trên sơ đồ."); return; }
+  const names = pool.map(s => s.name);
+  await runCountdown({
+    seconds: 60,
+    title: "CHỌN LỚP TRƯỞNG",
+    subtitle: "Tiêu chí hỗ trợ: học lực · không vi phạm · năng động / ưu điểm (theo dữ liệu GV nhập)",
+    names: names
+  });
+  const picked = weightedPickLeader(pool);
+  lastClassLeader = picked ? picked.name : null;
+  const el = document.getElementById("classLeaderArea");
+  if (el) {
+    el.innerHTML =
+      '<div class="to-card" style="border-color:var(--primary)">' +
+      '<h3>Lớp trưởng (phương án hỗ trợ)</h3>' +
+      '<div class="to-role" style="font-size:15px;font-weight:800">' + escapeHTML(lastClassLeader || "—") + "</div>" +
+      '<div class="hint" style="margin-top:6px">Giáo viên có thể chỉ định lại. Không dùng sinh trắc học tự động.</div></div>';
+  }
+  // Sync into committee if exists
+  if (lastCommitteeResult) {
+    const r = lastCommitteeResult.find(x => x.role === "Lớp trưởng");
+    if (r && lastClassLeader) r.names = [lastClassLeader];
+    renderCommitteeResults(lastCommitteeResult);
+  }
+  if (!window.lastRolePicks) window.lastRolePicks = {};
+  lastRolePicks["Lớp trưởng"] = lastClassLeader;
+  renderOrgChart();
+  toast("Đã chọn phương án Lớp trưởng: " + (lastClassLeader || "—"));
+}
+
+/** Tiêu chí: ưu tiên Học lực Giỏi + không vi phạm (ghi chú) */
+function scoreGioiKhongVipham(st) {
+  if (!st) return 0;
+  let sc = 0;
+  const lv = (st.academicLevel || "").toLowerCase();
+  if (lv === "giỏi" || lv === "gioi") sc += 20;
+  else if (lv === "khá" || lv === "kha") sc += 8;
+  else if (lv === "tb") sc += 2;
+  const note = ((st.note || "") + " " + (st.doiTuong || "")).toLowerCase();
+  if (note.includes("vi phạm") || note.includes("vi pham")) sc -= 25;
+  if (note.includes("không vi phạm") || note.includes("khong vi pham") || note.includes("nề nếp") || note.includes("ne nep")) sc += 8;
+  if (note.includes("năng động") || note.includes("nang dong")) sc += 3;
+  return sc;
+}
+function weightedPickGioi(pool) {
+  if (!pool.length) return null;
+  // Ưu tiên lọc Giỏi trước nếu có
+  const gioi = pool.filter(s => {
+    const lv = (s.academicLevel || "").toLowerCase();
+    return lv === "giỏi" || lv === "gioi";
+  });
+  const use = gioi.length ? gioi : pool;
+  const weights = use.map(st => Math.max(1, scoreGioiKhongVipham(st) + 5));
+  const total = weights.reduce((a, b) => a + b, 0);
+  let r = Math.random() * total;
+  for (let i = 0; i < use.length; i++) {
+    r -= weights[i];
+    if (r <= 0) return use[i];
+  }
+  return use[use.length - 1];
+}
+async function pickRole60(roleName) {
+  if (!window.lastRolePicks) window.lastRolePicks = {};
+  const taken = new Set(Object.values(lastRolePicks).filter(Boolean));
+  const pool = appState.students.filter(s => s.seatId != null && !taken.has(s.name));
+  if (!pool.length) { toast("Cần học sinh đã xếp chỗ (và chưa giữ vai trò khác)."); return; }
+  const names = pool.map(s => s.name);
+  await runCountdown({
+    seconds: 60,
+    title: "CHỌN " + roleName.toUpperCase(),
+    subtitle: "Tiêu chí hỗ trợ: Học lực Giỏi · không vi phạm",
+    names: names
+  });
+  const picked = weightedPickGioi(pool);
+  const nm = picked ? picked.name : null;
+  lastRolePicks[roleName] = nm;
+  // sync class leader area snippet
+  const el = document.getElementById("classLeaderArea");
+  if (el) {
+    const order = ["Lớp trưởng", "Lớp phó học tập", "Bí thư Đoàn", "Phó bí thư Đoàn"];
+    el.innerHTML = order.map(r => {
+      const v = lastRolePicks[r];
+      if (!v && r !== "Lớp trưởng" && r !== roleName) return "";
+      return '<div class="to-card" style="margin-bottom:6px"><h3>' + escapeHTML(r) + '</h3><div class="to-role">' + escapeHTML(v || "—") + "</div></div>";
+    }).join("");
+  }
+  // sync committee partial
+  if (!lastCommitteeResult) {
+    lastCommitteeResult = COMMITTEE_ROLES.map(r => ({ role: r.role, names: [] }));
+  }
+  const slot = lastCommitteeResult.find(x => x.role === roleName);
+  if (slot && nm) slot.names = [nm];
+  if (roleName === "Lớp trưởng") lastClassLeader = nm;
+  renderOrgChart();
+  toast("Đã chọn " + roleName + ": " + (nm || "—"));
+}
+function renderOrgChart() {
+  const el = document.getElementById("orgChartArea");
+  if (!el) return;
+  if (!window.lastRolePicks) window.lastRolePicks = {};
+  const g = role => escapeHTML(lastRolePicks[role] || "—");
+  const groups = lastToRoleResult || appState.groups || {};
+  function toBlock(z) {
+    const r = groups[z];
+    if (!r) return '<div class="org-node org-to"><b>Tổ ' + z + '</b><br>Tổ trưởng: —<br>Tổ phó: —</div>';
+    const pho = (r.pho || []).map(escapeHTML).join(", ") || "—";
+    return '<div class="org-node org-to"><b>Tổ ' + z + '</b><br>Tổ trưởng: ' + escapeHTML(r.truong || "—") + '<br>Tổ phó: ' + pho + "</div>";
+  }
+  el.innerHTML =
+    '<div id="orgChartSheet">' +
+    '<ul class="org-tree">' +
+    '<li><div class="org-node org-root">Lớp trưởng<br><b>' + g("Lớp trưởng") + '</b></div>' +
+    '<ul>' +
+    '<li><div class="org-node">Lớp phó học tập<br><b>' + g("Lớp phó học tập") + '</b></div></li>' +
+    '<li><div class="org-node org-doan">Bí thư Đoàn<br><b>' + g("Bí thư Đoàn") + '</b></div>' +
+    '<ul><li><div class="org-node">Phó bí thư Đoàn<br><b>' + g("Phó bí thư Đoàn") + '</b></div></li></ul></li>' +
+    '<li>' + toBlock(1) + '</li>' +
+    '<li>' + toBlock(2) + '</li>' +
+    '<li>' + toBlock(3) + '</li>' +
+    '<li>' + toBlock(4) + '</li>' +
+    '</ul></li></ul></div>';
+}
+
+/* =========================
+   CHỌN TỔ TRƯỞNG / PHÓ TỪNG TỔ (60s/tổ)
+========================= */
+async function pickToRolesSequential() {
   const filled = appState.seats.filter(Boolean).length;
-  if (!filled) { toast("Hãy xếp chỗ trước khi phân nhóm."); return; }
+  if (!filled) { toast("Hãy xếp chỗ (hoặc tải sơ đồ) trước."); return; }
   const zones = { 1: [], 2: [], 3: [], 4: [] };
   for (let i = 0; i < appState.classroom.seatCount; i++) {
     const name = studentNameAtSeat(i);
@@ -1548,32 +2023,53 @@ async function randomizeToRoles() {
   const result = { 1: null, 2: null, 3: null, 4: null };
   renderToResults(result);
   const insufficient = [];
-  const allNames = appState.students.map(s => s.name);
-  const secs = durationByClassSize();
-  await runCountdown({
-    seconds: secs,
-    title: "CHỌN TỔ TRƯỞNG / TỔ PHÓ",
-    subtitle: "Sĩ số " + secs + " · đếm " + secs + " giây · ưu tiên học lực cho Tổ trưởng",
-    names: allNames.length ? allNames : ["…"]
-  });
   for (const z of [1, 2, 3, 4]) {
     const members = zones[z];
+    await runCountdown({
+      seconds: 60,
+      title: "CHỌN TỔ TRƯỞNG / TỔ PHÓ — TỔ " + z,
+      subtitle: members.length + " học sinh trong tổ · ưu tiên năng lực học tập",
+      names: members.length ? members : ["(chưa có thành viên)"]
+    });
     if (members.length < 3) {
       insufficient.push(z);
       result[z] = { truong: null, pho: [], members };
     } else {
-      const truong = weightedPickByAcademic(members, true) || members[0];
+      const memberStudents = members.map(n => appState.students.find(s => s.name === n)).filter(Boolean);
+      const truongSt = weightedPickLeader(memberStudents.length ? memberStudents : members.map(n => ({ name: n, academicLevel: "", note: "" })));
+      const truong = truongSt ? (truongSt.name || truongSt) : members[0];
       const rest = members.filter(m => m !== truong);
-      shuffleArray(rest);
-      result[z] = { truong: truong, pho: rest.slice(0, 2), members };
+      // Phó: still prefer academic among rest
+      const restSt = rest.map(n => appState.students.find(s => s.name === n)).filter(Boolean);
+      const pho = [];
+      let poolRest = restSt.length ? restSt.slice() : rest.map(n => ({ name: n, academicLevel: "", note: "" }));
+      for (let k = 0; k < 2 && poolRest.length; k++) {
+        const p = weightedPickLeader(poolRest);
+        const pn = p.name || p;
+        pho.push(pn);
+        poolRest = poolRest.filter(x => (x.name || x) !== pn);
+      }
+      while (pho.length < 2 && rest.length) {
+        const leftover = rest.filter(m => !pho.includes(m));
+        if (!leftover.length) break;
+        pho.push(leftover[0]);
+      }
+      result[z] = { truong: truong, pho: pho.slice(0, 2), members };
     }
     renderToResults(result);
   }
   lastToRoleResult = result;
   appState.groups = result;
   if (insufficient.length) toast("Tổ " + insufficient.join(", ") + " chưa đủ 3 học sinh.");
-  else toast("Đã chọn Tổ trưởng / Tổ phó (nón kỳ diệu · học lực).");
+  else toast("Đã chọn Tổ trưởng / Tổ phó cho 4 tổ (60 giây/tổ).");
+  renderOrgChart();
 }
+
+async function randomizeToRoles() {
+  // Giữ API cũ — chuyển sang chọn tuần tự 60s/tổ
+  return pickToRolesSequential();
+}
+
 function renderToResults(result) {
   let html = '<div class="grid4" id="toResultSheet">';
   [1, 2, 3, 4].forEach(z => {
@@ -2302,6 +2798,14 @@ document.addEventListener("DOMContentLoaded", () => {
   ["school", "className", "schoolYear", "teacherName", "effectiveDate"].forEach(id => {
     document.getElementById(id).addEventListener("input", () => { syncFormToState(); renderPlan(); renderStats(); });
   });
+  const seatPlanInput = document.getElementById("seatPlanFile");
+  if (seatPlanInput) {
+    seatPlanInput.addEventListener("change", e => {
+      const f = e.target.files && e.target.files[0];
+      if (f) handleSeatPlanUpload(f);
+      e.target.value = "";
+    });
+  }
   document.getElementById("logoFile").addEventListener("change", e => {
     const file = e.target.files && e.target.files[0];
     if (!file || !file.type.startsWith("image/")) return;
@@ -2335,6 +2839,13 @@ window.resetAll = resetAll;
 window.downloadJPG = downloadJPG;
 window.downloadDOCX = downloadDOCX;
 window.randomizeToRoles = randomizeToRoles;
+window.pickClassLeader = pickClassLeader;
+window.pickRole60 = pickRole60;
+window.renderOrgChart = renderOrgChart;
+window.pickToRolesSequential = pickToRolesSequential;
+window.handleSeatPlanUpload = handleSeatPlanUpload;
+window.downloadSeatPlanExcelTemplate = downloadSeatPlanExcelTemplate;
+window.downloadSeatPlanDocxTemplate = downloadSeatPlanDocxTemplate;
 window.randomizeCommittee = randomizeCommittee;
 window.exportExcelTo = exportExcelTo;
 window.exportExcelCommittee = exportExcelCommittee;
