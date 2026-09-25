@@ -2287,11 +2287,11 @@ const MONTH_WEEKS = {
   9: ["1","2","3","4"],
   10: ["5","6","7","8"],
   11: ["9","10","11","12"],
-  12: ["13","14","15","16"],
-  1: ["19","20","21"],
-  2: ["22","23"],
-  3: ["24","25","26","27"],
-  4: ["28","29","30","31","32"]
+  12: ["13","14","15","16","17"],
+  1: ["19","20"],
+  2: ["21","22","23"],
+  3: ["24","25","26","27","28"],
+  4: ["29","30","31","32","33"]
 };
 function weeksForMonth(m) {
   return MONTH_WEEKS[+m] || [];
@@ -7440,10 +7440,11 @@ async function ocrFinanceImage(ev) {
 }
 
 
-/** 6 công việc trực nhật */
+/** 7 công việc trực nhật (hàng 3 = Quét cầu thang) */
 var DUTY_TASKS = [
   "Quét lớp",
   "Quét hành lang",
+  "Quét cầu thang",
   "Đổ rác đầu và cuối buổi",
   "Lau bảng và giặt khăn",
   "Đóng cửa sổ, khóa cửa chính, tắt điện quạt",
@@ -7585,6 +7586,8 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
 
   var allDays = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
   function maxPerDay(taskIndex) { return taskIndex < 2 ? 2 : 1; }
+  // Việc cuối (5–6 trong danh sách cũ; index 5–6 với 7 việc) ưu tiên nam
+  function preferMaleIdx(taskIndex) { return taskIndex >= DUTY_TASKS.length - 2; }
 
   // Gán tối đa 2 việc khác nhau cho mỗi HS
   var taskOwners = {};
@@ -7603,10 +7606,6 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
     var owned = ownedTasks(stu.id);
     if (owned.indexOf(task) >= 0) return true;
     if (owned.length >= 2) return false;
-    // Việc 5–6 ưu tiên nam (không bắt buộc nếu không đủ nam)
-    if (taskIdx >= 4 && stu.gender === "nu") {
-      // vẫn cho phép nếu sau này thiếu người
-    }
     taskOwners[task].push(stu);
     return true;
   }
@@ -7614,13 +7613,17 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
   // 1) Mỗi HS nhận đúng 2 việc (hoặc 1 nếu pool nhỏ)
   pool.forEach(function(stu) {
     var needJobs = Math.min(2, DUTY_TASKS.length);
-    // Thứ tự ưu tiên việc: 1,2 cần nhiều người; 5,6 nếu nam
-    var order = [0, 1, 2, 3, 4, 5];
-    if (stu.gender === "nam") order = [4, 5, 0, 1, 2, 3];
+    // Ưu tiên việc 1–2 (cần 2 HS); nam ưu tiên 2 việc cuối
+    var order = [];
+    for (var oi = 0; oi < DUTY_TASKS.length; oi++) order.push(oi);
+    if (stu.gender === "nam") {
+      order = [];
+      for (var oi2 = DUTY_TASKS.length - 2; oi2 < DUTY_TASKS.length; oi2++) if (oi2 >= 0) order.push(oi2);
+      for (var oi3 = 0; oi3 < DUTY_TASKS.length - 2; oi3++) order.push(oi3);
+    }
     for (var i = 0; i < order.length && ownedTasks(stu.id).length < needJobs; i++) {
       assignJob(stu, order[i]);
     }
-    // Bổ sung nếu chưa đủ 2 việc
     for (var j = 0; j < DUTY_TASKS.length && ownedTasks(stu.id).length < needJobs; j++) {
       assignJob(stu, j);
     }
@@ -7634,7 +7637,7 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
         var o = ownedTasks(s.id);
         return o.indexOf(task) < 0 && o.length < 2;
       });
-      if (idx >= 4) {
+      if (preferMaleIdx(idx)) {
         var nam = cand.filter(function(s) { return s.gender === "nam"; });
         if (nam.length) cand = nam.concat(cand.filter(function(s) { return s.gender !== "nam"; }));
       }
@@ -7683,7 +7686,7 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
       // Xoay owners theo ngày
       var di = allDays.indexOf(day);
       owners = owners.slice(di % Math.max(owners.length, 1)).concat(owners.slice(0, di % Math.max(owners.length, 1)));
-      if (tIdx >= 4) {
+      if (preferMaleIdx(tIdx)) {
         owners.sort(function(a, b) {
           if (a.gender === "nam" && b.gender !== "nam") return -1;
           if (b.gender === "nam" && a.gender !== "nam") return 1;
@@ -7705,7 +7708,7 @@ function buildDutyPlanFromWeek(sourceWeekNo) {
           return sessionUsed[s.id] < s.sessions &&
             !result.some(function(r) { return r.day === day && r.task === task && r.student.id === s.id; });
         }).sort(function(a, b) { return (a.sessions - sessionUsed[a.id]) - (b.sessions - sessionUsed[b.id]); }).reverse();
-        if (tIdx >= 4) {
+        if (preferMaleIdx(tIdx)) {
           var nam2 = cand.filter(function(s) { return s.gender === "nam"; });
           if (nam2.length) cand = nam2.concat(cand.filter(function(s) { return s.gender !== "nam"; }));
         }
@@ -7746,7 +7749,7 @@ function downloadDutyXlsx() {
   if (typeof XLSX === "undefined") { alert("Chưa tải Excel"); return; }
   var plan = window._dutyPlanLive || window._dutyPlanManual || window._dutyLastPlan;
   if (!plan) { alert("Chưa có lịch trực"); return; }
-  var tasks = ["1. Quét lớp", "2. Quét hành lang", "3. Đổ rác đầu/cuối buổi", "4. Lau bảng & giặt khăn", "5. Đóng cửa sổ/khóa cửa/tắt điện quạt", "6. Xích xếp xe"];
+  var tasks = DUTY_TASKS.map(function(t, i) { return (i + 1) + ". " + t; });
   var days = ["Thứ 2", "Thứ 3", "Thứ 4", "Thứ 5", "Thứ 6", "Thứ 7"];
   var dayKeys = ["T2", "T3", "T4", "T5", "T6", "T7"];
   var asg = plan.assignments || [];
@@ -7835,14 +7838,70 @@ function renderDutyRoster() {
   html += '<div id="dutyRosterCapture">';
 
   html += '<div class="text-xs mb-3 p-2 rounded border" style="border-color:#fde68a;background:#fff;color:#78350f;text-align:left">';
-  html += '<b>Quy tắc:</b> Việc 1–2: <b>2 HS/buổi</b> · Việc 3–6: <b>1 HS/buổi</b> (5–6 ưu tiên HS nam). ';
+  html += '<b>Quy tắc:</b> Việc 1–2: <b>2 HS/buổi</b> · Việc 3–7: <b>1 HS/buổi</b> (2 việc cuối ưu tiên HS nam). ';
   html += 'v01 → 2 buổi / 2 việc · v03 → 3 buổi / 2 việc · VP khác & v26 → 6 buổi / 2 việc (v26 hoặc VP 2 tuần liên tiếp: trực 3 tuần liên tiếp). ';
   html += 'Kéo thả tên HS vào bất kỳ ô nào để chỉnh tay.';
   html += '</div>';
 
+  // 3 cột: Vắng không phép | Vắng có phép / Đi học trễ | Vi phạm khác
+  var weekViolsDuty = (entries || []).filter(function(e) {
+    if (e.type !== "violation") return false;
+    if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
+    if (String(e.weekNo) === String(srcWeek)) return true;
+    var swSrc = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(srcWeek); });
+    if (swSrc && e.date && String(e.date).slice(0,10) >= swSrc.from && String(e.date).slice(0,10) <= swSrc.to) return true;
+    return false;
+  });
+  function dutyViolGroupKey(e) {
+    var code = (typeof normalizeViolCode === "function" ? normalizeViolCode(e) : "").toLowerCase();
+    var tx = String(e.contentText || e.contentCode || "").toLowerCase();
+    if (code === "v02" || tx.indexOf("vắng không phép") >= 0 || tx.indexOf("vang khong phep") >= 0) return "absentNo";
+    if (code === "v01" || code === "v06" || code === "v03" ||
+        tx.indexOf("vắng có phép") >= 0 || tx.indexOf("vang co phep") >= 0 ||
+        tx.indexOf("đi học trễ") >= 0 || tx.indexOf("di hoc tre") >= 0 ||
+        tx.indexOf("đi trễ") >= 0) return "absentLate";
+    return "other";
+  }
+  function dutyViolAgg(list) {
+    var map = {};
+    list.forEach(function(e) {
+      var sid = String(e.studentId);
+      var st = (students || []).find(function(s) { return String(s.id) === sid; });
+      var name = (st && st.name) || e.studentName || sid;
+      var code = (typeof normalizeViolCode === "function" ? normalizeViolCode(e) : "") || (e.contentCode || "");
+      var key = sid + "|" + code;
+      if (!map[key]) map[key] = { name: shortDutyName(name), code: code, times: 0 };
+      map[key].times += Number(e.times) || 1;
+    });
+    return Object.keys(map).map(function(k) { return map[k]; })
+      .sort(function(a, b) { return a.name.localeCompare(b.name, "vi"); });
+  }
+  var gAbsentNo = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "absentNo"; }));
+  var gAbsentLate = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "absentLate"; }));
+  var gOther = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "other"; }));
+  function dutyViolColHtml(title, rows, color) {
+    var h = '<div class="rounded-lg border p-2" style="border-color:' + color + ';background:#fff;min-height:4rem">';
+    h += '<div class="font-bold text-xs mb-1" style="color:' + color + '">' + title + '</div>';
+    if (!rows.length) h += '<div class="text-xs" style="color:#94a3b8">—</div>';
+    else {
+      h += '<ul class="text-xs space-y-0.5" style="color:#0f172a;text-align:left;padding-left:0;list-style:none">';
+      rows.forEach(function(r) {
+        h += '<li><b>' + r.name + '</b>' + (r.code ? ' <span style="color:#64748b">(' + r.code + ')</span>' : '') + ' · <b style="color:#b91c1c">' + r.times + '</b> lần</li>';
+      });
+      h += '</ul>';
+    }
+    h += '</div>';
+    return h;
+  }
+  html += '<div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">';
+  html += dutyViolColHtml("① Vắng không phép", gAbsentNo, "#b91c1c");
+  html += dutyViolColHtml("② Vắng có phép / Đi học trễ", gAbsentLate, "#c2410c");
+  html += dutyViolColHtml("③ Vi phạm khác", gOther, "#7c3aed");
+  html += '</div>';
+
   // Pool HS + số buổi
   if (plan.pool && plan.pool.length) {
-    html += '<div class="text-xs mb-3" style="text-align:left;color:#0f172a"><b>HS từ VP tuần ' + srcWeek + ':</b> ';
+    html += '<div class="text-xs mb-3" style="text-align:left;color:#0f172a"><b>HS từ VP tuần ' + srcWeek + ' (tổng hợp):</b> ';
     html += plan.pool.map(function(s) {
       var codes = Object.keys(s.codes || {}).join(",");
       return s.name + " (" + s.sessions + " buổi" + (codes ? " · " + codes : "") + ")";
@@ -7859,7 +7918,8 @@ function renderDutyRoster() {
     ["#fce7f3", "#fbcfe8"],
     ["#e0e7ff", "#c7d2fe"],
     ["#ffedd5", "#fed7aa"],
-    ["#fef3c7", "#fde68a"]
+    ["#fef3c7", "#fde68a"],
+    ["#f1f5f9", "#e2e8f0"]
   ];
   html += '<table class="w-full text-sm" style="border-collapse:collapse;background:#fff;border:2px solid #1e3a8a;margin:0 auto;max-width:100%" id="dutyAssignTable">';
   html += '<thead><tr>';
@@ -7899,28 +7959,35 @@ function renderDutyRoster() {
     }
   });
 
-  // Hàng ghi chú: HS trực 3 tuần liên tiếp (v26 / VP 2 tuần liên tiếp)
+  // Hàng ghi chú: bố cục cột theo độ rộng từng Thứ
   var longDuty = (plan.pool || []).filter(function(s) {
     var codes = Object.keys(s.codes || {});
     return codes.indexOf("v26") >= 0 || s.sessions >= 6;
   });
-  if (longDuty.length) {
-    html += '<tr style="background:#f8fafc">';
-    html += '<td class="py-2 px-2 border text-left font-semibold" style="border:1px solid #1e3a8a;color:#0f172a" colspan="1">Ghi chú</td>';
-    html += '<td class="py-2 px-2 border text-left text-xs" style="border:1px solid #1e3a8a;color:#0c4a6e" colspan="' + allDays.length + '">';
-    var untilW = Number(planWeek) + 2;
-    html += longDuty.map(function(s) {
-      return '<b>' + s.name + '</b>: trực đến tuần ' + untilW;
-    }).join(' · ');
-    html += '</td></tr>';
-  }
+  var untilW = Number(planWeek) + 2;
+  html += '<tr style="background:#f8fafc">';
+  html += '<td class="py-2 px-2 border text-left font-semibold" style="border:1px solid #1e3a8a;color:#0f172a">Ghi chú</td>';
+  allDays.forEach(function(day, di) {
+    html += '<td class="py-1 px-1 border text-left text-xs" style="border:1px solid #1e3a8a;color:#0c4a6e;vertical-align:top">';
+    // Ghi chú theo cột: chia đều HS dài hạn vào các cột Thứ
+    var chunk = longDuty.filter(function(_, i) { return i % allDays.length === di; });
+    if (chunk.length) {
+      html += chunk.map(function(s) {
+        return '<div><b>' + s.name + '</b><br/>đến T' + untilW + '</div>';
+      }).join("");
+    } else {
+      html += '<span style="color:#cbd5e1"> </span>';
+    }
+    html += '</td>';
+  });
+  html += '</tr>';
 
   html += '</tbody></table></div>';
 
   if (!plan.assignments.length) {
     html += '<p class="mt-3 text-sm" style="color:#b91c1c">Chưa có HS vi phạm tuần ' + srcWeek + ' — bấm <b>🔄 TẠO LỊCH TỰ ĐỘNG</b> sau khi đã nhập VP tuần nguồn.</p>';
   }
-  html += '<p class="mt-2 text-xs" style="color:#64748b;text-align:left">Kéo tên HS thả vào ô khác để chỉnh. Ô việc 1–2 tối đa 2 HS; việc 3–6 tối đa 1 HS.</p>';
+  html += '<p class="mt-2 text-xs" style="color:#64748b;text-align:left">Kéo tên HS thả vào ô khác để chỉnh. Ô việc 1–2 tối đa 2 HS; việc 3–7 tối đa 1 HS.</p>';
   html += '</div>';
   box.innerHTML = html;
 
