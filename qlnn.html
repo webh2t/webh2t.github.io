@@ -3257,12 +3257,45 @@ function renderOverview() {
   if (currentUser.role === "gvcn") {
     const male = students.filter(s => s.gender === "Nam").length;
     const female = students.filter(s => s.gender === "Nữ").length;
-    const stuRows = students.length ? (
-      '<div class="overflow-x-auto min-h-[50vh]"><table class="w-full text-sm"><thead class="text-slate-400 border-b border-slate-600 sticky top-0 bg-slate-900"><tr>' +
-      '<th class="text-left py-2">ID</th><th class="text-left">Họ và tên</th><th class="text-left">Ngày sinh</th><th class="text-center">GT</th><th class="text-left">Dân tộc</th><th class="text-center">Tổ</th><th class="text-left">Địa chỉ</th><th class="text-left">Ghi chú</th></tr></thead><tbody>' +
-      students.map(s => '<tr class="border-b border-slate-700/40"><td class="py-1.5 font-mono hs-contact">' + s.id + '</td><td class="hs-name">' + s.name +
-      '</td><td class="text-xs hs-dob">' + (s.dob || "—") + '</td><td class="text-center text-xs">' + (s.gender || "—") + '</td><td class="text-xs">' + (s.ethnicity || "—") + '</td><td class="text-center hs-team">' + (s.team || "—") + '</td><td class="text-xs hs-contact max-w-[120px] truncate">' + (s.address || "—") + '</td><td class="text-xs text-slate-400">' + (s.note || "—") + '</td></tr>').join("") +
-      '</tbody></table></div>'
+    const sortedStu = students.slice().sort(typeof sortByIdAsc === "function" ? sortByIdAsc : function(a, b) {
+      return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
+    });
+    const stuRows = sortedStu.length ? (
+      '<div class="overflow-x-auto min-h-[50vh] rounded-lg border border-slate-600">' +
+      '<table class="w-full text-sm overview-stu-table" style="table-layout:fixed;border-collapse:collapse;min-width:720px">' +
+      '<thead class="text-slate-400 border-b border-slate-600 sticky top-0 bg-slate-900"><tr>' +
+      '<th class="text-left py-2 px-1" style="width:7%">ID</th>' +
+      '<th class="text-left py-2 px-1" style="width:26%">Họ và tên</th>' +
+      '<th class="text-left py-2 px-1" style="width:11%">Ngày sinh</th>' +
+      '<th class="text-center py-2 px-1" style="width:7%">GT</th>' +
+      '<th class="text-left py-2 px-1" style="width:9%">Dân tộc</th>' +
+      '<th class="text-center py-2 px-1" style="width:10%">Tổ</th>' +
+      '<th class="text-left py-2 px-1" style="width:18%">Địa chỉ</th>' +
+      '<th class="text-left py-2 px-1" style="width:12%">Ghi chú</th>' +
+      '</tr></thead><tbody>' +
+      sortedStu.map(function(s) {
+        var t = String(s.team || "");
+        var teamSel = '<select class="overview-team-sel" data-sid="' + String(s.id).replace(/"/g, "&quot;") + '" onchange="onOverviewTeamChange(this)" ' +
+          'style="width:100%;max-width:4.5rem;padding:2px 4px;border-radius:6px;border:1px solid #94a3b8;background:#fff;color:#0f172a;font-weight:700;text-align:center;cursor:pointer">' +
+          '<option value=""' + (t === "" ? " selected" : "") + '>—</option>' +
+          '<option value="1"' + (t === "1" ? " selected" : "") + '>1</option>' +
+          '<option value="2"' + (t === "2" ? " selected" : "") + '>2</option>' +
+          '<option value="3"' + (t === "3" ? " selected" : "") + '>3</option>' +
+          '<option value="4"' + (t === "4" ? " selected" : "") + '>4</option>' +
+          '</select>';
+        return '<tr class="border-b border-slate-700/40" style="color:#0f172a">' +
+          '<td class="py-1.5 px-1 font-mono text-xs" style="white-space:nowrap">' + s.id + '</td>' +
+          '<td class="py-1.5 px-1 font-semibold" style="text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + String(s.name || "").replace(/"/g, "&quot;") + '">' + (s.name || "") + '</td>' +
+          '<td class="py-1.5 px-1 text-xs" style="white-space:nowrap">' + (s.dob || "—") + '</td>' +
+          '<td class="py-1.5 px-1 text-center text-xs">' + (s.gender || "—") + '</td>' +
+          '<td class="py-1.5 px-1 text-xs" style="white-space:nowrap">' + (s.ethnicity || "—") + '</td>' +
+          '<td class="py-1.5 px-1 text-center">' + teamSel + '</td>' +
+          '<td class="py-1.5 px-1 text-xs" style="text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + String(s.address || "").replace(/"/g, "&quot;") + '">' + (s.address || "—") + '</td>' +
+          '<td class="py-1.5 px-1 text-xs text-slate-500" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (s.note || "—") + '</td>' +
+          '</tr>';
+      }).join("") +
+      '</tbody></table></div>' +
+      '<p class="text-xs mt-2" style="color:#64748b">Chọn <b>Tổ</b> trên từng dòng → tự lưu máy + Cloud. Hoặc bấm <b>Lưu</b> sau khi chỉnh nhiều dòng.</p>'
     ) : '<p class="text-amber-300 text-sm">Chưa có học sinh — Upload Excel rồi bấm Lưu.</p>';
     box.innerHTML = '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700">' +
       '<div class="flex flex-wrap gap-6 mb-4"><div class="w-24 h-24 rounded-full bg-slate-700 border-2 border-yellow-400/50 flex items-center justify-center text-4xl">👨‍🏫</div>' +
@@ -3278,11 +3311,10 @@ function renderOverview() {
       '</div><div class="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6" id="overviewStats"></div>' +
       '<div class="p-4 bg-slate-900/60 rounded-xl border border-slate-600">' +
       '<h3 class="font-semibold text-sky-400 mb-2">Danh sách học sinh</h3>' +
-      '' +
       '<div class="flex flex-wrap gap-2 mb-3">' +
       '<label class="btn-upload-blue text-sm cursor-pointer inline-flex items-center px-3 py-2 rounded-lg">Upload Excel<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importStudentsExcel(event)"/></label>' +
       '<button type="button" onclick="exportStudentsExcel()" class="btn-sample-orange text-sm px-3 py-2 rounded-lg">Tải mẫu</button>' +
-      '<button type="button" onclick="saveClassData();renderOverview();alert(\'Đã lưu danh sách\')" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">Lưu</button>' +
+      '<button type="button" onclick="saveOverviewStudents()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">Lưu</button>' +
       '</div>' + stuRows + '</div></div>';
     updateOverviewStats();
     return;
@@ -3334,6 +3366,50 @@ function updateOverviewStats() {
   el.innerHTML = '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">Bản ghi tuần</div><div class="text-xl font-bold text-yellow-400">' + we.length + '</div></div>' +
     '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">TB điểm tuần</div><div class="text-xl font-bold text-yellow-400">' + avg + '</div></div>' +
     '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">HS có dữ liệu</div><div class="text-xl font-bold text-yellow-400">' + agg.length + '/' + students.length + '</div></div>';
+}
+
+/** Tổng quan: đổi Tổ từng HS → lưu local + Cloud */
+function onOverviewTeamChange(sel) {
+  if (!sel || !currentUser || currentUser.role !== "gvcn") return;
+  var sid = sel.getAttribute("data-sid");
+  var team = String(sel.value || "").trim();
+  var st = (students || []).find(function(s) { return String(s.id) === String(sid); });
+  if (!st) return;
+  st.team = team;
+  try {
+    var cid = currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "");
+    if (cid) localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
+  } catch (e) {}
+  try {
+    if (typeof saveClassData === "function") saveClassData();
+  } catch (e2) { console.warn(e2); }
+  sel.style.borderColor = "#16a34a";
+  sel.style.boxShadow = "0 0 0 2px rgba(22,163,74,.35)";
+  setTimeout(function() {
+    sel.style.borderColor = "#94a3b8";
+    sel.style.boxShadow = "none";
+  }, 900);
+}
+
+function saveOverviewStudents() {
+  if (!currentUser || currentUser.role !== "gvcn") return;
+  // Đồng bộ mọi select Tổ trên bảng (phòng khi chưa fire onchange)
+  try {
+    document.querySelectorAll(".overview-team-sel").forEach(function(sel) {
+      var sid = sel.getAttribute("data-sid");
+      var st = (students || []).find(function(s) { return String(s.id) === String(sid); });
+      if (st) st.team = String(sel.value || "").trim();
+    });
+  } catch (e) {}
+  try {
+    var cid = currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "");
+    if (cid) localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students));
+  } catch (e2) {}
+  try {
+    if (typeof saveClassData === "function") saveClassData();
+  } catch (e3) { console.warn(e3); }
+  alert("Đã lưu danh sách & phân tổ lên máy + Cloud.");
+  try { renderOverview(); } catch (e4) {}
 }
 
 function setClassify(type) { pickClassify(type); }
