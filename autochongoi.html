@@ -932,20 +932,28 @@ function renderStudentTable() {
    SEATING ENGINE
 ========================= */
 function zoneInfo() {
-  const totalRows = Math.ceil(appState.classroom.seatCount / COLS);
+  const totalRows = Math.ceil(appState.classroom.seatCount / COLS) || 6;
   const half = Math.ceil(totalRows / 2);
   return { totalRows, half };
 }
+/** Sơ đồ mẫu Mau_So_do_lop_CLASSROOM.docx:
+ * Hàng trên (xa bàn GV): trái 48→45 | phải 24→21
+ * Hàng dưới (gần bàn GV): trái 28→25 | phải 4→1
+ * Tổ 1 = chỗ 1–12 (phải, gần GV) | Tổ 2 = 13–24 (phải, trên)
+ * Tổ 3 = chỗ 25–36 (trái, gần GV) | Tổ 4 = 37–48 (trái, trên)
+ */
 function getZone(idx) {
-  const { half } = zoneInfo();
-  const row = Math.floor(idx / COLS);
-  const col = idx % COLS;
-  const isLeft = col < 4;
-  const isTop = row < half;
-  if (isLeft && isTop) return 4;
-  if (!isLeft && isTop) return 2;
-  if (isLeft && !isTop) return 3;
-  return 1;
+  const seatNum = idx + 1;
+  if (seatNum <= 12) return 1;
+  if (seatNum <= 24) return 2;
+  if (seatNum <= 36) return 3;
+  return 4;
+}
+/** r=0 hàng trên cùng (xa GV) → r=5 hàng dưới (gần bảng/bàn GV) */
+function visualRowSeatIndices(r) {
+  const left = [48, 47, 46, 45].map(function(n) { return n - r * 4 - 1; });
+  const right = [24, 23, 22, 21].map(function(n) { return n - r * 4 - 1; });
+  return { left: left, right: right };
 }
 function levelScore(lv) {
   return { "Giỏi": 4, "Khá": 3, "TB": 2, "Yếu": 1 }[lv] || 2.5;
@@ -1007,16 +1015,13 @@ function seatByCriteria() {
 
   // Seats nearest teacher desk / board = highest row index (bottom of map)
   function seatNearTeacherScore(seatIdx) {
-    // Tổ 1 = dãy phải hàng cuối; Tổ 3 = dãy trái hàng cuối (gần Bàn GV / bảng)
     const z = getZone(seatIdx);
-    const row = Math.floor(seatIdx / COLS);
-    const col = seatIdx % COLS;
-    let score = row * 10;
-    if (z === 1 || z === 3) score += 100; // bắt buộc ưu tiên Tổ 1 / Tổ 3
-    // "Đầu bàn": sát lối đi (col 3 trái / col 4 phải)
-    if (col === 3 || col === 4) score += 5;
-    // Ưu tiên ghế ngoài cùng hàng gần GV hơn
-    if (col === 0 || col === 7) score += 1;
+    const seatNum = seatIdx + 1;
+    let score = 0;
+    if (z === 1 || z === 3) score += 100;
+    if (z === 1) score += (13 - seatNum);
+    if (z === 3) score += (37 - seatNum);
+    if ([4, 8, 12, 25, 29, 33].indexOf(seatNum) >= 0) score += 5;
     return score;
   }
 
@@ -1230,9 +1235,9 @@ function renderPlan() {
   const { totalRows, half } = zoneInfo();
   let leftHTML = "", rightHTML = "";
   for (let r = 0; r < totalRows; r++) {
-    const base = r * COLS;
-    leftHTML += deskRowHTML([base, base + 1, base + 2, base + 3]);
-    rightHTML += deskRowHTML([base + 4, base + 5, base + 6, base + 7]);
+    const vis = visualRowSeatIndices(r);
+    leftHTML += deskRowHTML(vis.left);
+    rightHTML += deskRowHTML(vis.right);
     if (r === half - 1) {
       leftHTML += '<div class="to-label-row"><span class="to-badge to4">TỔ 4</span></div>';
       rightHTML += '<div class="to-label-row"><span class="to-badge to2">TỔ 2</span></div>';
@@ -1398,11 +1403,12 @@ function pickBestSeatForStudent(st) {
   const useFront = document.getElementById("cFrontWeak") && document.getElementById("cFrontWeak").checked;
   function score(seatIdx) {
     const z = getZone(seatIdx);
-    const row = Math.floor(seatIdx / COLS);
-    const col = seatIdx % COLS;
-    let sc = row * 10;
+    const seatNum = seatIdx + 1;
+    let sc = 0;
     if (z === 1 || z === 3) sc += 100;
-    if (col === 3 || col === 4) sc += 5;
+    if (z === 1) sc += (13 - seatNum);
+    if (z === 3) sc += (37 - seatNum);
+    if ([4, 8, 12, 25, 29, 33].indexOf(seatNum) >= 0) sc += 5;
     return sc;
   }
   let pool = empties.slice();
@@ -1611,7 +1617,7 @@ function downloadSeatPlanExcelTemplate() {
     [""],
     ["Tiêu đề file: TRƯỜNG THPT · Năm học · SƠ ĐỒ LỚP —"],
     ["1. Điền Họ và tên theo STT."],
-    ["2. Cột «Số chỗ» = vị trí trên sơ đồ (1 = góc trên trái dãy trái; tăng theo hàng)."],
+    ["2. Cột «Số chỗ» theo mẫu Word: Chỗ 1 gần bàn GV (góc dưới phải); Chỗ 48 góc trên trái (xa bàn GV)."],
     ["3. Trên sơ đồ CLASSROOM mỗi ô hiển thị: dòng 1 = STT, dòng 2 = 2 chữ cuối họ tên (vd: NGUYỄN QUANG MINH → QUANG MINH)."],
     ["4. Đối tượng: ghi «Khuyết tật» nếu ưu tiên đầu bàn Tổ 1 hoặc Tổ 3 (gần bàn GV)."],
     ["5. Học lực: Giỏi / Khá / TB / Yếu — dùng khi chọn Lớp trưởng, Tổ trưởng theo tiêu chí."],
@@ -1641,27 +1647,27 @@ async function downloadSeatPlanDocxTemplate() {
   const gridRows = [];
   for (let r = 0; r < totalRows; r++) {
     const cells = [];
-    for (let c = 0; c < 4; c++) {
-      const idx = r * COLS + c;
-      const label = idx < seatCount ? ("Chỗ " + (idx + 1) + "\\n………") : "";
-      cells.push(new TableCell({
-        width: { size: 11, type: WidthType.PERCENTAGE }, borders: cb, verticalAlign: VerticalAlign.CENTER,
-        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label.replace("\\n", " — "), bold: true, size: 14 })] })]
-      }));
-    }
-    cells.push(new TableCell({
-      width: { size: 8, type: WidthType.PERCENTAGE }, borders: sb, verticalAlign: VerticalAlign.CENTER,
-      shading: { fill: "DDE6F3", type: ShadingType.CLEAR, color: "auto" },
-      children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: r === mid ? "LỐI ĐI" : "", italics: true, size: 12, color: "5B7AA8" })] })]
-    }));
-    for (let c = 4; c < 8; c++) {
-      const idx = r * COLS + c;
-      const label = idx < seatCount ? ("Chỗ " + (idx + 1) + " — ………") : "";
+    const leftNums = [48, 47, 46, 45].map(function(n) { return n - r * 4; });
+    const rightNums = [24, 23, 22, 21].map(function(n) { return n - r * 4; });
+    leftNums.forEach(function(num) {
+      const label = num <= seatCount ? ("Chỗ " + num + " — ………") : "";
       cells.push(new TableCell({
         width: { size: 11, type: WidthType.PERCENTAGE }, borders: cb, verticalAlign: VerticalAlign.CENTER,
         children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label, bold: true, size: 14 })] })]
       }));
-    }
+    });
+        cells.push(new TableCell({
+      width: { size: 8, type: WidthType.PERCENTAGE }, borders: sb, verticalAlign: VerticalAlign.CENTER,
+      shading: { fill: "DDE6F3", type: ShadingType.CLEAR, color: "auto" },
+      children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: r === mid ? "LỐI ĐI" : "", italics: true, size: 12, color: "5B7AA8" })] })]
+    }));
+    rightNums.forEach(function(num) {
+      const label = num <= seatCount ? ("Chỗ " + num + " — ………") : "";
+      cells.push(new TableCell({
+        width: { size: 11, type: WidthType.PERCENTAGE }, borders: cb, verticalAlign: VerticalAlign.CENTER,
+        children: [new Paragraph({ alignment: AlignmentType.CENTER, children: [new TextRun({ text: label, bold: true, size: 14 })] })]
+      }));
+    });
     gridRows.push(new TableRow({ children: cells }));
   }
   const grid = new Table({ rows: gridRows, width: { size: 100, type: WidthType.PERCENTAGE } });
