@@ -562,17 +562,16 @@ body.present .sheet { transform: scale(1.05); }
         <div class="card">
           <div class="card-hd"><span>Ban cán sự &amp; tổ chức lớp</span></div>
           <div class="card-bd">
-            <div class="disclaimer">Phương án hỗ trợ theo tiêu chí. Giáo viên quyết định cuối cùng.</div>
+            <div class="disclaimer">Giáo viên quyết định cuối cùng.</div>
             <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:12px">
               <button class="btn btn-primary" style="width:100%" onclick="pickClassLeader()">CHỌN LỚP TRƯỞNG (60 giây)</button>
-              <div class="hint">Tiêu chí: học lực · không vi phạm · năng động / ưu điểm (theo dữ liệu GV nhập).</div>
-              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Lớp phó học tập')">CHỌN LỚP PHÓ HỌC TẬP (60 giây · Giỏi · không vi phạm)</button>
-              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Bí thư Đoàn')">CHỌN BÍ THƯ ĐOÀN (60 giây · Giỏi · không vi phạm)</button>
-              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Phó bí thư Đoàn')">CHỌN PHÓ BÍ THƯ ĐOÀN (60 giây · Giỏi · không vi phạm)</button>
+              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Lớp phó học tập')">CHỌN LỚP PHÓ HỌC TẬP (60 giây)</button>
+              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Bí thư Đoàn')">CHỌN BÍ THƯ ĐOÀN (60 giây)</button>
+              <button class="btn btn-primary" style="width:100%" onclick="pickRole60('Phó bí thư Đoàn')">CHỌN PHÓ BÍ THƯ ĐOÀN (60 giây)</button>
               <div id="classLeaderArea" style="margin:6px 0"></div>
               <hr style="border:0;border-top:1px solid var(--border);margin:4px 0">
               <button class="btn btn-primary" style="width:100%" onclick="pickToRolesSequential()">CHỌN TỔ TRƯỞNG / TỔ PHÓ (từng tổ · 60 giây/tổ)</button>
-              <div class="hint">Lần lượt Tổ 1 → 2 → 3 → 4. Mỗi tổ: 1 Tổ trưởng + 2 Tổ phó theo học lực.</div>
+              
             </div>
             <div class="card-hd" style="padding-left:0;margin-bottom:8px">Cây sơ đồ tổ chức lớp</div>
             <div id="orgChartArea" class="org-chart-wrap"></div>
@@ -1890,15 +1889,26 @@ function weightedPickLeader(pool) {
   }
   return pool[pool.length - 1];
 }
+function isHocLucGioi(st) {
+  if (!st) return false;
+  const lv = String(st.academicLevel || "").trim().toLowerCase().normalize("NFC");
+  return lv === "giỏi" || lv === "gioi" || lv.indexOf("giỏi") >= 0 || lv.indexOf("gioi") >= 0;
+}
 async function pickClassLeader() {
-  const pool = appState.students.filter(s => s.seatId != null);
-  if (pool.length < 1) { toast("Cần có học sinh đã xếp chỗ trên sơ đồ."); return; }
-  const names = pool.map(s => s.name);
+  const seated = appState.students.filter(s => s.seatId != null);
+  if (seated.length < 1) { toast("Cần có học sinh trên sơ đồ trước."); return; }
+  const pool = seated.filter(isHocLucGioi);
+  if (!pool.length) {
+    toast("Chưa có học sinh Học lực Giỏi trong danh sách.");
+    return;
+  }
+  // Quay tất cả tên theo sĩ số lớp; kết quả chỉ lấy trong nhóm Giỏi
+  const allNames = appState.students.map(s => s.name);
   await runCountdown({
     seconds: 60,
     title: "CHỌN LỚP TRƯỞNG",
-    subtitle: "Tiêu chí hỗ trợ: học lực · không vi phạm · năng động / ưu điểm (theo dữ liệu GV nhập)",
-    names: names
+    subtitle: "",
+    names: allNames.length ? allNames : pool.map(s => s.name)
   });
   const picked = weightedPickLeader(pool);
   lastClassLeader = picked ? picked.name : null;
@@ -1908,7 +1918,7 @@ async function pickClassLeader() {
       '<div class="to-card" style="border-color:var(--primary)">' +
       '<h3>Lớp trưởng (phương án hỗ trợ)</h3>' +
       '<div class="to-role" style="font-size:15px;font-weight:800">' + escapeHTML(lastClassLeader || "—") + "</div>" +
-      '<div class="hint" style="margin-top:6px">Giáo viên có thể chỉ định lại. Không dùng sinh trắc học tự động.</div></div>';
+      '<div class="hint" style="margin-top:6px">Giáo viên có thể chỉ định lại.</div></div>';
   }
   // Sync into committee if exists
   if (lastCommitteeResult) {
@@ -1956,14 +1966,19 @@ function weightedPickGioi(pool) {
 async function pickRole60(roleName) {
   if (!window.lastRolePicks) window.lastRolePicks = {};
   const taken = new Set(Object.values(lastRolePicks).filter(Boolean));
-  const pool = appState.students.filter(s => s.seatId != null && !taken.has(s.name));
-  if (!pool.length) { toast("Cần học sinh đã xếp chỗ (và chưa giữ vai trò khác)."); return; }
-  const names = pool.map(s => s.name);
+  const seated = appState.students.filter(s => s.seatId != null && !taken.has(s.name));
+  if (!seated.length) { toast("Cần học sinh trên sơ đồ trước."); return; }
+  const pool = seated.filter(isHocLucGioi);
+  if (!pool.length) {
+    toast("Chưa có học sinh Học lực Giỏi phù hợp cho " + roleName + ".");
+    return;
+  }
+  const allNames = appState.students.map(s => s.name);
   await runCountdown({
     seconds: 60,
     title: "CHỌN " + roleName.toUpperCase(),
-    subtitle: "Tiêu chí hỗ trợ: Học lực Giỏi · không vi phạm",
-    names: names
+    subtitle: "",
+    names: allNames.length ? allNames : pool.map(s => s.name)
   });
   const picked = weightedPickGioi(pool);
   const nm = picked ? picked.name : null;
@@ -2034,21 +2049,24 @@ async function pickToRolesSequential() {
     await runCountdown({
       seconds: 60,
       title: "CHỌN TỔ TRƯỞNG / TỔ PHÓ — TỔ " + z,
-      subtitle: members.length + " học sinh trong tổ · ưu tiên năng lực học tập",
-      names: members.length ? members : ["(chưa có thành viên)"]
+      subtitle: "",
+      names: appState.students.map(s => s.name)
     });
     if (members.length < 3) {
       insufficient.push(z);
       result[z] = { truong: null, pho: [], members };
     } else {
       const memberStudents = members.map(n => appState.students.find(s => s.name === n)).filter(Boolean);
-      const truongSt = weightedPickLeader(memberStudents.length ? memberStudents : members.map(n => ({ name: n, academicLevel: "", note: "" })));
+      const gioiPool = memberStudents.filter(isHocLucGioi);
+      const pickPool = gioiPool.length ? gioiPool : memberStudents;
+      const truongSt = weightedPickLeader(pickPool.length ? pickPool : memberStudents);
       const truong = truongSt ? (truongSt.name || truongSt) : members[0];
       const rest = members.filter(m => m !== truong);
-      // Phó: still prefer academic among rest
       const restSt = rest.map(n => appState.students.find(s => s.name === n)).filter(Boolean);
+      const restGioi = restSt.filter(isHocLucGioi);
       const pho = [];
-      let poolRest = restSt.length ? restSt.slice() : rest.map(n => ({ name: n, academicLevel: "", note: "" }));
+      let poolRest = (restGioi.length ? restGioi : restSt).slice();
+      if (!poolRest.length) poolRest = rest.map(n => ({ name: n, academicLevel: "", note: "" }));
       for (let k = 0; k < 2 && poolRest.length; k++) {
         const p = weightedPickLeader(poolRest);
         const pn = p.name || p;
