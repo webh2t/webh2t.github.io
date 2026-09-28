@@ -1365,12 +1365,14 @@ button[onclick="doParentReportLogin()"] {
 <div class="flex flex-wrap justify-between gap-3 mb-3 items-center">
 <h3 class="font-bold text-yellow-400 text-lg">Phân tổ · 4 tổ</h3>
 <div class="flex flex-wrap gap-2">
+<label class="text-sm px-3 py-2 rounded-lg font-bold cursor-pointer inline-flex items-center" style="background:#0d9488;color:#fff">📤 Upload Excel .xlsx
+<input type="file" accept=".xlsx,.xls" class="hidden" onchange="importTeamAssignExcel(event)"/>
+</label>
 <button type="button" onclick="exportTeamAssignExcel()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#2563eb;color:#fff">📥 Tải file Excel .xlsx</button>
-<button type="button" onclick="autoAssignInputBy()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#0d9488;color:#fff">⚡ Tự động chọn người nhập (không trùng)</button>
 <button type="button" onclick="saveTeamAssign()" class="text-sm px-3 py-2 rounded-lg font-bold" style="background:#fff;color:#5c4033;border:1px solid #a8a29e">💾 Lưu phân tổ</button>
 </div>
 </div>
-<p class="text-sm mb-4" style="color:#15803d">Danh sách lấy từ Tổng quan (file Excel đã upload). Chọn Tổ trưởng / Tổ phó · Người nhập không được trùng với chính học sinh đó.</p>
+<p class="text-sm mb-4" style="color:#15803d">Mỗi tổ: <b>Tổ trưởng</b> + <b>Tổ phó</b> (2 Leader nhập thi đua). Chọn Người nhập không trùng chính học sinh đó. Upload Excel: cột Tổ | ID HS | Họ tên | Người nhập (ID).</p>
 <div id="teamAssignPanels" class="space-y-4"></div>
 <div id="teamMsg" class="mt-3 text-sm hidden"></div>
 </div>
@@ -1509,8 +1511,7 @@ button[onclick="doParentReportLogin()"] {
 <select id="accRoleDetail" class="input-field text-base py-2.5" onchange="onAccRoleChange(); autoAccId();">
 <option value="gvcn">GVCN (Quản trị lớp)</option>
 <option value="truong">Tổ trưởng</option>
-<option value="pho1">Tổ phó 1</option>
-<option value="pho2">Tổ phó 2</option>
+<option value="pho1">Tổ phó</option>
 <option value="viewer">PH / HS (xem báo cáo)</option>
 </select>
 </div>
@@ -9740,18 +9741,13 @@ function renderTeamAssign() {
     const leaderOpts = leaders.filter(([, a]) => !a.team || String(a.team) === String(team))
       .map(([id, a]) => '<option value="' + id + '">' + (a.name || id) + " (" + id + ")</option>").join("");
     const allLeaderOpts = leaders.map(([id, a]) => '<option value="' + id + '">' + (a.name || id) + " (" + id + ")</option>").join("");
-    // current roles
-    const truong = leaders.find(([, a]) => a.roleDetail === "truong" && String(a.team) === String(team));
-    const pho1 = leaders.find(([, a]) => a.roleDetail === "pho1" && String(a.team) === String(team));
-    const pho2 = leaders.find(([, a]) => a.roleDetail === "pho2" && String(a.team) === String(team));
+    // current roles: chỉ Tổ trưởng + Tổ phó (2 Leader / tổ)
     html += '<div class="p-4 rounded-xl border border-slate-600 bg-slate-900/70">' +
       '<h4 class="font-bold text-sky-400 mb-3 text-base">Tổ ' + team + ' <span class="text-slate-400 font-normal text-sm">(' + members.length + ' HS)</span></h4>' +
-      '<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 text-sm">' +
+      '<div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3 text-sm">' +
       '<div><label class="text-xs text-slate-400">Tổ trưởng</label><select class="input-field text-sm team-role-sel" data-team="' + team + '" data-rd="truong">' +
       '<option value="">— Chọn —</option>' + allLeaderOpts + '</select></div>' +
-      '<div><label class="text-xs text-slate-400">Tổ phó 1</label><select class="input-field text-sm team-role-sel" data-team="' + team + '" data-rd="pho1">' +
-      '<option value="">— Chọn —</option>' + allLeaderOpts + '</select></div>' +
-      '<div><label class="text-xs text-slate-400">Tổ phó 2</label><select class="input-field text-sm team-role-sel" data-team="' + team + '" data-rd="pho2">' +
+      '<div><label class="text-xs text-slate-400">Tổ phó</label><select class="input-field text-sm team-role-sel" data-team="' + team + '" data-rd="pho1">' +
       '<option value="">— Chọn —</option>' + allLeaderOpts + '</select></div>' +
       '</div>';
     if (!members.length) {
@@ -9841,18 +9837,73 @@ function exportTeamAssignExcel() {
   students.forEach(s => {
     const a = s.inputBy && accounts[s.inputBy] ? accounts[s.inputBy] : null;
     const rd = a ? (a.roleDetail || a.role || "") : "";
-    const rdLabel = ({ truong: "Tổ trưởng", pho1: "Tổ phó 1", pho2: "Tổ phó 2", leader: "Leader", gvcn: "GVCN" })[rd] || rd;
+    const rdLabel = ({ truong: "Tổ trưởng", pho1: "Tổ phó", pho2: "Tổ phó", leader: "Leader", gvcn: "GVCN" })[rd] || rd;
     rows.push([s.team || "", s.id, s.name, s.inputBy || "", a ? (a.name || "") : "", rdLabel]);
   });
   // Roles sheet
   const roles = [["Tổ", "Vai trò", "ID", "Họ tên"]];
   Object.entries(classAccounts()).filter(([, a]) => a.role === "leader").forEach(([id, a]) => {
-    roles.push([a.team || "", a.roleDetail || "leader", id, a.name || ""]);
+    var rd = a.roleDetail || "leader";
+    if (rd === "pho2") rd = "pho1";
+    roles.push([a.team || "", rd === "truong" ? "Tổ trưởng" : (rd === "pho1" ? "Tổ phó" : rd), id, a.name || ""]);
   });
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Phan to");
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(roles), "Vai tro");
   XLSX.writeFile(wb, "QLNN_PhanTo.xlsx");
+}
+
+/** Upload Excel phân tổ: cột Tổ | ID HS | Họ tên | Người nhập (ID) */
+function importTeamAssignExcel(ev) {
+  const file = ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); ev.target.value = ""; return; }
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const wb = XLSX.read(e.target.result, { type: "array" });
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const data = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      if (!data || data.length < 2) { alert("File trống hoặc thiếu dữ liệu"); return; }
+      let updated = 0;
+      data.slice(1).forEach(function(r) {
+        if (!r || !r.length) return;
+        var team = String(r[0] != null ? r[0] : "").trim();
+        var sid = String(r[1] != null ? r[1] : "").trim();
+        var inputBy = String(r[3] != null ? r[3] : "").trim();
+        if (!sid) return;
+        var st = (students || []).find(function(s) { return String(s.id).toLowerCase() === sid.toLowerCase(); });
+        if (!st) {
+          // thử khớp theo tên cột 2
+          var name = String(r[2] != null ? r[2] : "").trim().toLowerCase();
+          if (name) st = (students || []).find(function(s) { return String(s.name || "").trim().toLowerCase() === name; });
+        }
+        if (!st) return;
+        if (team && ["1","2","3","4"].indexOf(team) >= 0) st.team = team;
+        if (inputBy) {
+          var lid = inputBy.toLowerCase();
+          if (accounts[lid] || accounts[inputBy]) {
+            st.inputBy = accounts[lid] ? lid : inputBy;
+          } else {
+            st.inputBy = inputBy;
+          }
+        }
+        updated++;
+      });
+      try { saveClassData(); } catch (err) { console.warn(err); }
+      renderTeamAssign();
+      var msg = document.getElementById("teamMsg");
+      if (msg) {
+        msg.className = "mt-3 text-sm text-green-400";
+        msg.textContent = "✅ Đã import phân tổ từ Excel (" + updated + " dòng). Kiểm tra rồi bấm Lưu phân tổ nếu cần.";
+        msg.classList.remove("hidden");
+      }
+    } catch (err) {
+      alert("Lỗi đọc Excel: " + (err.message || err));
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  ev.target.value = "";
 }
 
 function autoAssignInputBy() {
