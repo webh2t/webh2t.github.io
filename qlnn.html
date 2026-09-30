@@ -5851,11 +5851,14 @@ function violStatsHtml(list, poolIds, weekScoreMap) {
   var h = '<div class="legend-box mt-2 text-sm" style="color:#0f172a">';
   h += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
   h += '<div style="font-weight:800;color:#dc2626;font-size:0.95rem">' + title + "</div>";
-  h += '<div class="no-print flex flex-wrap gap-2">';
-  h += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadViolTableJpg()">📷 Tải .jpg</button>';
-  h += '<label class="px-3 py-1 rounded text-xs font-bold text-white cursor-pointer" style="background:#16a34a">📥 Upload mẫu .xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadViolExcel(event)"/></label>';
-  h += '<button type="button" class="px-3 py-1 rounded text-xs font-bold" style="background:#fff;border:1px solid #16a34a;color:#15803d" onclick="downloadViolTemplateXlsx()">📋 Tải mẫu .xlsx</button>';
-  h += '</div></div>';
+  if (!(currentUser && currentUser.role === "viewer")) {
+    h += '<div class="no-print flex flex-wrap gap-2">';
+    h += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadViolTableJpg()">📷 Tải .jpg</button>';
+    h += '<label class="px-3 py-1 rounded text-xs font-bold text-white cursor-pointer" style="background:#16a34a">📥 Upload mẫu .xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadViolExcel(event)"/></label>';
+    h += '<button type="button" class="px-3 py-1 rounded text-xs font-bold" style="background:#fff;border:1px solid #16a34a;color:#15803d" onclick="downloadViolTemplateXlsx()">📋 Tải mẫu .xlsx</button>';
+    h += '</div>';
+  }
+  h += '</div>';
   h += '<div id="reportViolCapture" class="overflow-x-auto"><table class="w-full text-sm" style="border-collapse:collapse;width:100%;table-layout:fixed;border:1px solid #93c5fd">';
   h += "<colgroup>";
   h += '<col style="width:6%"/><col style="width:6%"/><col style="width:22%"/><col style="width:52%"/><col style="width:14%"/>';
@@ -6187,12 +6190,15 @@ function renderSoKetTo(list) {
     weekOpts += '<option value="' + w + '"' + (String(w) === weekNo ? " selected" : "") + ">Tuần " + w + "</option>";
   }
 
+  var isViewer = currentUser && currentUser.role === "viewer";
   var html = '<div class="rounded-xl border-2 p-4 mb-4" style="border-color:#0369a1;background:#fff;color:#0f172a">';
   html += '<div class="flex flex-wrap gap-3 items-end mb-3 no-print">';
   html += '<label class="text-sm font-semibold">Chọn tuần <select id="soKetWeek" class="ml-1 border rounded px-2 py-1" onchange="(function(){var sk=document.getElementById(\'soKetWeek\');var rW=document.getElementById(\'rWeek\');if(sk&&rW&&sk.value)rW.value=sk.value;if(typeof renderReport===\'function\')renderReport();else renderSoKetTo(typeof getFilteredEntries===\'function\'?getFilteredEntries():entries);})()">' + weekOpts + '</select></label>';
-  html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0369a1" onclick="window.print()">🖨️ In sơ kết</button>';
-  html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#16a34a" onclick="downloadSoKetXlsx()">📊 Tải về .xlsx</button>';
-  html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0ea5e9" onclick="downloadSoKetJpg()">📷 Tải về .jpg</button>';
+  if (!isViewer) {
+    html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0369a1" onclick="window.print()">🖨️ In sơ kết</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#16a34a" onclick="downloadSoKetXlsx()">📊 Tải về .xlsx</button>';
+    html += '<button type="button" class="px-3 py-1 rounded text-sm font-bold text-white" style="background:#0ea5e9" onclick="downloadSoKetJpg()">📷 Tải về .jpg</button>';
+  }
   html += '</div>';
   html += '<div id="reportSoKetCapture">';
   html += '<div class="text-center mb-3">';
@@ -6215,7 +6221,9 @@ function renderSoKetTo(list) {
     html += '<span>TỔ ' + team + '</span>';
     html += '<span style="color:#a16207">Tổng điểm tổ: <b>' + tongTo + '</b></span>';
     html += '<span style="color:#9f1239">Xếp vị thứ lớp (tổ): <b>' + vtLopTo + '</b></span>';
-    html += '<button type="button" class="no-print ml-auto px-2 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadSoKetTeamJpg(\'' + team + '\')">📷 Tải tổ ' + team + ' .jpg</button>';
+    if (!isViewer) {
+      html += '<button type="button" class="no-print ml-auto px-2 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadSoKetTeamJpg(\'' + team + '\')">📷 Tải tổ ' + team + ' .jpg</button>';
+    }
     html += '</div>';
     html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="border-collapse:collapse">';
     html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
@@ -6776,10 +6784,13 @@ function renderWeekMonthBoards(list, agg) {
     html += '<div class="week-board mb-3 compact-class">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
     html += '<div class="text-center flex-1"><b style="color:#0c4a6e">SƠ KẾT TUẦN ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS</b></div>';
-    html += '<div class="no-print flex gap-2">';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportWeekCapture\',\'Tuan' + weekNo + '\',\'SƠ KẾT TUẦN ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS\')">📷 Tải ảnh .jpg</button>';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportWeekXlsx()">📊 Tải .xlsx</button>';
-    html += '</div></div>';
+    if (!(currentUser && currentUser.role === "viewer")) {
+      html += '<div class="no-print flex gap-2">';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportWeekCapture\',\'Tuan' + weekNo + '\',\'SƠ KẾT TUẦN ' + weekNo + (fromY ? ': ' + fromY + ' – ' + toY : '') + ' · ' + pool.length + ' HS\')">📷 Tải ảnh .jpg</button>';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportWeekXlsx()">📊 Tải .xlsx</button>';
+      html += '</div>';
+    }
+    html += '</div>';
     html += '<div id="reportWeekCapture">';
 // Bảng tuần hiện tại: ID | Tổ | Họ tên | Ngày | Môn | Số lần | Nội dung | VP tuần trước
     // Sắp theo danh sách lớp (ID tăng dần)
@@ -6933,10 +6944,13 @@ function renderWeekMonthBoards(list, agg) {
     html += '<div class="week-board mb-3 compact-class">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
     html += '<div class="text-center flex-1"><b style="color:#0c4a6e">SƠ KẾT THÁNG ' + mon + (mRangeY ? ': ' + mRangeY : '') + '</b></div>';
-    html += '<div class="no-print flex gap-2">';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportMonthCapture\',\'Thang' + mon + '\')">📷 Tải ảnh .jpg</button>';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportMonthXlsx()">📊 Tải .xlsx</button>';
-    html += '</div></div>';
+    if (!(currentUser && currentUser.role === "viewer")) {
+      html += '<div class="no-print flex gap-2">';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportMonthCapture\',\'Thang' + mon + '\')">📷 Tải ảnh .jpg</button>';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportMonthXlsx()">📊 Tải .xlsx</button>';
+      html += '</div>';
+    }
+    html += '</div>';
     html += '<div id="reportMonthCapture">';
     // Tính điểm tháng + số lần ƯĐ/VP
     var monthRows = pool.map(function(s) {
@@ -7018,10 +7032,13 @@ function renderWeekMonthBoards(list, agg) {
     html += '<div class="week-board mb-3 compact-class">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
     html += '<div class="text-center flex-1"><b style="color:#0c4a6e">' + (hk === "hk1" ? "SƠ KẾT HỌC KỲ 1 (THÁNG 9 – 12)" : "SƠ KẾT HỌC KỲ 2 (THÁNG 1 – 4)") + '</b></div>';
-    html += '<div class="no-print flex gap-2">';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportHkCapture\',\'' + (hk === "hk1" ? "HK1" : "HK2") + '\')">📷 Tải ảnh .jpg</button>';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportHkXlsx()">📊 Tải .xlsx</button>';
-    html += '</div></div>';
+    if (!(currentUser && currentUser.role === "viewer")) {
+      html += '<div class="no-print flex gap-2">';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportHkCapture\',\'' + (hk === "hk1" ? "HK1" : "HK2") + '\')">📷 Tải ảnh .jpg</button>';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportHkXlsx()">📊 Tải .xlsx</button>';
+      html += '</div>';
+    }
+    html += '</div>';
     html += '<div id="reportHkCapture">';
     // Tính điểm HK + số lần ƯĐ/VP (cùng công thức tháng, gộp allW)
     var hkRows = pool.map(function(s) {
@@ -7132,10 +7149,13 @@ function renderWeekMonthBoards(list, agg) {
     html += '<div class="week-board mb-3 compact-class mt-4">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
     html += '<div class="text-center flex-1"><b style="color:#0c4a6e">TỔNG HỢP CẢ NĂM · Lớp ' + (clsName || "") + ' · ' + pool.length + ' HS</b></div>';
-    html += '<div class="no-print flex gap-2">';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportYearCapture\',\'CaNam\')">📷 Tải ảnh .jpg</button>';
-    html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportYearXlsx()">📊 Tải .xlsx</button>';
-    html += '</div></div>';
+    if (!(currentUser && currentUser.role === "viewer")) {
+      html += '<div class="no-print flex gap-2">';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportYearCapture\',\'CaNam\')">📷 Tải ảnh .jpg</button>';
+      html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadReportYearXlsx()">📊 Tải .xlsx</button>';
+      html += '</div>';
+    }
+    html += '</div>';
     html += '<div id="reportYearCapture">';
     html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
     html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
@@ -9065,7 +9085,7 @@ function renderClassViolTableOnce(listOpt) {
     wrap.innerHTML =
       '<div class="flex flex-wrap items-center justify-between gap-2 mb-2 no-print">' +
       '<span style="font-weight:700;color:#b91c1c">Bảng vi phạm tổng hợp (cuối trang)</span>' +
-      '<button type="button" onclick="exportViolTableExcel()" class="px-3 py-2 rounded-lg font-semibold text-sm" style="background:#15803d;color:#fff;border:none">📥 Tải Excel .xlsx</button>' +
+      (role === "viewer" ? "" : '<button type="button" onclick="exportViolTableExcel()" class="px-3 py-2 rounded-lg font-semibold text-sm" style="background:#15803d;color:#fff;border:none">📥 Tải Excel .xlsx</button>') +
       "</div>" + tableHtml;
     wrap.style.display = "";
     window._lastViolListForExport = listViol;
@@ -9504,11 +9524,23 @@ function renderReport() {
         students.map(s => '<option value="' + s.id + '">' + s.id + ". " + s.name + (s.team ? " · Tổ " + s.team : "") + "</option>").join("");
       if (cur) sel.value = cur;
     }
-    // Ẩn nút export nếu còn
+    // Ẩn toàn bộ nút In / Tải .xlsx / .jpg trên Báo cáo (viewer chỉ xem)
     const be = document.getElementById("btnExportExcel");
     const bp = document.getElementById("btnPrint");
     if (be) be.classList.add("hidden");
     if (bp) bp.classList.add("hidden");
+    try {
+      var tabR = document.getElementById("tab-report");
+      if (tabR) {
+        tabR.querySelectorAll("button, label").forEach(function(el) {
+          var t = (el.textContent || "") + (el.getAttribute("onclick") || "");
+          if (/In sơ kết|Tải về|Tải tổ|Tải ảnh|Tải \.xlsx|Tải Excel|Upload mẫu|Tải mẫu|downloadSoKet|downloadReport|downloadViol|exportViol|window\.print|exportExcel|printReport/i.test(t)) {
+            el.classList.add("hidden");
+            el.style.display = "none";
+          }
+        });
+      }
+    } catch (e) {}
     renderParentStudentDetail();
   } else {
     const panel = document.getElementById("parentStudentPanel");
