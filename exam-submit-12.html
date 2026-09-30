@@ -104,6 +104,25 @@
 .modal-box button{padding:9px 26px;background:var(--red);color:#fff;border-radius:8px;font-weight:700}
 @media(max-width:900px){.exam-body{flex-direction:column}.sidebar{width:100%;position:static}.q-grid{grid-template-columns:repeat(6,1fr)}}
 @media(max-width:600px){.select-card{padding:22px 16px}.question-area{padding:16px}.q-grid{grid-template-columns:repeat(4,1fr)}.result-info{grid-template-columns:1fr}}
+
+.login-overlay{display:none;position:fixed;inset:0;background:rgba(15,28,46,.55);z-index:300;align-items:center;justify-content:center;padding:20px}
+.login-box{background:#fff;border-radius:16px;padding:28px 32px;width:100%;max-width:380px;box-shadow:0 24px 60px rgba(0,0,0,.25)}
+.login-box h3{font-size:1.15rem;color:var(--primary);margin-bottom:6px;text-align:center}
+.login-box .hint{font-size:.82rem;color:var(--text-soft);text-align:center;margin-bottom:18px}
+.login-box .field{margin-bottom:12px}
+.login-box input{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:.95rem}
+.login-box input:focus{border-color:var(--primary);outline:none}
+.login-error{color:#B91C1C;font-size:.85rem;text-align:center;margin-bottom:10px;display:none}
+.login-actions{display:flex;gap:10px;margin-top:8px}
+.login-actions button{flex:1;padding:12px;border-radius:10px;font-weight:700;font-size:.95rem}
+.btn-login{background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff}
+.btn-login-cancel{background:#F1F5F9;color:var(--text-soft)}
+.retake-list{max-height:200px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;margin:10px 0}
+.retake-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-bottom:1px solid var(--border);font-size:.88rem}
+.retake-item:last-child{border-bottom:none}
+.retake-item button{padding:5px 12px;border-radius:6px;font-size:.8rem;font-weight:600;background:#DBEAFE;color:var(--primary)}
+.retake-item button:hover{background:#BFDBFE}
+
 </style>
 </head>
 <body>
@@ -113,7 +132,7 @@
     <p class="sub" id="page-sub">Bài 4: Giao thức mạng · Sách Kết nối tri thức</p>
     <div class="top-nav">
       <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Trang chủ</a>
-      <a class="btn-nav-top btn-teacher" id="btn-teacher-link" href="?admin=1">👨‍🏫 Giáo viên</a>
+      <button type="button" class="btn-nav-top btn-teacher" id="btn-teacher-link">👨‍🏫 Giáo viên</button>
     </div>
     <div class="load-bar" id="load-bar">⏳ Đang tải dữ liệu đề thi &amp; danh sách học sinh…</div>
 
@@ -131,6 +150,10 @@
 
     <div class="teacher-panel" id="teacher-panel">
       <h3>📋 Quản trị điểm kiểm tra</h3>
+      <div class="top-nav" style="justify-content:flex-start;margin-bottom:12px">
+        <a class="btn-nav-top btn-home" href="https://webh2t.github.io/exam-submit-12.html" id="btn-back-student">📝 Về trang học sinh</a>
+        <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Trang chủ</a>
+      </div>
 
       <div class="stats-row">
         <div class="stats-card">
@@ -172,6 +195,15 @@
         <label class="btn-t btn-upload" style="cursor:pointer">📤 Tải danh sách / đề (Excel)
           <input type="file" id="file-upload" accept=".xlsx,.xls" style="display:none">
         </label>
+      </div>
+
+      <div class="stats-card" style="margin-top:20px">
+        <h4>🔄 Cho phép học sinh làm lại</h4>
+        <p style="font-size:.82rem;color:var(--text-soft);margin-bottom:8px">Chọn học sinh đã thi → bấm <b>Cho làm lại</b>. Điểm cũ sẽ bị xóa; khi nộp lại điểm mới ghi đè.</p>
+        <div class="retake-list" id="retake-list">
+          <div style="padding:12px;color:#888;font-size:.85rem">Chưa có học sinh đã nộp bài</div>
+        </div>
+        <button type="button" class="btn-t btn-clear" id="btn-clear-all-retake" style="margin-top:8px">🗑️ Xóa tất cả điểm (cho cả lớp làm lại)</button>
       </div>
     </div>
   </div>
@@ -217,6 +249,27 @@
   </div>
 </div>
 
+
+<div class="login-overlay" id="login-overlay">
+  <div class="login-box">
+    <h3>🔐 Đăng nhập giáo viên</h3>
+    <p class="hint">Chỉ dành cho giáo viên quản lý điểm</p>
+    <div class="login-error" id="login-error">Sai ID hoặc mật khẩu!</div>
+    <div class="field">
+      <label>ID</label>
+      <input type="text" id="login-id" placeholder="Nhập ID" autocomplete="username">
+    </div>
+    <div class="field">
+      <label>Mật khẩu</label>
+      <input type="password" id="login-pass" placeholder="Nhập mật khẩu" autocomplete="current-password">
+    </div>
+    <div class="login-actions">
+      <button type="button" class="btn-login-cancel" id="btn-login-cancel">Hủy</button>
+      <button type="button" class="btn-login" id="btn-login-submit">Đăng nhập</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modal-cancel">
   <div class="modal-box">
     <h3>🚫 Bài thi đã bị hủy!</h3>
@@ -238,7 +291,10 @@ let currentQ = 0, answers = {}, timerInterval = null, timeLeft = EXAM_MINUTES * 
 let startTime = null, selectedClass = "", selectedStudent = "", activeQuestions = [];
 let examCancelled = false;
 let scoreChart = null;
-const isAdmin = location.search.includes("admin=1");
+let isAdmin = false;
+const TEACHER_ID = "tin12";
+const TEACHER_PASS = "admintin12";
+const ADMIN_SESSION_KEY = "webh2t_teacher_ok";
 
 const classSelect = document.getElementById("class-select");
 const studentSelect = document.getElementById("student-select");
@@ -271,6 +327,7 @@ function renderScoreTable() {
     ).join("");
   }
   renderStats(list);
+  if (isAdmin) renderRetakeList();
 }
 
 function renderStats(list) {
@@ -446,19 +503,124 @@ async function loadFromUrl(url) {
   }
 }
 
+function enterAdminMode() {
+  isAdmin = true;
+  sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+  document.getElementById("teacher-panel").style.display = "block";
+  document.getElementById("student-ui").style.display = "none";
+  document.getElementById("select-card").classList.add("admin-wide");
+  document.getElementById("page-title").textContent = "📋 Quản trị điểm – Tin học 12";
+  document.getElementById("page-sub").textContent = "Bảng điểm · Thống kê · Cho làm lại";
+  const tl = document.getElementById("btn-teacher-link");
+  if (tl) tl.style.display = "none";
+  loadBar.style.display = "none";
+  document.getElementById("login-overlay").style.display = "none";
+  // Xóa ?admin=1 khỏi URL nếu có (ẩn đường dẫn)
+  if (location.search.includes("admin")) {
+    history.replaceState(null, "", location.pathname);
+  }
+  renderScoreTable();
+  renderRetakeList();
+}
+
+function exitAdminHint() {
+  // link về trang học sinh đã có
+}
+
 (function init() {
-  if (isAdmin) {
-    document.getElementById("teacher-panel").style.display = "block";
-    document.getElementById("student-ui").style.display = "none";
-    document.getElementById("select-card").classList.add("admin-wide");
-    document.getElementById("page-title").textContent = "📋 Quản trị điểm – Tin học 12";
-    document.getElementById("page-sub").textContent = "Bảng điểm · Thống kê · Xuất Excel";
-    document.getElementById("btn-teacher-link").style.display = "none";
-    loadBar.style.display = "none";
-    renderScoreTable();
+  // Chỉ vào admin nếu đã đăng nhập trong phiên (sessionStorage), KHÔNG dựa vào ?admin=1 công khai
+  if (sessionStorage.getItem(ADMIN_SESSION_KEY) === "1") {
+    enterAdminMode();
+  } else if (location.search.includes("admin=1")) {
+    // Nếu ai đó gõ ?admin=1 → hiện form đăng nhập, không vào thẳng
+    history.replaceState(null, "", location.pathname);
+    document.getElementById("login-overlay").style.display = "flex";
   }
   loadFromUrl(DEFAULT_DATA_URL);
 })();
+
+/* ----- Đăng nhập giáo viên ----- */
+document.getElementById("btn-teacher-link").addEventListener("click", function () {
+  document.getElementById("login-error").style.display = "none";
+  document.getElementById("login-id").value = "";
+  document.getElementById("login-pass").value = "";
+  document.getElementById("login-overlay").style.display = "flex";
+  setTimeout(() => document.getElementById("login-id").focus(), 100);
+});
+document.getElementById("btn-login-cancel").addEventListener("click", function () {
+  document.getElementById("login-overlay").style.display = "none";
+});
+document.getElementById("btn-login-submit").addEventListener("click", tryLogin);
+document.getElementById("login-pass").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") tryLogin();
+});
+document.getElementById("login-id").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") document.getElementById("login-pass").focus();
+});
+function tryLogin() {
+  const id = document.getElementById("login-id").value.trim();
+  const pass = document.getElementById("login-pass").value;
+  if (id === TEACHER_ID && pass === TEACHER_PASS) {
+    enterAdminMode();
+  } else {
+    document.getElementById("login-error").style.display = "block";
+    document.getElementById("login-pass").value = "";
+    document.getElementById("login-pass").focus();
+  }
+}
+
+/* ----- Cho làm lại ----- */
+function renderRetakeList() {
+  const box = document.getElementById("retake-list");
+  if (!box) return;
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  if (!list.length) {
+    box.innerHTML = '<div style="padding:12px;color:#888;font-size:.85rem">Chưa có học sinh đã nộp bài</div>';
+    return;
+  }
+  // unique by class|name, keep latest
+  const map = {};
+  list.forEach(r => { map[r.class + "|" + r.name] = r; });
+  const items = Object.values(map).sort((a, b) => (a.class + a.name).localeCompare(b.class + b.name));
+  box.innerHTML = items.map(r =>
+    '<div class="retake-item">' +
+    '<span><b>' + r.class + '</b> · ' + r.name + ' <span style="color:#2752D6">(điểm: ' + r.score + ')</span></span>' +
+    '<button type="button" data-cls="' + r.class + '" data-name="' + r.name.replace(/"/g, '&quot;') + '">Cho làm lại</button>' +
+    '</div>'
+  ).join("");
+  box.querySelectorAll("button[data-cls]").forEach(btn => {
+    btn.addEventListener("click", function () {
+      allowRetake(this.dataset.cls, this.dataset.name);
+    });
+  });
+}
+
+function allowRetake(cls, name) {
+  if (!confirm("Cho phép " + name + " (" + cls + ") làm lại? Điểm cũ sẽ bị xóa.")) return;
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  list = list.filter(r => !(r.class === cls && r.name === name));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  // Xóa điểm trong memory studentsByClass
+  if (studentsByClass[cls]) {
+    const st = studentsByClass[cls].find(s => s.name === name);
+    if (st) st.score = "";
+  }
+  renderScoreTable();
+  renderRetakeList();
+  alert("Đã xóa điểm của " + name + ". Học sinh có thể chọn tên và làm lại. Điểm mới sẽ ghi đè.");
+}
+
+document.getElementById("btn-clear-all-retake")?.addEventListener("click", function () {
+  if (!confirm("Xóa TẤT CẢ điểm để cả khối làm lại?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  Object.keys(studentsByClass).forEach(lop => {
+    studentsByClass[lop].forEach(s => { s.score = ""; });
+  });
+  renderScoreTable();
+  renderRetakeList();
+  alert("Đã xóa tất cả điểm. Học sinh có thể làm lại.");
+});
+
 
 document.getElementById("file-upload").addEventListener("change", function (e) {
   const file = e.target.files[0];
@@ -484,7 +646,11 @@ document.getElementById("btn-download-scores").addEventListener("click", functio
 document.getElementById("btn-clear-scores").addEventListener("click", function () {
   if (confirm("Xóa sạch toàn bộ dữ liệu điểm trên máy này?")) {
     localStorage.removeItem(STORAGE_KEY);
+    Object.keys(studentsByClass).forEach(lop => {
+      (studentsByClass[lop] || []).forEach(s => { s.score = ""; });
+    });
     renderScoreTable();
+    renderRetakeList();
     alert("Đã xóa sạch dữ liệu điểm.");
   }
 });
@@ -728,7 +894,9 @@ async function submitExam(auto) {
     correct: correctCount, wrong: wrongCount, skip: skipCount,
     elapsed, time: new Date().toLocaleString("vi-VN"), pattern
   };
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  // Ghi đè nếu đã có điểm cùng HS (làm lại)
+  list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
   list.push(record);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 
