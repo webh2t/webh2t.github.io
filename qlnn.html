@@ -1148,7 +1148,7 @@ button[onclick="doParentReportLogin()"] {
     <div class="qlnn-stats-grid">
       <div class="qlnn-stat-card">
         <div class="qlnn-stat-label">Tổng lượt xem</div>
-        <div class="qlnn-stat-value" id="statTotalViews">—</div>
+        <div class="qlnn-stat-value" id="totalViews" data-total-views="1">—</div>
         <div class="qlnn-stat-sub">mọi thời gian</div>
       </div>
       <div class="qlnn-stat-card">
@@ -1829,7 +1829,11 @@ function qlnnAnimateStat(el, target) {
 function qlnnRenderPageStats(total, monthN, reportN) {
   var ml = document.getElementById("statMonthLabel");
   if (ml) ml.textContent = qlnnMonthLabel();
-  qlnnAnimateStat(document.getElementById("statTotalViews"), total);
+  // Tổng lượt xem: ưu tiên CountAPI (id=totalViews) — không ghi đè nếu đã có số từ CountAPI
+  var totEl = document.getElementById("totalViews") || document.getElementById("statTotalViews");
+  if (totEl && !totEl.getAttribute("data-countapi")) {
+    qlnnAnimateStat(totEl, total);
+  }
   qlnnAnimateStat(document.getElementById("statMonthViews"), monthN);
   qlnnAnimateStat(document.getElementById("statReportViews"), reportN);
 }
@@ -10915,10 +10919,38 @@ if (fd) { fd.valueAsDate = new Date(); autoWeekday(); }
   });
 </script>
 <script>
+  // ===== Đồng bộ lượt xem với trang chủ (CountAPI) =====
   fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-qlnn')
-    .then(r => r.json())
-    .then(d => console.log('QLNN:', d.value))
-    .catch(() => {});
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var n = d.value;
+      console.log('QLNN views (CountAPI):', n);
+      // Cập nhật ô "TỔNG LƯỢT XEM" trên trang QLNN
+      var candidates = [
+        document.getElementById('totalViews'),
+        document.querySelector('[data-total-views]'),
+        document.querySelector('.stat-total .num'),
+        document.querySelector('.analytics-total'),
+        document.getElementById('statTotalViews')
+      ];
+      document.querySelectorAll('div, span, p, strong, h3, h4').forEach(function (el) {
+        if (el.children.length === 0 && /tổng\s*lượt\s*xem/i.test(el.textContent || '')) {
+          var box = el.parentElement;
+          if (box) {
+            var num = box.querySelector('.qlnn-stat-value, div, span, strong, b, p');
+            if (num && num !== el) candidates.unshift(num);
+          }
+        }
+      });
+      for (var i = 0; i < candidates.length; i++) {
+        if (candidates[i]) {
+          candidates[i].textContent = (typeof n === 'number' ? n.toLocaleString('vi-VN') : n);
+          try { candidates[i].setAttribute('data-countapi', '1'); } catch (e) {}
+          break;
+        }
+      }
+    })
+    .catch(function (e) { console.warn('CountAPI lỗi:', e); });
 </script>
 </body>
 </html>
