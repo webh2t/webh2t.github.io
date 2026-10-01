@@ -156,7 +156,8 @@
 
     
     <div class="warning-once" id="warn-once">
-      ⚠️ <b>Bài thi chỉ được làm 1 lần.</b> Sau khi bấm <b>Bắt đầu thi</b>, nếu thoát màn hình bài làm (đóng tab, quay lại, gian lận…) mà <b>không nộp bài</b>, hệ thống sẽ <b>lưu 0 điểm</b> và <b>không cho làm lại</b>.
+      ⚠️ <b>Bài thi chỉ làm 1 lần. Thoát màn hình → lưu 0 điểm, không được làm lại.</b><br>
+      Chỉ hiện lớp đang trong khung giờ giáo viên quy định. Sau khi <b>Bắt đầu thi</b>: đóng tab / quay lại / gian lận mà không nộp bài = <b>0 điểm</b> và khóa tên.
     </div>
 
     <div id="student-ui">
@@ -268,7 +269,7 @@
     <div class="student-info" id="exam-student-info">Họ tên: — · Lớp: —</div>
     <div class="timer-box" id="timer"><span>⏱️</span> <span id="timer-text">15:00</span></div>
   </div>
-  <div class="anti-cheat-bar">⚠️ Hệ thống chống gian lận: không được bôi đen, sao chép, mở tab khác hoặc nhấn phím tắt trái phép — vi phạm sẽ bị hủy bài!</div>
+  <div class="anti-cheat-bar">⚠️ Bài thi chỉ làm 1 lần. Thoát màn hình → lưu 0 điểm, không được làm lại. Cấm copy / đổi tab / phím tắt — vi phạm hủy bài + 0 điểm!</div>
   <div class="exam-body">
     <aside class="sidebar">
       <h3>Phần 1: Trắc nghiệm</h3><div class="q-grid" id="q-grid-p1"></div>
@@ -546,13 +547,39 @@ function parseWorkbook(wb) {
 
 function refreshClassDropdown() {
   classSelect.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  const sch = (typeof loadSchedule === "function") ? loadSchedule() : {};
+  const hasAnySchedule = Object.keys(sch).length > 0;
+  let shown = 0;
   Object.keys(studentsByClass).sort().forEach(lop => {
+    // Có cấu hình lịch: chỉ hiện lớp đang trong khung giờ
+    // Chưa cấu hình lịch nào: ẩn tất cả (bắt buộc GV đặt khung giờ)
+    if (!hasAnySchedule) return;
+    if (!sch[lop]) return; // lớp không có khung giờ → ẩn
+    if (typeof isClassOpenNow === "function" && !isClassOpenNow(lop)) return; // ngoài giờ → ẩn
     const opt = document.createElement("option");
     opt.value = lop;
-    opt.textContent = lop + " (" + studentsByClass[lop].length + " HS)";
+    const to = sch[lop].to ? new Date(sch[lop].to).toLocaleString("vi-VN") : "";
+    opt.textContent = lop + " (" + studentsByClass[lop].length + " HS) · đến " + to;
     classSelect.appendChild(opt);
+    shown++;
   });
   classSelect.disabled = false;
+  if (!shown) {
+    classSelect.innerHTML = '<option value="">-- Không có lớp đang mở thi --</option>';
+    classSelect.disabled = true;
+    const lb = document.getElementById("load-bar");
+    if (lb && !hasAnySchedule) {
+      lb.style.display = "flex";
+      lb.style.background = "#FEF3C7";
+      lb.style.color = "#92400E";
+      lb.textContent = "⚠️ Giáo viên chưa cấu hình khung giờ làm bài cho lớp. Vui lòng chờ.";
+    } else if (lb) {
+      lb.style.display = "flex";
+      lb.style.background = "#FEF3C7";
+      lb.style.color = "#92400E";
+      lb.textContent = "⚠️ Hiện không có lớp nào trong khung giờ được phép làm bài.";
+    }
+  }
 }
 
 async function loadFromUrl(url) {
@@ -613,6 +640,10 @@ function exitAdminHint() {
     document.getElementById("login-overlay").style.display = "flex";
   }
   loadFromUrl(DEFAULT_DATA_URL);
+  // Cập nhật danh sách lớp theo khung giờ mỗi 30s
+  setInterval(function () {
+    if (!isAdmin && dataReady && typeof refreshClassDropdown === "function") refreshClassDropdown();
+  }, 30000);
 })();
 
 /* ----- Đăng nhập giáo viên ----- */
@@ -1055,7 +1086,7 @@ function onKey(e) {
 function cancelExam(reason) {
   examCancelled = true; clearInterval(timerInterval);
   disableAntiCheat();
-  document.getElementById("modal-reason").textContent = reason + " Bài thi bị hủy, không ghi nhận điểm.";
+  document.getElementById("modal-reason").textContent = reason + " Bài thi chỉ làm 1 lần. Thoát/hủy → lưu 0 điểm, không được làm lại.";
   document.getElementById("modal-cancel").style.display = "flex";
   document.getElementById("screen-exam").style.display = "none";
 }
@@ -1253,11 +1284,18 @@ function saveZeroScore(reason) {
 
 // beforeunload khi đang thi
 window.addEventListener("beforeunload", function (e) {
-  if (document.getElementById("screen-exam")?.style.display === "flex" && !examCancelled) {
+  const examOn = document.getElementById("screen-exam") && document.getElementById("screen-exam").style.display === "flex";
+  if (examOn && !examCancelled) {
     saveZeroScore("beforeunload");
+    // Trình duyệt hiện đại chỉ hiện câu mặc định; vẫn buộc hộp thoại xác nhận
     e.preventDefault();
-    e.returnValue = "";
+    e.returnValue = "Bài thi chỉ làm 1 lần. Thoát màn hình → lưu 0 điểm, không được làm lại.";
+    return e.returnValue;
   }
+});
+window.addEventListener("pagehide", function () {
+  const examOn = document.getElementById("screen-exam") && document.getElementById("screen-exam").style.display === "flex";
+  if (examOn && !examCancelled) saveZeroScore("pagehide");
 });
 
 // override cancelExam to also save 0
