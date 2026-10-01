@@ -2311,20 +2311,22 @@ Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải th
       const v = document.getElementById('visitCount');
       if (v) v.textContent = visits.toLocaleString('vi-VN');
 
-      // QLNN & Thi Tin 12: đọc số TOÀN CỤC từ CountAPI
-      // Trang con phải gọi /hit cùng namespace+key thì số mới tăng và hiện đúng trên trang chủ
+      // QLNN & Thi Tin 12: đọc số TOÀN CỤC
+      // countapi.xyz đã NGỪNG → dùng countapi.mileshilliard.com
+      // Trang con phải gọi /hit cùng key thì số mới tăng trên trang chủ
       function fetchCount(key, elId) {
         const el = document.getElementById(elId);
         if (!el) return;
-        fetch('https://api.countapi.xyz/get/webh2t-github-io/' + key)
+        fetch('https://countapi.mileshilliard.com/api/v1/get/' + key)
           .then(function (r) { return r.json(); })
           .then(function (d) {
-            el.textContent = (typeof d.value === 'number' ? d.value : 0).toLocaleString('vi-VN');
+            var n = parseInt(d.value, 10);
+            el.textContent = (isNaN(n) ? 0 : n).toLocaleString('vi-VN');
           })
           .catch(function () { el.textContent = '0'; });
       }
-      fetchCount('qlnn', 'qlnnCount');
-      fetchCount('exam12', 'exam12Count');
+      fetchCount('webh2t-qlnn', 'qlnnCount');
+      fetchCount('webh2t-exam12', 'exam12Count');
     })();
   </script>
 </body>
