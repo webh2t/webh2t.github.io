@@ -2311,16 +2311,20 @@ Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải th
       const v = document.getElementById('visitCount');
       if (v) v.textContent = visits.toLocaleString('vi-VN');
 
-      // Thi Tin 12 / QL Nề nếp: số thủ công (hoặc đồng bộ localStorage từ trang con)
-      // Trên exam-submit-12.html / qlnn.html có thể tăng:
-      //   localStorage.setItem('webh2t_exam12', n)
-      //   localStorage.setItem('webh2t_qlnn', n)
-      const e12 = document.getElementById('exam12Count');
-      if (e12) e12.textContent = parseInt(localStorage.getItem('webh2t_exam12') || '0').toLocaleString('vi-VN');
-      const q = document.getElementById('qlnnCount');
-      if (q) q.textContent = parseInt(localStorage.getItem('webh2t_qlnn') || '0').toLocaleString('vi-VN');
-
-      // Bài viết / Đề thi: sửa số trong HTML (id postCount, examCount) khi cập nhật nội dung
+      // QLNN & Thi Tin 12: đọc số TOÀN CỤC từ CountAPI
+      // Trang con phải gọi /hit cùng namespace+key thì số mới tăng và hiện đúng trên trang chủ
+      function fetchCount(key, elId) {
+        const el = document.getElementById(elId);
+        if (!el) return;
+        fetch('https://api.countapi.xyz/get/webh2t-github-io/' + key)
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            el.textContent = (typeof d.value === 'number' ? d.value : 0).toLocaleString('vi-VN');
+          })
+          .catch(function () { el.textContent = '0'; });
+      }
+      fetchCount('qlnn', 'qlnnCount');
+      fetchCount('exam12', 'exam12Count');
     })();
   </script>
 </body>
