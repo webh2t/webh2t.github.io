@@ -269,7 +269,7 @@
     <div class="student-info" id="exam-student-info">Họ tên: — · Lớp: —</div>
     <div class="timer-box" id="timer"><span>⏱️</span> <span id="timer-text">15:00</span></div>
   </div>
-  <div class="anti-cheat-bar">⚠️ Bài thi chỉ làm 1 lần. Thoát màn hình → lưu 0 điểm, không được làm lại. Cấm copy / đổi tab / phím tắt — vi phạm hủy bài + 0 điểm!</div>
+  <div class="anti-cheat-bar">⚠️ Bài thi chỉ làm 1 lần. Thoát / Reload / đóng tab → lưu 0 điểm, không được làm lại. Cấm copy · đổi tab · F5 · Ctrl+R.</div>
   <div class="exam-body">
     <aside class="sidebar">
       <h3>Phần 1: Trắc nghiệm</h3><div class="q-grid" id="q-grid-p1"></div>
@@ -947,6 +947,12 @@ function startExam() {
   answers = {}; currentQ = 0; examCancelled = false;
   buildSidebar(); renderQuestion(0); startTimer(); startTime = Date.now();
   enableAntiCheat();
+  // Toàn màn hình (giảm thao tác đóng tab); HS có thể thoát fullscreen nhưng vẫn bị beforeunload
+  try {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch (err) {}
 }
 
 function enableAntiCheat() {
@@ -1063,16 +1069,27 @@ function updateTimer() {
 
 function onVis() { if (document.hidden && !examCancelled) cancelExam("Bạn đã chuyển tab/cửa sổ khác."); }
 function onKey(e) {
+  const examOn = document.getElementById("screen-exam") && document.getElementById("screen-exam").style.display === "flex";
+  // Chặn Reload / đóng tab bằng phím tắt khi đang thi
+  if (examOn && !examCancelled) {
+    const k = e.key;
+    const reloadCombo = k === "F5" || k === "F5" || (e.ctrlKey && (k === "r" || k === "R")) || (e.ctrlKey && e.shiftKey && (k === "r" || k === "R")) || (e.metaKey && (k === "r" || k === "R"));
+    const closeCombo = (e.ctrlKey && (k === "w" || k === "W")) || (e.altKey && k === "F4") || (e.ctrlKey && k === "F4");
+    if (reloadCombo || closeCombo) {
+      e.preventDefault();
+      e.stopPropagation();
+      alert("⚠️ Bài thi chỉ làm 1 lần.\\nThoát màn hình → lưu 0 điểm, không được làm lại.\\n\\nKhông được tải lại trang hoặc đóng tab khi đang làm bài.");
+      return false;
+    }
+  }
   // Cho phép gõ chữ trong ô SA
   if (e.target && e.target.id === "sa-input") {
-    // vẫn chặn Ctrl+C/V trong ô SA? Cho phép gõ bình thường, chặn phím tắt nguy hiểm
     if (e.key === "F12" || (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key))) {
       e.preventDefault();
       if (!examCancelled) cancelExam("Bạn đã nhấn phím tắt trái phép.");
     }
     return;
   }
-  // Chặn Ctrl+C, Ctrl+V, Ctrl+A, Ctrl+X, Ctrl+U, Ctrl+S, Ctrl+P, F12, PrintScreen...
   if (
     e.key === "F12" || e.key === "PrintScreen" ||
     (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
@@ -1086,6 +1103,7 @@ function onKey(e) {
 function cancelExam(reason) {
   examCancelled = true; clearInterval(timerInterval);
   disableAntiCheat();
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e) {}
   document.getElementById("modal-reason").textContent = reason + " Bài thi chỉ làm 1 lần. Thoát/hủy → lưu 0 điểm, không được làm lại.";
   document.getElementById("modal-cancel").style.display = "flex";
   document.getElementById("screen-exam").style.display = "none";
@@ -1108,6 +1126,7 @@ function buildPattern() {
 
 async function submitExam(auto) {
   if (examCancelled) return;
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e) {}
   const sa = document.getElementById("sa-input");
   if (sa) answers[activeQuestions[currentQ].uid] = sa.value;
   clearInterval(timerInterval);
