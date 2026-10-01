@@ -7,6 +7,18 @@
   <title>WEBH2T | Informatics Engineering</title>
   <link rel="icon" type="image/jpeg" href="assets/FAVICON.jpg" />
 
+  <!-- Google Analytics 4 – WEBH2T -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-JG88ZZBKGC', {
+      page_title: document.title,
+      page_location: window.location.href
+    });
+  </script>
+
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1211,37 +1223,81 @@
       transform: scale(1.12);
     }
 
-    /* Stats */
-    .stats-bar {
+    /* Stats – bảng thống kê cuối trang */
+    .stats-section {
       max-width: 1200px;
       margin: 40px auto 0;
-      display: flex;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 30px;
-      padding: 24px;
-      background: rgba(255,255,255,0.65);
-      border-radius: var(--radius);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      padding: 0 8px;
     }
-
+    .stats-section h3 {
+      text-align: center;
+      font-size: 1.15rem;
+      font-weight: 800;
+      color: var(--ink);
+      margin-bottom: 18px;
+      letter-spacing: 0.3px;
+    }
+    .stats-section h3 i {
+      color: var(--teal);
+      margin-right: 8px;
+    }
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      padding: 8px 0 4px;
+    }
+    @media (max-width: 900px) {
+      .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+    }
     .stat-item {
       text-align: center;
-      min-width: 130px;
+      padding: 18px 10px;
+      background: linear-gradient(160deg, #ffffff 0%, #f0faf9 100%);
+      border-radius: 16px;
+      border: 1px solid rgba(0,180,180,0.18);
+      box-shadow: 0 6px 20px rgba(0,80,80,0.08);
+      transition: transform 0.25s, box-shadow 0.25s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
     }
-
+    .stat-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 28px rgba(0,120,120,0.14);
+    }
+    .stat-item .stat-icon {
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 10px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      color: #fff;
+    }
+    .stat-item.s-visit .stat-icon { background: linear-gradient(135deg, #0288d1, #26c6da); }
+    .stat-item.s-exam12 .stat-icon { background: linear-gradient(135deg, #6a1b9a, #ab47bc); }
+    .stat-item.s-qlnn .stat-icon { background: linear-gradient(135deg, #1565c0, #42a5f5); }
+    .stat-item.s-post .stat-icon { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
+    .stat-item.s-exam .stat-icon { background: linear-gradient(135deg, #e65100, #ff9800); }
     .stat-item .num {
-      font-size: 2rem;
+      font-size: 1.7rem;
       font-weight: 800;
-      color: var(--teal-dark);
-      text-shadow: 0 2px 4px rgba(0,0,0,0.08);
+      color: var(--ink);
+      line-height: 1.2;
     }
-
     .stat-item .label {
-      font-size: 0.88rem;
-      color: #555;
-      font-weight: 600;
-      margin-top: 4px;
+      font-size: 0.78rem;
+      color: #546e7a;
+      font-weight: 700;
+      margin-top: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
 
     .copyright {
@@ -1778,22 +1834,34 @@
       </div>
     </div>
 
-    <div class="stats-bar">
-      <div class="stat-item">
-        <div class="num" id="visitCount">—</div>
-        <div class="label">Lượt truy cập</div>
-      </div>
-      <div class="stat-item">
-        <div class="num" id="memberCount">—</div>
-        <div class="label">Thành viên đăng ký</div>
-      </div>
-      <div class="stat-item">
-        <div class="num" id="postCount">—</div>
-        <div class="label"><a href="knowledge.html" style="color:inherit;font-weight:600">Bài viết</a></div>
-      </div>
-      <div class="stat-item">
-        <div class="num" id="examCount">—</div>
-        <div class="label"><a href="exam.html" style="color:inherit;font-weight:600">Đề thi</a></div>
+    <div class="stats-section">
+      <h3><i class="fas fa-chart-line"></i> Thống kê WEBH2T</h3>
+      <div class="stats-bar">
+        <div class="stat-item s-visit">
+          <div class="stat-icon"><i class="fas fa-eye"></i></div>
+          <div class="num" id="visitCount">—</div>
+          <div class="label">Lượt xem</div>
+        </div>
+        <a class="stat-item s-exam12" href="https://webh2t.github.io/exam-submit-12.html">
+          <div class="stat-icon"><i class="fas fa-laptop-code"></i></div>
+          <div class="num" id="exam12Count">—</div>
+          <div class="label">Thi Tin 12</div>
+        </a>
+        <a class="stat-item s-qlnn" href="qlnn.html">
+          <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
+          <div class="num" id="qlnnCount">—</div>
+          <div class="label">QL Nề nếp</div>
+        </a>
+        <a class="stat-item s-post" href="knowledge.html">
+          <div class="stat-icon"><i class="fas fa-newspaper"></i></div>
+          <div class="num" id="postCount">64</div>
+          <div class="label">Bài viết</div>
+        </a>
+        <a class="stat-item s-exam" href="exam.html">
+          <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
+          <div class="num" id="examCount">22</div>
+          <div class="label">Đề thi</div>
+        </a>
       </div>
     </div>
 
@@ -2034,7 +2102,24 @@
     const aiInput = document.getElementById('aiInput');
     const aiSend = document.getElementById('aiSend');
 
-    aiToggle.addEventListener('click', () => aiChatbox.classList.toggle('open'));
+    aiToggle.addEventListener('click', () => {
+      const willOpen = !aiChatbox.classList.contains('open');
+      aiChatbox.classList.toggle('open');
+      if (willOpen) {
+        // Đếm mở Chatbox (hiển thị trên trang)
+        let chats = parseInt(localStorage.getItem('webh2t_chat_opens') || '0') + 1;
+        localStorage.setItem('webh2t_chat_opens', chats);
+        const chatEl = document.getElementById('chatCount');
+        if (chatEl) chatEl.textContent = chats.toLocaleString('vi-VN');
+        // Gửi sự kiện lên Google Analytics 4
+        if (typeof gtag === 'function') {
+          gtag('event', 'open_chatbox', {
+            event_category: 'AI',
+            event_label: 'Learning Assistant'
+          });
+        }
+      }
+    });
     aiClose.addEventListener('click', () => aiChatbox.classList.remove('open'));
 
     function addMsg(text, type) {
@@ -2219,17 +2304,23 @@ Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải th
     });
 
     // ========== THỐNG KÊ ==========
-    // Lượt truy cập: tự tăng mỗi lần mở trang (localStorage)
     (function () {
+      // Lượt xem trang chủ (theo máy / trình duyệt)
       let visits = parseInt(localStorage.getItem('webh2t_visits') || '0') + 1;
       localStorage.setItem('webh2t_visits', visits);
-      document.getElementById('visitCount').textContent = visits.toLocaleString('vi-VN');
+      const v = document.getElementById('visitCount');
+      if (v) v.textContent = visits.toLocaleString('vi-VN');
 
-      // Các số còn lại: cập nhật thủ công khi có dữ liệu thật
-      // (GitHub Pages không có backend nên không tự đếm được từ trang con)
-      document.getElementById('memberCount').textContent = '128';  // ← Sửa số thành viên tại đây
-      document.getElementById('postCount').textContent = '64';    // ← Sửa số bài viết tại đây
-      document.getElementById('examCount').textContent = '22';    // ← Sửa số đề thi tại đây
+      // Thi Tin 12 / QL Nề nếp: số thủ công (hoặc đồng bộ localStorage từ trang con)
+      // Trên exam-submit-12.html / qlnn.html có thể tăng:
+      //   localStorage.setItem('webh2t_exam12', n)
+      //   localStorage.setItem('webh2t_qlnn', n)
+      const e12 = document.getElementById('exam12Count');
+      if (e12) e12.textContent = parseInt(localStorage.getItem('webh2t_exam12') || '0').toLocaleString('vi-VN');
+      const q = document.getElementById('qlnnCount');
+      if (q) q.textContent = parseInt(localStorage.getItem('webh2t_qlnn') || '0').toLocaleString('vi-VN');
+
+      // Bài viết / Đề thi: sửa số trong HTML (id postCount, examCount) khi cập nhật nội dung
     })();
   </script>
 </body>
