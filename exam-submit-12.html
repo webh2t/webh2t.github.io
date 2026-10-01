@@ -125,6 +125,22 @@
 .retake-item button{padding:5px 12px;border-radius:6px;font-size:.8rem;font-weight:600;background:#DBEAFE;color:var(--primary)}
 .retake-item button:hover{background:#BFDBFE}
 
+
+.q-text{font-size:1.25rem!important;font-weight:800!important;color:#B91C1C!important;line-height:1.55!important}
+.opt .content{font-size:1.05rem!important}
+.opt .letter{width:30px!important;height:30px!important;font-size:.95rem!important}
+.tf-statement .stmt{font-size:1.05rem!important}
+.short-input{font-size:1.1rem!important;padding:14px!important}
+.q-badge{font-size:.85rem!important}
+.warning-once{background:#FEF2F2;border:2px solid #FECACA;color:#991B1B;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.88rem;font-weight:600;line-height:1.45}
+.schedule-box{background:#F0F9FF;border:1px solid #BAE6FD;border-radius:10px;padding:12px;margin:12px 0}
+.schedule-box h4{color:#0369A1;margin-bottom:8px;font-size:.92rem}
+.schedule-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;font-size:.85rem}
+.schedule-row select,.schedule-row input{padding:6px 8px;border:1px solid #CBD5E1;border-radius:6px;font-size:.85rem}
+.schedule-row button{padding:6px 12px;border-radius:6px;font-weight:600;font-size:.82rem;background:#0EA5E9;color:#fff}
+.schedule-list{font-size:.82rem;margin-top:8px}
+.schedule-list li{padding:4px 0;border-bottom:1px dashed #E2E8F0}
+
 </style>
 </head>
 <body>
@@ -137,6 +153,11 @@
       <button type="button" class="btn-nav-top btn-teacher" id="btn-teacher-link">👨‍🏫 Giáo viên</button>
     </div>
     <div class="load-bar" id="load-bar">⏳ Đang tải dữ liệu đề thi &amp; danh sách học sinh…</div>
+
+    
+    <div class="warning-once" id="warn-once">
+      ⚠️ <b>Bài thi chỉ được làm 1 lần.</b> Sau khi bấm <b>Bắt đầu thi</b>, nếu thoát màn hình bài làm (đóng tab, quay lại, gian lận…) mà <b>không nộp bài</b>, hệ thống sẽ <b>lưu 0 điểm</b> và <b>không cho làm lại</b>.
+    </div>
 
     <div id="student-ui">
       <div class="field">
@@ -207,6 +228,26 @@
         <b>Đề Word đã tải:</b> <span id="docx-name"></span>
         <div id="docx-media" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px"></div>
         <p style="margin-top:8px;color:#64748B">Nội dung text đã trích. Hình/video đính kèm hiển thị bên dưới (nếu có). Câu hỏi online vẫn lấy từ Excel theo 5 mã đề.</p>
+      </div>
+
+
+      <div class="schedule-box" id="schedule-box">
+        <h4>⏰ Khóa lớp / khung giờ làm bài</h4>
+        <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Chỉ học sinh thuộc lớp được mở trong khoảng thời gian quy định mới vào thi được. Ví dụ: 12A1 từ 07:00 05/10 đến 11:30 05/10.</p>
+        <div class="schedule-row">
+          <label>Lớp
+            <select id="sch-class"><option value="">-- Chọn lớp --</option></select>
+          </label>
+          <label>Từ
+            <input type="datetime-local" id="sch-from">
+          </label>
+          <label>Đến
+            <input type="datetime-local" id="sch-to">
+          </label>
+          <button type="button" id="btn-sch-add">➕ Thêm / Cập nhật</button>
+        </div>
+        <ul class="schedule-list" id="sch-list"><li style="color:#888">Chưa có khung giờ (mặc định: mở tự do)</li></ul>
+        <button type="button" class="btn-t btn-clear" id="btn-sch-clear" style="margin-top:6px">🗑️ Xóa hết khung giờ</button>
       </div>
 
       <div class="stats-card" style="margin-top:20px">
@@ -330,7 +371,17 @@ function renderScoreTable() {
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="9" style="padding:16px;color:#888">Chưa có dữ liệu điểm</td></tr>';
   } else {
-    list.sort((a, b) => (b.time || "").localeCompare(a.time || ""));
+    const orderMap = {};
+  let ord = 0;
+  Object.keys(studentsByClass || {}).sort().forEach(lop => {
+    (studentsByClass[lop] || []).forEach(s => { orderMap[lop + "|" + s.name] = ord++; });
+  });
+  list.sort((a, b) => {
+    const oa = orderMap[a.class + "|" + a.name] ?? 99999;
+    const ob = orderMap[b.class + "|" + b.name] ?? 99999;
+    if (oa !== ob) return oa - ob;
+    return (a.class + a.name).localeCompare(b.class + b.name);
+  });
     tbody.innerHTML = list.map((r, i) =>
       "<tr><td>" + (i + 1) + "</td><td>" + (r.class || "") + "</td>" +
       '<td class="col-name">' + (r.name || "") + "</td><td><b>" + r.score + "</b></td>" +
@@ -661,8 +712,23 @@ document.getElementById("file-upload").addEventListener("change", function (e) {
 document.getElementById("btn-download-scores").addEventListener("click", function () {
   const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   if (!list.length) { alert("Chưa có dữ liệu điểm."); return; }
-  const data = [["STT", "Lớp", "Họ và tên", "Điểm", "Đúng", "Sai", "Bỏ qua", "Bài làm", "Thời điểm nộp"]];
-  list.forEach((r, i) => data.push([i + 1, r.class, r.name, r.score, r.correct, r.wrong, r.skip, r.pattern || "", r.time]));
+  // Sắp xếp theo lớp + thứ tự danh sách Excel (studentsByClass)
+  const orderMap = {};
+  let ord = 0;
+  Object.keys(studentsByClass).sort().forEach(lop => {
+    (studentsByClass[lop] || []).forEach(s => {
+      orderMap[lop + "|" + s.name] = ord++;
+    });
+  });
+  const sorted = [...list].sort((a, b) => {
+    const ka = a.class + "|" + a.name, kb = b.class + "|" + b.name;
+    const oa = orderMap[ka] !== undefined ? orderMap[ka] : 99999;
+    const ob = orderMap[kb] !== undefined ? orderMap[kb] : 99999;
+    if (oa !== ob) return oa - ob;
+    return (a.class + a.name).localeCompare(b.class + b.name);
+  });
+  const data = [["STT", "Lớp", "Họ và tên", "Điểm", "Đúng", "Sai", "Bỏ qua", "Bài làm", "Thời điểm nộp", "Mã đề"]];
+  sorted.forEach((r, i) => data.push([i + 1, r.class, r.name, r.score, r.correct, r.wrong, r.skip, r.pattern || "", r.time, r.maDe || ""]));
   const ws = XLSX.utils.aoa_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Diem");
@@ -836,6 +902,10 @@ function startExam() {
   const st = (studentsByClass[selectedClass] || []).find(s => s.name === selectedStudent);
   if ((st && st.score !== "" && st.score != null) || takenMap[selectedClass + "|" + selectedStudent]) {
     alert("Bạn đã hoàn thành bài kiểm tra rồi! Không thể làm lại");
+    return;
+  }
+  if (!isClassOpenNow(selectedClass)) {
+    alert("Hiện không trong khung giờ làm bài của lớp.\n" + scheduleMessage(selectedClass));
     return;
   }
   activeQuestions = buildExam();
@@ -1068,6 +1138,138 @@ async function submitExam(auto) {
 }
 </script>
 
+<script>
+
+/* ========== Lịch khóa lớp ========== */
+const SCHEDULE_KEY = "webh2t_exam_schedule";
+function loadSchedule() {
+  try { return JSON.parse(localStorage.getItem(SCHEDULE_KEY) || "{}"); } catch(e) { return {}; }
+}
+function saveSchedule(obj) {
+  localStorage.setItem(SCHEDULE_KEY, JSON.stringify(obj));
+}
+function renderScheduleList() {
+  const ul = document.getElementById("sch-list");
+  if (!ul) return;
+  const sch = loadSchedule();
+  const keys = Object.keys(sch).sort();
+  if (!keys.length) {
+    ul.innerHTML = '<li style="color:#888">Chưa có khung giờ (mặc định: mở tự do)</li>';
+    return;
+  }
+  ul.innerHTML = keys.map(lop => {
+    const s = sch[lop];
+    const from = s.from ? new Date(s.from).toLocaleString("vi-VN") : "?";
+    const to = s.to ? new Date(s.to).toLocaleString("vi-VN") : "?";
+    return '<li><b>' + lop + '</b>: ' + from + ' → ' + to +
+      ' <button type="button" data-del="' + lop + '" style="margin-left:8px;padding:2px 8px;font-size:.75rem;background:#FEE2E2;border-radius:4px;color:#991B1B">Xóa</button></li>';
+  }).join("");
+  ul.querySelectorAll("button[data-del]").forEach(btn => {
+    btn.onclick = () => {
+      const sch = loadSchedule();
+      delete sch[btn.dataset.del];
+      saveSchedule(sch);
+      renderScheduleList();
+    };
+  });
+}
+function fillScheduleClasses() {
+  const sel = document.getElementById("sch-class");
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  Object.keys(studentsByClass || {}).sort().forEach(lop => {
+    const o = document.createElement("option");
+    o.value = lop; o.textContent = lop;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+function isClassOpenNow(lop) {
+  const sch = loadSchedule();
+  if (!sch[lop]) return true; // không cấu hình = mở tự do
+  const now = Date.now();
+  const from = new Date(sch[lop].from).getTime();
+  const to = new Date(sch[lop].to).getTime();
+  return now >= from && now <= to;
+}
+function scheduleMessage(lop) {
+  const sch = loadSchedule();
+  if (!sch[lop]) return "";
+  const from = new Date(sch[lop].from).toLocaleString("vi-VN");
+  const to = new Date(sch[lop].to).toLocaleString("vi-VN");
+  return "Lớp " + lop + " chỉ được làm bài từ " + from + " đến " + to + ".";
+}
+
+document.getElementById("btn-sch-add")?.addEventListener("click", function () {
+  const lop = document.getElementById("sch-class").value;
+  const from = document.getElementById("sch-from").value;
+  const to = document.getElementById("sch-to").value;
+  if (!lop || !from || !to) { alert("Chọn lớp và đủ thời gian Từ / Đến."); return; }
+  if (new Date(from) >= new Date(to)) { alert("Thời gian 'Từ' phải trước 'Đến'."); return; }
+  const sch = loadSchedule();
+  sch[lop] = { from, to };
+  saveSchedule(sch);
+  renderScheduleList();
+  alert("Đã lưu khung giờ cho lớp " + lop);
+});
+document.getElementById("btn-sch-clear")?.addEventListener("click", function () {
+  if (!confirm("Xóa tất cả khung giờ khóa lớp?")) return;
+  saveSchedule({});
+  renderScheduleList();
+});
+
+/* Gọi khi vào admin / khi có danh sách lớp */
+const _enterAdmin = typeof enterAdminMode === "function" ? enterAdminMode : null;
+if (_enterAdmin) {
+  window.enterAdminMode = function () {
+    _enterAdmin();
+    fillScheduleClasses();
+    renderScheduleList();
+  };
+}
+
+/* ========== Thoát giữa chừng → 0 điểm ========== */
+function saveZeroScore(reason) {
+  if (!selectedStudent || !selectedClass) return;
+  const takenMap = getTakenMap();
+  if (takenMap[selectedClass + "|" + selectedStudent] !== undefined) return; // đã có điểm
+  const record = {
+    name: selectedStudent, class: selectedClass, score: 0,
+    correct: 0, wrong: 0, skip: 0, elapsed: 0,
+    time: new Date().toLocaleString("vi-VN"),
+    pattern: "THOAT/" + (reason || "no-submit"),
+    maDe: window._currentMaDe || ""
+  };
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
+  list.push(record);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  if (studentsByClass[selectedClass]) {
+    const st = studentsByClass[selectedClass].find(s => s.name === selectedStudent);
+    if (st) st.score = 0;
+  }
+}
+
+// beforeunload khi đang thi
+window.addEventListener("beforeunload", function (e) {
+  if (document.getElementById("screen-exam")?.style.display === "flex" && !examCancelled) {
+    saveZeroScore("beforeunload");
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+// override cancelExam to also save 0
+const _cancelExam = typeof cancelExam === "function" ? cancelExam : null;
+if (_cancelExam) {
+  window.cancelExam = function (reason) {
+    saveZeroScore(reason || "gian-lan");
+    _cancelExam(reason);
+  };
+}
+
+</script>
 <!-- Google Analytics 4 -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
 <script>
