@@ -10914,5 +10914,11 @@ if (fd) { fd.valueAsDate = new Date(); autoWeekday(); }
     page_location: window.location.href
   });
 </script>
+<script>
+  fetch('https://api.countapi.xyz/hit/webh2t-github-io/qlnn')
+    .then(r => r.json())
+    .then(d => console.log('QLNN views:', d.value))
+    .catch(() => {});
+</script>
 </body>
 </html>
