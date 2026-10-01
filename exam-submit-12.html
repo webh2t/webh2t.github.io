@@ -931,11 +931,22 @@ async function submitExam(auto) {
 </script>
 
 
+
+
 <script>
+  // Lượt xem Thi Tin 12 – đồng bộ với trang chủ WEBH2T
+  // Key: webh2t-exam12  |  Trang chủ đọc cùng key này
   fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-exam12')
-    .then(r => r.json())
-    .then(d => console.log('Exam12:', d.value))
-    .catch(() => {});
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      console.log('Thi Tin 12 views:', d.value);
+      // Nếu trang có ô hiển thị số lượt, gán vào đây (đổi id cho khớp):
+      // var el = document.getElementById('viewCount');
+      // if (el) el.textContent = d.value;
+    })
+    .catch(function (e) {
+      console.warn('CountAPI Thi Tin 12 lỗi:', e);
+    });
 </script>
 
 </body>
