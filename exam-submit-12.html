@@ -917,5 +917,26 @@ async function submitExam(auto) {
   document.getElementById("res-skip").textContent = skipCount;
 }
 </script>
+
+<!-- Google Analytics 4 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-JG88ZZBKGC', {
+    page_title: document.title,
+    page_location: window.location.href
+  });
+</script>
+
+
+<script>
+  fetch('https://api.countapi.xyz/hit/webh2t-github-io/exam12')
+    .then(r => r.json())
+    .then(d => console.log('Exam12 views:', d.value))
+    .catch(() => {});
+</script>
+
 </body>
 </html>
