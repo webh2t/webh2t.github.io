@@ -602,6 +602,118 @@ body.theme-light #welcomeSection span[style*="color:#000"] { color: #1d4ed8 !imp
 .clock-time { font-size: 1.5rem !important; color: #0369a1 !important; font-weight: 900 !important; }
 #inputToolsRow { display: none; } /* ẩn mặc định; JS hiện cho gvcn */
 
+/* ===== Widget thống kê lượt xem – phong cách AI / năng lực số ===== */
+.qlnn-stats-wrap {
+  max-width: 42rem;
+  margin: 2rem auto 0;
+  padding: 1px;
+  border-radius: 1.25rem;
+  background: linear-gradient(135deg, #22d3ee 0%, #6366f1 45%, #a855f7 100%);
+  box-shadow: 0 0 40px rgba(99, 102, 241, 0.35), 0 12px 32px rgba(15, 23, 42, 0.25);
+  position: relative;
+  overflow: hidden;
+}
+.qlnn-stats-wrap::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 20% 0%, rgba(34, 211, 238, 0.25), transparent 55%),
+              radial-gradient(ellipse at 80% 100%, rgba(168, 85, 247, 0.2), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+.qlnn-stats-inner {
+  position: relative;
+  z-index: 1;
+  margin: 1px;
+  border-radius: calc(1.25rem - 1px);
+  background: linear-gradient(160deg, #0f172a 0%, #1e1b4b 50%, #0c4a6e 100%);
+  padding: 1.25rem 1.5rem 1.35rem;
+  color: #e2e8f0;
+}
+.qlnn-stats-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #67e8f9;
+  margin-bottom: 0.75rem;
+}
+.qlnn-stats-badge span.dot {
+  width: 0.5rem; height: 0.5rem; border-radius: 999px;
+  background: #22d3ee;
+  box-shadow: 0 0 10px #22d3ee;
+  animation: qlnn-pulse 1.6s ease-in-out infinite;
+}
+@keyframes qlnn-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+}
+.qlnn-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+@media (max-width: 520px) {
+  .qlnn-stats-grid { grid-template-columns: 1fr; }
+}
+.qlnn-stat-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(103, 232, 249, 0.22);
+  border-radius: 0.85rem;
+  padding: 0.85rem 0.75rem;
+  text-align: center;
+  backdrop-filter: blur(8px);
+  transition: border-color 0.2s, transform 0.2s;
+}
+.qlnn-stat-card:hover {
+  border-color: rgba(167, 139, 250, 0.55);
+  transform: translateY(-2px);
+}
+.qlnn-stat-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #94a3b8;
+  margin-bottom: 0.35rem;
+}
+.qlnn-stat-value {
+  font-size: 1.65rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  background: linear-gradient(90deg, #67e8f9, #a78bfa, #f0abfc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  line-height: 1.2;
+}
+.qlnn-stat-sub {
+  font-size: 0.65rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+.qlnn-stats-foot {
+  margin-top: 0.85rem;
+  font-size: 0.68rem;
+  color: #64748b;
+  text-align: center;
+}
+body.theme-light .qlnn-stats-inner {
+  background: linear-gradient(160deg, #f8fafc 0%, #eef2ff 55%, #e0f2fe 100%);
+  color: #0f172a;
+}
+body.theme-light .qlnn-stat-card {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(99, 102, 241, 0.25);
+}
+body.theme-light .qlnn-stat-label { color: #64748b; }
+body.theme-light .qlnn-stats-foot { color: #94a3b8; }
+body.theme-light .qlnn-stats-badge { color: #0891b2; }
+
 
 #authModal input, #loginForm input, input#loginId, input#loginPass, input[name="password"], #authModal input[type="text"], #authModal input[type="password"] {
   color: #000000 !important;
@@ -1027,6 +1139,30 @@ button[onclick="doParentReportLogin()"] {
 <div class="font-semibold text-sky-400">PH / HS xem</div>
 <div class="text-slate-400 mt-1">Tài khoản xem chung theo lớp hoặc xem công khai báo cáo.</div>
 </div>
+</div>
+
+<!-- Thống kê lượt xem trang – AI / năng lực số -->
+<div class="qlnn-stats-wrap" id="qlnnPageStats" aria-label="Thống kê lượt xem trang">
+  <div class="qlnn-stats-inner">
+    <div class="qlnn-stats-badge"><span class="dot"></span> Năng lực số · WEBH2T Analytics</div>
+    <div class="qlnn-stats-grid">
+      <div class="qlnn-stat-card">
+        <div class="qlnn-stat-label">Tổng lượt xem</div>
+        <div class="qlnn-stat-value" id="statTotalViews">—</div>
+        <div class="qlnn-stat-sub">mọi thời gian</div>
+      </div>
+      <div class="qlnn-stat-card">
+        <div class="qlnn-stat-label" id="statMonthLabel">THÁNG 10</div>
+        <div class="qlnn-stat-value" id="statMonthViews">—</div>
+        <div class="qlnn-stat-sub">lượt trong tháng</div>
+      </div>
+      <div class="qlnn-stat-card">
+        <div class="qlnn-stat-label">BÁO CÁO</div>
+        <div class="qlnn-stat-value" id="statReportViews">—</div>
+        <div class="qlnn-stat-sub">PH / HS xem báo cáo</div>
+      </div>
+    </div>
+  </div>
 </div>
 </div>
 
@@ -1659,6 +1795,186 @@ function initFirebase() {
   }
 }
 initFirebase();
+
+/* ===== Thống kê lượt xem trang (Firestore + local fallback) ===== */
+function qlnnMonthKey() {
+  var d = new Date();
+  return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0");
+}
+function qlnnMonthLabel() {
+  return "THÁNG " + (new Date().getMonth() + 1);
+}
+function qlnnFmtNum(n) {
+  n = Number(n) || 0;
+  try { return n.toLocaleString("vi-VN"); } catch (e) { return String(n); }
+}
+function qlnnAnimateStat(el, target) {
+  if (!el) return;
+  target = Math.max(0, Number(target) || 0);
+  var start = 0;
+  var prev = parseInt(String(el.textContent).replace(/\D/g, ""), 10);
+  if (!isNaN(prev) && prev > 0 && prev < target) start = prev;
+  var dur = 700;
+  var t0 = null;
+  function step(ts) {
+    if (!t0) t0 = ts;
+    var p = Math.min(1, (ts - t0) / dur);
+    var ease = 1 - Math.pow(1 - p, 3);
+    el.textContent = qlnnFmtNum(Math.round(start + (target - start) * ease));
+    if (p < 1) requestAnimationFrame(step);
+    else el.textContent = qlnnFmtNum(target);
+  }
+  requestAnimationFrame(step);
+}
+function qlnnRenderPageStats(total, monthN, reportN) {
+  var ml = document.getElementById("statMonthLabel");
+  if (ml) ml.textContent = qlnnMonthLabel();
+  qlnnAnimateStat(document.getElementById("statTotalViews"), total);
+  qlnnAnimateStat(document.getElementById("statMonthViews"), monthN);
+  qlnnAnimateStat(document.getElementById("statReportViews"), reportN);
+}
+function qlnnReadLocalStats() {
+  var mk = qlnnMonthKey();
+  var total = 0, monthN = 0, reportN = 0, month = mk;
+  try {
+    total = parseInt(localStorage.getItem("qlnn_pv_total"), 10) || 0;
+    month = localStorage.getItem("qlnn_pv_month") || mk;
+    monthN = parseInt(localStorage.getItem("qlnn_pv_month_n"), 10) || 0;
+    reportN = parseInt(localStorage.getItem("qlnn_pv_report"), 10) || 0;
+    if (month !== mk) { month = mk; monthN = 0; }
+  } catch (e) {}
+  return { total: total, month: month, monthN: monthN, reportN: reportN };
+}
+function qlnnWriteLocalStats(s) {
+  try {
+    localStorage.setItem("qlnn_pv_total", String(s.total || 0));
+    localStorage.setItem("qlnn_pv_month", s.month || qlnnMonthKey());
+    localStorage.setItem("qlnn_pv_month_n", String(s.monthN || 0));
+    localStorage.setItem("qlnn_pv_report", String(s.reportN || 0));
+  } catch (e) {}
+}
+function qlnnTrackPageView() {
+  var mk = qlnnMonthKey();
+  var countedKey = "qlnn_pv_counted_" + mk;
+  var already = false;
+  try { already = sessionStorage.getItem(countedKey) === "1"; } catch (e) {}
+
+  function finish(total, monthN, reportN) {
+    qlnnRenderPageStats(total, monthN, reportN);
+  }
+
+  if (!firebaseReady || !db) {
+    var loc = qlnnReadLocalStats();
+    if (!already) {
+      loc.total += 1;
+      if (loc.month !== mk) { loc.month = mk; loc.monthN = 0; }
+      loc.monthN += 1;
+      try { sessionStorage.setItem(countedKey, "1"); } catch (e) {}
+      qlnnWriteLocalStats(loc);
+    }
+    finish(loc.total, loc.monthN, loc.reportN);
+    return;
+  }
+
+  var ref = db.collection("qlnn_stats").doc("pageviews");
+  ref.get().then(function(snap) {
+    var data = snap.exists ? (snap.data() || {}) : {};
+    var total = Number(data.total) || 0;
+    var month = data.month || mk;
+    var monthN = Number(data.monthN) || 0;
+    var reportN = Number(data.reportN) || 0;
+    if (month !== mk) { month = mk; monthN = 0; }
+    if (!already) {
+      total += 1;
+      monthN += 1;
+      try { sessionStorage.setItem(countedKey, "1"); } catch (e) {}
+      ref.set({
+        total: total,
+        month: month,
+        monthN: monthN,
+        reportN: reportN,
+        updatedAt: new Date().toISOString()
+      }, { merge: true }).catch(function(err) {
+        console.warn("[QLNN] stats cloud", err);
+      });
+      qlnnWriteLocalStats({ total: total, month: month, monthN: monthN, reportN: reportN });
+    }
+    finish(total, monthN, reportN);
+  }).catch(function(err) {
+    console.warn("[QLNN] stats read", err);
+    var loc = qlnnReadLocalStats();
+    if (!already) {
+      loc.total += 1;
+      if (loc.month !== mk) { loc.month = mk; loc.monthN = 0; }
+      loc.monthN += 1;
+      try { sessionStorage.setItem(countedKey, "1"); } catch (e) {}
+      qlnnWriteLocalStats(loc);
+    }
+    finish(loc.total, loc.monthN, loc.reportN);
+  });
+
+  try {
+    if (typeof gtag === "function") {
+      gtag("event", "qlnn_page_view", {
+        page_title: document.title,
+        page_location: window.location.href
+      });
+    }
+  } catch (e) {}
+}
+/** Đếm lượt PH/HS xem báo cáo (viewer / Xem báo cáo) */
+function qlnnTrackReportView() {
+  var countedKey = "qlnn_report_counted_" + qlnnMonthKey();
+  var already = false;
+  try { already = sessionStorage.getItem(countedKey) === "1"; } catch (e) {}
+  if (already) {
+    // chỉ làm mới hiển thị
+    var loc0 = qlnnReadLocalStats();
+    qlnnRenderPageStats(loc0.total, loc0.monthN, loc0.reportN);
+    return;
+  }
+  try { sessionStorage.setItem(countedKey, "1"); } catch (e) {}
+
+  function bump(reportN, total, monthN, month) {
+    qlnnWriteLocalStats({ total: total, month: month, monthN: monthN, reportN: reportN });
+    qlnnRenderPageStats(total, monthN, reportN);
+  }
+
+  if (!firebaseReady || !db) {
+    var loc = qlnnReadLocalStats();
+    loc.reportN = (loc.reportN || 0) + 1;
+    bump(loc.reportN, loc.total, loc.monthN, loc.month);
+    return;
+  }
+  var ref = db.collection("qlnn_stats").doc("pageviews");
+  ref.get().then(function(snap) {
+    var data = snap.exists ? (snap.data() || {}) : {};
+    var mk = qlnnMonthKey();
+    var total = Number(data.total) || 0;
+    var month = data.month || mk;
+    var monthN = Number(data.monthN) || 0;
+    var reportN = (Number(data.reportN) || 0) + 1;
+    if (month !== mk) { month = mk; monthN = 0; }
+    ref.set({
+      total: total,
+      month: month,
+      monthN: monthN,
+      reportN: reportN,
+      updatedAt: new Date().toISOString()
+    }, { merge: true }).catch(function() {});
+    bump(reportN, total, monthN, month);
+  }).catch(function() {
+    var loc = qlnnReadLocalStats();
+    loc.reportN = (loc.reportN || 0) + 1;
+    bump(loc.reportN, loc.total, loc.monthN, loc.month);
+  });
+  try {
+    if (typeof gtag === "function") {
+      gtag("event", "qlnn_report_view", { page_title: document.title });
+    }
+  } catch (e) {}
+}
+setTimeout(function() { try { qlnnTrackPageView(); } catch (e) { console.warn(e); } }, 400);
 
 // Super admin only (no demo gvcn/to1/view)
 const SUPER_ADMIN = {
@@ -2714,6 +3030,7 @@ function enterGuestReport() {
     '<button data-tab="report" class="tab-btn px-4 py-2 rounded-lg font-medium text-sm tab-active">Báo cáo</button>';
   document.querySelectorAll(".tab-btn").forEach(b => b.addEventListener("click", () => switchTab(b.dataset.tab)));
   document.getElementById("btnExportExcel").classList.add("hidden");
+  try { if (typeof qlnnTrackReportView === "function") qlnnTrackReportView(); } catch (e) {}
   // load all classes entries for guest? keep empty until class filter
   students = [];
   entries = [];
@@ -2909,6 +3226,7 @@ function doParentReportLogin() {
       guestMode = false;
       try { localStorage.setItem("qlnn_session_v2", JSON.stringify(currentUser)); } catch (e) {}
       try { loadClassData(); } catch (e) {}
+      try { if (typeof qlnnTrackReportView === "function") qlnnTrackReportView(); } catch (e) {}
       var modal = document.getElementById("parentReportModal");
       if (modal) modal.classList.add("hidden");
       if (currentUser.classId) {
@@ -3109,8 +3427,10 @@ function renderApp() {
     document.getElementById("dlPenalty").value = deadlineCfg.penaltyText || "";
   }
   fillWeekSelects();
-  if (currentUser.role === "viewer") switchTab("report");
-  else switchTab("overview");
+  if (currentUser.role === "viewer") {
+    try { if (typeof qlnnTrackReportView === "function") qlnnTrackReportView(); } catch (e) {}
+    switchTab("report");
+  } else switchTab("overview");
 }
 
 function switchTab(name) {
@@ -10582,6 +10902,17 @@ updateClock();
 updateClock(); setInterval(updateClock, 1000);;
 const fd = document.getElementById("fDate");
 if (fd) { fd.valueAsDate = new Date(); autoWeekday(); }
+</script>
+<!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-JG88ZZBKGC', {
+    page_title: document.title,
+    page_location: window.location.href
+  });
 </script>
 </body>
 </html>
