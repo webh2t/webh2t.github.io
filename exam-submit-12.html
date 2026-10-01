@@ -6,6 +6,8 @@
 <title>Kiểm tra thường xuyên – Tin học 12 | Bài 4: Giao thức mạng | WEBH2T</title>
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 :root{--primary:#2752D6;--purple:#6C5CE7;--green:#27AE60;--green-dark:#1e8449;--red:#E74C3C;--bg:#F0F4F8;--card:#fff;--text:#1A2332;--text-soft:#4A5568;--border:#E2E8F0;--shadow:0 4px 20px rgba(39,82,214,.12);--radius:12px}
@@ -190,11 +192,21 @@
       </div>
       <div class="admin-actions">
         <button class="btn-t btn-download" id="btn-download-scores">📊 Tải về điểm (.xlsx)</button>
+        <button class="btn-t btn-load" id="btn-sync-cloud" style="background:#E0E7FF;color:#3730A3">☁️ Lưu đồng bộ cloud &amp; local</button>
         <button class="btn-t btn-clear" id="btn-clear-scores">🗑️ Xóa sạch dữ liệu điểm</button>
         <button class="btn-t btn-load" id="btn-refresh-scores">🔄 Làm mới</button>
-        <label class="btn-t btn-upload" style="cursor:pointer">📤 Tải danh sách / đề (Excel)
+        <label class="btn-t btn-upload" style="cursor:pointer">📤 Tải danh sách / đề (.xlsx)
           <input type="file" id="file-upload" accept=".xlsx,.xls" style="display:none">
         </label>
+        <label class="btn-t btn-upload" style="cursor:pointer;background:#FCE7F3;color:#9D174D">📄 Tải đề Word (.docx)
+          <input type="file" id="file-upload-docx" accept=".docx" style="display:none">
+        </label>
+        <button class="btn-t btn-clear" id="btn-logout" style="background:#FEE2E2;color:#991B1B">🚪 Đăng xuất</button>
+      </div>
+      <div id="docx-preview" style="display:none;margin-top:12px;padding:12px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;font-size:.85rem">
+        <b>Đề Word đã tải:</b> <span id="docx-name"></span>
+        <div id="docx-media" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:8px"></div>
+        <p style="margin-top:8px;color:#64748B">Nội dung text đã trích. Hình/video đính kèm hiển thị bên dưới (nếu có). Câu hỏi online vẫn lấy từ Excel theo 5 mã đề.</p>
       </div>
 
       <div class="stats-card" style="margin-top:20px">
@@ -669,6 +681,110 @@ document.getElementById("btn-clear-scores").addEventListener("click", function (
 });
 document.getElementById("btn-refresh-scores").addEventListener("click", renderScoreTable);
 
+/* ----- Đăng xuất ----- */
+document.getElementById("btn-back-student")?.addEventListener("click", function (e) {
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+});
+document.getElementById("btn-logout")?.addEventListener("click", function () {
+  if (!confirm("Đăng xuất và quay về trang học sinh?")) return;
+  sessionStorage.removeItem(ADMIN_SESSION_KEY);
+  location.href = location.pathname; // reload clean student view
+});
+
+/* ----- Lưu đồng bộ cloud & local ----- */
+document.getElementById("btn-sync-cloud")?.addEventListener("click", async function () {
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const dataBlob = localStorage.getItem(DATA_KEY) || "";
+  // 1) Local: đảm bảo đã lưu
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  // 2) Tải file điểm + backup JSON
+  if (list.length) {
+    const data = [["STT","Lớp","Họ và tên","Điểm","Đúng","Sai","Bỏ qua","Bài làm","Thời điểm nộp","Mã đề"]];
+    list.forEach((r,i) => data.push([i+1,r.class,r.name,r.score,r.correct,r.wrong,r.skip,r.pattern||"",r.time,r.maDe||""]));
+    const ws = XLSX.utils.aoa_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Diem");
+    XLSX.writeFile(wb, "DongBo_Diem_Tin12_" + new Date().toISOString().slice(0,10) + ".xlsx");
+  }
+  const backup = { scores: list, savedAt: new Date().toISOString(), dataKey: DATA_KEY };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "DongBo_Local_Tin12_" + new Date().toISOString().slice(0,10) + ".json";
+  a.click();
+  // 3) Cloud webhook nếu đã cấu hình trước (localStorage)
+  const webhook = (localStorage.getItem("webh2t_webhook_url") || "").trim();
+  if (webhook) {
+    try {
+      await fetch(webhook, { method: "POST", mode: "no-cors", headers: { "Content-Type": "application/json" }, body: JSON.stringify(backup) });
+      alert("Đã lưu local + tải file đồng bộ. Đã gửi lên webhook cloud.");
+    } catch (e) {
+      alert("Đã lưu local + tải file. Webhook lỗi: " + e.message);
+    }
+  } else {
+    alert("Đã lưu local và tải file Excel + JSON đồng bộ.\n(Muốn cloud: cấu hình webhook Google Apps Script vào localStorage key webh2t_webhook_url)");
+  }
+});
+
+/* ----- Tải đề Word .docx (text + hình/video) ----- */
+document.getElementById("file-upload-docx")?.addEventListener("change", async function (e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const prev = document.getElementById("docx-preview");
+  const media = document.getElementById("docx-media");
+  const nameEl = document.getElementById("docx-name");
+  prev.style.display = "block";
+  nameEl.textContent = file.name + " (" + Math.round(file.size/1024) + " KB)";
+  media.innerHTML = "";
+
+  try {
+    const buf = await file.arrayBuffer();
+    // Text via mammoth
+    if (window.mammoth) {
+      const r = await mammoth.convertToHtml({ arrayBuffer: buf });
+      const box = document.createElement("div");
+      box.style.cssText = "max-height:220px;overflow:auto;border:1px solid #E2E8F0;padding:8px;border-radius:8px;background:#fff;margin-top:8px;font-size:.8rem";
+      box.innerHTML = r.value;
+      media.appendChild(box);
+    }
+    // Media via JSZip (images + video in word/media)
+    if (window.JSZip) {
+      const zip = await JSZip.loadAsync(buf);
+      const mediaFolder = Object.keys(zip.files).filter(p => p.startsWith("word/media/"));
+      for (const p of mediaFolder) {
+        const f = zip.files[p];
+        if (f.dir) continue;
+        const blob = await f.async("blob");
+        const url = URL.createObjectURL(blob);
+        const lower = p.toLowerCase();
+        if (/\.(png|jpe?g|gif|webp|bmp)$/.test(lower)) {
+          const img = document.createElement("img");
+          img.src = url; img.style.cssText = "max-width:180px;max-height:120px;border-radius:8px;border:1px solid #ddd";
+          img.title = p;
+          media.appendChild(img);
+        } else if (/\.(mp4|webm|ogg)$/.test(lower)) {
+          const v = document.createElement("video");
+          v.src = url; v.controls = true; v.style.cssText = "max-width:240px;max-height:140px;border-radius:8px";
+          media.appendChild(v);
+        }
+      }
+      if (!mediaFolder.length) {
+        const tip = document.createElement("span");
+        tip.style.color = "#64748B";
+        tip.textContent = "Không có file media trong docx.";
+        media.appendChild(tip);
+      }
+    }
+    // Lưu meta local
+    localStorage.setItem("webh2t_last_docx_name", file.name);
+    alert("Đã đọc đề Word. Hình/video (nếu có) hiện bên dưới. Câu hỏi thi online vẫn lấy từ file Excel 5 mã đề.");
+  } catch (err) {
+    alert("Lỗi đọc DOCX: " + err.message);
+  }
+  e.target.value = "";
+});
+
+
 function shuffle(a) {
   const arr = [...a];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -689,12 +805,22 @@ function buildExam() {
     selectedCode = codes[Math.floor(Math.random() * codes.length)];
     bank = window.examCodes[selectedCode];
   }
-  // Giữ đúng thứ tự mức độ: không xáo toàn bộ phần 1 (C1-3 Biết... C10-12 Vận dụng cao)
-  // Chỉ xáo đáp án MC; với TF/SA lấy đủ 2 câu theo thứ tự ngân hàng
-  const p1src = (bank.part1 || []).slice(0, 12);
+  // Xáo trong từng mức độ: Biết(0-2) / Hiểu(3-5) / VĐ thấp(6-8) / VĐ cao(9-11)
+  // Không trộn câu giữa các mức; chỉ xáo đáp án A–D
+  function bandShuffle(arr, size) {
+    const a = arr.slice(0, size);
+    const bands = [a.slice(0,3), a.slice(3,6), a.slice(6,9), a.slice(9,12)];
+    return bands.flatMap(b => shuffle(b));
+  }
+  const p1src = bandShuffle(bank.part1 || [], 12);
   const p1 = p1src.map(q => shuffleMC({ ...q, part: 1 }));
-  const p2 = (bank.part2 || []).slice(0, 2).map(q => ({ ...q, part: 2 }));
-  const p3 = (bank.part3 || []).slice(0, 2).map(q => ({ ...q, part: 3 }));
+  // TF: giữ 2 câu, có thể đảo thứ tự 2 câu; trong mỗi câu ý a-d giữ thứ tự mức độ
+  let p2src = (bank.part2 || []).slice(0, 2);
+  p2src = shuffle(p2src);
+  const p2 = p2src.map(q => ({ ...q, part: 2 }));
+  let p3src = (bank.part3 || []).slice(0, 2);
+  // C15 VĐ thấp, C16 VĐ cao — giữ thứ tự
+  const p3 = p3src.map(q => ({ ...q, part: 3 }));
   const all = [...p1, ...p2, ...p3];
   all.forEach((q, i) => { q.displayId = i + 1; q.uid = "q" + i + "_" + Date.now(); q.maDe = selectedCode; });
   window._currentMaDe = selectedCode;
