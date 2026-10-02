@@ -74,15 +74,23 @@
 
 .anti-cheat-bar{background:#FEF3C7;color:#92400E;padding:7px 18px;font-size:.82rem;font-weight:600;text-align:center;border-bottom:2px solid #F59E0B}
 .exam-body{display:flex;flex:1;max-width:1400px;margin:0 auto;width:100%;padding:14px;gap:14px}
-.sidebar{width:220px;flex-shrink:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;height:fit-content;position:sticky;top:95px}
-.sidebar h3{font-size:.8rem;font-weight:700;color:var(--purple);margin-bottom:6px;padding-bottom:5px;border-bottom:2px solid var(--border)}
-.q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:10px}
-.q-btn{width:100%;min-height:42px;aspect-ratio:auto;border-radius:6px;font-weight:700;font-size:.72rem;line-height:1.2;padding:4px 2px;background:#F1F5F9;color:var(--text-soft);border:2px solid transparent;word-break:break-all}
-.q-btn .ans-label{display:block;font-size:.68rem;font-weight:800;color:#1D4ED8;margin-top:2px}
-.q-btn.answered .ans-label{color:#1E40AF}
-.q-btn.current .ans-label{color:#fff}
+.sidebar{width:240px;flex-shrink:0;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:14px 12px;height:fit-content;position:sticky;top:95px;border:1px solid #E8EEF7}
+.sidebar h3{font-size:.78rem;font-weight:700;color:#5B4BCC;margin:12px 0 8px;padding:0 2px;letter-spacing:.02em}.sidebar h3:first-child{margin-top:0}
+.q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}.q-grid.tf-grid{grid-template-columns:1fr;gap:8px}.q-grid.sa-grid{grid-template-columns:repeat(2,1fr);gap:8px}
+.q-btn{width:100%;min-height:44px;border-radius:10px;font-weight:700;font-size:.8rem;line-height:1.25;padding:8px 6px;background:#EEF3FF;color:#3B5BDB;border:1.5px solid #C5D4F7;cursor:pointer;transition:all .15s;text-align:center}
+.q-btn:hover{background:#E0EAFF;border-color:#93B4F5}
+.q-btn.answered{background:#E8F0FE;border-color:#7BA3F0;color:#1E3A8A}
+.q-btn.current{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;border-color:#16A34A;box-shadow:0 4px 12px rgba(22,163,74,.35)}
+.q-btn .ans-main{display:block;font-size:.85rem;font-weight:800;letter-spacing:.02em}
+.q-btn .ans-sub{display:block;font-size:.68rem;font-weight:600;opacity:.95;margin-top:3px;line-height:1.3;word-break:break-word}
+.q-btn.tf-btn-side{min-height:56px;padding:8px 10px;text-align:left}
+.q-btn.tf-btn-side .ans-main{font-size:.9rem}
+.q-btn.tf-btn-side .tf-row{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-top:4px}
+.q-btn.tf-btn-side .tf-cell{font-size:.72rem;font-weight:700;color:#1D4ED8;background:rgba(255,255,255,.55);border-radius:4px;padding:2px 4px}
+.q-btn.current .tf-cell{color:#fff;background:rgba(255,255,255,.2)}
+.q-btn.sa-btn-side .ans-sub{font-size:.75rem;font-style:italic}
 
-.q-btn.current{background:var(--green);color:#fff}.q-btn.answered{background:#DBEAFE;color:var(--primary);border-color:#93C5FD}.q-btn.current.answered{background:var(--green);color:#fff}
+
 .question-area{flex:1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 26px;min-height:460px;display:flex;flex-direction:column}
 .q-badge{display:inline-block;background:var(--purple);color:#fff;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:14px;margin-bottom:10px}
 .q-text{font-size:1.05rem;font-weight:600;line-height:1.5;margin-bottom:18px}
@@ -903,31 +911,56 @@ function shuffleMC(q) {
   return { ...q, options: idxs.map(i => q.options[i]), correct: idxs.indexOf(q.correct) };
 }
 function buildExam() {
-  let bank = questionBank;
-  let selectedCode = "";
-  const codes = Object.keys(window.examCodes || {}).filter(k => k && k !== "default" && (window.examCodes[k].part1 || []).length >= 12);
+  // Gộp ngân hàng theo mức độ từ mọi mã đề → giảm trùng lặp
+  const codes = Object.keys(window.examCodes || {}).filter(k => k && k !== "default");
+  const pools = { b0: [], b1: [], b2: [], b3: [], tf: [], saLow: [], saHigh: [] };
+
+  function absorb(bank) {
+    const p1 = bank.part1 || [];
+    // 4 band: 0-2 Biết, 3-5 Hiểu, 6-8 VĐ thấp, 9-11 VĐ cao
+    p1.forEach((q, i) => {
+      const b = i < 3 ? "b0" : i < 6 ? "b1" : i < 9 ? "b2" : "b3";
+      pools[b].push({ ...q });
+    });
+    (bank.part2 || []).forEach(q => pools.tf.push({ ...q }));
+    const p3 = bank.part3 || [];
+    if (p3[0]) pools.saLow.push({ ...p3[0] });
+    if (p3[1]) pools.saHigh.push({ ...p3[1] });
+  }
+
   if (codes.length) {
-    selectedCode = codes[Math.floor(Math.random() * codes.length)];
-    bank = window.examCodes[selectedCode];
+    codes.forEach(c => absorb(window.examCodes[c]));
+  } else {
+    absorb(questionBank);
   }
-  // Xáo trong từng mức độ: Biết(0-2) / Hiểu(3-5) / VĐ thấp(6-8) / VĐ cao(9-11)
-  // Không trộn câu giữa các mức; chỉ xáo đáp án A–D
-  function bandShuffle(arr, size) {
-    const a = arr.slice(0, size);
-    const bands = [a.slice(0,3), a.slice(3,6), a.slice(6,9), a.slice(9,12)];
-    return bands.flatMap(b => shuffle(b));
+
+  function pick(arr, n) {
+    return shuffle(arr).slice(0, Math.min(n, arr.length));
   }
-  const p1src = bandShuffle(bank.part1 || [], 12);
-  const p1 = p1src.map(q => shuffleMC({ ...q, part: 1 }));
-  // TF: giữ 2 câu, có thể đảo thứ tự 2 câu; trong mỗi câu ý a-d giữ thứ tự mức độ
-  let p2src = (bank.part2 || []).slice(0, 2);
-  p2src = shuffle(p2src);
-  const p2 = p2src.map(q => ({ ...q, part: 2 }));
-  let p3src = (bank.part3 || []).slice(0, 2);
-  // C15 VĐ thấp, C16 VĐ cao — giữ thứ tự
-  const p3 = p3src.map(q => ({ ...q, part: 3 }));
+
+  // Mỗi band lấy 3 câu (xáo trong band); nếu thiếu thì lấy từ toàn bộ MC
+  let p1 = [];
+  ["b0", "b1", "b2", "b3"].forEach(b => {
+    let got = pick(pools[b], 3);
+    if (got.length < 3) {
+      const rest = shuffle((questionBank.part1 || []).map(q => ({ ...q })));
+      for (const q of rest) {
+        if (got.length >= 3) break;
+        if (!got.some(x => x.text === q.text)) got.push(q);
+      }
+    }
+    p1 = p1.concat(got);
+  });
+  p1 = p1.slice(0, 12).map(q => shuffleMC({ ...q, part: 1 }));
+
+  const p2 = pick(pools.tf.length ? pools.tf : (questionBank.part2 || []), 2).map(q => ({ ...q, part: 2 }));
+  const saL = pick(pools.saLow.length ? pools.saLow : (questionBank.part3 || []).slice(0, 1), 1);
+  const saH = pick(pools.saHigh.length ? pools.saHigh : (questionBank.part3 || []).slice(1, 2), 1);
+  const p3 = [...saL, ...saH].map(q => ({ ...q, part: 3 }));
+
   const all = [...p1, ...p2, ...p3];
-  all.forEach((q, i) => { q.displayId = i + 1; q.uid = "q" + i + "_" + Date.now(); q.maDe = selectedCode; });
+  const selectedCode = "MIX-" + (codes.length ? codes.join("/") : "1");
+  all.forEach((q, i) => { q.displayId = i + 1; q.uid = "q" + i + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6); q.maDe = selectedCode; });
   window._currentMaDe = selectedCode;
   return all;
 }
@@ -991,54 +1024,74 @@ function blockEvent(e) {
 }
 
 function buildSidebar() {
-  ["q-grid-p1", "q-grid-p2", "q-grid-p3"].forEach(id => document.getElementById(id).innerHTML = "");
+  const map = { 1: "q-grid-p1", 2: "q-grid-p2", 3: "q-grid-p3" };
+  Object.values(map).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = "";
+  });
+  // class grids
+  const g1 = document.getElementById("q-grid-p1");
+  const g2 = document.getElementById("q-grid-p2");
+  const g3 = document.getElementById("q-grid-p3");
+  if (g1) g1.className = "q-grid";
+  if (g2) g2.className = "q-grid tf-grid";
+  if (g3) g3.className = "q-grid sa-grid";
+
   activeQuestions.forEach((q, i) => {
     const btn = document.createElement("button");
-    btn.className = "q-btn"; btn.textContent = q.displayId; btn.dataset.idx = i;
+    btn.type = "button";
+    btn.className = "q-btn" + (q.type === "tf" ? " tf-btn-side" : q.type === "sa" ? " sa-btn-side" : "");
+    btn.dataset.idx = i;
     btn.onclick = () => goTo(i);
-    document.getElementById(q.part === 1 ? "q-grid-p1" : q.part === 2 ? "q-grid-p2" : "q-grid-p3").appendChild(btn);
+    btn.innerHTML = "<span class=\"ans-main\">" + q.displayId + "</span>";
+    document.getElementById(map[q.part]).appendChild(btn);
   });
+  updateSidebar();
 }
-function formatAnswerLabel(q) {
+
+function formatSideContent(q) {
   const k = q.uid;
   if (q.type === "mc") {
-    if (answers[k] === undefined) return "";
-    return String.fromCharCode(65 + answers[k]);
+    if (answers[k] === undefined) return { main: String(q.displayId), sub: "" };
+    return { main: q.displayId + " = " + String.fromCharCode(65 + answers[k]), sub: "" };
   }
   if (q.type === "tf") {
     const a = answers[k] || [null, null, null, null];
     const letters = ["a", "b", "c", "d"];
-    return letters.map((L, i) => {
-      if (a[i] === true) return L + "=Đ";
-      if (a[i] === false) return L + "=S";
-      return L + "=-";
-    }).join(" ");
+    const cells = letters.map((L, i) => {
+      let v = "—";
+      if (a[i] === true) v = "Đ";
+      else if (a[i] === false) v = "S";
+      return { L, v, done: a[i] != null };
+    });
+    return { main: String(q.displayId), tf: cells };
   }
-  // sa
   const t = (answers[k] || "").trim();
-  if (!t) return "";
-  return t.length > 18 ? t.slice(0, 16) + "…" : t;
+  return { main: String(q.displayId), sub: t ? (t.length > 22 ? t.slice(0, 20) + "…" : t) : "" };
 }
+
 function updateSidebar() {
   document.querySelectorAll(".q-btn").forEach(btn => {
     const idx = +btn.dataset.idx;
     const q = activeQuestions[idx];
+    if (!q) return;
     btn.classList.toggle("current", idx === currentQ);
     btn.classList.toggle("answered", isAnswered(q));
-    const label = formatAnswerLabel(q);
-    if (label) {
-      if (q.type === "mc") {
-        btn.innerHTML = '<span class="ans-label">' + q.displayId + " = " + label + "</span>";
-      } else if (q.type === "tf") {
-        btn.innerHTML = "<b>" + q.displayId + "</b><span class=\"ans-label\">" + label + "</span>";
-      } else {
-        btn.innerHTML = "<b>" + q.displayId + "</b><span class=\"ans-label\">" + label + "</span>";
-      }
+    const info = formatSideContent(q);
+    if (q.type === "tf") {
+      const cells = (info.tf || []).map(c =>
+        "<span class=\"tf-cell\">" + c.L + " = " + c.v + "</span>"
+      ).join("");
+      btn.innerHTML = "<span class=\"ans-main\">" + info.main + "</span><div class=\"tf-row\">" + cells + "</div>";
+    } else if (q.type === "sa") {
+      btn.innerHTML = "<span class=\"ans-main\">" + info.main + "</span>" +
+        (info.sub ? "<span class=\"ans-sub\">" + info.sub + "</span>" : "");
     } else {
-      btn.textContent = q.displayId;
+      btn.innerHTML = "<span class=\"ans-main\">" + info.main + "</span>";
     }
   });
 }
+
 function isAnswered(q) {
   const k = q.uid;
   if (q.type === "mc") return answers[k] !== undefined;
