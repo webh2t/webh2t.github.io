@@ -67,13 +67,21 @@
 .exam-header .title{font-weight:700;font-size:.92rem}
 .exam-header .student-info{font-size:.85rem;background:rgba(255,255,255,.15);padding:4px 12px;border-radius:20px}
 .timer-box{background:linear-gradient(135deg,#FF6B35,#E74C3C);color:#fff;padding:7px 16px;border-radius:50px;font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:6px;min-width:95px;justify-content:center}
-.timer-box.warning{animation:pulse .8s infinite}@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.timer-box.warning{animation:pulse .8s infinite}
+.timer-box.critical{background:linear-gradient(135deg,#DC2626,#7F1D1D)!important;animation:blink-red .4s infinite;box-shadow:0 0 20px rgba(220,38,38,.8)}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes blink-red{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.75;transform:scale(1.12)}}
+
 .anti-cheat-bar{background:#FEF3C7;color:#92400E;padding:7px 18px;font-size:.82rem;font-weight:600;text-align:center;border-bottom:2px solid #F59E0B}
 .exam-body{display:flex;flex:1;max-width:1400px;margin:0 auto;width:100%;padding:14px;gap:14px}
-.sidebar{width:190px;flex-shrink:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;height:fit-content;position:sticky;top:95px}
+.sidebar{width:220px;flex-shrink:0;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:12px;height:fit-content;position:sticky;top:95px}
 .sidebar h3{font-size:.8rem;font-weight:700;color:var(--purple);margin-bottom:6px;padding-bottom:5px;border-bottom:2px solid var(--border)}
-.q-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:10px}
-.q-btn{width:100%;aspect-ratio:1;border-radius:6px;font-weight:700;font-size:.82rem;background:#F1F5F9;color:var(--text-soft);border:2px solid transparent}
+.q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:10px}
+.q-btn{width:100%;min-height:42px;aspect-ratio:auto;border-radius:6px;font-weight:700;font-size:.72rem;line-height:1.2;padding:4px 2px;background:#F1F5F9;color:var(--text-soft);border:2px solid transparent;word-break:break-all}
+.q-btn .ans-label{display:block;font-size:.68rem;font-weight:800;color:#1D4ED8;margin-top:2px}
+.q-btn.answered .ans-label{color:#1E40AF}
+.q-btn.current .ans-label{color:#fff}
+
 .q-btn.current{background:var(--green);color:#fff}.q-btn.answered{background:#DBEAFE;color:var(--primary);border-color:#93C5FD}.q-btn.current.answered{background:var(--green);color:#fff}
 .question-area{flex:1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 26px;min-height:460px;display:flex;flex-direction:column}
 .q-badge{display:inline-block;background:var(--purple);color:#fff;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:14px;margin-bottom:10px}
@@ -991,11 +999,44 @@ function buildSidebar() {
     document.getElementById(q.part === 1 ? "q-grid-p1" : q.part === 2 ? "q-grid-p2" : "q-grid-p3").appendChild(btn);
   });
 }
+function formatAnswerLabel(q) {
+  const k = q.uid;
+  if (q.type === "mc") {
+    if (answers[k] === undefined) return "";
+    return String.fromCharCode(65 + answers[k]);
+  }
+  if (q.type === "tf") {
+    const a = answers[k] || [null, null, null, null];
+    const letters = ["a", "b", "c", "d"];
+    return letters.map((L, i) => {
+      if (a[i] === true) return L + "=Đ";
+      if (a[i] === false) return L + "=S";
+      return L + "=-";
+    }).join(" ");
+  }
+  // sa
+  const t = (answers[k] || "").trim();
+  if (!t) return "";
+  return t.length > 18 ? t.slice(0, 16) + "…" : t;
+}
 function updateSidebar() {
   document.querySelectorAll(".q-btn").forEach(btn => {
     const idx = +btn.dataset.idx;
+    const q = activeQuestions[idx];
     btn.classList.toggle("current", idx === currentQ);
-    btn.classList.toggle("answered", isAnswered(activeQuestions[idx]));
+    btn.classList.toggle("answered", isAnswered(q));
+    const label = formatAnswerLabel(q);
+    if (label) {
+      if (q.type === "mc") {
+        btn.innerHTML = '<span class="ans-label">' + q.displayId + " = " + label + "</span>";
+      } else if (q.type === "tf") {
+        btn.innerHTML = "<b>" + q.displayId + "</b><span class=\"ans-label\">" + label + "</span>";
+      } else {
+        btn.innerHTML = "<b>" + q.displayId + "</b><span class=\"ans-label\">" + label + "</span>";
+      }
+    } else {
+      btn.textContent = q.displayId;
+    }
   });
 }
 function isAnswered(q) {
@@ -1064,7 +1105,16 @@ function startTimer() {
 function updateTimer() {
   const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
   document.getElementById("timer-text").textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
-  if (timeLeft <= 60) document.getElementById("timer").classList.add("warning");
+  const box = document.getElementById("timer");
+  if (timeLeft <= 10) {
+    box.classList.add("critical");
+    box.classList.remove("warning");
+  } else if (timeLeft <= 60) {
+    box.classList.add("warning");
+    box.classList.remove("critical");
+  } else {
+    box.classList.remove("warning", "critical");
+  }
 }
 
 function onVis() { if (document.hidden && !examCancelled) cancelExam("Bạn đã chuyển tab/cửa sổ khác."); }
