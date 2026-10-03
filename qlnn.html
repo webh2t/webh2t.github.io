@@ -2617,8 +2617,8 @@ function withTimeout(promise, ms, label) {
 }
 
 /**
- * Ghi 1 bản ghi lên cloud — 2 đường song song (qlnn_sync + qlnn_classes)
- * Thành công nếu ÍT NHẤT 1 đường OK
+ * Ghi 1 bản ghi — CHỈ 1 đường qlnn_sync (tiết kiệm quota Spark)
+ * Lỗi quota (429) → báo rõ, không spam retry
  */
 function saveOneEntryToCloud(entry, attempt) {
   if (!entry || !entry.id) return Promise.resolve(false);
@@ -2634,7 +2634,6 @@ function saveOneEntryToCloud(entry, attempt) {
     return Promise.resolve(false);
   }
 
-  // Lấy key lớp bằng mọi cách
   var key = "";
   try { key = sharedSyncKey(currentUser); } catch (e) {}
   if (!key && currentUser) {
@@ -2653,7 +2652,7 @@ function saveOneEntryToCloud(entry, attempt) {
     key = String(entry.className).toLowerCase().replace(/[^a-z0-9]/g, "");
   }
   if (!key) {
-    window._lastCloudError = "Thiếu className/classId — báo GVCN kiểm tra tài khoản Leader (parentId, className)";
+    window._lastCloudError = "Thiếu className/classId — kiểm tra tài khoản Leader";
     if (typeof setSyncStatus === "function") setSyncStatus(window._lastCloudError, false);
     return Promise.resolve(false);
   }
@@ -2675,45 +2674,43 @@ function saveOneEntryToCloud(entry, attempt) {
     syncedAt: new Date().toISOString()
   });
 
-  // Đường 1: qlnn_sync/{key}/entries/{id}
-  var p1 = withTimeout(
+  // Chỉ 1 write — tránh đốt quota Spark (20k writes/ngày)
+  return withTimeout(
     db.collection("qlnn_sync").doc(key).collection("entries").doc(String(entry.id)).set(payload, { merge: true }),
-    12000,
+    15000,
     "sync/" + key
-  );
-  // Đường 2: qlnn_classes/{cid}/entries/{id} (dự phòng)
-  var p2 = withTimeout(
-    db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(entry.id)).set(payload, { merge: true }),
-    12000,
-    "classes/" + cid
-  );
-
-  return Promise.all([p1, p2]).then(function(results) {
-    var ok1 = results[0] && results[0].ok;
-    var ok2 = results[1] && results[1].ok;
-    if (ok1 || ok2) {
-      console.info("[QLNN] cloud OK", "sync=" + ok1, "classes=" + ok2, key, entry.id);
+  ).then(function(res) {
+    if (res && res.ok) {
+      console.info("[QLNN] cloud OK", key, entry.id, entry.studentName);
       if (typeof setSyncStatus === "function") {
         setSyncStatus("✓ Cloud OK: " + (entry.studentName || "") + " · " + key, true);
       }
       return true;
     }
-    // Lấy lỗi chi tiết
     var errMsg = "";
-    [results[0], results[1]].forEach(function(r) {
-      if (r && r.timeout) errMsg = errMsg || "Timeout 12s (mạng chậm)";
-      if (r && r.error) {
-        var em = r.error.message || String(r.error);
-        var code = r.error.code || "";
-        errMsg = errMsg || (code ? code + ": " : "") + em;
+    if (res && res.timeout) errMsg = "Timeout 15s (mạng chậm)";
+    if (res && res.error) {
+      var em = (res.error.message || String(res.error) || "").toLowerCase();
+      var code = res.error.code || "";
+      if (code === "resource-exhausted" || /quota|resource.exhausted|429/i.test(em)) {
+        errMsg = "HẾT QUOTA Firestore (Spark) — vào Firebase → Usage, đợi reset hoặc nâng Blaze";
+      } else {
+        errMsg = (code ? code + ": " : "") + (res.error.message || String(res.error));
       }
-    });
+    }
     window._lastCloudError = errMsg || "Ghi Firestore thất bại";
-    console.warn("[QLNN] cloud FAIL", window._lastCloudError, "key=", key, "cid=", cid);
+    console.warn("[QLNN] cloud FAIL", window._lastCloudError);
 
-    if (attempt < 2) {
+    // Quota: không retry (làm hết quota thêm)
+    if (/quota|resource.exhausted|429/i.test(window._lastCloudError)) {
+      if (typeof setSyncStatus === "function") {
+        setSyncStatus("⚠ " + window._lastCloudError + " · bản ghi vẫn trên máy", false);
+      }
+      return false;
+    }
+    if (attempt < 1) {
       return new Promise(function(resolve) {
-        setTimeout(function() { resolve(saveOneEntryToCloud(entry, attempt + 1)); }, 1000);
+        setTimeout(function() { resolve(saveOneEntryToCloud(entry, attempt + 1)); }, 1500);
       });
     }
     if (typeof setSyncStatus === "function") {
