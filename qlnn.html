@@ -4670,6 +4670,14 @@ function saveEntryFromForm(e) {
   try { dedupeEntriesInMemory(); } catch (e) {}
   window._forceShowWeek = String(entry.weekNo || "");
 
+  // Chuẩn hóa ngày ISO (tránh GVCN lọc tuần lệch định dạng dd/mm)
+  try {
+    if (entry.date && String(entry.date).indexOf("/") >= 0) {
+      var pd = String(entry.date).split("/");
+      if (pd.length === 3) entry.date = pd[2] + "-" + String(pd[1]).padStart(2, "0") + "-" + String(pd[0]).padStart(2, "0");
+    }
+  } catch (e) {}
+
   // Ghi local ngay (classId + backup theo user — sống sót sau logout/login)
   try {
     var cidL = currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "");
@@ -4680,7 +4688,6 @@ function saveEntryFromForm(e) {
     if (currentUser && currentUser.id) {
       localStorage.setItem("qlnn_entries_user_" + String(currentUser.id).toLowerCase(), JSON.stringify(entries));
     }
-    // Snapshot session gần nhất — khôi phục khi classId lệch
     localStorage.setItem("qlnn_entries_last", JSON.stringify({
       classId: cidL || "",
       userId: (currentUser && currentUser.id) || "",
@@ -4689,48 +4696,95 @@ function saveEntryFromForm(e) {
     }));
   } catch (e) { console.warn("local save", e); }
 
-  // 1) Ghi ngay 1 bản ghi lên subcollection (an toàn khi nhiều Leader)
-  try { saveOneEntryToCloud(entry); } catch (e) { console.warn(e); }
-  // 2) Hàng đợi đồng bộ đầy đủ (gộp remote + batch subcollection + mirror doc)
-  var ok = false;
-  try {
-    ok = saveClassData({ forceEntry: entry }) !== false;
-  } catch (e) { console.warn(e); ok = true; }
-
   var msg = document.getElementById("formMsg");
   if (msg) {
-    msg.textContent = "✅ Đã lưu: " + entry.studentName + " · Tuần " + (entry.weekNo || "?") + " · " + (entry.contentText || entry.contentCode || "") + " · " + (entry.total > 0 ? "+" : "") + entry.total + (firebaseReady ? " · đang đồng bộ cloud" : " · chỉ máy này");
-    msg.className = "mt-3 text-sm font-semibold text-green-700";
+    msg.textContent = "⏳ Đang lưu & đồng bộ cloud: " + entry.studentName + " · " + (entry.subject || "") + " · " + (entry.contentCode || "");
+    msg.className = "mt-3 text-sm font-semibold text-sky-700";
     msg.classList.remove("hidden");
   }
 
-  // Form giữ tuần vừa nhập — không gọi onWeekSelect (tránh reset)
+  // Hiển thị ngay trên máy Leader
+  try {
+    if (typeof renderRecent === "function") renderRecent();
+    if (typeof updateMissingAssigned === "function") updateMissingAssigned();
+  } catch (err) { console.warn(err); }
+
+  /**
+   * Đồng bộ cloud chắc chắn:
+   * 1) Ghi bản ghi hiện tại
+   * 2) Đẩy LẠI toàn bộ entries local (cùng HS / cả lớp) — tránh mất 1/3 như lea.png (KTPL)
+   */
+  function syncAllLocalEntriesToCloud(done) {
+    var list = (entries || []).filter(function(x) {
+      return x && x.id && !(typeof isEntryDeleted === "function" && isEntryDeleted(x));
+    });
+    // Ưu tiên bản ghi vừa lưu lên đầu
+    list = [entry].concat(list.filter(function(x) { return String(x.id) !== String(entry.id); }));
+    var chain = Promise.resolve(true);
+    // Ghi từng cái (multi-path + index) — chắc hơn batch một đường
+    list.forEach(function(ent) {
+      chain = chain.then(function() {
+        return saveOneEntryToCloud(ent).catch(function() { return false; });
+      });
+    });
+    chain.then(function() {
+      try { saveClassData({ forceEntry: entry }); } catch (e) {}
+      if (done) done(true);
+    }).catch(function() {
+      try { saveClassData({ forceEntry: entry }); } catch (e) {}
+      if (done) done(false);
+    });
+  }
+
+  try {
+    saveOneEntryToCloud(entry).then(function(ok1) {
+      syncAllLocalEntriesToCloud(function(ok2) {
+        if (msg) {
+          if (ok1 || ok2) {
+            msg.textContent = "✅ Đã lưu & cloud: " + entry.studentName + " · " + (entry.subject || "—") + " · " + (entry.contentText || entry.contentCode || "") + " · " + (entry.total > 0 ? "+" : "") + entry.total + " · tổng local " + (entries || []).length + " bản ghi";
+            msg.className = "mt-3 text-sm font-semibold text-green-700";
+          } else {
+            msg.textContent = "⚠️ Đã lưu máy · Cloud chưa xác nhận — bấm «☁ Đồng bộ cloud» trên máy GVCN hoặc lưu lại";
+            msg.className = "mt-3 text-sm font-semibold text-amber-700";
+          }
+        }
+        try {
+          if (typeof renderRecent === "function") renderRecent();
+          if (typeof renderReport === "function") renderReport();
+        } catch (e) {}
+      });
+    }).catch(function() {
+      try { saveClassData({ forceEntry: entry }); } catch (e) {}
+      if (msg) {
+        msg.textContent = "⚠️ Đã lưu máy · Lỗi cloud — thử lại khi có mạng";
+        msg.className = "mt-3 text-sm font-semibold text-amber-700";
+      }
+    });
+  } catch (e) {
+    console.warn(e);
+    try { saveClassData({ forceEntry: entry }); } catch (e2) {}
+  }
+
+  // Form giữ tuần vừa nhập
   try {
     var wEl = document.getElementById("fWeekNo");
     if (wEl && entry.weekNo) wEl.value = String(entry.weekNo);
   } catch (e) {}
 
-  // Hiển thị ngay
-  try {
-    if (typeof renderRecent === "function") renderRecent();
-    if (typeof updateMissingAssigned === "function") updateMissingAssigned();
-    if (typeof updateOverviewStats === "function") updateOverviewStats();
-    if (typeof renderReport === "function") renderReport();
-    if (typeof renderClassViolTableOnce === "function") renderClassViolTableOnce(entries);
-  } catch (err) { console.warn(err); }
-
-  // Đồng bộ lại cloud sau 1.2s (đảm bảo bản ghi còn sau merge concurrent)
+  // Đồng bộ lại sau 2s (phòng race)
   setTimeout(function() {
     try {
       if (!(entries || []).some(function(x) { return String(x.id) === String(entry.id); })) {
         entries.unshift(entry);
       }
       try { unmarkEntryDeleted(entry); } catch (e) {}
-      saveOneEntryToCloud(entry);
+      (entries || []).forEach(function(ent) {
+        if (ent && ent.id) try { saveOneEntryToCloud(ent); } catch (e) {}
+      });
       saveClassData({ forceEntry: entry });
       if (typeof renderRecent === "function") renderRecent();
     } catch (e) { console.warn(e); }
-  }, 1200);
+  }, 2000);
 
   // Mobile: cuộn tới bản ghi gần đây
   try {
@@ -5496,7 +5550,9 @@ function entryFingerprint(e) {
   text = text.replace(/\s*\([+\-]?\d+\)\s*/g, " ");
   text = text.replace(/\s+/g, " ").trim();
   var code = String(e.contentCode || "").toLowerCase().replace(/[^a-z0-9]/g, "");
-  return [String(e.studentId || "").toLowerCase(), date, String(e.type || "").toLowerCase(), code, text].join("|");
+  var subject = String(e.subject || "").toLowerCase().replace(/\s+/g, " ").trim();
+  // Gồm môn — không xóa nhầm bản ghi cùng mã u/v nhưng khác môn
+  return [String(e.studentId || "").toLowerCase(), date, String(e.type || "").toLowerCase(), code, text, subject].join("|");
 }
 
 function isEntryDeleted(e) {
