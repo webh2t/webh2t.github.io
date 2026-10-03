@@ -2680,10 +2680,12 @@ function saveOneEntryToCloud(entry, attempt) {
   });
 }
 
-/** Ghi hàng loạt entries lên subcollection (chia batch 400) — chống ghi đè khi nhiều người */
+/** Ghi hàng loạt entries lên qlnn_sync/{className}/entries */
 function saveEntriesBatchToCloud(cid, list) {
-  if (!firebaseReady || !db || !cid || !list || !list.length) return Promise.resolve(0);
-  var CHUNK = 400;
+  if (!firebaseReady || !db || !list || !list.length) return Promise.resolve(0);
+  var key = sharedSyncKey(currentUser) || String(cid || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!key) return Promise.resolve(0);
+  var CHUNK = 200;
   var i = 0;
   var written = 0;
   function next() {
@@ -2694,12 +2696,17 @@ function saveEntriesBatchToCloud(cid, list) {
       var e = list[i];
       if (!e || !e.id) continue;
       if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) continue;
-      var ref = db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(e.id));
-      batch.set(ref, Object.assign({}, e, { classId: cid, syncedAt: new Date().toISOString() }), { merge: true });
+      var ref = db.collection("qlnn_sync").doc(key).collection("entries").doc(String(e.id));
+      batch.set(ref, Object.assign({}, e, {
+        classId: cid || e.classId || key,
+        className: (currentUser && currentUser.className) || e.className || key,
+        syncKey: key,
+        syncedAt: new Date().toISOString()
+      }), { merge: true });
       written++;
     }
     return batch.commit().then(next).catch(function(err) {
-      console.warn("[QLNN] batch entries", err);
+      console.warn("[QLNN] batch qlnn_sync", err);
       return written;
     });
   }
@@ -2871,12 +2878,24 @@ function saveClassData(opts) {
     return false;
   }
   if (!firebaseReady || !db) {
-    setSyncStatus("Đã lưu máy · Cloud chưa sẵn sàng (kiểm tra mạng / Firebase)", false);
+    setSyncStatus("Đã lưu máy · Cloud chưa sẵn sàng", false);
     return true;
   }
-  setSyncStatus("☁ Đang đồng bộ " + (entries || []).length + " bản ghi…", null);
 
-  // Snapshot local entries tại thời điểm gọi (tránh mất bản ghi khi queue chạy chậm)
+  var forceEntry = opts.forceEntry || null;
+  var syncKey = "";
+  try { syncKey = sharedSyncKey(currentUser) || sharedSyncKey(userSnap) || ""; } catch (e) {}
+
+  // Leader: chỉ đẩy 1 bản ghi qua qlnn_sync — KHÔNG chạy hàng đợi nặng (gốc rễ lỗi treo)
+  if (forceEntry && forceEntry.id && ((userSnap && userSnap.role === "leader") || (currentUser && currentUser.role === "leader"))) {
+    saveOneEntryToCloud(forceEntry).then(function(ok) {
+      setSyncStatus(ok ? "☁ Leader → cloud OK · " + syncKey : "☁ Leader cloud lỗi — đã lưu máy", !!ok);
+      if (opts.cb) opts.cb(!!ok);
+    });
+    return true;
+  }
+
+  setSyncStatus("☁ Đang đồng bộ…", null);
   var localSnapshot = (entries || []).slice();
   var studentsSnap = students;
   var bonusesSnap = bonuses;
@@ -2884,115 +2903,54 @@ function saveClassData(opts) {
   var penaltiesSnap = penalties;
   var penaltyAssignsSnap = penaltyAssigns;
   var deadlineSnap = deadlineCfg;
-  var deletedIdsSnap = Object.assign({}, window._deletedEntryIds || {});
-  var deletedFpSnap = Object.assign({}, window._deletedEntryFingerprints || {});
-  var forceEntry = opts.forceEntry || null;
   var metaClassName = (userSnap && userSnap.className) || (currentUser && currentUser.className) || "";
   var metaSchool = (userSnap && userSnap.school) || (currentUser && currentUser.school) || "";
   var metaBy = (userSnap && userSnap.id) || (currentUser && currentUser.id) || "";
 
   _saveClassQueue = _saveClassQueue.then(function() {
     _saveClassBusy = true;
-    var attempt = 0;
-    function pushCloud() {
-      attempt++;
-      try { purgeDeletedEntries(); } catch (e) {}
-      // 1) Ưu tiên ghi từng bản ghi (và snapshot) lên subcollection — an toàn concurrent
-      var toPush = mergeEntryLists(localSnapshot, entries || []);
-      if (forceEntry && forceEntry.id) {
-        toPush = mergeEntryLists(toPush, [forceEntry]);
-      }
-      try { purgeDeletedEntries(); } catch (e) {}
-      return saveEntriesBatchToCloud(cid, toPush).then(function() {
-        // 2) Đọc remote (doc + subcollection) rồi GỘP — không bao giờ ghi đè mù entries của Leader khác
-        return db.collection("qlnn_classes").doc(cid).get().then(function(snap) {
-          var remoteEntries = [];
-          var remoteStudents = null;
-          if (snap.exists) {
-            var d = snap.data() || {};
-            if (Array.isArray(d.entries)) remoteEntries = d.entries;
-            if (Array.isArray(d.students) && d.students.length) remoteStudents = d.students;
-            if (d.deletedEntryIds && typeof d.deletedEntryIds === "object") {
-              window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, d.deletedEntryIds, deletedIdsSnap);
-              if (window._unmarkedThisSession) {
-                Object.keys(window._unmarkedThisSession).forEach(function(k) {
-                  if (k.indexOf("id:") === 0) delete window._deletedEntryIds[k.slice(3)];
-                });
-              }
-            }
-            if (d.deletedFingerprints && typeof d.deletedFingerprints === "object") {
-              window._deletedEntryFingerprints = Object.assign({}, window._deletedEntryFingerprints || {}, d.deletedFingerprints, deletedFpSnap);
-              if (window._unmarkedThisSession) {
-                Object.keys(window._unmarkedThisSession).forEach(function(k) {
-                  if (k.indexOf("id:") !== 0) delete window._deletedEntryFingerprints[k];
-                });
-              }
-            }
-          }
-          return db.collection("qlnn_classes").doc(cid).collection("entries").get().then(function(qs) {
-            var sub = [];
-            qs.forEach(function(doc) {
-              var dd = doc.data();
-              if (dd) { if (!dd.id) dd.id = doc.id; sub.push(dd); }
-            });
-            entries = mergeEntryLists(mergeEntryLists(remoteEntries, sub), mergeEntryLists(localSnapshot, entries || []));
-            if (forceEntry && forceEntry.id) {
-              try { unmarkEntryDeleted(forceEntry); } catch (e) {}
-              if (window._deletedEntryIds) delete window._deletedEntryIds[String(forceEntry.id)];
-              entries = mergeEntryLists(entries, [forceEntry]);
-            }
-            // Không purge fingerprint của bản ghi đang lưu
-            try { purgeDeletedEntries(); } catch (e) {}
-            if (forceEntry && forceEntry.id && !(entries || []).some(function(x) { return String(x.id) === String(forceEntry.id); })) {
-              entries.unshift(forceEntry);
-            }
-            if (remoteStudents && remoteStudents.length && (!studentsSnap || !studentsSnap.length)) {
-              students = remoteStudents;
-            } else if (studentsSnap && studentsSnap.length) {
-              students = studentsSnap;
-            }
-            // Doc lớp: metadata + mirror entries đã GỘP
-            var payload = {
-              students: students,
-              entries: entries,
-              bonuses: bonusesSnap,
-              violations: violationsSnap,
-              penalties: penaltiesSnap,
-              penaltyAssigns: penaltyAssignsSnap,
-              deadlineCfg: deadlineSnap,
-              deletedEntryIds: window._deletedEntryIds || {},
-              deletedFingerprints: window._deletedEntryFingerprints || {},
-              className: metaClassName,
-              school: metaSchool,
-              updatedAt: new Date().toISOString(),
-              updatedBy: metaBy
-            };
-            return db.collection("qlnn_classes").doc(cid).set(payload, { merge: true });
-          });
-        });
-      }).then(function() {
-        try {
-          localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries));
-          if (metaBy) localStorage.setItem("qlnn_entries_user_" + String(metaBy).toLowerCase(), JSON.stringify(entries));
-        } catch (e) {}
-        setSyncStatus("✓ Đã lưu & đồng bộ cloud · " + entries.length + " bản ghi · lớp " + cid, true);
-        try { if (currentUser) subscribeClassData(cid); } catch (e) {}
-        if (opts.cb) opts.cb(true);
-      }).catch(function(err) {
-        console.warn("Firestore save", err);
-        if (attempt < 4) {
-          setSyncStatus("☁ Lỗi đồng bộ, thử lại lần " + (attempt + 1) + "…", false);
-          return new Promise(function(resolve) {
-            setTimeout(function() { resolve(pushCloud()); }, 900 * attempt);
-          });
-        }
-        setSyncStatus("Đã lưu máy · Cloud lỗi: " + (err.message || err) + " — thử lại khi có mạng", false);
-        if (opts.cb) opts.cb(false);
-      });
-    }
-    return pushCloud();
-  }).then(function() {
-    _saveClassBusy = false;
+    try { purgeDeletedEntries(); } catch (e) {}
+    var toPush = mergeEntryLists(localSnapshot, entries || []);
+    if (forceEntry && forceEntry.id) toPush = mergeEntryLists(toPush, [forceEntry]);
+    var key = syncKey || String(cid).toLowerCase().replace(/[^a-z0-9]/g, "");
+
+    var pEntries = key ? saveEntriesBatchToCloud(cid, toPush) : Promise.resolve(0);
+    var pMeta = key ? db.collection("qlnn_sync").doc(key).set({
+      deletedEntryIds: window._deletedEntryIds || {},
+      deletedFingerprints: window._deletedEntryFingerprints || {},
+      className: metaClassName,
+      school: metaSchool,
+      updatedAt: new Date().toISOString(),
+      updatedBy: metaBy
+    }, { merge: true }).catch(function() {}) : Promise.resolve();
+
+    // Doc lớp: students + catalog — KHÔNG ghi mảng entries (tránh treo / đè)
+    var pClass = db.collection("qlnn_classes").doc(cid).set({
+      students: studentsSnap || students || [],
+      bonuses: bonusesSnap,
+      violations: violationsSnap,
+      penalties: penaltiesSnap,
+      penaltyAssigns: penaltyAssignsSnap,
+      deadlineCfg: deadlineSnap,
+      deletedEntryIds: window._deletedEntryIds || {},
+      className: metaClassName,
+      school: metaSchool,
+      updatedAt: new Date().toISOString(),
+      updatedBy: metaBy
+    }, { merge: true }).catch(function(e) { console.warn(e); });
+
+    return Promise.all([pEntries, pMeta, pClass]).then(function() {
+      try { localStorage.setItem("qlnn_entries_" + cid, JSON.stringify(entries)); } catch (e) {}
+      setSyncStatus("☁ Đã đồng bộ · " + (entries || []).length + " · " + key, true);
+      try { if (currentUser) subscribeClassData(cid); } catch (e) {}
+      if (opts.cb) opts.cb(true);
+      _saveClassBusy = false;
+    }).catch(function(err) {
+      console.warn("saveClassData", err);
+      setSyncStatus("☁ Lỗi cloud (đã lưu máy): " + (err.message || err), false);
+      if (opts.cb) opts.cb(false);
+      _saveClassBusy = false;
+    });
   }).catch(function(e) {
     _saveClassBusy = false;
     console.warn("saveClassData queue", e);
@@ -3399,16 +3357,29 @@ function doLoginAfterSync(id, pass, err) {
     }
 
     currentUser = Object.assign({ id: accId }, acc);
-    // Leader: luôn gắn classId/className/school từ GVCN parent
+    // Leader/viewer: BẮT BUỘC className từ parent (kênh qlnn_sync/{className})
     if (currentUser.role === "leader" || currentUser.role === "viewer") {
       if (currentUser.parentId && accounts[currentUser.parentId]) {
         var pg0 = accounts[currentUser.parentId];
-        currentUser.className = currentUser.className || pg0.className;
-        currentUser.school = currentUser.school || pg0.school;
+        if (pg0.className) currentUser.className = pg0.className;
+        if (pg0.school) currentUser.school = pg0.school;
         if (pg0.classId) currentUser.classId = String(pg0.classId);
+      }
+      if (!currentUser.className) {
+        Object.keys(accounts).forEach(function(k) {
+          var a = accounts[k];
+          if (a && a.role === "gvcn" && a.className && (!currentUser.className)) {
+            if (currentUser.parentId === k || (currentUser.classId && a.classId && String(a.classId) === String(currentUser.classId))) {
+              currentUser.className = a.className;
+              currentUser.school = currentUser.school || a.school;
+              currentUser.classId = currentUser.classId || a.classId;
+            }
+          }
+        });
       }
     }
     try { ensureUserClassId(currentUser); } catch (e) { console.warn(e); }
+    console.info("[QLNN] login", currentUser.id, "role=", currentUser.role, "className=", currentUser.className, "syncKey=", typeof sharedSyncKey === "function" ? sharedSyncKey(currentUser) : "");
     if (currentUser.role === "leader" && !currentUser.team && accounts[accId] && accounts[accId].team) {
       currentUser.team = accounts[accId].team;
     }
