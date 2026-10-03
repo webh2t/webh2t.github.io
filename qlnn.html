@@ -600,7 +600,7 @@ body.theme-light #welcomeSection span[style*="color:#000"] { color: #1d4ed8 !imp
 }
 .clock-date { font-size: 1rem !important; color: #0f172a !important; font-weight: 700 !important; }
 .clock-time { font-size: 1.5rem !important; color: #0369a1 !important; font-weight: 900 !important; }
-#inputToolsRow { display: none; } /* ẩn mặc định; JS hiện cho gvcn */
+#inputToolsRow { display: grid; } /* 3 nút: mẫu / update offline / đồng bộ — GVCN + Leader */
 
 /* ===== Widget thống kê lượt xem – phong cách AI / năng lực số ===== */
 .qlnn-stats-wrap {
@@ -1175,41 +1175,47 @@ button[onclick="doParentReportLogin()"] {
 <section id="tab-input" class="tab-content hidden">
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-6">
 <h2 class="text-xl font-bold text-yellow-400 mb-4">📝 Nhập thi đua học sinh</h2>
-<!-- Thông báo quy định Leader -->
-<div id="leaderInputNotice" class="mb-4 text-sm leading-relaxed rounded-xl border-2 p-4" style="background:#fff7ed;border-color:#f97316;color:#1c1917">
-<div class="font-bold text-base mb-2" style="color:#c2410c">⚠ Quy định nhập thi đua (Leader) — tránh nghẽn hệ thống</div>
-<ol class="list-decimal ml-5 space-y-2" style="color:#1c1917">
-<li><b>Nhiều Leader cùng nhập một lúc</b> dễ nghẽn mạng / không lưu cloud.<br/>
-Nên <b>chia đợt theo từng ngày</b> có điểm thi đua, hoặc <b>tập trung nhập Thứ 6 và Thứ 7</b>.<br/>
-<b>Chậm nhất trước 20:00 Thứ 7 hàng tuần.</b></li>
-<li><b>Số bản ghi cho phép nhập online 1 ngày = <span id="dailyLimitNum" style="color:#b91c1c;font-size:1.1em">40</span> lần</b>
-<span id="dailyLimitUsed" class="ml-1" style="color:#0369a1"></span>
-(quota Firebase Spark miễn phí; reset ~<b>07:00 sáng</b> giờ VN).</li>
-<li>Vượt giới hạn ngày → chọn <b>1 trong 3 cách</b>:
-<ol type="a" class="list-[lower-alpha] ml-5 mt-1 space-y-1">
-<li>Chuyển sang ngày tiếp theo từ <b>07:00</b> (giờ VN) rồi nhập tiếp trên web.</li>
-<li><b>Tải file mẫu Excel</b> → nhập offline trên máy → <b>Ctrl+S</b> → <b>Update offline</b> lên QLNN → <b>Đồng bộ cloud</b>.</li>
-<li>Gửi file Excel đã nhập qua <b>Zalo cho GVCN</b> để GVCN upload.</li>
+<!-- 2 cột: Quy định + Hướng dẫn nhanh -->
+<div class="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
+<div id="leaderInputNotice" class="text-sm leading-snug rounded-xl border p-3" style="background:linear-gradient(145deg,#fff7ed 0%,#ffedd5 100%);border-color:#fb923c;color:#1c1917">
+<div class="font-bold mb-2 flex items-center gap-2" style="color:#c2410c;font-size:0.95rem">
+<span style="display:inline-flex;width:1.5rem;height:1.5rem;align-items:center;justify-content:center;border-radius:9999px;background:#ea580c;color:#fff;font-size:0.75rem">⚠</span>
+Quy định nhập thi đua (Leader)
+</div>
+<ol class="list-decimal ml-4 space-y-1.5" style="color:#292524;font-size:0.82rem">
+<li><b>Nhiều Leader cùng nhập một lúc cùng thời điểm người dùng nhiều</b> → dễ tắc nghẽn mạng hệ thống <b>KHÔNG LƯU CLOUD</b> được. Leader nên chia nhiều đợt nhập theo từng ngày có điểm thi đua, hoặc tập trung nhập vào <b>Thứ 6 và Thứ 7</b>.<br/><b>Chậm nhất trước 20:00 Thứ 7 hàng tuần.</b></li>
+<li>Số bản ghi cho phép nhập online 1 ngày = <b style="color:#b91c1c"><span id="dailyLimitNum">40</span> lần / bản ghi / Leader</b>
+<span id="dailyLimitUsed" class="ml-1" style="color:#0369a1"></span>.</li>
+<li>Vượt giới hạn ngày → chọn <b>1 trong 3 cách</b> thực hiện sau:
+<ol class="ml-3 mt-1 space-y-0.5" style="list-style-type:lower-alpha">
+<li>Chuyển sang ngày tiếp theo từ <b>07:30</b> (giờ VN) rồi nhập tiếp trên website hệ thống bình thường.</li>
+<li><b>Tải file mẫu Excel</b> → nhập offline trên máy → Lưu <b>Ctrl+S</b> → <b>Update offline</b> file mẫu Excel lên QLNN website hệ thống → <b>Đồng bộ cloud</b>.</li>
+<li>Gửi file mẫu Excel đã nhập qua <b>Zalo cho GVCN</b> upload.</li>
 </ol>
 </li>
 </ol>
 </div>
-<!-- Chỉ 3 nút -->
-<div id="inputToolsRow" class="mb-4 p-4 bg-slate-900/70 rounded-xl border border-slate-600 grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-<div>
-<label class="block text-sm text-slate-300 mb-1 font-medium">📥 Tải file mẫu Excel</label>
-<button type="button" onclick="downloadEntriesTemplate()" class="w-full py-3 rounded-lg text-sm font-bold" style="background:#ea580c;color:#fff;box-shadow:0 4px 14px rgba(234,88,12,.4)">TẢI FILE MẪU .XLSX</button>
+<div class="text-sm leading-snug rounded-xl border p-3" style="background:linear-gradient(145deg,#f0f9ff 0%,#e0f2fe 100%);border-color:#38bdf8;color:#0f172a">
+<div class="font-bold mb-2 flex items-center gap-2" style="color:#0369a1;font-size:0.95rem">
+<span style="display:inline-flex;width:1.5rem;height:1.5rem;align-items:center;justify-content:center;border-radius:9999px;background:#0284c7;color:#fff;font-size:0.75rem">ℹ</span>
+Hướng dẫn nhập nhanh
 </div>
-<div>
-<label class="block text-sm text-slate-300 mb-1 font-medium">📤 Update offline</label>
-<label class="w-full py-3 rounded-lg text-sm font-bold cursor-pointer inline-flex items-center justify-center" style="background:#0d9488;color:#fff;box-shadow:0 4px 14px rgba(13,148,136,.45)">CHỌN FILE .XLSX
+<ul class="list-disc ml-4 space-y-1" style="color:#0f172a;font-size:0.82rem">
+<li><b>HS không có</b> Ưu điểm / Vi phạm → <b>không cần nhập</b> (Im lặng · điểm tuần 100).</li>
+<li><b>Vắng / đi trễ / không mặc áo đoàn</b> → <b>không chọn Môn</b>.</li>
+<li><b>Ưu điểm cùng môn cùng ngày</b> → chọn <b>tổng số lần</b> rồi Lưu.</li>
+<li>Trường hợp khác → đủ <b>Ngày · Môn · Họ tên HS · Nội dung · Số lần</b> → Lưu.</li>
+<li>Sai → <b>Bản ghi gần đây</b> → Sửa / Xóa.</li>
+</ul>
+</div>
+</div>
+<!-- 3 nút -->
+<div id="inputToolsRow" class="mb-4 grid grid-cols-1 sm:grid-cols-3 gap-3">
+<button type="button" onclick="downloadEntriesTemplate()" class="py-3 px-3 rounded-xl text-sm font-bold shadow-md" style="background:#ea580c;color:#fff">📥 Tải file mẫu Excel</button>
+<label class="py-3 px-3 rounded-xl text-sm font-bold shadow-md cursor-pointer text-center" style="background:#0d9488;color:#fff">📤 Update offline
 <input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadEntriesFromExcel(event)"/>
 </label>
-</div>
-<div>
-<label class="block text-sm text-slate-300 mb-1 font-medium">☁ Đồng bộ cloud</label>
-<button type="button" onclick="forcePullClassEntries()" class="w-full py-3 rounded-lg text-sm font-bold" style="background:#2563eb;color:#fff;box-shadow:0 4px 14px rgba(37,99,235,.4)">ĐỒNG BỘ CLOUD</button>
-</div>
+<button type="button" onclick="forcePullClassEntries()" class="py-3 px-3 rounded-xl text-sm font-bold shadow-md" style="background:#2563eb;color:#fff">☁ Đồng bộ cloud</button>
 </div>
 
 <!-- HÀNG 2: TUẦN / NGÀY / THỨ -->
@@ -3901,9 +3907,13 @@ function switchTab(name) {
     }
     var tools = document.getElementById("inputToolsRow");
     var teamW = document.getElementById("fTeamWrap");
+    // 3 nút mẫu/offline/cloud hiện cho cả Leader + GVCN
+    if (tools) {
+      tools.classList.remove("hidden");
+      tools.style.display = "grid";
+    }
     if (currentUser && currentUser.role === "leader") {
       ensureUserClassId(currentUser);
-      if (tools) { tools.classList.add("hidden"); tools.style.display = "none"; }
       if (teamW) { teamW.classList.add("hidden"); teamW.style.display = "none"; }
       if (document.getElementById("fTeam") && currentUser.team) {
         document.getElementById("fTeam").value = String(currentUser.team);
@@ -3918,8 +3928,10 @@ function switchTab(name) {
         filterStudentsByTeam();
       }
     } else {
-      if (tools) tools.classList.remove("hidden");
-      if (teamW) teamW.classList.remove("hidden");
+      if (teamW) {
+        teamW.classList.remove("hidden");
+        teamW.style.display = "";
+      }
     }
   }
   if (name === "report") {
@@ -4486,8 +4498,8 @@ function saveEntryFromForm(e) {
     var lim = typeof QLN_DAILY_ENTRY_LIMIT === "number" ? QLN_DAILY_ENTRY_LIMIT : 40;
     if (usedToday >= lim) {
       alert("Đã đủ " + lim + " bản ghi online hôm nay.\n\nChọn 1 cách:\n" +
-        "a) Nhập tiếp sau 07:00 sáng mai (giờ VN)\n" +
-        "b) Tải file mẫu Excel → nhập offline → Update offline → Đồng bộ cloud\n" +
+        "a) Nhập tiếp sau 07:30 sáng mai (giờ VN)\n" +
+        "b) Tải file mẫu Excel → nhập offline → Ctrl+S → Update offline → Đồng bộ cloud\n" +
         "c) Gửi file Excel qua Zalo cho GVCN");
       try { refreshDailyLimitUI(); } catch (e) {}
       return;
@@ -5245,9 +5257,9 @@ function uploadEntriesFromExcel(ev) {
     try {
       var data = new Uint8Array(e.target.result);
       var wb = XLSX.read(data, { type: "array" });
-      // Ưu tiên sheet Nhap_lieu
+      // Ưu tiên sheet BanGhi / Nhap_lieu
       var sheetName = wb.SheetNames.find(function(n) {
-        return /nhap/i.test(n);
+        return /banghi|nhap/i.test(n);
       }) || wb.SheetNames[0];
       var sheet = wb.Sheets[sheetName];
       var aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
@@ -5833,7 +5845,6 @@ function downloadEntriesTemplate() {
     if (ta !== tb) return ta - tb;
     return String(a.id || "").localeCompare(String(b.id || ""), "vi", { numeric: true });
   });
-  // Leader chỉ thấy HS tổ mình
   if (currentUser && currentUser.role === "leader" && currentUser.team) {
     var t0 = String(currentUser.team);
     var filtered = listHS.filter(function(s) { return String(s.team) === t0; });
@@ -5843,135 +5854,137 @@ function downloadEntriesTemplate() {
     listHS = [{ team: 1, id: "b901", name: "NGUYỄN VĂN A" }, { team: 1, id: "b902", name: "TRẦN THỊ B" }];
   }
   var listMon = ["NỀ NẾP","SINH HOẠT 15'","CHÀO CỜ","TOÁN","VĂN","ANH","LÝ","HÓA","SINH","SỬ","ĐỊA","GDCD","KTPL","TIN","CÔNG NGHỆ","THỂ DỤC","GDTC- cầu lông","GDTC- bóng chuyền","GDTC- bóng rổ","GDTC- bóng đá","QUỐC PHÒNG","HĐTN","GDĐP","XIN VỀ"];
-  var listNoiDung = [];
-  (bonuses || []).forEach(function(i) {
-    listNoiDung.push({ loai: "Ưu điểm", code: i.code, text: (i.code || "") + ". " + (i.text || ""), pts: i.points });
+  var listBonus = (bonuses || []).map(function(i) {
+    return { code: i.code, text: (i.code || "") + ". " + (i.text || ""), pts: i.points };
   });
-  (violations || []).forEach(function(i) {
-    listNoiDung.push({ loai: "Vi phạm", code: i.code, text: (i.code || "") + ". " + (i.text || ""), pts: i.points });
+  var listViol = (violations || []).map(function(i) {
+    return { code: i.code, text: (i.code || "") + ". " + (i.text || ""), pts: i.points };
   });
-  if (!listNoiDung.length) {
-    listNoiDung = [
-      { loai: "Ưu điểm", code: "u06", text: "u06. Giơ tay phát biểu GV mời", pts: 5 },
-      { loai: "Vi phạm", code: "v03", text: "v03. Đi học trễ", pts: -2 }
-    ];
-  }
+  if (!listBonus.length) listBonus = [{ code: "u06", text: "u06. Giơ tay phát biểu GV mời", pts: 5 }];
+  if (!listViol.length) listViol = [{ code: "v03", text: "v03. Đi học trễ", pts: -2 }];
+  var listAllNd = listBonus.concat(listViol);
 
-  var guide = [
+  // —— Sheet Huong_dan ——
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
     ["FILE MẪU NHẬP THI ĐUA — LỚP " + cls + " — NH " + year],
-    ["1) Mở file → bật Enable Editing"],
-    ["2) Sheet «Nhap_lieu»: nhập từng dòng"],
-    ["   · Họ tên HS — chọn từ danh sách cột L (hoặc sheet DS_HS)"],
-    ["   · Ngày — dd/mm/yyyy (VD 03/10/2026)"],
-    ["   · Môn — chọn cột M"],
-    ["   · Số lần — 1 đến 10 (cột N)"],
-    ["   · Nội dung — chọn cột O (đủ mã u/v như trên web)"],
-    ["   · Tổng điểm — có thể để trống (hệ thống tự tính) hoặc ghi +5 / -2"],
-    ["   · Người nhập — đã điền sẵn"],
-    ["3) Tạo dropdown Excel (nếu chưa có mũi tên chọn):"],
-    ["   Chọn ô cột A → Dữ liệu → Xác thực dữ liệu → Danh sách → =$L$3:$L$60"],
-    ["   Tương tự cột C =$M$3:$M$30 · cột D =$N$3:$N$12 · cột E =$O$3:$O$80"],
-    ["4) Ctrl+S → trên web bấm «Update offline» → «Đồng bộ cloud»"],
-    ["5) Hoặc gửi file Zalo cho GVCN"]
-  ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), "Huong_dan");
+    ["Dành cho Leader mới dùng Excel — đã lập sẵn danh sách chọn (Dropdown)"],
+    [],
+    ["BƯỚC 1: Mở file → bấm Enable Editing / Cho phép chỉnh sửa"],
+    ["BƯỚC 2: Vào sheet BanGhi — chỉ nhập ở các cột có tiêu đề màu"],
+    ["   A Họ tên HS → bấm mũi tên ▼ chọn HS"],
+    ["   B Ngày → gõ dd/mm/yyyy (VD 03/10/2026)"],
+    ["   C Môn → chọn ▼"],
+    ["   D Số lần → chọn 1–10"],
+    ["   E Nội dung → chọn ▼ (ưu điểm u… hoặc vi phạm v…)"],
+    ["   F Tổng điểm → có thể để trống"],
+    ["   G Người nhập → đã sẵn tên Leader"],
+    ["BƯỚC 3: Ctrl+S lưu file"],
+    ["BƯỚC 4: Trên web QLNN → Update offline → Đồng bộ cloud"],
+    ["   hoặc gửi Zalo cho GVCN"],
+    [],
+    ["Các sheet danh sách: DS_HocSinh | DS_UuDiem | DS_ViPham | DS_Tuan | DS_Mon | DS_NguoiNhap"]
+  ]), "Huong_dan");
 
-  // Nhap_lieu: cột A–J nhập; L–O = danh sách chọn (cùng sheet)
-  var maxList = Math.max(listHS.length, listMon.length, listNoiDung.length, 12, 15);
-  var aoa = [];
-  aoa.push(["NHẬP THI ĐUA LỚP " + cls + " · NH " + year, "", "", "", "", "", "", "", "", "", "", "▼ DANH SÁCH CHỌN (copy hoặc Data Validation)", "", "", ""]);
-  aoa.push(["Họ tên HS", "Ngày", "Môn", "Số lần", "Nội dung", "Tổng điểm", "Người nhập", "Tuần", "Tổ", "ID HS", "", "Họ tên HS", "Môn", "Số lần", "Nội dung"]);
-  var ex = listHS[0];
-  var exNd = listNoiDung[0];
-  aoa.push([
-    ex ? ex.name : "", "03/10/2026", "TOÁN", 1,
-    exNd ? exNd.text : "",
-    exNd ? exNd.pts : "",
-    leaderName, "4", ex ? ex.team : "", ex ? ex.id : "",
-    "",
-    listHS[0] ? listHS[0].name : "",
-    listMon[0] || "",
-    1,
-    listNoiDung[0] ? listNoiDung[0].text : ""
-  ]);
-  for (var i = 1; i < maxList + 5; i++) {
-    var row = ["", "", "", "", "", "", leaderName, "", "", "", ""];
-    row.push(listHS[i] ? listHS[i].name : "");
-    row.push(listMon[i] || "");
-    row.push(i <= 10 ? i : "");
-    row.push(listNoiDung[i] ? listNoiDung[i].text : "");
-    aoa.push(row);
-  }
-  var ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws["!cols"] = [
-    { wch: 26 }, { wch: 12 }, { wch: 14 }, { wch: 8 }, { wch: 40 },
-    { wch: 10 }, { wch: 18 }, { wch: 6 }, { wch: 5 }, { wch: 8 },
-    { wch: 3 },
-    { wch: 26 }, { wch: 14 }, { wch: 8 }, { wch: 40 }
-  ];
-  // Dropdown inline (chuỗi ngắn) — Excel/WPS nhận tốt hơn
-  try {
-    var monList = listMon.join(",");
-    var lanList = "1,2,3,4,5,6,7,8,9,10";
-    var hsNames = listHS.map(function(s) { return String(s.name || "").replace(/,/g, " "); }).filter(Boolean);
-    var ndTexts = listNoiDung.map(function(x) { return String(x.text || "").replace(/,/g, ";"); }).filter(Boolean);
-    // Giới hạn độ dài formula Excel ~255 ký tự cho list inline
-    function shortList(arr, maxLen) {
-      var out = [];
-      var n = 0;
-      for (var i = 0; i < arr.length; i++) {
-        var add = (out.length ? 1 : 0) + arr[i].length;
-        if (n + add > maxLen) break;
-        out.push(arr[i]);
-        n += add;
-      }
-      return out.join(",");
-    }
-    var dv = [];
-    var hsInline = shortList(hsNames, 240);
-    if (hsInline) {
-      dv.push({ type: "list", allowBlank: true, showDropDown: false, sqref: "A3:A200", formulas: ['"' + hsInline + '"'] });
-    }
-    if (monList.length < 250) {
-      dv.push({ type: "list", allowBlank: true, showDropDown: false, sqref: "C3:C200", formulas: ['"' + monList + '"'] });
-    }
-    dv.push({ type: "list", allowBlank: true, showDropDown: false, sqref: "D3:D200", formulas: ['"' + lanList + '"'] });
-    var ndInline = shortList(ndTexts, 240);
-    if (ndInline) {
-      dv.push({ type: "list", allowBlank: true, showDropDown: false, sqref: "E3:E200", formulas: ['"' + ndInline + '"'] });
-    }
-    // Tham chiếu cột L–O trên cùng sheet (danh sách đầy đủ)
-    var hsLast = 2 + listHS.length;
-    var monLast = 2 + listMon.length;
-    var ndLast = 2 + listNoiDung.length;
-    dv.push({ type: "list", allowBlank: true, showDropDown: false, sqref: "A3:A200", formulas: ["$L$3:$L$" + hsLast] });
-    dv.push({ type: "list", allowBlank: true, showDropDown: false, sqref: "C3:C200", formulas: ["$M$3:$M$" + monLast] });
-    dv.push({ type: "list", allowBlank: true, showDropDown: false, sqref: "E3:E200", formulas: ["$O$3:$O$" + ndLast] });
-    ws["!dataValidation"] = dv;
-  } catch (e) { console.warn(e); }
-  XLSX.utils.book_append_sheet(wb, ws, "Nhap_lieu");
-
+  // —— Sheet danh sách (phải tạo trước BanGhi để tham chiếu) ——
   var hsAoa = [["Tổ", "ID HS", "Họ tên HS"]];
   listHS.forEach(function(s) { hsAoa.push([s.team || "", s.id || "", s.name || ""]); });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hsAoa), "DS_HS");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hsAoa), "DS_HocSinh");
+
+  var udAoa = [["Mã", "Nội dung ưu điểm", "Điểm"]];
+  listBonus.forEach(function(i) { udAoa.push([i.code, i.text, i.pts]); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(udAoa), "DS_UuDiem");
+
+  var vpAoa = [["Mã", "Nội dung vi phạm", "Điểm"]];
+  listViol.forEach(function(i) { vpAoa.push([i.code, i.text, i.pts]); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(vpAoa), "DS_ViPham");
+
+  // Sheet gộp nội dung để dropdown 1 cột
+  var ndAoa = [["Nội dung (ƯĐ / VP)"]];
+  listAllNd.forEach(function(i) { ndAoa.push([i.text]); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ndAoa), "DS_NoiDung");
 
   var monAoa = [["Môn"]];
   listMon.forEach(function(m) { monAoa.push([m]); });
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monAoa), "DS_Mon");
 
-  var ndAoa = [["Loại", "Mã", "Nội dung (chọn)", "Điểm"]];
-  listNoiDung.forEach(function(i) { ndAoa.push([i.loai, i.code, i.text, i.pts]); });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ndAoa), "DS_NoiDung");
+  var lanAoa = [["Số lần"]];
+  for (var li = 1; li <= 10; li++) lanAoa.push([li]);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(lanAoa), "DS_SoLan");
 
-  var weeks = [["Tuần", "Từ ngày", "Đến ngày"]];
+  var weeks = [["Tuần", "Từ ngày", "Đến ngày", "Nhãn tuần"]];
+  function fmtVN(iso) {
+    if (!iso || String(iso).length < 10) return iso || "";
+    return iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4);
+  }
   (typeof SCHOOL_WEEKS !== "undefined" ? SCHOOL_WEEKS : []).forEach(function(w) {
-    function fmt(iso) {
-      if (!iso || iso.length < 10) return iso;
-      return iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4);
-    }
-    weeks.push([w.w, fmt(w.from), fmt(w.to)]);
+    weeks.push([w.w, fmtVN(w.from), fmtVN(w.to), "Tuần " + w.w + " | " + fmtVN(w.from) + " – " + fmtVN(w.to)]);
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(weeks), "Lich_tuan");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(weeks), "DS_Tuan");
+
+  var ngAoa = [["Người nhập"]];
+  ngAoa.push([leaderName || "Leader"]);
+  // Thêm các leader khác cùng lớp nếu có
+  try {
+    Object.keys(accounts || {}).forEach(function(k) {
+      var a = accounts[k];
+      if (a && a.role === "leader" && a.name && a.name !== leaderName) {
+        if (!currentUser.className || String(a.className) === String(currentUser.className) || String(a.parentId) === String(currentUser.parentId)) {
+          ngAoa.push([a.name]);
+        }
+      }
+    });
+  } catch (e) {}
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ngAoa), "DS_NguoiNhap");
+
+  // —— Sheet BanGhi (chính) ——
+  var header = ["Họ tên HS", "Ngày", "Môn", "Số lần", "Nội dung", "Tổng điểm", "Người nhập", "Tuần", "Tổ", "ID HS"];
+  var rows = [
+    ["BẢN GHI NHẬP THI ĐUA — LỚP " + cls + " — NH " + year],
+    header
+  ];
+  var ex = listHS[0];
+  var exNd = listAllNd[0];
+  rows.push([
+    ex ? ex.name : "", "03/10/2026", "TOÁN", 1,
+    exNd ? exNd.text : "", exNd ? exNd.pts : "",
+    leaderName, "4", ex ? ex.team : "", ex ? ex.id : ""
+  ]);
+  for (var r = 0; r < 20; r++) {
+    rows.push(["", "", "", "", "", "", leaderName, "", "", ""]);
+  }
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = [
+    { wch: 28 }, { wch: 12 }, { wch: 16 }, { wch: 8 },
+    { wch: 42 }, { wch: 10 }, { wch: 20 }, { wch: 8 }, { wch: 5 }, { wch: 8 }
+  ];
+  // Data Validation tham chiếu sheet danh sách (Excel / WPS)
+  var hsEnd = 1 + listHS.length;
+  var monEnd = 1 + listMon.length;
+  var ndEnd = 1 + listAllNd.length;
+  var ngEnd = ngAoa.length;
+  var tuanEnd = weeks.length;
+  try {
+    ws["!dataValidation"] = [
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "A3:A500", formulas: ["DS_HocSinh!$C$2:$C$" + hsEnd] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "C3:C500", formulas: ["DS_Mon!$A$2:$A$" + monEnd] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "D3:D500", formulas: ["DS_SoLan!$A$2:$A$11"] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "E3:E500", formulas: ["DS_NoiDung!$A$2:$A$" + ndEnd] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "G3:G500", formulas: ["DS_NguoiNhap!$A$2:$A$" + ngEnd] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "H3:H500", formulas: ["DS_Tuan!$A$2:$A$" + tuanEnd] }
+    ];
+  } catch (e) { console.warn(e); }
+  XLSX.utils.book_append_sheet(wb, ws, "BanGhi");
+
+  // Đưa BanGhi lên đầu workbook
+  try {
+    var order = ["Huong_dan", "BanGhi", "DS_HocSinh", "DS_UuDiem", "DS_ViPham", "DS_NoiDung", "DS_Mon", "DS_SoLan", "DS_Tuan", "DS_NguoiNhap"];
+    var sheets = {};
+    order.forEach(function(n) {
+      if (wb.Sheets[n]) sheets[n] = wb.Sheets[n];
+    });
+    wb.SheetNames = order.filter(function(n) { return !!sheets[n]; });
+    wb.Sheets = sheets;
+  } catch (e) {}
 
   XLSX.writeFile(wb, "QLNN_Mau_Nhap_" + cls + ".xlsx");
 }
