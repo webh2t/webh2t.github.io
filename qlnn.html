@@ -5224,15 +5224,35 @@ function uploadEntriesFromExcel(ev) {
     try {
       var data = new Uint8Array(e.target.result);
       var wb = XLSX.read(data, { type: "array" });
-      var sheet = wb.Sheets[wb.SheetNames[0]];
-      var rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
-      if (!rows.length) { alert("File trống"); return; }
-      // Chuẩn hóa tên cột
+      // Ưu tiên sheet Nhap_lieu
+      var sheetName = wb.SheetNames.find(function(n) {
+        return /nhap/i.test(n);
+      }) || wb.SheetNames[0];
+      var sheet = wb.Sheets[sheetName];
+      var aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      // Tìm dòng header có «Họ tên»
+      var headerIdx = 0;
+      for (var hi = 0; hi < Math.min(aoa.length, 8); hi++) {
+        var line = (aoa[hi] || []).map(function(x) { return String(x || "").toLowerCase(); }).join("|");
+        if (line.indexOf("họ tên") >= 0 || line.indexOf("nội dung") >= 0 || line.indexOf("id hs") >= 0) {
+          headerIdx = hi;
+          break;
+        }
+      }
+      var headers = (aoa[headerIdx] || []).map(function(x) { return String(x || "").trim(); });
+      var rows = [];
+      for (var ri = headerIdx + 1; ri < aoa.length; ri++) {
+        var arr = aoa[ri] || [];
+        if (!arr.some(function(c) { return String(c || "").trim(); })) continue;
+        var obj = {};
+        headers.forEach(function(h, j) { if (h) obj[h] = arr[j]; });
+        rows.push(obj);
+      }
+      if (!rows.length) { alert("File trống hoặc không đúng mẫu"); return; }
       function pick(row, names) {
         for (var i = 0; i < names.length; i++) {
           if (row[names[i]] != null && row[names[i]] !== "") return row[names[i]];
         }
-        // case-insensitive
         var keys = Object.keys(row);
         for (var i = 0; i < names.length; i++) {
           var n = names[i].toLowerCase();
@@ -5252,17 +5272,37 @@ function uploadEntriesFromExcel(ev) {
         if (!sid && st) sid = st.id;
         if (!sname && st) sname = st.name;
         if (!sid && !sname) { skipped++; return; }
+        var content = String(pick(row, ["Nội dung", "contentText", "Nội dung thi đua"])).trim();
+        var code = String(pick(row, ["Mã", "contentCode", "Mã nội dung"])).trim();
+        // Tách mã từ nội dung: "u06. Giơ tay…" hoặc "v03. Đi học trễ"
+        if (!code && content) {
+          var m = content.match(/^([uvp]\d{1,3})\b/i);
+          if (m) code = m[1];
+        }
         var typeRaw = String(pick(row, ["Loại", "type", "Loại nội dung"])).toLowerCase();
         var type = "silent";
         if (typeRaw.indexOf("ưu") >= 0 || typeRaw.indexOf("bonus") >= 0 || typeRaw === "u") type = "bonus";
         else if (typeRaw.indexOf("vi") >= 0 || typeRaw.indexOf("violation") >= 0 || typeRaw === "v") type = "violation";
         else if (typeRaw.indexOf("im") >= 0 || typeRaw === "silent") type = "silent";
-        var code = String(pick(row, ["Mã", "contentCode", "Mã nội dung"])).trim();
-        var content = String(pick(row, ["Nội dung", "contentText", "Nội dung thi đua"])).trim();
+        else if (code) {
+          var c0 = code.charAt(0).toLowerCase();
+          if (c0 === "u") type = "bonus";
+          else if (c0 === "v") type = "violation";
+          else if (c0 === "p") type = "penalty";
+        } else if (content) {
+          type = "violation";
+        }
+        // Điểm từ danh mục nếu thiếu
         var pts = Number(pick(row, ["Điểm", "points", "±Điểm"])) || 0;
+        if (!pts && code) {
+          var catItem = (type === "bonus" ? bonuses : violations).find(function(i) {
+            return String(i.code).toLowerCase() === String(code).toLowerCase();
+          });
+          if (catItem) pts = Number(catItem.points) || 0;
+        }
         var times = Number(pick(row, ["Số lần", "times", "Lần"])) || 1;
         var totalX = pick(row, ["Tổng điểm", "Tổng điểm dòng", "total"]);
-        var date = String(pick(row, ["Ngày", "date", "Ngày nhập"])).trim();
+        var date = String(pick(row, ["Ngày", "date", "Ngày nhập", "Ngày giờ lưu"])).trim();
         var teamX = String(pick(row, ["Tổ", "team"])).trim();
         var inputByNameX = String(pick(row, ["Người nhập", "inputByName"])).trim();
         // Excel serial date?
@@ -5761,51 +5801,126 @@ function editEntry(eid) {
 
 
 function downloadEntriesTemplate() {
+  if (typeof XLSX === "undefined") { alert("Thư viện Excel chưa tải"); return; }
   const cls = (currentUser && currentUser.className) || "11B9";
   const year = (currentUser && currentUser.year) || "2026 – 2027";
+  const leaderName = (currentUser && currentUser.name) || (currentUser && currentUser.id) || "";
   const wb = XLSX.utils.book_new();
-  // Sheet hướng dẫn
-  const guide = [
-    ["NHẬP THI ĐUA LỚP " + cls, "", "NĂM HỌC " + year],
-    ["Bật Enable Editing khi mở file trên Excel / WPS"],
-    [],
-    ["Cột bắt buộc:", "Tuần | Ngày giờ lưu | Tổ | ID HS | Họ tên HS | Ngày | Môn | Số lần | Nội dung | Tổng điểm | Người nhập"],
-    ["Tuần:", "Chọn 1–35 hoặc 18' theo lịch năm học"],
-    ["Ngày:", "Phải nằm trong khoảng tuần (VD tuần 1: 07/09/2026–12/09/2026)"],
-    ["Loại:", "Ưu điểm / Vi phạm / Hình phạt"],
-    ["Mã:", "u01… (ưu điểm) | v01… (vi phạm) | p01… (hình phạt)"],
-    ["Số lần:", "1 đến 10"]
-  ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), "Huong dan");
-  // Sheet nhập
-  const rows = [
-    ["NHẬP THI ĐUA LỚP " + cls + " — NĂM HỌC " + year],
-    ["Tuần", "Ngày giờ lưu", "Tổ", "ID HS", "Họ tên HS", "Ngày", "Môn", "Số lần", "Nội dung", "Tổng điểm", "Người nhập"],
-    ["1", "07/09/2026", "Thứ 2", "TOÁN", "1", "Nguyễn Văn A", "Ưu điểm", "u01", "1"],
-    ["1", "08/09/2026", "Thứ 3", "VĂN", "1", "Nguyễn Văn A", "Vi phạm", "v01", "1"],
-    ["1", "09/09/2026", "Thứ 4", "ANH", "1", "Nguyễn Văn A", "Hình phạt", "p01", "1"]
-  ];
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "Nhap lieu");
-  // Tuần
-  const weeks = [["Tuần", "Từ ngày", "Đến ngày"]];
-  SCHOOL_WEEKS.forEach(w => {
-    weeks.push([w.w, w.from.slice(8,10)+"/"+w.from.slice(5,7)+"/"+w.from.slice(0,4), w.to.slice(8,10)+"/"+w.to.slice(5,7)+"/"+w.to.slice(0,4)]);
+
+  // —— Danh sách tham chiếu ——
+  var listHS = (students || []).slice().sort(function(a, b) {
+    var ta = Number(a.team) || 99, tb = Number(b.team) || 99;
+    if (ta !== tb) return ta - tb;
+    return String(a.id || "").localeCompare(String(b.id || ""), "vi", { numeric: true });
   });
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(weeks), "Lich tuan");
-  // HS theo tổ
-  const hs = [["Tổ", "ID", "Họ tên"]];
-  students.forEach(s => hs.push([s.team, s.id, s.name]));
-  if (hs.length === 1) hs.push([1, "b901", "Nguyễn Văn A"]);
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hs), "Hoc sinh");
-  // Danh mục
-  const cat = [["Loại", "Mã", "Nội dung", "Điểm"]];
-  bonuses.forEach(i => cat.push(["Ưu điểm", i.code, i.text, i.points]));
-  violations.forEach(i => cat.push(["Vi phạm", i.code, i.text, i.points]));
-  normalizePenalties(penalties).forEach(i => cat.push(["Hình phạt", i.code, i.text, i.points || 0]));
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(cat), "Danh muc");
-  // Môn
-  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([["Môn"],["TOÁN"],["VĂN"],["ANH"],["LÝ"],["TIN"],["HÓA"],["SINH"],["CÔNG NGHỆ"],["SỬ"],["ĐỊA"],["KTPL"],["GDĐP"],["HĐTN"],["THỂ DỤC"],["QUỐC PHÒNG"]]), "Mon");
-  XLSX.writeFile(wb, "QLNN_Mau_Nhap_Thi_Dua.xlsx");
+  if (!listHS.length) {
+    listHS = [{ team: 1, id: "b901", name: "NGUYỄN VĂN A" }, { team: 1, id: "b902", name: "TRẦN THỊ B" }];
+  }
+  var listMon = ["NỀ NẾP","SINH HOẠT 15'","CHÀO CỜ","TOÁN","VĂN","ANH","LÝ","HÓA","SINH","SỬ","ĐỊA","GDCD","KTPL","TIN","CÔNG NGHỆ","THỂ DỤC","GDTC- cầu lông","GDTC- bóng chuyền","GDTC- bóng rổ","GDTC- bóng đá","QUỐC PHÒNG","HĐTN","GDĐP","XIN VỀ"];
+  var listLan = [1,2,3,4,5,6,7,8,9,10];
+  var listNoiDung = [];
+  (bonuses || []).forEach(function(i) {
+    listNoiDung.push({ loai: "Ưu điểm", code: i.code, text: (i.code || "") + ". " + (i.text || ""), pts: i.points });
+  });
+  (violations || []).forEach(function(i) {
+    listNoiDung.push({ loai: "Vi phạm", code: i.code, text: (i.code || "") + ". " + (i.text || ""), pts: i.points });
+  });
+  if (!listNoiDung.length) {
+    listNoiDung = [
+      { loai: "Ưu điểm", code: "u06", text: "u06. Giơ tay phát biểu GV mời", pts: 5 },
+      { loai: "Vi phạm", code: "v03", text: "v03. Đi học trễ", pts: -2 },
+      { loai: "Vi phạm", code: "v01", text: "v01. Vắng có phép", pts: -5 }
+    ];
+  }
+
+  // Sheet hướng dẫn
+  var guide = [
+    ["FILE MẪU NHẬP THI ĐUA — LỚP " + cls + " — NH " + year],
+    ["Mở file → Enable Editing (Cho phép chỉnh sửa)"],
+    [],
+    ["CÁCH NHẬP (giống form trên web):"],
+    ["1. Vào sheet «Nhap lieu»"],
+    ["2. Cột Họ tên HS: chọn từ danh sách (hoặc copy từ sheet DS_HS)"],
+    ["3. Cột Ngày: ghi dd/mm/yyyy trong tuần đang nhập (VD 30/09/2026)"],
+    ["4. Cột Môn: chọn TOÁN / VĂN / NỀ NẾP… (sheet DS_Mon)"],
+    ["5. Cột Số lần: 1 đến 10"],
+    ["6. Cột Nội dung: copy từ sheet DS_NoiDung (VD: u06. Giơ tay phát biểu GV mời)"],
+    ["7. Cột Tổng điểm: điểm × số lần (VD +5 hoặc -2). Có thể để trống — hệ thống tự tính từ mã"],
+    ["8. Cột Người nhập: tên Leader (mặc định đã điền)"],
+    [],
+    ["Sau khi nhập xong: lưu file → trên web bấm «UPLOAD Excel đã nhập» hoặc «Upload Excel offline»"],
+    ["Khi hết quota Firebase: Leader gửi file này cho GVCN qua Zalo để upload"]
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(guide), "Huong_dan");
+
+  // Sheet nhập chính — đúng cột Leader cần
+  var header = ["Họ tên HS", "Ngày", "Môn", "Số lần", "Nội dung", "Tổng điểm", "Người nhập", "Tuần", "Tổ", "ID HS"];
+  var rows = [
+    ["NHẬP THI ĐUA LỚP " + cls + " · NĂM HỌC " + year],
+    header
+  ];
+  // 8 dòng trống mẫu + 1 dòng ví dụ
+  var exName = listHS[0] ? listHS[0].name : "NGUYỄN VĂN A";
+  var exId = listHS[0] ? listHS[0].id : "b901";
+  var exTeam = listHS[0] ? listHS[0].team : 1;
+  var exNd = listNoiDung[0] ? listNoiDung[0].text : "u06. Giơ tay phát biểu GV mời";
+  var exPts = listNoiDung[0] ? listNoiDung[0].pts : 5;
+  rows.push([exName, "30/09/2026", "TOÁN", 1, exNd, exPts, leaderName, "4", exTeam, exId]);
+  for (var r = 0; r < 12; r++) {
+    rows.push(["", "", "", 1, "", "", leaderName, "", "", ""]);
+  }
+  var wsNhap = XLSX.utils.aoa_to_sheet(rows);
+  wsNhap["!cols"] = [
+    { wch: 28 }, { wch: 12 }, { wch: 16 }, { wch: 8 },
+    { wch: 42 }, { wch: 10 }, { wch: 22 }, { wch: 6 }, { wch: 5 }, { wch: 8 }
+  ];
+  // Data validation (Excel/WPS hỗ trợ khi mở file)
+  try {
+    var hsEnd = Math.max(2, listHS.length + 1);
+    var monEnd = Math.max(2, listMon.length + 1);
+    var ndEnd = Math.max(2, listNoiDung.length + 1);
+    wsNhap["!dataValidation"] = [
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "A3:A200", formulas: ["DS_HS!$C$2:$C$" + hsEnd] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "C3:C200", formulas: ["DS_Mon!$A$2:$A$" + monEnd] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "D3:D200", formulas: ["\"1,2,3,4,5,6,7,8,9,10\""] },
+      { type: "list", allowBlank: true, showDropDown: false, sqref: "E3:E200", formulas: ["DS_NoiDung!$C$2:$C$" + ndEnd] }
+    ];
+  } catch (e) {}
+  XLSX.utils.book_append_sheet(wb, wsNhap, "Nhap_lieu");
+
+  // DS_HS — chọn Họ tên
+  var hsAoa = [["Tổ", "ID HS", "Họ tên HS"]];
+  listHS.forEach(function(s) {
+    hsAoa.push([s.team || "", s.id || "", s.name || ""]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hsAoa), "DS_HS");
+
+  // DS_Mon
+  var monAoa = [["Môn"]];
+  listMon.forEach(function(m) { monAoa.push([m]); });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(monAoa), "DS_Mon");
+
+  // DS_NoiDung — chọn nội dung như catalog web
+  var ndAoa = [["Loại", "Mã", "Nội dung (chọn cột này)", "Điểm"]];
+  listNoiDung.forEach(function(i) {
+    ndAoa.push([i.loai, i.code, i.text, i.pts]);
+  });
+  var wsNd = XLSX.utils.aoa_to_sheet(ndAoa);
+  wsNd["!cols"] = [{ wch: 10 }, { wch: 8 }, { wch: 48 }, { wch: 8 }];
+  XLSX.utils.book_append_sheet(wb, wsNd, "DS_NoiDung");
+
+  // Lịch tuần
+  var weeks = [["Tuần", "Từ ngày", "Đến ngày"]];
+  (typeof SCHOOL_WEEKS !== "undefined" ? SCHOOL_WEEKS : []).forEach(function(w) {
+    function fmt(iso) {
+      if (!iso || iso.length < 10) return iso;
+      return iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4);
+    }
+    weeks.push([w.w, fmt(w.from), fmt(w.to)]);
+  });
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(weeks), "Lich_tuan");
+
+  XLSX.writeFile(wb, "QLNN_Mau_Nhap_" + cls + ".xlsx");
 }
 function debugLeaderCoverage() {
   if (!currentUser) return;
