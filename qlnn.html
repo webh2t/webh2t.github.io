@@ -2317,30 +2317,43 @@ function mergeEntryLists(a, b) {
 
 function normalizeClassId(u) {
   if (!u) return "";
-  if (u.classId) return String(u.classId);
-  if (u.role === "gvcn") {
-    return ((u.school || "") + "_" + (u.className || u.id)).toLowerCase().replace(/\s+/g, "_");
-  }
-  // Leader/viewer: ưu tiên parent GVCN
-  if (u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
-    var pg = accounts[u.parentId];
-    if (pg.classId) return String(pg.classId);
-    return ((pg.school || "") + "_" + (pg.className || pg.id)).toLowerCase().replace(/\s+/g, "_");
-  }
-  if (u.className) {
-    if (typeof accounts !== "undefined") {
+  // Leader/viewer: LUÔN ưu tiên classId của GVCN parent (cùng “kho” với GVCN)
+  if (u.role === "leader" || u.role === "viewer") {
+    if (u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
+      var pg = accounts[u.parentId];
+      if (pg.classId) return String(pg.classId);
+      return ((pg.school || "") + "_" + (pg.className || pg.id)).toLowerCase().replace(/\s+/g, "_");
+    }
+    // Tìm GVCN cùng lớp trong accounts (khi parentId thiếu trên máy Leader)
+    if (typeof accounts !== "undefined" && (u.className || u.classId)) {
       var keys = Object.keys(accounts);
       for (var i = 0; i < keys.length; i++) {
         var a = accounts[keys[i]];
-        if (a && a.role === "gvcn" && String(a.className) === String(u.className)) {
+        if (!a || a.role !== "gvcn") continue;
+        if (u.classId && a.classId && String(a.classId) === String(u.classId)) return String(a.classId);
+        if (u.className && String(a.className) === String(u.className)) {
           if (a.classId) return String(a.classId);
           return ((a.school || "") + "_" + a.className).toLowerCase().replace(/\s+/g, "_");
         }
       }
     }
+  }
+  if (u.classId) return String(u.classId);
+  if (u.role === "gvcn") {
+    return ((u.school || "") + "_" + (u.className || u.id)).toLowerCase().replace(/\s+/g, "_");
+  }
+  if (u.className) {
     return ((u.school || "") + "_" + u.className).toLowerCase().replace(/\s+/g, "_");
   }
   return "";
+}
+
+/** classId chuẩn dùng chung Leader ↔ GVCN (ghi/đọc cùng 1 document Firestore) */
+function resolveSharedClassId(u) {
+  if (!u) return "";
+  var cid = normalizeClassId(u);
+  if (cid && u) u.classId = cid;
+  return cid;
 }
 
 function setSyncStatus(msg, ok) {
@@ -2511,17 +2524,42 @@ function saveOneEntryToCloud(entry, attempt) {
   if (!entry || !entry.id) return Promise.resolve(false);
   attempt = attempt || 0;
   try { if (typeof ensureUserClassId === "function") ensureUserClassId(currentUser); } catch (e) {}
-  var cid = currentUser && (currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : ""));
+  var cid = currentUser && (typeof resolveSharedClassId === "function"
+    ? resolveSharedClassId(currentUser)
+    : (currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "")));
   if (!cid || !firebaseReady || !db) return Promise.resolve(false);
-  var ref = db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(entry.id));
+  if (currentUser) currentUser.classId = cid;
+  entry.classId = cid;
   var payload = Object.assign({}, entry, {
     classId: cid,
     syncedAt: new Date().toISOString()
   });
-  return ref.set(payload, { merge: true }).then(function() {
-    console.info("[QLNN] entry cloud OK", entry.id, entry.studentName);
+  // Ghi vào classId chuẩn + classId parent (nếu khác) để GVCN luôn đọc được
+  var targets = [cid];
+  try {
+    if (currentUser && currentUser.parentId && accounts[currentUser.parentId] && accounts[currentUser.parentId].classId) {
+      var pc = String(accounts[currentUser.parentId].classId);
+      if (pc && targets.indexOf(pc) < 0) targets.push(pc);
+    }
+    // GVCN cùng className
+    if (currentUser && currentUser.className && typeof accounts === "object") {
+      Object.keys(accounts).forEach(function(k) {
+        var a = accounts[k];
+        if (a && a.role === "gvcn" && String(a.className) === String(currentUser.className) && a.classId) {
+          var gc = String(a.classId);
+          if (targets.indexOf(gc) < 0) targets.push(gc);
+        }
+      });
+    }
+  } catch (e) {}
+  var writes = targets.map(function(tid) {
+    return db.collection("qlnn_classes").doc(tid).collection("entries").doc(String(entry.id))
+      .set(Object.assign({}, payload, { classId: tid }), { merge: true });
+  });
+  return Promise.all(writes).then(function() {
+    console.info("[QLNN] entry cloud OK", entry.id, entry.studentName, "→", targets.join(","));
     if (typeof setSyncStatus === "function") {
-      setSyncStatus("✓ Bản ghi đã lên cloud: " + (entry.studentName || entry.id), true);
+      setSyncStatus("✓ Bản ghi đã lên cloud: " + (entry.studentName || entry.id) + " · lớp " + cid, true);
     }
     return true;
   }).catch(function(err) {
@@ -3688,11 +3726,30 @@ function switchTab(name) {
           setTimeout(function() {
             renderLeaderMissingReport(aw, sw && sw.from, sw && sw.to);
           }, 100);
+          try {
+            var nLead = (entries || []).filter(function(e) {
+              return e && e.inputBy && String(e.inputBy).toLowerCase() !== String(currentUser.id || "").toLowerCase();
+            }).length;
+            if (typeof setSyncStatus === "function") {
+              setSyncStatus("☁ Lớp " + (currentUser.classId || "") + " · " + (entries || []).length + " bản ghi (Leader: " + nLead + ")", true);
+            }
+          } catch (e2) {}
         }
       } catch (e) { console.warn(e); }
     };
-    if (currentUser && currentUser.classId && typeof loadClassDataFromCloud === "function") {
-      loadClassDataFromCloud(currentUser.classId, afterLoad);
+    // GVCN/Leader: luôn kéo lại cloud + subcollection khi mở Nhập thi đua
+    if (currentUser) {
+      try { ensureUserClassId(currentUser); } catch (e) {}
+      var cidIn = currentUser.classId || (typeof resolveSharedClassId === "function" ? resolveSharedClassId(currentUser) : "");
+      if (cidIn && typeof loadClassDataFromCloud === "function") {
+        loadClassDataFromCloud(cidIn, function() {
+          if (typeof loadEntriesSubcollection === "function") {
+            loadEntriesSubcollection(cidIn, afterLoad);
+          } else afterLoad();
+        });
+      } else {
+        afterLoad();
+      }
     } else {
       afterLoad();
     }
@@ -4158,17 +4215,29 @@ function resetForm() {
 function ensureUserClassId(u) {
   if (!u) return null;
   try {
-    var cid = normalizeClassId(u);
-    if (cid) {
-      u.classId = cid;
-      // đồng bộ className/school từ GVCN parent nếu thiếu
-      if ((u.role === "leader" || u.role === "viewer") && u.parentId && accounts[u.parentId]) {
+    // Leader/viewer: bắt buộc lấy classId từ parent GVCN
+    if ((u.role === "leader" || u.role === "viewer") && typeof accounts === "object") {
+      if (u.parentId && accounts[u.parentId]) {
         var pg = accounts[u.parentId];
         u.className = u.className || pg.className;
         u.school = u.school || pg.school;
         if (pg.classId) u.classId = String(pg.classId);
+      } else if (u.className) {
+        var keys = Object.keys(accounts);
+        for (var i = 0; i < keys.length; i++) {
+          var a = accounts[keys[i]];
+          if (a && a.role === "gvcn" && String(a.className) === String(u.className)) {
+            u.parentId = u.parentId || keys[i];
+            u.className = u.className || a.className;
+            u.school = u.school || a.school;
+            if (a.classId) u.classId = String(a.classId);
+            break;
+          }
+        }
       }
     }
+    var cid = normalizeClassId(u);
+    if (cid) u.classId = cid;
   } catch (e) { console.warn(e); }
   return u.classId || null;
 }
@@ -4235,6 +4304,8 @@ function saveEntryFromForm(e) {
   (function(){
   if (!currentUser) { alert("Phiên đăng nhập hết hạn — hãy đăng nhập lại"); return; }
   ensureUserClassId(currentUser);
+  var sharedCid = typeof resolveSharedClassId === "function" ? resolveSharedClassId(currentUser) : currentUser.classId;
+  if (sharedCid) currentUser.classId = sharedCid;
   if (!currentUser.classId) {
     alert("Tài khoản chưa gắn lớp (classId). Báo GVCN kiểm tra phân tổ / tài khoản Leader (className, parentId).");
     return;
@@ -4347,6 +4418,7 @@ function saveEntryFromForm(e) {
     weekday: document.getElementById("fWeekday").value,
     subject: document.getElementById("fSubject").value,
     class: document.getElementById("fClass").value,
+    classId: currentUser.classId || "",
     team: student.team,
     studentId: student.id,
     studentName: student.name,
@@ -4675,18 +4747,22 @@ function _renderRecentImpl() {
   });
   let mine = entries.filter(e => {
     if (!inWeek(e)) return false;
-    if (isGvcn) return true;
+    if (isGvcn) return true; // GVCN thấy tất cả Leader
     if (currentUser.role === "leader") {
       return String(e.inputBy) === String(currentUser.id) || String(e.inputByName) === String(currentUser.name) || String(e.inputBy || "").toLowerCase() === String(currentUser.id || "").toLowerCase();
     }
     return false;
   });
-  // Fallback: nếu tuần hiện tại trống nhưng có entries — hiện entries tuần active theo createdAt gần nhất cùng class
+  // Fallback: nếu tuần hiện tại trống nhưng có entries — hiện entries tuần active
   if (!mine.length && (entries || []).length && isGvcn) {
     mine = entries.filter(function(e) {
       if (activeWeek && String(e.weekNo) === String(activeWeek)) return true;
       return inWeek(e);
     });
+  }
+  // Fallback 2: GVCN vẫn trống dù cloud/local có data — hiện mọi bản ghi (mọi tuần) để không “mất” Leader
+  if (!mine.length && (entries || []).length && isGvcn) {
+    mine = (entries || []).slice();
   }
   // không cắt bớt khi GVCN — hiện đủ
   if (!isGvcn) mine = mine.slice(0, 80);
