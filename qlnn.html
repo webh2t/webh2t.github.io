@@ -2590,11 +2590,41 @@ function loadClassDataFromCloud(cid, cb) {
 }
 
 
-/** Ghi TỪNG bản ghi vào subcollection + chỉ mục toàn cục — GVCN mọi thiết bị đều đọc được */
+/** Promise có timeout — tránh treo mãi «Đang lưu & đồng bộ cloud» */
+function withTimeout(promise, ms, label) {
+  ms = ms || 10000;
+  return new Promise(function(resolve) {
+    var done = false;
+    var t = setTimeout(function() {
+      if (done) return;
+      done = true;
+      console.warn("[QLNN] timeout", label || "", ms + "ms");
+      resolve({ ok: false, timeout: true });
+    }, ms);
+    Promise.resolve(promise).then(function(v) {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      resolve({ ok: true, value: v });
+    }).catch(function(err) {
+      if (done) return;
+      done = true;
+      clearTimeout(t);
+      console.warn("[QLNN] write err", label, err);
+      resolve({ ok: false, error: err });
+    });
+  });
+}
+
+/** Ghi TỪNG bản ghi — tối đa 3 đường dẫn + index, có timeout (không treo UI) */
 function saveOneEntryToCloud(entry, attempt) {
   if (!entry || !entry.id) return Promise.resolve(false);
   attempt = attempt || 0;
   try { if (typeof ensureUserClassId === "function") ensureUserClassId(currentUser); } catch (e) {}
+  // Thử init Firebase lại nếu chưa sẵn sàng
+  if (!firebaseReady || !db) {
+    try { if (typeof initFirebase === "function") initFirebase(); } catch (e) {}
+  }
   var cid = currentUser && (typeof resolveSharedClassId === "function"
     ? resolveSharedClassId(currentUser)
     : (currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : "")));
@@ -2615,44 +2645,54 @@ function saveOneEntryToCloud(entry, attempt) {
     school: entry.school || "",
     syncedAt: new Date().toISOString()
   });
-  // Mọi đường dẫn ứng viên (classId lệch giữa máy/điện thoại)
-  var targets = typeof classDocIdCandidates === "function" ? classDocIdCandidates(currentUser || { classId: cid, className: entry.className, school: entry.school }) : [cid];
-  if (targets.indexOf(cid) < 0) targets.unshift(cid);
-  var can = canonicalClassDocId(currentUser || entry);
-  if (can && targets.indexOf(can) < 0) targets.push(can);
+  // Tối đa 3 đường: classId chính + canonical + parent (tránh treo nhiều write)
+  var targets = [];
+  function addT(x) {
+    x = String(x || "").trim();
+    if (x && targets.indexOf(x) < 0 && targets.length < 3) targets.push(x);
+  }
+  addT(cid);
+  addT(typeof canonicalClassDocId === "function" ? canonicalClassDocId(currentUser || entry) : "");
+  try {
+    if (currentUser && currentUser.parentId && accounts[currentUser.parentId] && accounts[currentUser.parentId].classId) {
+      addT(accounts[currentUser.parentId].classId);
+    }
+  } catch (e) {}
 
-  var writes = [];
-  targets.forEach(function(tid) {
-    writes.push(
+  var writes = targets.map(function(tid) {
+    return withTimeout(
       db.collection("qlnn_classes").doc(tid).collection("entries").doc(String(entry.id))
-        .set(Object.assign({}, payload, { classId: tid }), { merge: true })
+        .set(Object.assign({}, payload, { classId: tid }), { merge: true }),
+      8000,
+      "entries/" + tid
     );
   });
-  // Chỉ mục toàn cục theo entry.id — GVCN quét theo className/classId
-  writes.push(
+  writes.push(withTimeout(
     db.collection("qlnn_entry_index").doc(String(entry.id)).set(Object.assign({}, payload, {
       primaryClassId: cid,
       targets: targets
-    }), { merge: true })
-  );
+    }), { merge: true }),
+    8000,
+    "entry_index"
+  ));
 
-  return Promise.all(writes).then(function() {
-    console.info("[QLNN] entry cloud OK", entry.id, entry.studentName, "→", targets.join(","));
-    if (typeof setSyncStatus === "function") {
-      setSyncStatus("✓ Cloud OK: " + (entry.studentName || entry.id) + " · " + targets.length + " đường dẫn", true);
+  return Promise.all(writes).then(function(results) {
+    var okN = (results || []).filter(function(r) { return r && r.ok; }).length;
+    var anyOk = okN > 0;
+    console.info("[QLNN] entry cloud", entry.id, entry.studentName, okN + "/" + writes.length, targets.join(","));
+    if (anyOk) {
+      if (typeof setSyncStatus === "function") {
+        setSyncStatus("✓ Cloud OK: " + (entry.studentName || entry.id) + " · " + okN + " nguồn", true);
+      }
+      return true;
     }
-    return true;
-  }).catch(function(err) {
-    console.warn("[QLNN] entry cloud lỗi", err);
-    if (attempt < 5) {
+    if (attempt < 2) {
       return new Promise(function(resolve) {
-        setTimeout(function() {
-          resolve(saveOneEntryToCloud(entry, attempt + 1));
-        }, 700 * (attempt + 1));
+        setTimeout(function() { resolve(saveOneEntryToCloud(entry, attempt + 1)); }, 1000);
       });
     }
     if (typeof setSyncStatus === "function") {
-      setSyncStatus("Cloud lỗi (bản ghi vẫn trên máy): " + (err.message || err), false);
+      setSyncStatus("Cloud lỗi/timeout — bản ghi vẫn trên máy Leader", false);
     }
     return false;
   });
@@ -4697,94 +4737,87 @@ function saveEntryFromForm(e) {
   } catch (e) { console.warn("local save", e); }
 
   var msg = document.getElementById("formMsg");
+  // Báo đã lưu máy NGAY — không treo «Đang lưu…»
   if (msg) {
-    msg.textContent = "⏳ Đang lưu & đồng bộ cloud: " + entry.studentName + " · " + (entry.subject || "") + " · " + (entry.contentCode || "");
+    msg.textContent = "✅ Đã lưu trên máy: " + entry.studentName + " · " + (entry.subject || "—") + " · " + (entry.contentCode || "") + " · đang đẩy cloud…";
     msg.className = "mt-3 text-sm font-semibold text-sky-700";
     msg.classList.remove("hidden");
   }
 
-  // Hiển thị ngay trên máy Leader
   try {
     if (typeof renderRecent === "function") renderRecent();
     if (typeof updateMissingAssigned === "function") updateMissingAssigned();
   } catch (err) { console.warn(err); }
 
-  /**
-   * Đồng bộ cloud chắc chắn:
-   * 1) Ghi bản ghi hiện tại
-   * 2) Đẩy LẠI toàn bộ entries local (cùng HS / cả lớp) — tránh mất 1/3 như lea.png (KTPL)
-   */
-  function syncAllLocalEntriesToCloud(done) {
-    var list = (entries || []).filter(function(x) {
-      return x && x.id && !(typeof isEntryDeleted === "function" && isEntryDeleted(x));
-    });
-    // Ưu tiên bản ghi vừa lưu lên đầu
-    list = [entry].concat(list.filter(function(x) { return String(x.id) !== String(entry.id); }));
-    var chain = Promise.resolve(true);
-    // Ghi từng cái (multi-path + index) — chắc hơn batch một đường
-    list.forEach(function(ent) {
-      chain = chain.then(function() {
-        return saveOneEntryToCloud(ent).catch(function() { return false; });
-      });
-    });
-    chain.then(function() {
-      try { saveClassData({ forceEntry: entry }); } catch (e) {}
-      if (done) done(true);
-    }).catch(function() {
-      try { saveClassData({ forceEntry: entry }); } catch (e) {}
-      if (done) done(false);
-    });
+  // Chỉ đẩy bản ghi hiện tại + tối đa 8 bản ghi cùng HS (song song, có timeout)
+  function finishMsg(cloudOk) {
+    if (!msg) return;
+    if (cloudOk) {
+      msg.textContent = "✅ Đã lưu & cloud: " + entry.studentName + " · " + (entry.subject || "—") + " · " + (entry.contentText || entry.contentCode || "") + " · " + (entry.total > 0 ? "+" : "") + entry.total;
+      msg.className = "mt-3 text-sm font-semibold text-green-700";
+    } else {
+      msg.textContent = "⚠️ Đã lưu máy · Cloud chưa OK — kiểm tra mạng / Firebase. GVCN bấm «☁ Đồng bộ cloud» sau khi Leader thấy ✅ cloud";
+      msg.className = "mt-3 text-sm font-semibold text-amber-700";
+    }
   }
 
   try {
-    saveOneEntryToCloud(entry).then(function(ok1) {
-      syncAllLocalEntriesToCloud(function(ok2) {
-        if (msg) {
-          if (ok1 || ok2) {
-            msg.textContent = "✅ Đã lưu & cloud: " + entry.studentName + " · " + (entry.subject || "—") + " · " + (entry.contentText || entry.contentCode || "") + " · " + (entry.total > 0 ? "+" : "") + entry.total + " · tổng local " + (entries || []).length + " bản ghi";
-            msg.className = "mt-3 text-sm font-semibold text-green-700";
-          } else {
-            msg.textContent = "⚠️ Đã lưu máy · Cloud chưa xác nhận — bấm «☁ Đồng bộ cloud» trên máy GVCN hoặc lưu lại";
-            msg.className = "mt-3 text-sm font-semibold text-amber-700";
-          }
-        }
-        try {
-          if (typeof renderRecent === "function") renderRecent();
-          if (typeof renderReport === "function") renderReport();
-        } catch (e) {}
-      });
-    }).catch(function() {
+    // Timeout tổng 12s — không bao giờ kẹt UI
+    var finished = false;
+    var watchdog = setTimeout(function() {
+      if (finished) return;
+      finished = true;
+      finishMsg(false);
       try { saveClassData({ forceEntry: entry }); } catch (e) {}
-      if (msg) {
-        msg.textContent = "⚠️ Đã lưu máy · Lỗi cloud — thử lại khi có mạng";
-        msg.className = "mt-3 text-sm font-semibold text-amber-700";
-      }
+    }, 12000);
+
+    var sameHs = (entries || []).filter(function(x) {
+      return x && x.id && String(x.studentId) === String(entry.studentId) &&
+        !(typeof isEntryDeleted === "function" && isEntryDeleted(x));
+    }).slice(0, 8);
+
+    var jobs = [entry].concat(sameHs.filter(function(x) { return String(x.id) !== String(entry.id); }));
+    Promise.all(jobs.map(function(ent) {
+      return saveOneEntryToCloud(ent).catch(function() { return false; });
+    })).then(function(results) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(watchdog);
+      var ok = (results || []).some(function(r) { return r === true; });
+      finishMsg(ok);
+      try { saveClassData({ forceEntry: entry }); } catch (e) {}
+      try {
+        if (typeof renderRecent === "function") renderRecent();
+      } catch (e) {}
+    }).catch(function() {
+      if (finished) return;
+      finished = true;
+      clearTimeout(watchdog);
+      finishMsg(false);
+      try { saveClassData({ forceEntry: entry }); } catch (e) {}
     });
   } catch (e) {
     console.warn(e);
+    finishMsg(false);
     try { saveClassData({ forceEntry: entry }); } catch (e2) {}
   }
 
-  // Form giữ tuần vừa nhập
   try {
     var wEl = document.getElementById("fWeekNo");
     if (wEl && entry.weekNo) wEl.value = String(entry.weekNo);
   } catch (e) {}
 
-  // Đồng bộ lại sau 2s (phòng race)
+  // Đồng bộ lại bản ghi vừa lưu sau 3s (một lần, không đẩy cả lớp)
   setTimeout(function() {
     try {
       if (!(entries || []).some(function(x) { return String(x.id) === String(entry.id); })) {
         entries.unshift(entry);
       }
       try { unmarkEntryDeleted(entry); } catch (e) {}
-      (entries || []).forEach(function(ent) {
-        if (ent && ent.id) try { saveOneEntryToCloud(ent); } catch (e) {}
-      });
+      saveOneEntryToCloud(entry);
       saveClassData({ forceEntry: entry });
-      if (typeof renderRecent === "function") renderRecent();
     } catch (e) { console.warn(e); }
-  }, 2000);
+  }, 3000);
 
   // Mobile: cuộn tới bản ghi gần đây
   try {
