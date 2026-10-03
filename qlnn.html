@@ -1303,7 +1303,8 @@ button[onclick="doParentReportLogin()"] {
 
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700">
 <h3 class="font-semibold text-sky-400 mb-3">Bản ghi gần đây
-<button type="button" onclick="forcePullClassEntries()" class="ml-2 px-3 py-1 rounded text-xs font-bold no-print" style="background:#2563eb;color:#fff" title="Kéo bản ghi Leader từ Firestore">☁ Đồng bộ cloud</button>
+<button type="button" onclick="forcePullClassEntries()" class="ml-2 px-3 py-1 rounded text-xs font-bold no-print" style="background:#2563eb;color:#fff" title="Kéo bản ghi từ Firestore (thủ công — tiết kiệm quota)">☁ Đồng bộ cloud</button>
+<button type="button" onclick="if(typeof downloadRecentEntriesXlsx==='function')downloadRecentEntriesXlsx();" class="ml-2 px-3 py-1 rounded text-xs font-bold no-print" style="background:#ca8a04;color:#fff" title="Xuất Excel khi hết quota Firebase">📥 Excel offline</button>
 <button type="button" onclick="downloadRecentEntriesXlsx()" class="ml-2 px-3 py-1 rounded text-xs font-bold no-print" style="background:#16a34a;color:#fff">📊 Tải Excel .xlsx</button>
 <button type="button" onclick="document.getElementById('uploadEntriesFile').click()" class="ml-2 px-3 py-1 rounded text-xs font-bold no-print" style="background:#0ea5e9;color:#fff">📤 Upload Excel offline</button>
 <input type="file" id="uploadEntriesFile" accept=".xlsx,.xls" class="hidden" onchange="uploadEntriesFromExcel(event)"/>
@@ -2428,91 +2429,17 @@ function setSyncStatus(msg, ok) {
 var _classUnsub = null;
 var _entriesUnsubs = [];
 var _syncMetaUnsub = null;
+/**
+ * KHÔNG dùng onSnapshot realtime (đốt 50k–500k reads/ngày → hết Spark).
+ * Đồng bộ thủ công: bấm «☁ Đồng bộ cloud» hoặc lúc đăng nhập (1 lần get).
+ */
 function subscribeClassData(cid) {
-  if (!firebaseReady || !db) return;
+  // Hủy listener cũ nếu còn (bản trước)
   if (_classUnsub) { try { _classUnsub(); } catch(e) {} _classUnsub = null; }
   if (_syncMetaUnsub) { try { _syncMetaUnsub(); } catch(e) {} _syncMetaUnsub = null; }
   (_entriesUnsubs || []).forEach(function(u) { try { u(); } catch(e) {} });
   _entriesUnsubs = [];
-
-  var key = sharedSyncKey(currentUser);
-  if (!key) {
-    console.warn("[QLNN] subscribe: thiếu syncKey");
-    return;
-  }
-  var primary = cid || key;
-
-  function refreshUI() {
-    try {
-      if (document.getElementById("recentBody")) renderRecent();
-      if (typeof updateMissingAssigned === "function") updateMissingAssigned();
-      if (typeof renderReport === "function") renderReport();
-    } catch (e) {}
-  }
-
-  // Realtime entries — kênh duy nhất
-  var unsubE = db.collection("qlnn_sync").doc(key).collection("entries").onSnapshot(function(qs) {
-    var remote = [];
-    var remoteIds = {};
-    qs.forEach(function(doc) {
-      var d = doc.data();
-      if (d) {
-        if (!d.id) d.id = doc.id;
-        remote.push(d);
-        remoteIds[String(d.id)] = true;
-      }
-    });
-    // Áp deleted trước
-    try { purgeDeletedEntries(); } catch (e) {}
-    var before = (entries || []).length;
-    if (remote.length) {
-      entries = mergeEntryLists(entries, remote);
-    }
-    // Bản ghi local đã từng sync nhưng bị xóa trên cloud (không còn trong remote + có trong deleted)
-    try { purgeDeletedEntries(); } catch (e) {}
-    try { localStorage.setItem("qlnn_entries_" + primary, JSON.stringify(entries)); } catch (e) {}
-    if ((entries || []).length !== before) {
-      refreshUI();
-      if (typeof setSyncStatus === "function") setSyncStatus("☁ Realtime · " + entries.length + " bản ghi", true);
-    }
-  }, function(err) { console.warn("entries snapshot", key, err); });
-  _entriesUnsubs.push(unsubE);
-
-  // Realtime meta — deletedEntryIds từ GVCN → Leader purge ngay
-  _syncMetaUnsub = db.collection("qlnn_sync").doc(key).onSnapshot(function(snap) {
-    if (!snap.exists) return;
-    var d = snap.data() || {};
-    var before = (entries || []).length;
-    if (d.deletedEntryIds && typeof d.deletedEntryIds === "object") {
-      window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, d.deletedEntryIds);
-      try { localStorage.setItem("qlnn_deleted_ids_" + primary, JSON.stringify(window._deletedEntryIds)); } catch (e) {}
-      try { purgeDeletedEntries(); } catch (e) {}
-    }
-    if ((entries || []).length !== before) {
-      refreshUI();
-      if (typeof setSyncStatus === "function") setSyncStatus("☁ Đã xóa đồng bộ · còn " + entries.length + " bản ghi", true);
-    }
-  }, function(err) { console.warn("meta snapshot", err); });
-
-  // Doc lớp legacy (students, catalogs…)
-  if (cid) {
-    _classUnsub = db.collection("qlnn_classes").doc(cid).onSnapshot(function(snap) {
-      if (!snap.exists) return;
-      var d = snap.data() || {};
-      var changed = false;
-      if (Array.isArray(d.students) && d.students.length) {
-        students = d.students;
-        try { localStorage.setItem("qlnn_students_" + cid, JSON.stringify(students)); } catch(e) {}
-        changed = true;
-      }
-      if (d.deletedEntryIds && typeof d.deletedEntryIds === "object") {
-        window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, d.deletedEntryIds);
-        try { purgeDeletedEntries(); } catch (e) {}
-        changed = true;
-      }
-      if (changed) refreshUI();
-    }, function(err) { console.warn("onSnapshot class", err); });
-  }
+  console.info("[QLNN] Chế độ tiết kiệm quota: không realtime. Bấm «☁ Đồng bộ cloud» để kéo dữ liệu.");
 }
 
 function loadClassDataFromCloud(cid, cb) {
@@ -2720,37 +2647,37 @@ function saveOneEntryToCloud(entry, attempt) {
   });
 }
 
-/** Ghi hàng loạt entries lên qlnn_sync/{className}/entries */
+/**
+ * Ghi hàng loạt — tối đa 30 bản ghi / lần (tránh đốt 20k writes Spark).
+ * Leader nên chỉ saveOneEntryToCloud từng cái.
+ */
 function saveEntriesBatchToCloud(cid, list) {
   if (!firebaseReady || !db || !list || !list.length) return Promise.resolve(0);
   var key = sharedSyncKey(currentUser) || String(cid || "").toLowerCase().replace(/[^a-z0-9]/g, "");
   if (!key) return Promise.resolve(0);
-  var CHUNK = 200;
-  var i = 0;
+  // Chỉ đẩy bản chưa có syncedAt gần đây + giới hạn 30
+  var capped = list.filter(function(e) {
+    return e && e.id && !(typeof isEntryDeleted === "function" && isEntryDeleted(e));
+  }).slice(0, 30);
+  if (!capped.length) return Promise.resolve(0);
+  var batch = db.batch();
   var written = 0;
-  function next() {
-    if (i >= list.length) return Promise.resolve(written);
-    var batch = db.batch();
-    var end = Math.min(i + CHUNK, list.length);
-    for (; i < end; i++) {
-      var e = list[i];
-      if (!e || !e.id) continue;
-      if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) continue;
-      var ref = db.collection("qlnn_sync").doc(key).collection("entries").doc(String(e.id));
-      batch.set(ref, Object.assign({}, e, {
-        classId: cid || e.classId || key,
-        className: (currentUser && currentUser.className) || e.className || key,
-        syncKey: key,
-        syncedAt: new Date().toISOString()
-      }), { merge: true });
-      written++;
-    }
-    return batch.commit().then(next).catch(function(err) {
-      console.warn("[QLNN] batch qlnn_sync", err);
-      return written;
-    });
-  }
-  return next();
+  capped.forEach(function(e) {
+    var ref = db.collection("qlnn_sync").doc(key).collection("entries").doc(String(e.id));
+    batch.set(ref, Object.assign({}, e, {
+      classId: cid || e.classId || key,
+      className: (currentUser && currentUser.className) || e.className || key,
+      syncKey: key,
+      syncedAt: new Date().toISOString()
+    }), { merge: true });
+    written++;
+  });
+  return batch.commit().then(function() {
+    return written;
+  }).catch(function(err) {
+    console.warn("[QLNN] batch qlnn_sync", err);
+    return 0;
+  });
 }
 
 /** Xóa trên kênh qlnn_sync + ghi deletedEntryIds — Leader realtime purge */
@@ -2865,20 +2792,21 @@ function loadEntriesSubcollection(cid, cb) {
   });
 }
 
-/** GVCN / Leader: kéo lại từ qlnn_sync */
+/** GVCN / Leader: kéo 1 lần từ cloud (không realtime) */
 function forcePullClassEntries(cb) {
   if (!currentUser) { if (cb) cb(); return; }
   try { ensureUserClassId(currentUser); } catch (e) {}
   var cid = currentUser.classId || resolveSharedClassId(currentUser);
-  if (typeof setSyncStatus === "function") setSyncStatus("☁ Đang đồng bộ qlnn_sync…", null);
+  if (typeof setSyncStatus === "function") setSyncStatus("☁ Đang kéo bản ghi (1 lần get)…", null);
   loadEntriesSubcollection(cid, function() {
     try {
       if (typeof renderRecent === "function") renderRecent();
       if (typeof renderReport === "function") renderReport();
       if (typeof updateMissingAssigned === "function") updateMissingAssigned();
     } catch (e) {}
+    var n = (entries || []).length;
     if (typeof setSyncStatus === "function") {
-      setSyncStatus("✓ Đồng bộ xong · " + (entries || []).length + " bản ghi · key=" + sharedSyncKey(currentUser), true);
+      setSyncStatus("✓ Đã kéo · " + n + " bản ghi · " + (sharedSyncKey(currentUser) || cid) + " · (hết quota thì dùng Excel offline)", true);
     }
     if (cb) cb();
   });
