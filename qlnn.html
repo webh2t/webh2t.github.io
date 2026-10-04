@@ -9872,8 +9872,8 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   h += '<button type="button" onclick="downloadSelfDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#16a34a;color:#fff">📝 Tải .docx</button>';
   h += '<button type="button" onclick="downloadSelfDoc()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#2563eb;color:#fff">📝 Tải Word (.doc)</button>';
   h += '<button type="button" onclick="downloadSelfPdf()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
-  h += '<button type="button" onclick="downloadSelfClassAllDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#ca8a04;color:#fff">📝 Tải cả lớp .docx</button>';
-  h += '<button type="button" onclick="downloadSelfClassAllJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#db2777;color:#fff">📷 Tải cả lớp .jpg</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#ca8a04;color:#fff">📝 Tải cả lớp Word (.doc)</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#db2777;color:#fff">📄 Tải cả lớp PDF</button>';
   h += '</div></div>';
   window._nbSelfCtx = { scope, mon, hk, weekNos, nW, gvcn, cls, school, year, periodLabel, monthNum };
   setTimeout(fillSelfAssessment, 50);
@@ -9889,22 +9889,20 @@ function downloadSelfJpg() {
 }
 
 function downloadSelfDocx() {
-  // Xuất HTML → file .doc (Word mở được); .docx thuần cần thư viện nặng
+  // HTML Word (.doc) — Word mở ổn định; không dùng đuôi .docx giả (Word báo lỗi)
   var el = document.getElementById("selfAssessSheet");
   if (!el) { alert("Chưa có phiếu"); return; }
-  var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>Tu danh gia</title></head><body>" + el.innerHTML + "</body></html>";
+  var html = "<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta charset='utf-8'>" +
+    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->" +
+    "<style>body{font-family:'Times New Roman',Times,serif;font-size:12pt} .self-sheet-one{page-break-after:always}</style>" +
+    "<title>Tu danh gia</title></head><body>" + el.innerHTML + "</body></html>";
   var blob = new Blob(["\ufeff", html], { type: "application/msword" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
   a.download = "Ban_Tu_Danh_Gia.doc";
+  document.body.appendChild(a);
   a.click();
-  // alias .docx extension for user request
-  setTimeout(function() {
-    var a2 = document.createElement("a");
-    a2.href = URL.createObjectURL(blob);
-    a2.download = "Ban_Tu_Danh_Gia.docx";
-    a2.click();
-  }, 300);
+  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 500);
 }
 
 function buildSelfSheetHtmlForStudent(st, ctx) {
@@ -10015,28 +10013,71 @@ function downloadSelfClassAllDocx() {
   if (!ctx) { alert("Chưa mở mục tự đánh giá"); return; }
   var list = (students || []).slice().sort(sortByIdAsc);
   if (!list.length) { alert("Chưa có danh sách lớp"); return; }
-  var body = list.map(function(st) {
-    return buildSelfSheetHtmlForStudent(st, ctx);
-  }).join('<br clear="all" style="page-break-before:always"/>');
-  var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>Tu danh gia ca lop</title></head><body>" + body + "</body></html>";
+  // Word HTML (.doc) — đuôi .doc để Word không báo "unreadable content"
+  var body = list.map(function(st, i) {
+    var block = buildSelfSheetHtmlForStudent(st, ctx);
+    if (i > 0) block = '<br style="page-break-before:always;clear:both"/>' + block;
+    return block;
+  }).join("");
+  var html = "<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>" +
+    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->" +
+    "<style>" +
+    "body{font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000}" +
+    ".self-sheet-one{page-break-after:always;margin-bottom:12pt}" +
+    "p{margin:4pt 0} table{border-collapse:collapse}" +
+    "</style><title>Tu danh gia ca lop</title></head><body>" +
+    "<p style='text-align:center;font-weight:bold'>BẢN TỰ ĐÁNH GIÁ CẢ LỚP " + (ctx.cls || "") + " — " + (ctx.periodLabel || "") + "</p>" +
+    body +
+    "</body></html>";
   var blob = new Blob(["\ufeff", html], { type: "application/msword" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "TuDanhGia_CaLop_" + (ctx.cls || "Lop") + ".docx";
+  a.download = "TuDanhGia_CaLop_" + (ctx.cls || "Lop") + ".doc";
+  document.body.appendChild(a);
   a.click();
+  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 800);
 }
 
+/** Cả lớp: 1 JPG quá cao → canvas hỏng. Xuất PDF nhiều trang (mỗi HS 1 trang). */
 function downloadSelfClassAllJpg() {
+  var ctx = window._nbSelfCtx;
+  if (!ctx) { alert("Chưa mở mục tự đánh giá"); return; }
   var sel = document.getElementById("nbSelfStudent");
   if (sel) sel.value = "__ALL__";
   fillSelfAssessment();
   setTimeout(function() {
-    if (typeof downloadReportBoardJpg === "function") {
-      downloadReportBoardJpg("selfAssessSheet", "TuDanhGia_CaLop", "BẢN TỰ ĐÁNH GIÁ CẢ LỚP");
-    } else {
-      alert("Chức năng tải ảnh chưa sẵn sàng");
+    var el = document.getElementById("selfAssessSheet");
+    if (!el) { alert("Chưa có phiếu cả lớp"); return; }
+    // PDF nhiều trang ổn định hơn 1 JPG khổng lồ
+    if (typeof html2pdf !== "undefined") {
+      html2pdf().set({
+        margin: [8, 8, 8, 8],
+        filename: "TuDanhGia_CaLop_" + (ctx.cls || "Lop") + ".pdf",
+        image: { type: "jpeg", quality: 0.92 },
+        html2canvas: { scale: 1.5, useCORS: true, logging: false },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+        pagebreak: { mode: ["css", "legacy"], after: ".self-sheet-one" }
+      }).from(el).save().catch(function(e) {
+        alert("Lỗi PDF cả lớp: " + (e && e.message ? e.message : e));
+      });
+      return;
     }
-  }, 200);
+    // Fallback: chỉ chụp 1 phiếu đầu (tránh canvas vượt giới hạn trình duyệt)
+    var first = el.querySelector(".self-sheet-one");
+    if (!first || typeof html2canvas === "undefined") {
+      alert("Không tải được ảnh cả lớp. Hãy dùng «Tải cả lớp Word (.doc)».");
+      return;
+    }
+    html2canvas(first, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
+      var a = document.createElement("a");
+      a.download = "TuDanhGia_HS1_" + (ctx.cls || "") + ".jpg";
+      a.href = canvas.toDataURL("image/jpeg", 0.92);
+      a.click();
+      alert("Ảnh cả lớp quá lớn → đã tải phiếu HS đầu. Dùng «Tải cả lớp Word (.doc)» hoặc PDF để in cả lớp.");
+    }).catch(function(e) {
+      alert("Lỗi JPG: " + (e.message || e));
+    });
+  }, 300);
 }
 function printNotebook() {
   const area = document.getElementById("nbPrintArea");
