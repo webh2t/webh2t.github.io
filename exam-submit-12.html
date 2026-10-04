@@ -1383,11 +1383,33 @@ async function submitExam(auto) {
 
 
 
+
+function buildQuestionLookup() {
+  const map = {};
+  function add(q) {
+    if (!q || !q.text) return;
+    const key = String(q.text).trim().toLowerCase().replace(/\s+/g, " ");
+    if (q.type === "mc" && q.options && q.options.length) {
+      map[key] = {
+        options: q.options.map((o, i) => String.fromCharCode(65 + i) + ". " + String(o || "")),
+        correct: String.fromCharCode(65 + (q.correct || 0)) + ". " + String((q.options || [])[q.correct] || ""),
+        optsRaw: (q.options || []).map(String)
+      };
+    }
+  }
+  (questionBank.part1 || []).forEach(add);
+  Object.keys(window.examCodes || {}).forEach(code => {
+    ((window.examCodes[code] || {}).part1 || []).forEach(add);
+  });
+  return map;
+}
+
 function showAnswerReview(r) {
   if (!r) return;
   const modal = document.getElementById("modal-review");
   document.getElementById("review-title").textContent = (r.name || "") + " · " + (r.class || "");
   const rev = r.review || [];
+  const lookup = buildQuestionLookup();
   let sumPts = 0;
   if (rev.length) {
     sumPts = rev.reduce((s, it) => s + (Number(it.pts) || 0), 0);
@@ -1401,7 +1423,7 @@ function showAnswerReview(r) {
     " · Đúng: " + (r.correct ?? "—") + " · Sai: " + (r.wrong ?? "—") + " · Bỏ: " + (r.skip ?? "—");
   const body = document.getElementById("review-body");
   if (!rev.length) {
-    body.innerHTML = "<p style=\"color:#888\">Bài này chưa có chi tiết từng câu (nộp trước khi cập nhật). Chuỗi bài làm: <code>" +
+    body.innerHTML = "<p style=\"color:#888\">Bài này chưa có chi tiết từng câu. Chuỗi bài làm: <code>" +
       (r.pattern || "—") + "</code></p>";
   } else {
     body.innerHTML = rev.map(item => {
@@ -1411,32 +1433,69 @@ function showAnswerReview(r) {
       const partial = pts > 0 && !full;
       const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
       const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
+
       let userLine = item.user || "—";
       let correctLine = item.correct || "—";
       let optsBlock = "";
-      if (item.type === "mc" && item.options && item.options.length) {
-        optsBlock = "<div style=\"margin:6px 0 4px;padding:8px;background:#F8FAFC;border-radius:6px;font-size:.82rem;line-height:1.45\">" +
-          item.options.map(function(o) {
-            var isU = item.userLetter && o.indexOf(item.userLetter + ".") === 0;
-            var isC = item.correctLetter && o.indexOf(item.correctLetter + ".") === 0;
-            var st = "";
-            if (isU && isC) st = "background:#D1FAE5;font-weight:700;";
-            else if (isU) st = "background:#FEE2E2;font-weight:700;";
-            else if (isC) st = "background:#D1FAE5;";
-            return "<div style=\"padding:2px 4px;border-radius:4px;" + st + "\">" + o + "</div>";
-          }).join("") + "</div>";
-        userLine = item.user || "—";
-        correctLine = item.correct || "—";
+
+      // Bổ sung nội dung đáp án câu 1–12 từ ngân hàng nếu thiếu
+      if (item.type === "mc") {
+        let options = item.options;
+        let userLetter = item.userLetter || "";
+        let correctLetter = item.correctLetter || "";
+        // lấy chữ cái từ user/correct nếu chưa có
+        if (!userLetter && item.user) {
+          const m = String(item.user).trim().match(/^([A-D])/i);
+          if (m) userLetter = m[1].toUpperCase();
+        }
+        if (!correctLetter && item.correct) {
+          const m = String(item.correct).trim().match(/^([A-D])/i);
+          if (m) correctLetter = m[1].toUpperCase();
+        }
+        const qkey = String(item.text || "").trim().toLowerCase().replace(/\s+/g, " ");
+        const bank = lookup[qkey];
+        if ((!options || !options.length || options.every(o => !o || o.length < 4)) && bank) {
+          options = bank.options;
+          if (!correctLine || correctLine.length <= 3) correctLine = bank.correct;
+        }
+        if (options && options.length) {
+          // map letter -> full text
+          const byLetter = {};
+          options.forEach(o => {
+            const mm = String(o).match(/^([A-D])\.\s*(.*)$/i);
+            if (mm) byLetter[mm[1].toUpperCase()] = mm[2];
+          });
+          if (userLetter && byLetter[userLetter] !== undefined) {
+            userLine = userLetter + ". " + byLetter[userLetter];
+          } else if (userLetter && (!item.user || item.user.length <= 3)) {
+            userLine = userLetter + (byLetter[userLetter] ? ". " + byLetter[userLetter] : "");
+          }
+          if (correctLetter && byLetter[correctLetter] !== undefined) {
+            correctLine = correctLetter + ". " + byLetter[correctLetter];
+          } else if (bank && bank.correct) {
+            correctLine = bank.correct;
+          }
+          optsBlock = "<div style=\"margin:6px 0 4px;padding:8px;background:#F8FAFC;border-radius:6px;font-size:.82rem;line-height:1.5\">" +
+            options.map(function(o) {
+              const mm = String(o).match(/^([A-D])/i);
+              const L = mm ? mm[1].toUpperCase() : "";
+              let st = "padding:3px 6px;border-radius:4px;margin:2px 0;";
+              if (L && L === userLetter && L === correctLetter) st += "background:#D1FAE5;font-weight:700;";
+              else if (L && L === userLetter) st += "background:#FEE2E2;font-weight:700;";
+              else if (L && L === correctLetter) st += "background:#D1FAE5;font-weight:600;";
+              return "<div style=\"" + st + "\">" + o + "</div>";
+            }).join("") + "</div>";
+        }
       }
+
       return "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:" + bg + "\">" +
         "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap\">" +
-        "<div style=\"font-weight:700;color:#1E3A8A\">Câu " + item.id + "</div>" +
-        "<div style=\"font-weight:800;font-size:.95rem;color:" + color + "\">" + pts + " / " + maxP + " điểm</div>" +
-        "</div>" +
-        "<div style=\"margin:4px 0;color:#334155\">" + (item.text || "") + "</div>" +
+        "<div style=\"font-weight:700;color:#1E3A8A\">Câu " + item.id + ". <span style=\"color:" + color + "\">" + pts + " điểm</span></div>" +
+        "<div style=\"font-weight:800;font-size:.9rem;color:" + color + "\">" + pts + " / " + maxP + "</div></div>" +
+        "<div style=\"margin:6px 0;color:#334155;font-weight:600\">" + (item.text || "") + "</div>" +
         optsBlock +
-        "<div style=\"font-size:.84rem;margin-top:4px\"><b>HS chọn:</b> " + userLine + "</div>" +
-        "<div style=\"font-size:.84rem\"><b>Đáp án đúng:</b> <span style=\"color:#065F46\">" + correctLine + "</span></div></div>";
+        "<div style=\"font-size:.88rem;margin-top:6px\"><b>HS chọn:</b> " + userLine + "</div>" +
+        "<div style=\"font-size:.88rem\"><b>Đáp án đúng:</b> <span style=\"color:#065F46;font-weight:600\">" + correctLine + "</span></div></div>";
     }).join("") +
     "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.1rem;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
   }
