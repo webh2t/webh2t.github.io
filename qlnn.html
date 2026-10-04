@@ -1176,20 +1176,25 @@ button[onclick="doParentReportLogin()"] {
 <section id="tab-input" class="tab-content hidden">
 <div class="bg-slate-800 rounded-xl p-5 border border-slate-700 mb-6">
 <h2 class="text-xl font-bold text-yellow-400 mb-4">📝 Nhập thi đua học sinh</h2>
-<!-- 2 cột: Quy định + Hướng dẫn nhanh -->
-<div class="mb-4 grid grid-cols-1 lg:grid-cols-2 gap-3">
+<!-- 2 cột: 60% Quy định · 40% Hướng dẫn -->
+<style>
+@media (min-width: 900px) {
+  #leaderNoticeGrid { grid-template-columns: 3fr 2fr !important; }
+}
+</style>
+<div id="leaderNoticeGrid" class="mb-4 grid gap-3" style="grid-template-columns:1fr">
 <div id="leaderInputNotice" class="text-sm leading-snug rounded-xl border p-3" style="background:linear-gradient(145deg,#fff7ed 0%,#ffedd5 100%);border-color:#fb923c;color:#1c1917">
 <div class="font-bold mb-2 flex items-center gap-2" style="color:#c2410c;font-size:0.95rem">
 <span style="display:inline-flex;width:1.5rem;height:1.5rem;align-items:center;justify-content:center;border-radius:9999px;background:#ea580c;color:#fff;font-size:0.75rem">⚠</span>
 Quy định nhập thi đua (Leader)
 </div>
 <ol class="list-decimal ml-4 space-y-1.5" style="color:#292524;font-size:0.82rem">
-<li><b>Nhiều Leader cùng nhập một lúc cùng thời điểm người dùng nhiều</b> → dễ tắc nghẽn mạng hệ thống <b>KHÔNG LƯU CLOUD</b> được. Leader nên chia nhiều đợt nhập theo từng ngày có điểm thi đua, hoặc tập trung nhập vào <b>Thứ 6 và Thứ 7</b>.<br/><b>Chậm nhất trước 20:00 Thứ 7 hàng tuần.</b></li>
-<li>Số bản ghi cho phép nhập online 1 ngày = <b style="color:#b91c1c"><span id="dailyLimitNum">40</span> lần / bản ghi / Leader</b>
-<span id="dailyLimitUsed" class="ml-1" style="color:#0369a1"></span>.</li>
-<li>Vượt giới hạn ngày → chọn <b>1 trong 3 cách</b> thực hiện sau:
+<li><b>Nhiều Leader cùng nhập một lúc cùng thời điểm người dùng nhiều</b> → lượng dữ liệu truyền tải hoặc số lượng yêu cầu truy cập vượt quá khả năng xử lý của hạ tầng mạng Cloud. Leader nên chia nhiều đợt nhập theo từng ngày có điểm thi đua hoặc tập trung nhập vào <b>2 ngày Thứ 6 và Thứ 7</b>. <b>Chậm nhất trước 20:00 Thứ 7 hàng tuần.</b></li>
+<li><b>Chụp hình lưu lại danh mục nhập thi đua hàng tuần</b> (có sai sót gửi hình nhập về GVCN).</li>
+<li>Số bản ghi cho phép nhập online 1 ngày = <b style="color:#b91c1c"><span id="dailyLimitNum">20</span> lần / bản ghi / Leader</b>.</li>
+<li>Vượt giới hạn ngày <b>20 lần / bản ghi</b> → Leader chọn <b>1 trong 3 cách</b> thực hiện sau:
 <ol class="ml-3 mt-1 space-y-0.5" style="list-style-type:lower-alpha">
-<li>Chuyển sang ngày tiếp theo từ <b>07:30</b> (giờ VN) rồi nhập tiếp trên website hệ thống bình thường.</li>
+<li>Chuyển sang ngày tiếp theo sau <b>07:30</b> (giờ VN) rồi nhập tiếp trên website hệ thống bình thường. <i>(hạn chế không nhập Chủ nhật trừ có sai sót)</i></li>
 <li><b>Tải file mẫu Excel</b> → nhập offline trên máy → Lưu <b>Ctrl+S</b> → <b>Update offline</b> file mẫu Excel lên QLNN website hệ thống → <b>Đồng bộ cloud</b>.</li>
 <li>Gửi file mẫu Excel đã nhập qua <b>Zalo cho GVCN</b> upload.</li>
 </ol>
@@ -1207,6 +1212,7 @@ Hướng dẫn nhập nhanh
 <li><b>Ưu điểm cùng môn cùng ngày</b> → chọn <b>tổng số lần</b> rồi Lưu.</li>
 <li>Trường hợp khác → đủ <b>Ngày · Môn · Họ tên HS · Nội dung · Số lần</b> → Lưu.</li>
 <li>Sai → <b>Bản ghi gần đây</b> → Sửa / Xóa.</li>
+<li class="mt-1" style="color:#b45309"><b>Cloud lỗi / hết quota?</b> Dùng <b>Tải mẫu Excel → Update offline</b> (miễn phí, không phụ thuộc Spark).</li>
 </ul>
 </div>
 </div>
@@ -4507,10 +4513,10 @@ function saveEntryFromForm(e) {
   // Giới hạn bản ghi online / ngày (Spark)
   try {
     var usedToday = typeof countEntriesTodayLocal === "function" ? countEntriesTodayLocal() : 0;
-    var lim = typeof QLN_DAILY_ENTRY_LIMIT === "number" ? QLN_DAILY_ENTRY_LIMIT : 40;
+    var lim = typeof QLN_DAILY_ENTRY_LIMIT === "number" ? QLN_DAILY_ENTRY_LIMIT : 20;
     if (usedToday >= lim) {
       alert("Đã đủ " + lim + " bản ghi online hôm nay.\n\nChọn 1 cách:\n" +
-        "a) Nhập tiếp sau 07:30 sáng mai (giờ VN)\n" +
+        "a) Nhập tiếp sau 07:30 sáng mai (giờ VN) — hạn chế Chủ nhật\n" +
         "b) Tải file mẫu Excel → nhập offline → Ctrl+S → Update offline → Đồng bộ cloud\n" +
         "c) Gửi file Excel qua Zalo cho GVCN");
       try { refreshDailyLimitUI(); } catch (e) {}
@@ -6043,7 +6049,7 @@ function downloadEntriesTemplate() {
 }
 
 /** Giới hạn bản ghi online / ngày (Spark) */
-var QLN_DAILY_ENTRY_LIMIT = 40;
+var QLN_DAILY_ENTRY_LIMIT = 20;
 function countEntriesTodayLocal() {
   var uid = currentUser && currentUser.id ? String(currentUser.id).toLowerCase() : "";
   var today = new Date();
@@ -6068,12 +6074,9 @@ function refreshDailyLimitUI() {
   try {
     var el = document.getElementById("dailyLimitNum");
     if (el) el.textContent = String(QLN_DAILY_ENTRY_LIMIT);
+    // Không hiển thị “(đã nhập hôm nay: x/20)”
     var used = document.getElementById("dailyLimitUsed");
-    if (used) {
-      var n = countEntriesTodayLocal();
-      used.textContent = "(đã nhập hôm nay: " + n + "/" + QLN_DAILY_ENTRY_LIMIT + ")";
-      used.style.color = n >= QLN_DAILY_ENTRY_LIMIT ? "#b91c1c" : "#0369a1";
-    }
+    if (used) used.textContent = "";
   } catch (e) {}
 }
 function debugLeaderCoverage() {
