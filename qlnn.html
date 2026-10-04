@@ -9488,7 +9488,7 @@ function renderNotebook() {
   html += '</div>';
   html += '<div class="no-print flex gap-2">';
   html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#16a34a" onclick="downloadNbClassXlsx()">📊 Tải .xlsx</button>';
-  html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadNbClassJpg()">📷 Tải .jpg</button>';
+  html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadNbClassJpg()">📷 ZIP ảnh HD (3–4 phần)</button>';
   html += '</div></div>';
 
   html += '<div class="overflow-x-auto"><table class="w-full text-sm nb-soket-class" style="' + tblStyle + '">';
@@ -9822,11 +9822,109 @@ function downloadNbViolXlsx() {
 function downloadNbClassJpg() {
   var meta = window._nbExport || {};
   var sub = meta.soKetTitle || (meta.title || "") + " · Lớp " + (meta.cls || "");
-  if (typeof downloadReportBoardJpg === "function") {
-    downloadReportBoardJpg("nbClassSoKet", "NB_SoKet_Lop_" + (meta.scope || "week"), sub);
-  } else {
-    alert("Chức năng tải ảnh chưa sẵn sàng");
+  var root = document.getElementById("nbClassSoKet");
+  if (!root) { alert("Chưa có bảng sơ kết lớp"); return; }
+  var table = root.querySelector("table");
+  if (!table) { alert("Chưa có bảng"); return; }
+  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
+  if (typeof JSZip === "undefined") { alert("Chưa tải JSZip — kiểm tra mạng rồi F5"); return; }
+
+  var thead = table.querySelector("thead");
+  var tbody = table.querySelector("tbody");
+  if (!tbody) { alert("Bảng trống"); return; }
+
+  // Nhóm hàng theo học sinh (rowspan hoặc 1 hàng)
+  var rows = Array.prototype.slice.call(tbody.querySelectorAll("tr"));
+  var groups = [];
+  var i = 0;
+  while (i < rows.length) {
+    var tr = rows[i];
+    var firstTd = tr.querySelector("td");
+    var span = firstTd ? parseInt(firstTd.getAttribute("rowspan") || "1", 10) : 1;
+    if (!span || span < 1) span = 1;
+    groups.push(rows.slice(i, i + span));
+    i += span;
   }
+
+  // 12 HS / ảnh → khoảng 3–4 ảnh cho lớp 48
+  var PER = 12;
+  var chunks = [];
+  for (var g = 0; g < groups.length; g += PER) {
+    chunks.push(groups.slice(g, g + PER));
+  }
+  if (!chunks.length) { alert("Không có dữ liệu"); return; }
+
+  var school = (meta.school || "THPT HÀ HUY TẬP").toUpperCase();
+  var gvcn = meta.gvcn || "";
+  var cls = meta.cls || "";
+  var year = meta.year || "2026-2027";
+  var zip = new JSZip();
+  var folder = zip.folder("SoKet_Lop_" + (meta.scope || "month"));
+  var part = 0;
+
+  function headerHtml(partNo, totalParts) {
+    return '<div style="text-align:center;font-family:system-ui,sans-serif;margin-bottom:10px;border-bottom:2px solid #0c4a6e;padding-bottom:8px">' +
+      '<div style="font-size:18px;font-weight:900;color:#7f1d1d">' + school + '</div>' +
+      '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-top:4px">GVCN: ' + gvcn + ' · LỚP: ' + cls + ' · NH: ' + year + '</div>' +
+      '<div style="font-size:14px;font-weight:800;color:#0369a1;margin-top:6px">' + sub + '</div>' +
+      '<div style="font-size:12px;color:#64748b;margin-top:4px">Phần ' + partNo + '/' + totalParts + ' · ' + chunks[partNo - 1].length + ' học sinh</div>' +
+      '</div>';
+  }
+
+  function next() {
+    if (part >= chunks.length) {
+      zip.generateAsync({ type: "blob" }).then(function(blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "NB_SoKet_Lop_" + (meta.scope || "week") + "_HD_" + chunks.length + "anh.zip";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 1200);
+      }).catch(function(e) {
+        alert("Lỗi ZIP: " + (e && e.message ? e.message : e));
+      });
+      return;
+    }
+
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "position:fixed;left:-9999px;top:0;background:#fff;padding:20px 24px;width:1400px;font-family:system-ui,sans-serif;color:#0f172a";
+    wrap.innerHTML = headerHtml(part + 1, chunks.length);
+
+    var tbl = document.createElement("table");
+    tbl.style.cssText = "width:100%;border-collapse:collapse;border:2px solid #dc2626;color:#1d4ed8;font-size:13px;table-layout:fixed";
+    if (thead) tbl.appendChild(thead.cloneNode(true));
+    var tb = document.createElement("tbody");
+    chunks[part].forEach(function(group) {
+      group.forEach(function(tr) { tb.appendChild(tr.cloneNode(true)); });
+    });
+    tbl.appendChild(tb);
+    wrap.appendChild(tbl);
+    document.body.appendChild(wrap);
+
+    // scale 2.5 → ảnh HD rõ chữ
+    html2canvas(wrap, {
+      scale: 2.5,
+      backgroundColor: "#ffffff",
+      logging: false,
+      windowWidth: wrap.scrollWidth,
+      windowHeight: wrap.scrollHeight,
+      useCORS: true
+    }).then(function(canvas) {
+      try { document.body.removeChild(wrap); } catch (e) {}
+      var dataUrl = canvas.toDataURL("image/jpeg", 0.95);
+      var base64 = dataUrl.split(",")[1];
+      var fname = "SoKet_" + (meta.scope || "month") + "_P" + String(part + 1).padStart(2, "0") + "_of_" + chunks.length + ".jpg";
+      folder.file(fname, base64, { base64: true });
+      part++;
+      setTimeout(next, 40);
+    }).catch(function(err) {
+      try { document.body.removeChild(wrap); } catch (e) {}
+      alert("Lỗi chụp phần " + (part + 1) + ": " + (err && err.message ? err.message : err));
+    });
+  }
+
+  if (!window.confirm("Tách bảng sơ kết thành " + chunks.length + " ảnh HD (mỗi ảnh ~" + PER + " HS) rồi nén ZIP.\nTiếp tục?")) return;
+  next();
 }
 
 function downloadNbClassXlsx() {
