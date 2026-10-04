@@ -167,7 +167,7 @@
       <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Trang chủ</a>
       <button type="button" class="btn-nav-top btn-teacher" id="btn-teacher-link">👨‍🏫 Giáo viên</button>
     </div>
-    <div class="load-bar" id="load-bar">⏳ Đang tải dữ liệu đề thi &amp; danh sách học sinh…</div>
+    <div class="load-bar" id="load-bar" style="display:none"></div>
 
     
     <div class="warning-once" id="warn-once">
@@ -415,8 +415,8 @@ function renderScoreTable() {
       "<tr><td>" + (i + 1) + "</td><td>" + (r.class || "") + "</td>" +
       '<td class="col-name">' + (r.name || "") + "</td><td><b>" + r.score + "</b></td>" +
       "<td>" + (r.correct ?? "") + "</td><td>" + (r.wrong ?? "") + "</td><td>" + (r.skip ?? "") + "</td>" +
-      '<td class="col-ans">' + (r.pattern || "—") + "</td><td>" + (r.time || "") + "</td>" +
-      '<td><button type="button" class="btn-view-ans" data-idx="' + i + '" style="padding:4px 8px;font-size:.75rem;background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE;border-radius:6px;cursor:pointer;font-weight:600">Xem đáp án</button></td></tr>"
+      '<td class="col-ans">' + (r.pattern || "—") + '</td><td>' + (r.time || "") + '</td>' +
+      '<td><button type="button" class="btn-view-ans" data-idx="' + i + '" style="padding:4px 8px;font-size:.75rem;background:#EEF2FF;color:#3730A3;border:1px solid #C7D2FE;border-radius:6px;cursor:pointer;font-weight:600">Xem đáp án</button></td></tr>'
     ).join("");
     tbody.querySelectorAll(".btn-view-ans").forEach(btn => {
       btn.onclick = () => showAnswerReview(list[+btn.dataset.idx]);
@@ -620,8 +620,7 @@ function refreshClassDropdown() {
 
 async function loadFromUrl(url) {
   if (!url) return;
-  loadBar.style.display = "flex";
-  loadBar.textContent = "⏳ Đang tải dữ liệu…";
+  if (loadBar) { loadBar.style.display = "none"; }
   try {
     const resp = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
     if (!resp.ok) throw new Error("HTTP " + resp.status);
@@ -707,14 +706,20 @@ document.getElementById("login-id").addEventListener("keydown", function (e) {
   if (e.key === "Enter") document.getElementById("login-pass").focus();
 });
 function tryLogin() {
-  const id = document.getElementById("login-id").value.trim();
-  const pass = document.getElementById("login-pass").value;
+  const id = (document.getElementById("login-id")?.value || "").trim();
+  const pass = document.getElementById("login-pass")?.value || "";
   if (id === TEACHER_ID && pass === TEACHER_PASS) {
-    enterAdminMode();
+    try {
+      (window.enterAdminMode || enterAdminMode)();
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi vào trang giáo viên: " + err.message);
+    }
   } else {
-    document.getElementById("login-error").style.display = "block";
-    document.getElementById("login-pass").value = "";
-    document.getElementById("login-pass").focus();
+    const le = document.getElementById("login-error");
+    if (le) le.style.display = "block";
+    const lp = document.getElementById("login-pass");
+    if (lp) { lp.value = ""; lp.focus(); }
   }
 }
 
@@ -1569,14 +1574,14 @@ document.getElementById("btn-sch-clear")?.addEventListener("click", function () 
 });
 
 /* Gọi khi vào admin / khi có danh sách lớp */
-const _enterAdmin = typeof enterAdminMode === "function" ? enterAdminMode : null;
-if (_enterAdmin) {
+// Bổ sung lịch vào enterAdminMode (không ghi đè gây lỗi)
+(function () {
+  const _orig = window.enterAdminMode || enterAdminMode;
   window.enterAdminMode = function () {
-    _enterAdmin();
-    fillScheduleClasses();
-    renderScheduleList();
+    _orig();
+    try { fillScheduleClasses(); renderScheduleList(); } catch (e) { console.warn(e); }
   };
-}
+})();
 
 /* ========== Thoát giữa chừng → 0 điểm ========== */
 function saveZeroScore(reason) {
