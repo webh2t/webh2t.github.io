@@ -1300,20 +1300,22 @@ async function submitExam(auto) {
     let userShow = "", correctShow = "", ok = false, pts = 0, maxPts = 0;
     if (q.type === "mc") {
       maxPts = 0.5;
-      const opts = q.options || [];
-      if (answers[key] === undefined) {
+      const opts = (q.options || []).map(o => String(o == null ? "" : o));
+      const letters = ["A", "B", "C", "D"];
+      if (answers[key] === undefined || answers[key] === null) {
         userShow = "(bỏ)";
       } else {
-        const li = answers[key];
-        const letter = String.fromCharCode(65 + li);
-        const txt = opts[li] != null ? opts[li] : "";
-        userShow = letter + ". " + txt;
+        const li = +answers[key];
+        userShow = letters[li] + ". " + (opts[li] || "");
       }
-      const cLetter = String.fromCharCode(65 + q.correct);
-      const cTxt = opts[q.correct] != null ? opts[q.correct] : "";
-      correctShow = cLetter + ". " + cTxt;
+      const ci = +q.correct;
+      correctShow = letters[ci] + ". " + (opts[ci] || "");
       ok = answers[key] === q.correct;
       pts = ok ? 0.5 : 0;
+      // lưu đủ 4 phương án để GV xem
+      var mcOptions = letters.map((L, i) => L + ". " + (opts[i] || ""));
+      var userLetter = answers[key] === undefined || answers[key] === null ? "" : letters[+answers[key]];
+      var correctLetter = letters[ci];
     } else if (q.type === "tf") {
       maxPts = 1.0;
       const ans = answers[key] || [null, null, null, null];
@@ -1340,7 +1342,10 @@ async function submitExam(auto) {
       correct: correctShow,
       ok,
       pts: Math.round(pts * 100) / 100,
-      maxPts
+      maxPts,
+      options: (q.type === "mc" ? (typeof mcOptions !== "undefined" ? mcOptions : []) : undefined),
+      userLetter: (q.type === "mc" ? (typeof userLetter !== "undefined" ? userLetter : "") : undefined),
+      correctLetter: (q.type === "mc" ? (typeof correctLetter !== "undefined" ? correctLetter : "") : undefined)
     };
   });
 
@@ -1406,16 +1411,32 @@ function showAnswerReview(r) {
       const partial = pts > 0 && !full;
       const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
       const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
-      const ptsLabel = pts.toFixed(2).replace(/\.?0+$/, (m) => m.includes(".") ? m.replace(/0+$/, "").replace(/\.$/, "") : m);
-      const maxLabel = String(maxP);
+      let userLine = item.user || "—";
+      let correctLine = item.correct || "—";
+      let optsBlock = "";
+      if (item.type === "mc" && item.options && item.options.length) {
+        optsBlock = "<div style=\"margin:6px 0 4px;padding:8px;background:#F8FAFC;border-radius:6px;font-size:.82rem;line-height:1.45\">" +
+          item.options.map(function(o) {
+            var isU = item.userLetter && o.indexOf(item.userLetter + ".") === 0;
+            var isC = item.correctLetter && o.indexOf(item.correctLetter + ".") === 0;
+            var st = "";
+            if (isU && isC) st = "background:#D1FAE5;font-weight:700;";
+            else if (isU) st = "background:#FEE2E2;font-weight:700;";
+            else if (isC) st = "background:#D1FAE5;";
+            return "<div style=\"padding:2px 4px;border-radius:4px;" + st + "\">" + o + "</div>";
+          }).join("") + "</div>";
+        userLine = item.user || "—";
+        correctLine = item.correct || "—";
+      }
       return "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:" + bg + "\">" +
         "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap\">" +
         "<div style=\"font-weight:700;color:#1E3A8A\">Câu " + item.id + "</div>" +
         "<div style=\"font-weight:800;font-size:.95rem;color:" + color + "\">" + pts + " / " + maxP + " điểm</div>" +
         "</div>" +
         "<div style=\"margin:4px 0;color:#334155\">" + (item.text || "") + "</div>" +
-        "<div style=\"font-size:.84rem\"><b>HS chọn:</b> " + (item.user || "—") +
-        " &nbsp;|&nbsp; <b>Đáp án đúng:</b> <span style=\"color:#065F46\">" + (item.correct || "—") + "</span></div></div>";
+        optsBlock +
+        "<div style=\"font-size:.84rem;margin-top:4px\"><b>HS chọn:</b> " + userLine + "</div>" +
+        "<div style=\"font-size:.84rem\"><b>Đáp án đúng:</b> <span style=\"color:#065F46\">" + correctLine + "</span></div></div>";
     }).join("") +
     "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.1rem;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
   }
