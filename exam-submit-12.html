@@ -1300,8 +1300,18 @@ async function submitExam(auto) {
     let userShow = "", correctShow = "", ok = false, pts = 0, maxPts = 0;
     if (q.type === "mc") {
       maxPts = 0.5;
-      userShow = answers[key] === undefined ? "(bỏ)" : String.fromCharCode(65 + answers[key]);
-      correctShow = String.fromCharCode(65 + q.correct);
+      const opts = q.options || [];
+      if (answers[key] === undefined) {
+        userShow = "(bỏ)";
+      } else {
+        const li = answers[key];
+        const letter = String.fromCharCode(65 + li);
+        const txt = opts[li] != null ? opts[li] : "";
+        userShow = letter + ". " + txt;
+      }
+      const cLetter = String.fromCharCode(65 + q.correct);
+      const cTxt = opts[q.correct] != null ? opts[q.correct] : "";
+      correctShow = cLetter + ". " + cTxt;
       ok = answers[key] === q.correct;
       pts = ok ? 0.5 : 0;
     } else if (q.type === "tf") {
