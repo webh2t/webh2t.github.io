@@ -1297,21 +1297,29 @@ async function submitExam(auto) {
   // Chi tiết đáp án để GV xem lại
   const reviewList = activeQuestions.map(q => {
     const key = q.uid;
-    let userShow = "", correctShow = "", ok = false;
+    let userShow = "", correctShow = "", ok = false, pts = 0, maxPts = 0;
     if (q.type === "mc") {
+      maxPts = 0.5;
       userShow = answers[key] === undefined ? "(bỏ)" : String.fromCharCode(65 + answers[key]);
       correctShow = String.fromCharCode(65 + q.correct);
       ok = answers[key] === q.correct;
+      pts = ok ? 0.5 : 0;
     } else if (q.type === "tf") {
+      maxPts = 1.0;
       const ans = answers[key] || [null, null, null, null];
       userShow = ans.map((v, i) => ["a","b","c","d"][i] + "." + (v === true ? "Đ" : v === false ? "S" : "-")).join(" ");
       correctShow = q.statements.map((s, i) => ["a","b","c","d"][i] + "." + (s.correct ? "Đ" : "S")).join(" ");
-      ok = q.statements.every((s, i) => ans[i] === s.correct);
+      let partial = 0;
+      q.statements.forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) partial += 0.25; });
+      pts = partial;
+      ok = pts >= maxPts;
     } else {
+      maxPts = 1.0;
       userShow = (answers[key] || "").trim() || "(bỏ)";
       correctShow = (q.correct || []).join(" | ");
       const user = userShow.toLowerCase();
       ok = user !== "(bỏ)" && (q.correct || []).some(c => c.toLowerCase().trim() === user);
+      pts = ok ? 1.0 : 0;
     }
     return {
       id: q.displayId,
@@ -1320,7 +1328,9 @@ async function submitExam(auto) {
       text: q.text,
       user: userShow,
       correct: correctShow,
-      ok
+      ok,
+      pts: Math.round(pts * 100) / 100,
+      maxPts
     };
   });
 
@@ -1362,26 +1372,42 @@ function showAnswerReview(r) {
   if (!r) return;
   const modal = document.getElementById("modal-review");
   document.getElementById("review-title").textContent = (r.name || "") + " · " + (r.class || "");
-  document.getElementById("review-meta").textContent =
-    "Điểm: " + r.score + "/10 · Mã đề: " + (r.maDe || "—") + " · Nộp: " + (r.time || "—") +
+  const rev = r.review || [];
+  let sumPts = 0;
+  if (rev.length) {
+    sumPts = rev.reduce((s, it) => s + (Number(it.pts) || 0), 0);
+    sumPts = Math.round(sumPts * 100) / 100;
+  } else {
+    sumPts = Number(r.score) || 0;
+  }
+  document.getElementById("review-meta").innerHTML =
+    "<b>Tổng điểm: <span style=\"color:#1D4ED8;font-size:1.15rem\">" + sumPts + "/10</span></b>" +
+    " · Mã đề: " + (r.maDe || "—") + " · Nộp: " + (r.time || "—") +
     " · Đúng: " + (r.correct ?? "—") + " · Sai: " + (r.wrong ?? "—") + " · Bỏ: " + (r.skip ?? "—");
   const body = document.getElementById("review-body");
-  const rev = r.review || [];
   if (!rev.length) {
-    body.innerHTML = "<p style=\"color:#888\">Bài này chưa có chi tiết đáp án (nộp trước khi cập nhật tính năng). Chuỗi bài làm: <code>" +
+    body.innerHTML = "<p style=\"color:#888\">Bài này chưa có chi tiết từng câu (nộp trước khi cập nhật). Chuỗi bài làm: <code>" +
       (r.pattern || "—") + "</code></p>";
   } else {
     body.innerHTML = rev.map(item => {
-      const color = item.ok ? "#065F46" : "#991B1B";
-      const bg = item.ok ? "#ECFDF5" : "#FEF2F2";
-      const tag = item.ok ? "✓ Đúng" : "✗ Sai/thiếu";
+      const pts = Number(item.pts) || 0;
+      const maxP = Number(item.maxPts) || (item.type === "mc" ? 0.5 : 1);
+      const full = pts >= maxP - 0.001;
+      const partial = pts > 0 && !full;
+      const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
+      const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
+      const ptsLabel = pts.toFixed(2).replace(/\.?0+$/, (m) => m.includes(".") ? m.replace(/0+$/, "").replace(/\.$/, "") : m);
+      const maxLabel = String(maxP);
       return "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:" + bg + "\">" +
-        "<div style=\"font-weight:700;color:#1E3A8A\">Câu " + item.id +
-        " <span style=\"font-size:.75rem;color:" + color + ";margin-left:6px\">" + tag + "</span></div>" +
+        "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap\">" +
+        "<div style=\"font-weight:700;color:#1E3A8A\">Câu " + item.id + "</div>" +
+        "<div style=\"font-weight:800;font-size:.95rem;color:" + color + "\">" + pts + " / " + maxP + " điểm</div>" +
+        "</div>" +
         "<div style=\"margin:4px 0;color:#334155\">" + (item.text || "") + "</div>" +
         "<div style=\"font-size:.84rem\"><b>HS chọn:</b> " + (item.user || "—") +
         " &nbsp;|&nbsp; <b>Đáp án đúng:</b> <span style=\"color:#065F46\">" + (item.correct || "—") + "</span></div></div>";
-    }).join("");
+    }).join("") +
+    "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.1rem;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
   }
   modal.style.display = "flex";
 }
