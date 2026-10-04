@@ -9012,7 +9012,8 @@ function renderDutyRoster() {
   html += 'Kéo thả tên HS vào bất kỳ ô nào để chỉnh tay.';
   html += '</div>';
 
-  // 5 cột VP tuần nguồn: Vắng KP | Vắng CP | Đi trễ | Điện thoại (v26) | VP khác
+  // 5 cột VP tuần nguồn (mới):
+  // ① Vắng không phép | ② Vắng CP + Đi trễ | ③ v49/v07/v35 | ④ v26/v13/v14 | ⑤ VP khác + HS >2 lần
   var weekViolsDuty = (entries || []).filter(function(e) {
     if (e.type !== "violation") return false;
     if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
@@ -9022,21 +9023,23 @@ function renderDutyRoster() {
     return false;
   });
   function dutyViolGroupKey(e) {
-    var code = (typeof normalizeViolCode === "function" ? normalizeViolCode(e) : "").toLowerCase();
+    var code = (typeof normalizeViolCode === "function" ? normalizeViolCode(e) : String(e.contentCode || "")).toLowerCase().replace(/\s/g, "");
     var tx = String(e.contentText || e.contentCode || "").toLowerCase();
-    // ④ Điện thoại v26 trước
-    if (code === "v26" || tx.indexOf("điện thoại") >= 0 || tx.indexOf("dien thoai") >= 0) return "phone";
     // ① Vắng không phép
-    if (code === "v02" || tx.indexOf("vắng không phép") >= 0 || tx.indexOf("vang khong phep") >= 0) return "absentNo";
-    // ② Vắng có phép
+    if (code === "v02" || tx.indexOf("vắng không phép") >= 0 || tx.indexOf("vang khong phep") >= 0) return "col1";
+    // ② Vắng có phép + Đi học trễ
     if (code === "v01" || code === "v06" ||
-        tx.indexOf("vắng có phép") >= 0 || tx.indexOf("vang co phep") >= 0) return "absentYes";
-    // ③ Đi học trễ
+        tx.indexOf("vắng có phép") >= 0 || tx.indexOf("vang co phep") >= 0) return "col2";
     if (code === "v03" ||
         tx.indexOf("đi học trễ") >= 0 || tx.indexOf("di hoc tre") >= 0 ||
-        tx.indexOf("đi trễ") >= 0 || tx.indexOf("di tre") >= 0) return "late";
+        tx.indexOf("đi trễ") >= 0 || tx.indexOf("di tre") >= 0) return "col2";
+    // ③ v49, v07, v35
+    if (code === "v49" || code === "v07" || code === "v35") return "col3";
+    // ④ Điện thoại v26 + v13 + v14
+    if (code === "v26" || code === "v13" || code === "v14" ||
+        tx.indexOf("điện thoại") >= 0 || tx.indexOf("dien thoai") >= 0) return "col4";
     // ⑤ Vi phạm khác
-    return "other";
+    return "col5";
   }
   function dutyViolAgg(list) {
     var map = {};
@@ -9046,17 +9049,38 @@ function renderDutyRoster() {
       var name = (st && st.name) || e.studentName || sid;
       var code = (typeof normalizeViolCode === "function" ? normalizeViolCode(e) : "") || (e.contentCode || "");
       var key = sid + "|" + code;
-      if (!map[key]) map[key] = { name: shortDutyName(name), code: code, times: 0 };
+      if (!map[key]) map[key] = { name: shortDutyName(name), code: code, times: 0, sid: sid };
       map[key].times += Number(e.times) || 1;
     });
     return Object.keys(map).map(function(k) { return map[k]; })
       .sort(function(a, b) { return a.name.localeCompare(b.name, "vi"); });
   }
-  var gAbsentNo = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "absentNo"; }));
-  var gAbsentYes = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "absentYes"; }));
-  var gLate = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "late"; }));
-  var gPhone = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "phone"; }));
-  var gOther = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "other"; }));
+  var g1 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col1"; }));
+  var g2 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col2"; }));
+  var g3 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col3"; }));
+  var g4 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col4"; }));
+  var g5 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col5"; }));
+  // Cột 5: thêm HS vi phạm nhiều nhất (> 2 lần) trong tuần nguồn
+  var totalBySid = {};
+  weekViolsDuty.forEach(function(e) {
+    var sid = String(e.studentId);
+    totalBySid[sid] = (totalBySid[sid] || 0) + (Number(e.times) || 1);
+  });
+  Object.keys(totalBySid).forEach(function(sid) {
+    if (totalBySid[sid] > 2) {
+      var st = (students || []).find(function(s) { return String(s.id) === sid; });
+      var name = shortDutyName((st && st.name) || sid);
+      var exists = g5.some(function(r) { return String(r.sid) === sid; });
+      if (!exists) {
+        g5.push({ name: name, code: ">2 lần", times: totalBySid[sid], sid: sid });
+      } else {
+        g5.forEach(function(r) {
+          if (String(r.sid) === sid && totalBySid[sid] > r.times) r.times = totalBySid[sid];
+        });
+      }
+    }
+  });
+  g5.sort(function(a, b) { return a.name.localeCompare(b.name, "vi"); });
   function dutyViolColHtml(title, rows, color) {
     var h = '<div class="rounded-lg border p-2" style="border-color:' + color + ';background:#fff;min-height:4rem">';
     h += '<div class="font-bold text-xs mb-1" style="color:' + color + '">' + title + '</div>';
@@ -9072,11 +9096,11 @@ function renderDutyRoster() {
     return h;
   }
   html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-3">';
-  html += dutyViolColHtml("① Vắng không phép", gAbsentNo, "#b91c1c");
-  html += dutyViolColHtml("② Vắng có phép", gAbsentYes, "#c2410c");
-  html += dutyViolColHtml("③ Đi học trễ", gLate, "#a16207");
-  html += dutyViolColHtml("④ Điện thoại (v26)", gPhone, "#7c3aed");
-  html += dutyViolColHtml("⑤ Vi phạm khác", gOther, "#0f766e");
+  html += dutyViolColHtml("① Vắng không phép", g1, "#b91c1c");
+  html += dutyViolColHtml("② Vắng có phép · Đi học trễ", g2, "#c2410c");
+  html += dutyViolColHtml("③ v49 · v07 · v35", g3, "#a16207");
+  html += dutyViolColHtml("④ Điện thoại (v26) · v13 · v14", g4, "#7c3aed");
+  html += dutyViolColHtml("⑤ VP khác · HS >2 lần", g5, "#0f766e");
   html += '</div>';
 
   // Pool HS + số buổi
@@ -9822,18 +9846,25 @@ function downloadNbClassXlsx() {
 
 
 function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, school, year) {
+  var scopeTitle = scope === "month" ? "THÁNG" : (scope === "year" ? "CẢ NĂM" : "HỌC KỲ");
   const periodLabel = scope === "month"
     ? ("THÁNG " + mon + " HỌC KỲ " + (mon >= 9 || mon <= 4 ? (mon >= 9 ? "1" : "2") : "") + " NĂM HỌC " + year)
-    : ((hk === "hk1" ? "HỌC KỲ 1" : "HỌC KỲ 2") + " NĂM HỌC " + year);
+    : (scope === "year"
+      ? ("CẢ NĂM HỌC " + year)
+      : ((hk === "hk1" ? "HỌC KỲ 1" : "HỌC KỲ 2") + " NĂM HỌC " + year));
   const monthNum = scope === "month" ? mon : "";
   let h = '<div class="mt-6">';
-  h += '<h3 class="font-bold text-yellow-400 mb-2 text-lg">BẢN TỰ ĐÁNH GIÁ CÁ NHÂN THEO ' + (scope === "month" ? "THÁNG" : "HỌC KỲ") + '</h3>';
-  h += '<p class="text-sm text-slate-300 mb-3">Tự động điền mục 1–3 từ dữ liệu thi đua · Mục 4–5 để trống cho HS/PH điền · Chọn HS rồi Lưu / Tải</p>';
-  h += '<div class="mb-3 no-print"><label class="text-sm text-slate-300">Chọn học sinh</label>';
+  h += '<h3 class="font-bold text-yellow-400 mb-2 text-lg">BẢN TỰ ĐÁNH GIÁ CÁ NHÂN THEO ' + scopeTitle + '</h3>';
+  h += '<p class="text-sm text-slate-300 mb-3">Tự động điền mục 1–3 từ dữ liệu thi đua · Mục 4–5 để trống · Chọn 1 HS hoặc <b>Cả lớp</b></p>';
+  h += '<div class="mb-3 no-print flex flex-wrap gap-2 items-end">';
+  h += '<div><label class="text-sm text-slate-300 block">Chọn học sinh / lớp</label>';
   h += '<select id="nbSelfStudent" class="input-field text-base py-2" onchange="fillSelfAssessment()">' +
     '<option value="">— Chọn HS —</option>' +
+    '<option value="__ALL__">📋 CẢ LỚP (' + (students || []).length + ' HS)</option>' +
     students.slice().sort(sortByIdAsc).map(s => '<option value="' + s.id + '">' + s.name + " (Tổ " + (s.team||"?") + ")</option>").join("") +
     '</select></div>';
+  h += '<button type="button" onclick="(function(){var s=document.getElementById(\'nbSelfStudent\');if(s){s.value=\'__ALL__\';fillSelfAssessment();}})()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#7c3aed;color:#fff">📋 Cả lớp</button>';
+  h += '</div>';
   h += '<div id="nbSelfForm" class="week-board bg-white text-slate-900"></div>';
   h += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
   h += '<button type="button" onclick="fillSelfAssessment()" class="px-3 py-2 rounded-lg bg-slate-600 text-white text-sm">Làm mới phiếu</button>';
@@ -9841,8 +9872,9 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   h += '<button type="button" onclick="downloadSelfDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#16a34a;color:#fff">📝 Tải .docx</button>';
   h += '<button type="button" onclick="downloadSelfDoc()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#2563eb;color:#fff">📝 Tải Word (.doc)</button>';
   h += '<button type="button" onclick="downloadSelfPdf()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#ca8a04;color:#fff">📝 Tải cả lớp .docx</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#db2777;color:#fff">📷 Tải cả lớp .jpg</button>';
   h += '</div></div>';
-  // store context
   window._nbSelfCtx = { scope, mon, hk, weekNos, nW, gvcn, cls, school, year, periodLabel, monthNum };
   setTimeout(fillSelfAssessment, 50);
   return h;
@@ -9875,25 +9907,18 @@ function downloadSelfDocx() {
   }, 300);
 }
 
-function fillSelfAssessment() {
-  const box = document.getElementById("nbSelfForm");
-  if (!box || !window._nbSelfCtx) return;
-  const ctx = window._nbSelfCtx;
-  const sid = (document.getElementById("nbSelfStudent") || {}).value || "";
-  const st = students.find(s => String(s.id) === String(sid));
-  const list = entriesInWeeks(ctx.weekNos);
-  let bonusLines = [], violLines = [];
-  let sumScore = ctx.weekNos.length * 100;
+function buildSelfSheetHtmlForStudent(st, ctx) {
+  var list = entriesInWeeks(ctx.weekNos);
+  var bonusLines = [], violLines = [];
+  var sumScore = ctx.weekNos.length * 100;
   if (st) {
     sumScore = studentWeekScoreInWeeks(st.id, ctx.weekNos);
-    // Gộp theo nội dung (bỏ mã u/v) + tổng số lần
     var bonusMap = {}, violMap = {};
     list.filter(function(e) { return String(e.studentId) === String(st.id); }).forEach(function(e) {
       if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
       var text = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "");
       text = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || text;
       text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+/g, "").trim();
-      // bỏ prefix "Thứ x." nếu muốn gộp cùng nội dung
       var key = text.toLowerCase().replace(/^thứ\s*\d+[,.\s]*/i, "").replace(/\s+/g, " ").trim();
       if (!key) return;
       var times = Number(e.times) || 1;
@@ -9912,8 +9937,7 @@ function fillSelfAssessment() {
       return violMap[k].text + " (" + violMap[k].times + " lần)";
     });
   }
-  const rk = ctx.scope === "week" ? rankClass(sumScore) : rankClassScaled(sumScore, ctx.nW);
-  // Vị thứ lớp
+  var rk = ctx.scope === "week" ? rankClass(sumScore) : rankClassScaled(sumScore, ctx.nW || 1);
   var classPos = "…";
   if (st) {
     var allSc = (students || []).map(function(s) {
@@ -9925,8 +9949,10 @@ function fillSelfAssessment() {
       if (String(x.id) === String(st.id)) classPos = rr;
     });
   }
-  const monthTxt = ctx.scope === "month" ? String(ctx.mon) : "…";
-  let html = '<div id="selfAssessSheet" class="self-a5" style="font-family:\'Times New Roman\',Times,serif;font-size:11pt;color:#000;padding:10mm 12mm;max-width:148mm;margin:0 auto;background:#fff;box-sizing:border-box;line-height:1.45">';
+  var monthTxt = ctx.scope === "month" ? String(ctx.mon) : "…";
+  var periodWord = ctx.scope === "month" ? ("tháng " + monthTxt) : (ctx.scope === "year" ? "năm học" : "học kỳ");
+  var scoreLabel = ctx.scope === "month" ? "THÁNG" : (ctx.scope === "year" ? "CẢ NĂM" : "HỌC KỲ");
+  var html = '<div class="self-a5 self-sheet-one" style="font-family:\'Times New Roman\',Times,serif;font-size:11pt;color:#000;padding:10mm 12mm;max-width:148mm;margin:0 auto 16px;background:#fff;box-sizing:border-box;line-height:1.45;page-break-after:always">';
   html += '<div style="text-align:center;font-weight:bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br/>Độc lập - Tự do - Hạnh phúc<br/>---------------</div>';
   var schoolTitle = String(ctx.school || "THPT HÀ HUY TẬP").toUpperCase();
   if (schoolTitle.indexOf("TRƯỜNG") !== 0) schoolTitle = "TRƯỜNG " + schoolTitle;
@@ -9936,19 +9962,19 @@ function fillSelfAssessment() {
   html += '<p style="margin-top:12px"><b>Kính gửi:</b> <i>BGH nhà trường, GV chủ nhiệm lớp</i> <b>' + (ctx.cls || "") + '</b></p>';
   html += '<p>Họ và tên học sinh: <b>' + (st ? st.name : ".................................................") + '</b>';
   html += '&nbsp;&nbsp;Ngày sinh: <b>' + (st && st.dob ? st.dob : "……………") + '</b></p>';
-  html += '<p>Trong ' + (ctx.scope === "month" ? ("tháng " + monthTxt) : "học kỳ") + ', năm học ' + ctx.year + ' vừa qua em tự nhận thấy bản thân có những ưu, khuyết điểm như sau:</p>';
+  html += '<p>Trong ' + periodWord + ', năm học ' + ctx.year + ' vừa qua em tự nhận thấy bản thân có những ưu, khuyết điểm như sau:</p>';
   html += '<p><b>1. Ưu điểm:</b></p><p style="min-height:48px;border-bottom:1px dotted #999">';
-  html += bonusLines.length ? bonusLines.map(l => "• " + l).join("<br/>") : ".....................................................................................................................................";
+  html += bonusLines.length ? bonusLines.map(function(l) { return "• " + l; }).join("<br/>") : ".....................................................................................................................................";
   html += '</p>';
   html += '<p><b>2. Khuyết điểm:</b></p><p style="min-height:64px;border-bottom:1px dotted #999">';
-  html += violLines.length ? violLines.map(l => "• " + l).join("<br/>") : ".....................................................................................................................................";
+  html += violLines.length ? violLines.map(function(l) { return "• " + l; }).join("<br/>") : ".....................................................................................................................................";
   html += '</p>';
-  html += '<p><b>3. Em tự nhận xét về kết quả xếp loại rèn luyện, học tập của ' + (ctx.scope === "month" ? ("tháng " + monthTxt) : "học kỳ") + ' :</b></p>';
+  html += '<p><b>3. Em tự nhận xét về kết quả xếp loại rèn luyện, học tập của ' + periodWord + ' :</b></p>';
   html += '<ul style="list-style:none;padding-left:0">';
-  html += '<li><b>TỔNG ĐIỂM ' + (ctx.scope === "month" ? "THÁNG" : "HỌC KỲ") + ' : ' + (st ? sumScore : "……………….") + '</b></li>';
+  html += '<li><b>TỔNG ĐIỂM ' + scoreLabel + ' : ' + (st ? sumScore : "……………….") + '</b></li>';
   html += '<li><b>Vị thứ trong lớp : ' + (st ? classPos : "…………………") + '</b></li>';
   html += '<li><b>Rèn luyện XẾP LOẠI : ' + (st ? rk.label : "…………………") + '</b></li></ul>';
-  html += '<p><b>4. Ý kiến cá nhân HS và mục tiêu học tập cho ' + (ctx.scope === "month" ? "tháng kế tiếp" : "học kỳ kế tiếp") + ' :</b></p>';
+  html += '<p><b>4. Ý kiến cá nhân HS và mục tiêu học tập cho ' + (ctx.scope === "month" ? "tháng kế tiếp" : "giai đoạn kế tiếp") + ' :</b></p>';
   html += '<p>.....................................................................................................................................</p>';
   html += '<p>.....................................................................................................................................</p>';
   html += '<p>.....................................................................................................................................</p>';
@@ -9961,7 +9987,56 @@ function fillSelfAssessment() {
   html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Tổ trưởng/ phó</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
   html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Học sinh</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
   html += '</tr></table></div>';
-  box.innerHTML = html;
+  return html;
+}
+
+function fillSelfAssessment() {
+  var box = document.getElementById("nbSelfForm");
+  if (!box || !window._nbSelfCtx) return;
+  var ctx = window._nbSelfCtx;
+  var sid = (document.getElementById("nbSelfStudent") || {}).value || "";
+  if (sid === "__ALL__") {
+    var list = (students || []).slice().sort(sortByIdAsc);
+    var html = '<div id="selfAssessSheet" style="background:#f8fafc;padding:8px">';
+    html += '<div class="text-center font-bold mb-2" style="color:#0f172a">BẢN TỰ ĐÁNH GIÁ CẢ LỚP · ' + (ctx.cls || "") + " · " + (ctx.periodLabel || "") + " · " + list.length + " HS</div>";
+    list.forEach(function(st) {
+      html += buildSelfSheetHtmlForStudent(st, ctx);
+    });
+    html += "</div>";
+    box.innerHTML = html;
+    return;
+  }
+  var st = students.find(function(s) { return String(s.id) === String(sid); });
+  box.innerHTML = '<div id="selfAssessSheet">' + buildSelfSheetHtmlForStudent(st || null, ctx) + "</div>";
+}
+
+function downloadSelfClassAllDocx() {
+  var ctx = window._nbSelfCtx;
+  if (!ctx) { alert("Chưa mở mục tự đánh giá"); return; }
+  var list = (students || []).slice().sort(sortByIdAsc);
+  if (!list.length) { alert("Chưa có danh sách lớp"); return; }
+  var body = list.map(function(st) {
+    return buildSelfSheetHtmlForStudent(st, ctx);
+  }).join('<br clear="all" style="page-break-before:always"/>');
+  var html = "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><title>Tu danh gia ca lop</title></head><body>" + body + "</body></html>";
+  var blob = new Blob(["\ufeff", html], { type: "application/msword" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "TuDanhGia_CaLop_" + (ctx.cls || "Lop") + ".docx";
+  a.click();
+}
+
+function downloadSelfClassAllJpg() {
+  var sel = document.getElementById("nbSelfStudent");
+  if (sel) sel.value = "__ALL__";
+  fillSelfAssessment();
+  setTimeout(function() {
+    if (typeof downloadReportBoardJpg === "function") {
+      downloadReportBoardJpg("selfAssessSheet", "TuDanhGia_CaLop", "BẢN TỰ ĐÁNH GIÁ CẢ LỚP");
+    } else {
+      alert("Chức năng tải ảnh chưa sẵn sàng");
+    }
+  }, 200);
 }
 function printNotebook() {
   const area = document.getElementById("nbPrintArea");
