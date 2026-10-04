@@ -9907,24 +9907,40 @@ function downloadSelfDocx() {
 }
 
 function buildSelfSheetHtmlForStudent(st, ctx) {
-  var list = entriesInWeeks(ctx.weekNos);
+  var weekNos = (ctx.weekNos || []).map(String);
+  if (!weekNos.length) weekNos = ["1"];
+  var list = (typeof entriesInWeeks === "function") ? entriesInWeeks(weekNos) : (entries || []);
   var bonusLines = [], violLines = [];
-  var sumScore = ctx.weekNos.length * 100;
+  var sumScore = weekNos.length * 100;
   if (st) {
-    sumScore = studentWeekScoreInWeeks(st.id, ctx.weekNos);
+    sumScore = (typeof studentWeekScoreInWeeks === "function")
+      ? studentWeekScoreInWeeks(st.id, weekNos)
+      : sumScore;
     var bonusMap = {}, violMap = {};
     list.filter(function(e) { return String(e.studentId) === String(st.id); }).forEach(function(e) {
       if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
-      var text = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "");
-      text = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || text;
-      text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+/g, "").trim();
-      var key = text.toLowerCase().replace(/^thứ\s*\d+[,.\s]*/i, "").replace(/\s+/g, " ").trim();
-      if (!key) return;
+      var raw = String(e.contentText || e.contentCode || e.content || "").trim();
+      if (!raw) raw = String(e.contentCode || "—");
+      var text = raw.replace(/^Đã chọn:\s*/i, "");
+      // Bỏ mã đầu dòng nhưng giữ nội dung
+      var stripped = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim();
+      if (stripped) text = stripped;
+      text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").trim();
+      if (!text) text = raw;
+      var key = text.toLowerCase().replace(/\s+/g, " ").trim() || raw.toLowerCase();
       var times = Number(e.times) || 1;
-      if (e.type === "bonus") {
+      if (e.type === "bonus" || e.type === "u" || (e.contentCode && String(e.contentCode).charAt(0).toLowerCase() === "u")) {
         if (!bonusMap[key]) bonusMap[key] = { text: text, times: 0 };
         bonusMap[key].times += times;
-      } else if (e.type === "violation") {
+      } else if (e.type === "violation" || e.type === "v" || (e.contentCode && String(e.contentCode).charAt(0).toLowerCase() === "v")) {
+        if (!violMap[key]) violMap[key] = { text: text, times: 0 };
+        violMap[key].times += times;
+      } else if (e.type === "silent" || e.type === "im") {
+        /* bỏ qua im lặng trong mục ưu/khuyết */
+      } else if (Number(e.points) > 0) {
+        if (!bonusMap[key]) bonusMap[key] = { text: text, times: 0 };
+        bonusMap[key].times += times;
+      } else if (Number(e.points) < 0) {
         if (!violMap[key]) violMap[key] = { text: text, times: 0 };
         violMap[key].times += times;
       }
@@ -9936,11 +9952,18 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
       return violMap[k].text + " (" + violMap[k].times + " lần)";
     });
   }
-  var rk = ctx.scope === "week" ? rankClass(sumScore) : rankClassScaled(sumScore, ctx.nW || 1);
+  var nW = ctx.nW || weekNos.length || 1;
+  var rk = { label: "…" };
+  try {
+    rk = (ctx.scope === "week")
+      ? (typeof rankClass === "function" ? rankClass(sumScore) : rk)
+      : (typeof rankClassScaled === "function" ? rankClassScaled(sumScore, nW) : rk);
+  } catch (e) {}
+  if (!rk || !rk.label) rk = { label: "…" };
   var classPos = "…";
   if (st) {
     var allSc = (students || []).map(function(s) {
-      return { id: s.id, score: studentWeekScoreInWeeks(s.id, ctx.weekNos) };
+      return { id: s.id, score: (typeof studentWeekScoreInWeeks === "function" ? studentWeekScoreInWeeks(s.id, weekNos) : 100) };
     }).sort(function(a, b) { return b.score - a.score; });
     var rr = 0, prevS = null;
     allSc.forEach(function(x) {
@@ -9951,42 +9974,67 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   var monthTxt = ctx.scope === "month" ? String(ctx.mon) : "…";
   var periodWord = ctx.scope === "month" ? ("tháng " + monthTxt) : (ctx.scope === "year" ? "năm học" : "học kỳ");
   var scoreLabel = ctx.scope === "month" ? "THÁNG" : (ctx.scope === "year" ? "CẢ NĂM" : "HỌC KỲ");
-  var html = '<div class="self-a5 self-sheet-one" style="font-family:\'Times New Roman\',Times,serif;font-size:11pt;color:#000;padding:10mm 12mm;max-width:148mm;margin:0 auto 16px;background:#fff;box-sizing:border-box;line-height:1.45;page-break-after:always">';
-  html += '<div style="text-align:center;font-weight:bold">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM<br/>Độc lập - Tự do - Hạnh phúc<br/>---------------</div>';
   var schoolTitle = String(ctx.school || "THPT HÀ HUY TẬP").toUpperCase();
   if (schoolTitle.indexOf("TRƯỜNG") !== 0) schoolTitle = "TRƯỜNG " + schoolTitle;
-  html += '<div style="text-align:center;margin-top:10px;font-weight:bold">' + schoolTitle + '</div>';
-  html += '<div style="text-align:center;font-weight:bold;margin-top:8px">BẢN TỰ NHẬN XÉT CÁ NHÂN LỚP ' + (ctx.cls || "") + '</div>';
-  html += '<div style="text-align:center;font-weight:bold">' + ctx.periodLabel + '</div>';
-  html += '<p style="margin-top:12px"><b>Kính gửi:</b> <i>BGH nhà trường, GV chủ nhiệm lớp</i> <b>' + (ctx.cls || "") + '</b></p>';
-  html += '<p>Họ và tên học sinh: <b>' + (st ? st.name : ".................................................") + '</b>';
-  html += '&nbsp;&nbsp;Ngày sinh: <b>' + (st && st.dob ? st.dob : "……………") + '</b></p>';
-  html += '<p>Trong ' + periodWord + ', năm học ' + ctx.year + ' vừa qua em tự nhận thấy bản thân có những ưu, khuyết điểm như sau:</p>';
-  html += '<p><b>1. Ưu điểm:</b></p><p style="min-height:48px;border-bottom:1px dotted #999">';
-  html += bonusLines.length ? bonusLines.map(function(l) { return "• " + l; }).join("<br/>") : ".....................................................................................................................................";
-  html += '</p>';
-  html += '<p><b>2. Khuyết điểm:</b></p><p style="min-height:64px;border-bottom:1px dotted #999">';
-  html += violLines.length ? violLines.map(function(l) { return "• " + l; }).join("<br/>") : ".....................................................................................................................................";
-  html += '</p>';
-  html += '<p><b>3. Em tự nhận xét về kết quả xếp loại rèn luyện, học tập của ' + periodWord + ' :</b></p>';
-  html += '<ul style="list-style:none;padding-left:0">';
-  html += '<li><b>TỔNG ĐIỂM ' + scoreLabel + ' : ' + (st ? sumScore : "……………….") + '</b></li>';
-  html += '<li><b>Vị thứ trong lớp : ' + (st ? classPos : "…………………") + '</b></li>';
-  html += '<li><b>Rèn luyện XẾP LOẠI : ' + (st ? rk.label : "…………………") + '</b></li></ul>';
-  html += '<p><b>4. Ý kiến cá nhân HS và mục tiêu học tập cho ' + (ctx.scope === "month" ? "tháng kế tiếp" : "giai đoạn kế tiếp") + ' :</b></p>';
-  html += '<p>.....................................................................................................................................</p>';
-  html += '<p>.....................................................................................................................................</p>';
-  html += '<p>.....................................................................................................................................</p>';
-  html += '<p><b>5. Ý kiến của phụ huynh :</b></p>';
-  html += '<p>.....................................................................................................................................</p>';
-  html += '<p>.....................................................................................................................................</p>';
-  html += '<p style="text-align:right;margin-top:12px"><i>Tây Nha Trang, ngày…… tháng…… năm 2026</i></p>';
-  html += '<table style="width:100%;margin-top:8px"><tr>';
-  html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Phụ huynh</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
-  html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Tổ trưởng/ phó</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
-  html += '<td style="width:33%;vertical-align:top;text-align:center"><b>Học sinh</b><br/><span style="font-size:10pt">(ký và ghi tên)</span><br/><br/><br/><br/></td>';
-  html += '</tr></table></div>';
-  return html;
+  var name = st ? String(st.name) : ".................................................";
+  var dob = (st && st.dob) ? String(st.dob) : "……………";
+  var team = (st && st.team) ? String(st.team) : "…";
+  var sid = st ? String(st.id) : "";
+
+  // HTML đơn giản, 1 cột, Word-safe (không flex, không max-width lạ)
+  var h = "";
+  h += '<div class="self-sheet-one" style="font-family:Times New Roman,Times,serif;font-size:11pt;color:#000;background:#fff;padding:8mm 10mm;line-height:1.4">';
+  h += '<p style="text-align:center;font-weight:bold;margin:0 0 2pt 0">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>';
+  h += '<p style="text-align:center;font-weight:bold;margin:0 0 2pt 0">Độc lập - Tự do - Hạnh phúc</p>';
+  h += '<p style="text-align:center;margin:0 0 8pt 0">---------------</p>';
+  h += '<p style="text-align:center;font-weight:bold;margin:4pt 0">' + schoolTitle + '</p>';
+  h += '<p style="text-align:center;font-weight:bold;margin:4pt 0">BẢN TỰ NHẬN XÉT CÁ NHÂN LỚP ' + (ctx.cls || "") + '</p>';
+  h += '<p style="text-align:center;font-weight:bold;margin:2pt 0 10pt 0">' + (ctx.periodLabel || "") + '</p>';
+  h += '<p style="margin:6pt 0"><b>Kính gửi:</b> BGH nhà trường, GV chủ nhiệm lớp <b>' + (ctx.cls || "") + '</b></p>';
+  h += '<p style="margin:4pt 0">Họ và tên học sinh: <b>' + name + '</b>' +
+    (sid ? ' &nbsp;(ID: ' + sid + ')' : '') +
+    ' &nbsp;|&nbsp; Tổ: <b>' + team + '</b></p>';
+  h += '<p style="margin:4pt 0">Ngày sinh: <b>' + dob + '</b></p>';
+  h += '<p style="margin:8pt 0">Trong ' + periodWord + ', năm học ' + (ctx.year || "2026-2027") +
+    ' vừa qua em tự nhận thấy bản thân có những ưu, khuyết điểm như sau:</p>';
+
+  h += '<p style="margin:8pt 0 2pt 0"><b>1. Ưu điểm:</b></p>';
+  if (bonusLines.length) {
+    h += '<p style="margin:2pt 0 2pt 12pt">' + bonusLines.map(function(l) { return "• " + l; }).join("<br/>") + '</p>';
+  } else {
+    h += '<p style="margin:2pt 0 2pt 12pt"><i>Không có ưu điểm ghi nhận trong kỳ này.</i></p>';
+  }
+
+  h += '<p style="margin:8pt 0 2pt 0"><b>2. Khuyết điểm (vi phạm):</b></p>';
+  if (violLines.length) {
+    h += '<p style="margin:2pt 0 2pt 12pt">' + violLines.map(function(l) { return "• " + l; }).join("<br/>") + '</p>';
+  } else {
+    h += '<p style="margin:2pt 0 2pt 12pt"><i>Không có vi phạm ghi nhận trong kỳ này.</i></p>';
+  }
+
+  h += '<p style="margin:8pt 0 2pt 0"><b>3. Kết quả xếp loại rèn luyện ' + periodWord + ':</b></p>';
+  h += '<table border="1" cellpadding="4" cellspacing="0" style="border-collapse:collapse;width:100%;margin:4pt 0 8pt 0">';
+  h += '<tr><td width="40%"><b>TỔNG ĐIỂM ' + scoreLabel + '</b></td><td><b>' + (st ? sumScore : "…") + '</b></td></tr>';
+  h += '<tr><td><b>Vị thứ trong lớp</b></td><td><b>' + (st ? classPos : "…") + '</b></td></tr>';
+  h += '<tr><td><b>Rèn luyện XẾP LOẠI</b></td><td><b>' + (st ? rk.label : "…") + '</b></td></tr>';
+  h += '</table>';
+
+  h += '<p style="margin:8pt 0 2pt 0"><b>4. Ý kiến cá nhân HS và mục tiêu học tập:</b></p>';
+  h += '<p style="margin:2pt 0">…………………………………………………………………………………</p>';
+  h += '<p style="margin:2pt 0">…………………………………………………………………………………</p>';
+
+  h += '<p style="margin:8pt 0 2pt 0"><b>5. Ý kiến của phụ huynh:</b></p>';
+  h += '<p style="margin:2pt 0">…………………………………………………………………………………</p>';
+  h += '<p style="margin:2pt 0">…………………………………………………………………………………</p>';
+
+  h += '<p style="text-align:right;margin:12pt 0 6pt 0"><i>Tây Nha Trang, ngày…… tháng…… năm……</i></p>';
+  h += '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:6pt"><tr>';
+  h += '<td width="33%" align="center" valign="top"><b>Phụ huynh</b><br/>(ký và ghi tên)<br/><br/><br/><br/></td>';
+  h += '<td width="33%" align="center" valign="top"><b>Tổ trưởng/phó</b><br/>(ký và ghi tên)<br/><br/><br/><br/></td>';
+  h += '<td width="34%" align="center" valign="top"><b>Học sinh</b><br/>(ký và ghi tên)<br/><br/><br/><br/></td>';
+  h += '</tr></table>';
+  h += '</div>';
+  return h;
 }
 
 function fillSelfAssessment() {
@@ -10010,15 +10058,15 @@ function fillSelfAssessment() {
 }
 
 function selfWordHtmlWrap(innerBody) {
-  return "<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>" +
-    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom>" +
-    "<w:PageSetup><w:PaperSize>9</w:PaperSize></w:PageSetup></w:WordDocument></xml><![endif]-->" +
+  // Word HTML đơn giản — 1 trang/HS, không chia cột ngang
+  return "<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'>" +
+    "<head><meta charset='utf-8'>" +
+    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View></w:WordDocument></xml><![endif]-->" +
     "<style>" +
-    "@page{size:148mm 210mm;margin:12mm 10mm}" +
-    "body{font-family:'Times New Roman',Times,serif;font-size:11pt;color:#000;margin:0;padding:0}" +
-    ".self-sheet-one{width:100%;box-sizing:border-box}" +
-    "p{margin:3pt 0} table{border-collapse:collapse;width:100%}" +
-    "</style><title>Tu danh gia</title></head><body>" + innerBody + "</body></html>";
+    "body{font-family:'Times New Roman',Times,serif;font-size:11pt;color:#000;margin:12mm}" +
+    "p{margin:3pt 0} table{border-collapse:collapse}" +
+    "td{font-family:'Times New Roman',Times,serif;font-size:11pt}" +
+    "</style></head><body>" + innerBody + "</body></html>";
 }
 
 function safeFileNamePart(s) {
