@@ -1337,27 +1337,85 @@ function saveSchedule(arr) {
 function renderScheduleList() {
   const ul = document.getElementById("sch-list");
   if (!ul) return;
+  const now = Date.now();
+  // Sắp xếp: suất đang diễn ra trước → suất sắp tới (gần nhất) → suất đã qua; trong nhóm theo thời gian tăng dần
   const list = loadSchedule().slice().sort((a, b) => {
-    const c = (a.lop || "").localeCompare(b.lop || "");
-    if (c) return c;
-    return String(a.from).localeCompare(String(b.from));
+    const fa = new Date(a.from).getTime();
+    const fb = new Date(b.from).getTime();
+    const ta = new Date(a.to).getTime();
+    const tb = new Date(b.to).getTime();
+    const status = (f, t) => {
+      if (now >= f && now <= t) return 0; // đang mở
+      if (now < f) return 1;              // sắp tới
+      return 2;                           // đã qua
+    };
+    const sa = status(fa, ta), sb = status(fb, tb);
+    if (sa !== sb) return sa - sb;
+    if (fa !== fb) return fa - fb;
+    return ta - tb;
   });
   if (!list.length) {
     ul.innerHTML = '<li style="color:#888">Chưa có khung giờ (mặc định: chưa mở lớp nào)</li>';
     return;
   }
   ul.innerHTML = list.map(s => {
-    const from = s.from ? new Date(s.from).toLocaleString("vi-VN") : "?";
-    const to = s.to ? new Date(s.to).toLocaleString("vi-VN") : "?";
-    return '<li><b>' + s.lop + '</b>: ' + from + ' → ' + to +
-      ' <button type="button" data-del-id="' + s.id + '" style="margin-left:8px;padding:2px 8px;font-size:.75rem;background:#FEE2E2;border-radius:4px;color:#991B1B;border:none;cursor:pointer">Xóa</button></li>';
+    const fromMs = new Date(s.from).getTime();
+    const toMs = new Date(s.to).getTime();
+    const from = new Date(s.from).toLocaleString("vi-VN");
+    const to = new Date(s.to).toLocaleString("vi-VN");
+    let badge = "";
+    if (now >= fromMs && now <= toMs) badge = ' <span style="background:#D1FAE5;color:#065F46;font-size:.7rem;padding:1px 6px;border-radius:8px;font-weight:700">Đang mở</span>';
+    else if (now < fromMs) badge = ' <span style="background:#DBEAFE;color:#1E40AF;font-size:.7rem;padding:1px 6px;border-radius:8px;font-weight:700">Sắp tới</span>';
+    else badge = ' <span style="background:#F3F4F6;color:#6B7280;font-size:.7rem;padding:1px 6px;border-radius:8px">Đã qua</span>';
+    return '<li style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:6px 0;border-bottom:1px dashed #E2E8F0">' +
+      '<span style="flex:1;min-width:200px"><b>' + s.lop + '</b>: ' + from + ' → ' + to + badge + '</span>' +
+      '<span style="display:flex;gap:4px">' +
+      '<button type="button" data-edit-id="' + s.id + '" style="padding:3px 10px;font-size:.75rem;background:#FEF3C7;border-radius:6px;color:#92400E;border:none;cursor:pointer;font-weight:600">Sửa</button>' +
+      '<button type="button" data-del-id="' + s.id + '" style="padding:3px 10px;font-size:.75rem;background:#FEE2E2;border-radius:6px;color:#991B1B;border:none;cursor:pointer;font-weight:600">Xóa</button>' +
+      '</span></li>';
   }).join("");
   ul.querySelectorAll("button[data-del-id]").forEach(btn => {
     btn.onclick = () => {
+      if (!confirm("Xóa suất thi này?")) return;
       const arr = loadSchedule().filter(x => x.id !== btn.dataset.delId);
       saveSchedule(arr);
       renderScheduleList();
       if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+    };
+  });
+  ul.querySelectorAll("button[data-edit-id]").forEach(btn => {
+    btn.onclick = () => {
+      const s = loadSchedule().find(x => x.id === btn.dataset.editId);
+      if (!s) return;
+      const sel = document.getElementById("sch-class");
+      const fromEl = document.getElementById("sch-from");
+      const toEl = document.getElementById("sch-to");
+      if (sel) {
+        // đảm bảo option lớp tồn tại
+        if (![...sel.options].some(o => o.value === s.lop)) {
+          const o = document.createElement("option");
+          o.value = s.lop; o.textContent = s.lop;
+          sel.appendChild(o);
+        }
+        sel.value = s.lop;
+      }
+      // datetime-local cần format YYYY-MM-DDTHH:mm
+      const toLocal = (iso) => {
+        const d = new Date(iso);
+        if (isNaN(d)) return "";
+        const pad = n => String(n).padStart(2, "0");
+        return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate()) + "T" + pad(d.getHours()) + ":" + pad(d.getMinutes());
+      };
+      if (fromEl) fromEl.value = toLocal(s.from);
+      if (toEl) toEl.value = toLocal(s.to);
+      // đánh dấu đang sửa
+      window._editingScheduleId = s.id;
+      const addBtn = document.getElementById("btn-sch-add");
+      if (addBtn) {
+        addBtn.textContent = "💾 Lưu sửa";
+        addBtn.style.background = "#D97706";
+      }
+      sel?.scrollIntoView({ behavior: "smooth", block: "center" });
     };
   });
 }
@@ -1401,8 +1459,24 @@ document.getElementById("btn-sch-add")?.addEventListener("click", function () {
   const to = document.getElementById("sch-to").value;
   if (!lop || !from || !to) { alert("Chọn lớp và đủ thời gian Từ / Đến."); return; }
   if (new Date(from) >= new Date(to)) { alert("Thời gian 'Từ' phải trước 'Đến'."); return; }
-  const arr = loadSchedule();
-  // Cho phép nhiều suất cùng lớp (ngày/giờ khác nhau)
+  let arr = loadSchedule();
+  if (window._editingScheduleId) {
+    const i = arr.findIndex(x => x.id === window._editingScheduleId);
+    if (i >= 0) {
+      arr[i] = { ...arr[i], lop, from, to };
+      saveSchedule(arr);
+      renderScheduleList();
+      if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+      alert("Đã cập nhật suất thi lớp " + lop);
+    }
+    window._editingScheduleId = null;
+    const addBtn = document.getElementById("btn-sch-add");
+    if (addBtn) {
+      addBtn.textContent = "➕ Thêm / Cập nhật";
+      addBtn.style.background = "";
+    }
+    return;
+  }
   arr.push({ id: "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7), lop, from, to });
   saveSchedule(arr);
   renderScheduleList();
