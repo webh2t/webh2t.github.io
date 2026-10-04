@@ -14,10 +14,9 @@
 *{box-sizing:border-box;margin:0;padding:0}body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}button{font-family:inherit;cursor:pointer;border:none;outline:none}input,select{font-family:inherit}a{text-decoration:none;color:inherit}
 
 /* Chống bôi đen / copy trên màn hình thi */
-.no-select{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none}
-.no-select *{-webkit-user-select:none;user-select:none}
-::selection{background:transparent;color:inherit}
-::-moz-selection{background:transparent;color:inherit}
+#screen-exam.no-select,#screen-exam.no-select *{-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;-webkit-touch-callout:none}
+#screen-exam ::selection{background:transparent;color:inherit}
+#screen-exam ::-moz-selection{background:transparent;color:inherit}
 
 #screen-select{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#EEF2FF,#F0F9FF 50%,#F5F3FF)}
 .select-card{background:var(--card);border-radius:20px;box-shadow:0 20px 60px rgba(39,82,214,.15);padding:32px 40px;width:100%;max-width:640px}
@@ -250,7 +249,7 @@
 
       <div class="schedule-box" id="schedule-box">
         <h4>⏰ Khóa lớp / khung giờ làm bài</h4>
-        <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Chỉ học sinh thuộc lớp được mở trong khoảng thời gian quy định mới vào thi được. Ví dụ: 12A1 từ 07:00 05/10 đến 11:30 05/10.</p>
+        <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Mỗi lớp có thể có nhiều suất (ngày/giờ khác nhau). Thêm từng suất bằng nút <b>Thêm / Cập nhật</b>. Ví dụ: 12A1 suất sáng 5/10 và suất chiều 6/10.</p>
         <div class="schedule-row">
           <label>Lớp
             <select id="sch-class"><option value="">-- Chọn lớp --</option></select>
@@ -563,19 +562,23 @@ function parseWorkbook(wb) {
 
 function refreshClassDropdown() {
   classSelect.innerHTML = '<option value="">-- Chọn lớp --</option>';
-  const sch = (typeof loadSchedule === "function") ? loadSchedule() : {};
-  const hasAnySchedule = Object.keys(sch).length > 0;
+  const schList = (typeof loadSchedule === "function") ? loadSchedule() : [];
+  const hasAnySchedule = schList.length > 0;
+  const openLops = {};
+  schList.forEach(s => { if (typeof isClassOpenNow === "function" && isClassOpenNow(s.lop)) openLops[s.lop] = true; });
   let shown = 0;
   Object.keys(studentsByClass).sort().forEach(lop => {
-    // Có cấu hình lịch: chỉ hiện lớp đang trong khung giờ
-    // Chưa cấu hình lịch nào: ẩn tất cả (bắt buộc GV đặt khung giờ)
     if (!hasAnySchedule) return;
-    if (!sch[lop]) return; // lớp không có khung giờ → ẩn
-    if (typeof isClassOpenNow === "function" && !isClassOpenNow(lop)) return; // ngoài giờ → ẩn
+    if (!openLops[lop]) return; // không có suất đang mở
     const opt = document.createElement("option");
     opt.value = lop;
-    const to = sch[lop].to ? new Date(sch[lop].to).toLocaleString("vi-VN") : "";
-    opt.textContent = lop + " (" + studentsByClass[lop].length + " HS) · đến " + to;
+    const slots = schList.filter(s => s.lop === lop);
+    const active = slots.filter(s => {
+      const now = Date.now();
+      return now >= new Date(s.from).getTime() && now <= new Date(s.to).getTime();
+    });
+    const to = active[0] ? new Date(active[0].to).toLocaleString("vi-VN") : "";
+    opt.textContent = lop + " (" + studentsByClass[lop].length + " HS)" + (to ? " · đến " + to : "");
     classSelect.appendChild(opt);
     shown++;
   });
@@ -625,6 +628,12 @@ async function loadFromUrl(url) {
 function enterAdminMode() {
   isAdmin = true;
   sessionStorage.setItem(ADMIN_SESSION_KEY, "1");
+  // Tắt chống gian lận trên trang GV: cho phép bôi đen, copy, phím tắt
+  try { if (typeof disableAntiCheat === "function") disableAntiCheat(); } catch(e) {}
+  document.body.style.userSelect = "auto";
+  document.body.style.webkitUserSelect = "auto";
+  document.documentElement.style.userSelect = "auto";
+
   document.getElementById("teacher-panel").style.display = "block";
   document.getElementById("student-ui").style.display = "none";
   document.getElementById("select-card").classList.add("admin-wide");
@@ -1293,36 +1302,62 @@ async function submitExam(auto) {
 
 <script>
 
-/* ========== Lịch khóa lớp ========== */
-const SCHEDULE_KEY = "webh2t_exam_schedule";
+
+/* ========== Lịch khóa lớp (nhiều suất / lớp) ========== */
+const SCHEDULE_KEY = "webh2t_exam_schedule_v2";
+const SCHEDULE_KEY_LEGACY = "webh2t_exam_schedule";
+
 function loadSchedule() {
-  try { return JSON.parse(localStorage.getItem(SCHEDULE_KEY) || "{}"); } catch(e) { return {}; }
+  // Trả về mảng: [{ id, lop, from, to }, ...]
+  try {
+    let raw = localStorage.getItem(SCHEDULE_KEY);
+    if (raw) {
+      const arr = JSON.parse(raw);
+      if (Array.isArray(arr)) return arr;
+    }
+    // Migrate từ bản cũ { lop: {from,to} }
+    const leg = localStorage.getItem(SCHEDULE_KEY_LEGACY);
+    if (leg) {
+      const obj = JSON.parse(leg);
+      const arr = Object.keys(obj || {}).map((lop, i) => ({
+        id: "mig_" + i + "_" + Date.now(),
+        lop,
+        from: obj[lop].from,
+        to: obj[lop].to
+      }));
+      saveSchedule(arr);
+      return arr;
+    }
+  } catch (e) {}
+  return [];
 }
-function saveSchedule(obj) {
-  localStorage.setItem(SCHEDULE_KEY, JSON.stringify(obj));
+function saveSchedule(arr) {
+  localStorage.setItem(SCHEDULE_KEY, JSON.stringify(arr));
 }
 function renderScheduleList() {
   const ul = document.getElementById("sch-list");
   if (!ul) return;
-  const sch = loadSchedule();
-  const keys = Object.keys(sch).sort();
-  if (!keys.length) {
-    ul.innerHTML = '<li style="color:#888">Chưa có khung giờ (mặc định: mở tự do)</li>';
+  const list = loadSchedule().slice().sort((a, b) => {
+    const c = (a.lop || "").localeCompare(b.lop || "");
+    if (c) return c;
+    return String(a.from).localeCompare(String(b.from));
+  });
+  if (!list.length) {
+    ul.innerHTML = '<li style="color:#888">Chưa có khung giờ (mặc định: chưa mở lớp nào)</li>';
     return;
   }
-  ul.innerHTML = keys.map(lop => {
-    const s = sch[lop];
+  ul.innerHTML = list.map(s => {
     const from = s.from ? new Date(s.from).toLocaleString("vi-VN") : "?";
     const to = s.to ? new Date(s.to).toLocaleString("vi-VN") : "?";
-    return '<li><b>' + lop + '</b>: ' + from + ' → ' + to +
-      ' <button type="button" data-del="' + lop + '" style="margin-left:8px;padding:2px 8px;font-size:.75rem;background:#FEE2E2;border-radius:4px;color:#991B1B">Xóa</button></li>';
+    return '<li><b>' + s.lop + '</b>: ' + from + ' → ' + to +
+      ' <button type="button" data-del-id="' + s.id + '" style="margin-left:8px;padding:2px 8px;font-size:.75rem;background:#FEE2E2;border-radius:4px;color:#991B1B;border:none;cursor:pointer">Xóa</button></li>';
   }).join("");
-  ul.querySelectorAll("button[data-del]").forEach(btn => {
+  ul.querySelectorAll("button[data-del-id]").forEach(btn => {
     btn.onclick = () => {
-      const sch = loadSchedule();
-      delete sch[btn.dataset.del];
-      saveSchedule(sch);
+      const arr = loadSchedule().filter(x => x.id !== btn.dataset.delId);
+      saveSchedule(arr);
       renderScheduleList();
+      if (typeof refreshClassDropdown === "function") refreshClassDropdown();
     };
   });
 }
@@ -1339,20 +1374,26 @@ function fillScheduleClasses() {
   if (cur) sel.value = cur;
 }
 function isClassOpenNow(lop) {
-  const sch = loadSchedule();
-  if (!sch[lop]) return true; // không cấu hình = mở tự do
+  const list = loadSchedule().filter(s => s.lop === lop);
+  if (!list.length) return false; // không có suất → không mở
   const now = Date.now();
-  const from = new Date(sch[lop].from).getTime();
-  const to = new Date(sch[lop].to).getTime();
-  return now >= from && now <= to;
+  return list.some(s => {
+    const from = new Date(s.from).getTime();
+    const to = new Date(s.to).getTime();
+    return now >= from && now <= to;
+  });
 }
 function scheduleMessage(lop) {
-  const sch = loadSchedule();
-  if (!sch[lop]) return "";
-  const from = new Date(sch[lop].from).toLocaleString("vi-VN");
-  const to = new Date(sch[lop].to).toLocaleString("vi-VN");
-  return "Lớp " + lop + " chỉ được làm bài từ " + from + " đến " + to + ".";
+  const list = loadSchedule().filter(s => s.lop === lop);
+  if (!list.length) return "Lớp " + lop + " chưa được giáo viên mở khung giờ thi.";
+  return "Lớp " + lop + " các suất: " + list.map(s =>
+    new Date(s.from).toLocaleString("vi-VN") + " → " + new Date(s.to).toLocaleString("vi-VN")
+  ).join(" ; ");
 }
+function hasAnyScheduleConfigured() {
+  return loadSchedule().length > 0;
+}
+
 
 document.getElementById("btn-sch-add")?.addEventListener("click", function () {
   const lop = document.getElementById("sch-class").value;
@@ -1360,16 +1401,19 @@ document.getElementById("btn-sch-add")?.addEventListener("click", function () {
   const to = document.getElementById("sch-to").value;
   if (!lop || !from || !to) { alert("Chọn lớp và đủ thời gian Từ / Đến."); return; }
   if (new Date(from) >= new Date(to)) { alert("Thời gian 'Từ' phải trước 'Đến'."); return; }
-  const sch = loadSchedule();
-  sch[lop] = { from, to };
-  saveSchedule(sch);
+  const arr = loadSchedule();
+  // Cho phép nhiều suất cùng lớp (ngày/giờ khác nhau)
+  arr.push({ id: "s_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7), lop, from, to });
+  saveSchedule(arr);
   renderScheduleList();
-  alert("Đã lưu khung giờ cho lớp " + lop);
+  if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+  alert("Đã thêm suất thi cho lớp " + lop + "\n" + new Date(from).toLocaleString("vi-VN") + " → " + new Date(to).toLocaleString("vi-VN"));
 });
 document.getElementById("btn-sch-clear")?.addEventListener("click", function () {
   if (!confirm("Xóa tất cả khung giờ khóa lớp?")) return;
-  saveSchedule({});
+  saveSchedule([]);
   renderScheduleList();
+  if (typeof refreshClassDropdown === "function") refreshClassDropdown();
 });
 
 /* Gọi khi vào admin / khi có danh sách lớp */
