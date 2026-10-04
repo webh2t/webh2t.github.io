@@ -11,6 +11,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
@@ -9872,8 +9873,8 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   h += '<button type="button" onclick="downloadSelfDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#16a34a;color:#fff">📝 Tải .docx</button>';
   h += '<button type="button" onclick="downloadSelfDoc()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#2563eb;color:#fff">📝 Tải Word (.doc)</button>';
   h += '<button type="button" onclick="downloadSelfPdf()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
-  h += '<button type="button" onclick="downloadSelfClassAllDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#ca8a04;color:#fff">📝 Tải cả lớp Word (.doc)</button>';
-  h += '<button type="button" onclick="downloadSelfClassAllJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#db2777;color:#fff">📄 Tải cả lớp PDF</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#ca8a04;color:#fff">📦 ZIP Word cả lớp (.doc × HS)</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#db2777;color:#fff">📦 ZIP JPG cả lớp (× HS)</button>';
   h += '</div></div>';
   window._nbSelfCtx = { scope, mon, hk, weekNos, nW, gvcn, cls, school, year, periodLabel, monthNum };
   setTimeout(fillSelfAssessment, 50);
@@ -10008,76 +10009,119 @@ function fillSelfAssessment() {
   box.innerHTML = '<div id="selfAssessSheet">' + buildSelfSheetHtmlForStudent(st || null, ctx) + "</div>";
 }
 
+function selfWordHtmlWrap(innerBody) {
+  return "<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>" +
+    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom>" +
+    "<w:PageSetup><w:PaperSize>9</w:PaperSize></w:PageSetup></w:WordDocument></xml><![endif]-->" +
+    "<style>" +
+    "@page{size:148mm 210mm;margin:12mm 10mm}" +
+    "body{font-family:'Times New Roman',Times,serif;font-size:11pt;color:#000;margin:0;padding:0}" +
+    ".self-sheet-one{width:100%;box-sizing:border-box}" +
+    "p{margin:3pt 0} table{border-collapse:collapse;width:100%}" +
+    "</style><title>Tu danh gia</title></head><body>" + innerBody + "</body></html>";
+}
+
+function safeFileNamePart(s) {
+  return String(s || "HS").replace(/[\\\/\:\*\?\"\<\>\|]+/g, "_").replace(/\s+/g, "_").slice(0, 40);
+}
+
+/** Cả lớp → ZIP chứa 1 file .doc / HS (Word mở ổn định, khổ gần A5) */
 function downloadSelfClassAllDocx() {
   var ctx = window._nbSelfCtx;
   if (!ctx) { alert("Chưa mở mục tự đánh giá"); return; }
   var list = (students || []).slice().sort(sortByIdAsc);
   if (!list.length) { alert("Chưa có danh sách lớp"); return; }
-  // Word HTML (.doc) — đuôi .doc để Word không báo "unreadable content"
-  var body = list.map(function(st, i) {
-    var block = buildSelfSheetHtmlForStudent(st, ctx);
-    if (i > 0) block = '<br style="page-break-before:always;clear:both"/>' + block;
-    return block;
-  }).join("");
-  var html = "<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'><head><meta http-equiv='Content-Type' content='text/html; charset=utf-8'>" +
-    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->" +
-    "<style>" +
-    "body{font-family:'Times New Roman',Times,serif;font-size:12pt;color:#000}" +
-    ".self-sheet-one{page-break-after:always;margin-bottom:12pt}" +
-    "p{margin:4pt 0} table{border-collapse:collapse}" +
-    "</style><title>Tu danh gia ca lop</title></head><body>" +
-    "<p style='text-align:center;font-weight:bold'>BẢN TỰ ĐÁNH GIÁ CẢ LỚP " + (ctx.cls || "") + " — " + (ctx.periodLabel || "") + "</p>" +
-    body +
-    "</body></html>";
-  var blob = new Blob(["\ufeff", html], { type: "application/msword" });
-  var a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "TuDanhGia_CaLop_" + (ctx.cls || "Lop") + ".doc";
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 800);
+  if (typeof JSZip === "undefined") {
+    alert("Chưa tải thư viện ZIP. Kiểm tra mạng rồi tải lại trang.");
+    return;
+  }
+  var zip = new JSZip();
+  var folder = zip.folder("TuDanhGia_" + safeFileNamePart(ctx.cls || "Lop"));
+  list.forEach(function(st, i) {
+    var body = buildSelfSheetHtmlForStudent(st, ctx);
+    var html = selfWordHtmlWrap(body);
+    var fname = String(i + 1).padStart(2, "0") + "_" + safeFileNamePart(st.id) + "_" + safeFileNamePart(st.name) + ".doc";
+    folder.file(fname, "\ufeff" + html);
+  });
+  zip.generateAsync({ type: "blob" }).then(function(blob) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "TuDanhGia_CaLop_" + safeFileNamePart(ctx.cls || "Lop") + "_" + list.length + "HS.zip";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }).catch(function(e) {
+    alert("Lỗi ZIP Word: " + (e && e.message ? e.message : e));
+  });
 }
 
-/** Cả lớp: 1 JPG quá cao → canvas hỏng. Xuất PDF nhiều trang (mỗi HS 1 trang). */
+/** Cả lớp → ZIP chứa 1 ảnh JPG / HS (không gộp 1 ảnh khổng lồ) */
 function downloadSelfClassAllJpg() {
   var ctx = window._nbSelfCtx;
   if (!ctx) { alert("Chưa mở mục tự đánh giá"); return; }
-  var sel = document.getElementById("nbSelfStudent");
-  if (sel) sel.value = "__ALL__";
-  fillSelfAssessment();
-  setTimeout(function() {
-    var el = document.getElementById("selfAssessSheet");
-    if (!el) { alert("Chưa có phiếu cả lớp"); return; }
-    // PDF nhiều trang ổn định hơn 1 JPG khổng lồ
-    if (typeof html2pdf !== "undefined") {
-      html2pdf().set({
-        margin: [8, 8, 8, 8],
-        filename: "TuDanhGia_CaLop_" + (ctx.cls || "Lop") + ".pdf",
-        image: { type: "jpeg", quality: 0.92 },
-        html2canvas: { scale: 1.5, useCORS: true, logging: false },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"], after: ".self-sheet-one" }
-      }).from(el).save().catch(function(e) {
-        alert("Lỗi PDF cả lớp: " + (e && e.message ? e.message : e));
+  if (typeof JSZip === "undefined") {
+    alert("Chưa tải thư viện ZIP. Kiểm tra mạng rồi tải lại trang.");
+    return;
+  }
+  if (typeof html2canvas === "undefined") {
+    alert("Chưa tải html2canvas");
+    return;
+  }
+  var list = (students || []).slice().sort(sortByIdAsc);
+  if (!list.length) { alert("Chưa có danh sách lớp"); return; }
+
+  var host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:-9999px;top:0;width:148mm;background:#fff;z-index:-1";
+  document.body.appendChild(host);
+
+  var zip = new JSZip();
+  var folder = zip.folder("TuDanhGia_JPG_" + safeFileNamePart(ctx.cls || "Lop"));
+  var idx = 0;
+
+  function next() {
+    if (idx >= list.length) {
+      try { document.body.removeChild(host); } catch (e) {}
+      zip.generateAsync({ type: "blob" }).then(function(blob) {
+        var a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "TuDanhGia_CaLop_JPG_" + safeFileNamePart(ctx.cls || "Lop") + "_" + list.length + "HS.zip";
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+      }).catch(function(e) {
+        alert("Lỗi ZIP JPG: " + (e && e.message ? e.message : e));
       });
       return;
     }
-    // Fallback: chỉ chụp 1 phiếu đầu (tránh canvas vượt giới hạn trình duyệt)
-    var first = el.querySelector(".self-sheet-one");
-    if (!first || typeof html2canvas === "undefined") {
-      alert("Không tải được ảnh cả lớp. Hãy dùng «Tải cả lớp Word (.doc)».");
-      return;
-    }
-    html2canvas(first, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
-      var a = document.createElement("a");
-      a.download = "TuDanhGia_HS1_" + (ctx.cls || "") + ".jpg";
-      a.href = canvas.toDataURL("image/jpeg", 0.92);
-      a.click();
-      alert("Ảnh cả lớp quá lớn → đã tải phiếu HS đầu. Dùng «Tải cả lớp Word (.doc)» hoặc PDF để in cả lớp.");
-    }).catch(function(e) {
-      alert("Lỗi JPG: " + (e.message || e));
+    var st = list[idx];
+    host.innerHTML = buildSelfSheetHtmlForStudent(st, ctx);
+    var sheet = host.querySelector(".self-sheet-one") || host.firstElementChild;
+    html2canvas(sheet, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      logging: false,
+      windowWidth: sheet.scrollWidth,
+      windowHeight: sheet.scrollHeight
+    }).then(function(canvas) {
+      var dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      var base64 = dataUrl.split(",")[1];
+      var fname = String(idx + 1).padStart(2, "0") + "_" + safeFileNamePart(st.id) + "_" + safeFileNamePart(st.name) + ".jpg";
+      folder.file(fname, base64, { base64: true });
+      idx++;
+      setTimeout(next, 30);
+    }).catch(function(err) {
+      console.warn("JPG HS lỗi", st && st.id, err);
+      idx++;
+      setTimeout(next, 30);
     });
-  }, 300);
+  }
+
+  // Thông báo tiến trình
+  if (window.confirm("Tạo ZIP " + list.length + " ảnh phiếu (mỗi HS 1 file JPG).\nCó thể mất 30–90 giây. Tiếp tục?")) {
+    next();
+  } else {
+    try { document.body.removeChild(host); } catch (e) {}
+  }
 }
 function printNotebook() {
   const area = document.getElementById("nbPrintArea");
