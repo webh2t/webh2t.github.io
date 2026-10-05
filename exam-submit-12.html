@@ -248,6 +248,30 @@
       </div>
 
 
+      
+      <div class="schedule-box" id="cloud-box" style="background:#F0FDF4;border-color:#86EFAC">
+        <h4 style="color:#166534">☁️ Đồng bộ điểm mọi máy (Google Sheet)</h4>
+        <p style="font-size:.8rem;color:#166534;margin-bottom:8px;line-height:1.4">
+          GitHub Pages <b>không ghi ngược</b> được. Điểm mặc định chỉ trên từng máy.
+          Để mọi máy thấy cùng điểm: dùng <b>Google Sheet + Apps Script</b> (webhook).
+        </p>
+        <div class="schedule-row">
+          <label style="flex:1;min-width:220px">URL Webhook nhận điểm (Apps Script)
+            <input type="url" id="cloud-webhook" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;margin-top:4px;padding:8px;border:1px solid #BBF7D0;border-radius:8px;font-size:.85rem">
+          </label>
+        </div>
+        <div class="schedule-row">
+          <label style="flex:1;min-width:220px">URL đọc điểm (CSV/Sheet xuất bản — tùy chọn)
+            <input type="url" id="cloud-read-url" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" style="width:100%;margin-top:4px;padding:8px;border:1px solid #BBF7D0;border-radius:8px;font-size:.85rem">
+          </label>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px">
+          <button type="button" class="btn-t btn-download" id="btn-cloud-save" style="background:#BBF7D0;color:#14532D">💾 Lưu cấu hình cloud</button>
+          <button type="button" class="btn-t btn-load" id="btn-cloud-pull" style="background:#DCFCE7;color:#166534">⬇️ Tải điểm từ cloud</button>
+          <button type="button" class="btn-t btn-download" id="btn-cloud-guide" style="background:#FEF9C3;color:#854D0E">📖 Hướng dẫn Apps Script</button>
+        </div>
+      </div>
+
       <div class="schedule-box" id="schedule-box">
         <h4>⏰ Khóa lớp / khung giờ làm bài</h4>
         <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Mỗi lớp có thể có nhiều suất (ngày/giờ khác nhau). Thêm từng suất bằng nút <b>Thêm / Cập nhật</b>. Ví dụ: 12A1 suất sáng 5/10 và suất chiều 6/10.</p>
@@ -586,26 +610,56 @@ function parseWorkbook(wb) {
       const slots = [];
       rows.slice(1).forEach((row, i) => {
         const lop = String(row[0] || "").trim();
-        let from = row[1], to = row[2];
-        if (!lop || from === "" || to === "") return;
-        // Excel serial date → ISO
-        const toIso = (v) => {
-          if (v instanceof Date) return v.toISOString();
-          if (typeof v === "number" && window.XLSX && XLSX.SSF) {
+        if (!lop) return;
+        // (A) Lớp | Từ | Đến   (B) Lớp | Ngày dd/mm/yyyy | Giờ từ | Giờ đến
+        function parseVN(dateStr, timeStr) {
+          const ds = String(dateStr || "").trim();
+          const ts = String(timeStr || "00:00").trim();
+          let y, m, d;
+          let m1 = ds.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+          let m2 = ds.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
+          if (m1) { d = +m1[1]; m = +m1[2]; y = +m1[3]; }
+          else if (m2) { y = +m2[1]; m = +m2[2]; d = +m2[3]; }
+          else {
+            const dt = new Date(ds);
+            if (isNaN(dt.getTime())) return null;
+            return dt;
+          }
+          const tm = ts.match(/^(\d{1,2}):(\d{2})/);
+          const hh = tm ? +tm[1] : 0, mm = tm ? +tm[2] : 0;
+          return new Date(y, m - 1, d, hh, mm, 0);
+        }
+        function cellToIso(v) {
+          if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
+          if (typeof v === "number" && typeof XLSX !== "undefined" && XLSX.SSF) {
             const d = XLSX.SSF.parse_date_code(v);
             if (d) return new Date(d.y, d.m - 1, d.d, d.H || 0, d.M || 0, d.S || 0).toISOString();
           }
-          const s = String(v).trim();
+          const s = String(v || "").trim();
           if (!s) return "";
-          // datetime-local or vi string
+          // "dd/mm/yyyy HH:mm"
+          const parts = s.split(/\s+/);
+          if (parts[0].match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/) || parts[0].match(/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/)) {
+            const p = parseVN(parts[0], parts[1] || "00:00");
+            if (p && !isNaN(p.getTime())) return p.toISOString();
+          }
           const d2 = new Date(s);
-          if (!isNaN(d2)) return d2.toISOString();
-          return s;
-        };
-        const fromIso = toIso(from);
-        const toIsoV = toIso(to);
+          if (!isNaN(d2.getTime())) return d2.toISOString();
+          return "";
+        }
+        let fromIso = "", toIsoV = "";
+        const c1 = row[1], c2 = row[2], c3 = row[3];
+        // Dạng B: có cột giờ đến (col 3) dạng HH:mm
+        if (c3 !== undefined && String(c3).trim() !== "" && /^\d{1,2}:\d{2}/.test(String(c2 || "").trim())) {
+          const df = parseVN(c1, c2);
+          const dt = parseVN(c1, c3);
+          if (df && dt) { fromIso = df.toISOString(); toIsoV = dt.toISOString(); }
+        } else {
+          fromIso = cellToIso(c1);
+          toIsoV = cellToIso(c2);
+        }
         if (!fromIso || !toIsoV) return;
-        slots.push({ id: "xls_" + i + "_" + Date.now(), lop, from: fromIso, to: toIsoV });
+        slots.push({ id: "xls_" + i + "_" + Date.now(), lop: lop, from: fromIso, to: toIsoV });
       });
       if (slots.length) {
         saveSchedule(slots);
@@ -1459,9 +1513,19 @@ function buildQuestionLookup() {
 
 function getScheduleRowsForExcel() {
   const list = (typeof loadSchedule === "function") ? loadSchedule() : [];
-  const rows = [["Lớp", "Từ (ISO hoặc yyyy-mm-dd hh:mm)", "Đến (ISO hoặc yyyy-mm-dd hh:mm)"]];
+  // Xuất dạng dễ nhập: Lớp | Ngày | Giờ từ | Giờ đến (dd/mm/yyyy)
+  const rows = [["Lớp", "Ngày (dd/mm/yyyy)", "Giờ từ (HH:mm)", "Giờ đến (HH:mm)"]];
+  const pad = n => String(n).padStart(2, "0");
   list.forEach(s => {
-    rows.push([s.lop, s.from, s.to]);
+    const a = new Date(s.from), b = new Date(s.to);
+    if (isNaN(a) || isNaN(b)) {
+      rows.push([s.lop, s.from, "", s.to]);
+      return;
+    }
+    const ngay = pad(a.getDate()) + "/" + pad(a.getMonth() + 1) + "/" + a.getFullYear();
+    const gf = pad(a.getHours()) + ":" + pad(a.getMinutes());
+    const gt = pad(b.getHours()) + ":" + pad(b.getMinutes());
+    rows.push([s.lop, ngay, gf, gt]);
   });
   return rows;
 }
@@ -1474,6 +1538,154 @@ function downloadScheduleExcel() {
   XLSX.writeFile(wb, "LichThi_Tin12_" + new Date().toISOString().slice(0, 10) + ".xlsx");
   alert("Đã tải file lịch.\\nUpload file này (hoặc gộp sheet LichThi vào Mau_De…xlsx) lên GitHub thư mục data/ để mọi máy cùng thấy lịch.");
 }
+
+
+/* ========== Cloud điểm (mọi máy) ========== */
+const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
+const CLOUD_READ_KEY = "webh2t_cloud_read_url";
+
+function loadCloudConfig() {
+  const w = document.getElementById("cloud-webhook");
+  const r = document.getElementById("cloud-read-url");
+  if (w) w.value = localStorage.getItem(CLOUD_WEBHOOK_KEY) || "";
+  if (r) r.value = localStorage.getItem(CLOUD_READ_KEY) || "";
+}
+function saveCloudConfig() {
+  const w = (document.getElementById("cloud-webhook")?.value || "").trim();
+  const r = (document.getElementById("cloud-read-url")?.value || "").trim();
+  localStorage.setItem(CLOUD_WEBHOOK_KEY, w);
+  localStorage.setItem(CLOUD_READ_KEY, r);
+  alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
+}
+async function pushScoreToCloud(record) {
+  const url = (localStorage.getItem(CLOUD_WEBHOOK_KEY) || "").trim();
+  if (!url) return false;
+  try {
+    await fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain" },
+      body: JSON.stringify({
+        action: "append",
+        class: record.class,
+        name: record.name,
+        score: record.score,
+        correct: record.correct,
+        wrong: record.wrong,
+        skip: record.skip,
+        pattern: record.pattern,
+        time: record.time,
+        maDe: record.maDe,
+        review: record.review || [],
+        elapsed: record.elapsed
+      })
+    });
+    return true;
+  } catch (e) {
+    console.warn("pushScoreToCloud", e);
+    return false;
+  }
+}
+async function pullScoresFromCloud() {
+  const url = (localStorage.getItem(CLOUD_READ_KEY) || "").trim();
+  if (!url) {
+    alert("Chưa có URL đọc điểm (CSV Google Sheet xuất bản).");
+    return;
+  }
+  try {
+    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
+    const text = await res.text();
+    // Parse CSV: Class,Name,Score,Correct,Wrong,Skip,Pattern,Time,MaDe
+    const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(l => l.trim());
+    if (lines.length < 2) { alert("Sheet trống hoặc không đọc được."); return; }
+    const parseLine = (line) => {
+      const out = []; let cur = "", q = false;
+      for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === '"') { q = !q; continue; }
+        if (ch === "," && !q) { out.push(cur); cur = ""; continue; }
+        cur += ch;
+      }
+      out.push(cur);
+      return out;
+    };
+    const header = parseLine(lines[0]).map(h => h.trim().toLowerCase());
+    const idx = (names) => {
+      for (const n of names) {
+        const i = header.findIndex(h => h.includes(n));
+        if (i >= 0) return i;
+      }
+      return -1;
+    };
+    const iClass = idx(["lớp", "lop", "class"]);
+    const iName = idx(["họ", "ten", "name", "họ và tên"]);
+    const iScore = idx(["điểm", "diem", "score"]);
+    const iCorrect = idx(["đúng", "dung", "correct"]);
+    const iWrong = idx(["sai", "wrong"]);
+    const iSkip = idx(["bỏ", "bo", "skip"]);
+    const iPattern = idx(["bài làm", "bai lam", "pattern"]);
+    const iTime = idx(["thời", "time", "nộp"]);
+    const iMa = idx(["mã đề", "made", "ma de"]);
+    let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    let added = 0, updated = 0;
+    for (let li = 1; li < lines.length; li++) {
+      const cols = parseLine(lines[li]);
+      const name = (iName >= 0 ? cols[iName] : cols[1] || "").trim();
+      const lop = (iClass >= 0 ? cols[iClass] : cols[0] || "").trim();
+      if (!name || !lop) continue;
+      const score = parseFloat(iScore >= 0 ? cols[iScore] : cols[2]) || 0;
+      const rec = {
+        name, class: lop, score,
+        correct: parseInt(iCorrect >= 0 ? cols[iCorrect] : 0, 10) || 0,
+        wrong: parseInt(iWrong >= 0 ? cols[iWrong] : 0, 10) || 0,
+        skip: parseInt(iSkip >= 0 ? cols[iSkip] : 0, 10) || 0,
+        pattern: (iPattern >= 0 ? cols[iPattern] : "") || "",
+        time: (iTime >= 0 ? cols[iTime] : "") || "",
+        maDe: (iMa >= 0 ? cols[iMa] : "") || "",
+        review: []
+      };
+      const ix = list.findIndex(x => x.class === lop && x.name === name);
+      if (ix >= 0) { list[ix] = { ...list[ix], ...rec }; updated++; }
+      else { list.push(rec); added++; }
+    }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+    if (typeof renderScoreTable === "function") renderScoreTable();
+    alert("Đã tải điểm từ cloud.\\nThêm mới: " + added + " · Cập nhật: " + updated);
+  } catch (e) {
+    alert("Lỗi tải cloud: " + e.message);
+  }
+}
+function showCloudGuide() {
+  const guide = `HƯỚNG DẪN ĐỒNG BỘ ĐIỂM (Google Sheet)
+
+1) Tạo Google Sheet mới, sheet1 cột:
+Lớp | Họ và tên | Điểm | Đúng | Sai | Bỏ qua | Bài làm | Thời điểm nộp | Mã đề
+
+2) Extensions → Apps Script, dán code:
+
+function doPost(e) {
+  var ss = SpreadsheetApp.getActiveSpreadsheet();
+  var sh = ss.getSheets()[0];
+  var d = JSON.parse(e.postData.contents);
+  sh.appendRow([d.class, d.name, d.score, d.correct, d.wrong, d.skip, d.pattern, d.time, d.maDe]);
+  return ContentService.createTextOutput("ok");
+}
+
+3) Deploy → New deployment → Web app
+   - Execute as: Me
+   - Who has access: Anyone
+   Copy URL → dán vào ô Webhook trên trang GV → Lưu cấu hình
+
+4) File → Share → Publish to web → CSV
+   Copy link CSV → dán ô URL đọc điểm → Lưu
+
+5) Máy GV bấm "Tải điểm từ cloud" để gom điểm từ mọi máy học sinh đã nộp.`;
+  alert(guide);
+}
+
+document.getElementById("btn-cloud-save")?.addEventListener("click", saveCloudConfig);
+document.getElementById("btn-cloud-pull")?.addEventListener("click", pullScoresFromCloud);
+document.getElementById("btn-cloud-guide")?.addEventListener("click", showCloudGuide);
 
 function showAnswerReview(r) {
   if (!r) return;
