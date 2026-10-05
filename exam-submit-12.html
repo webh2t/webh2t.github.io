@@ -264,7 +264,15 @@
           <button type="button" id="btn-sch-add">➕ Thêm / Cập nhật</button>
         </div>
         <ul class="schedule-list" id="sch-list"><li style="color:#888">Chưa có khung giờ (mặc định: mở tự do)</li></ul>
-        <button type="button" class="btn-t btn-clear" id="btn-sch-clear" style="margin-top:6px">🗑️ Xóa hết khung giờ</button>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">
+          <button type="button" class="btn-t btn-clear" id="btn-sch-clear">🗑️ Xóa hết khung giờ</button>
+          <button type="button" class="btn-t btn-download" id="btn-sch-download" style="background:#D1FAE5;color:#065F46">📥 Tải lịch .xlsx (chia sẻ mọi máy)</button>
+        </div>
+        <p style="font-size:.78rem;color:#0369A1;margin-top:8px;line-height:1.4">
+          ⚠️ Lịch lưu trên máy này <b>và</b> trong file Excel. Để máy khác / học sinh cùng thấy:
+          bấm <b>Tải lịch .xlsx</b> → upload lên GitHub <code>data/</code> (sheet <b>LichThi</b> trong file đề hoặc file riêng rồi gộp vào Mau_De…xlsx).
+          Trang thi tải lại file Excel → mọi thiết bị có cùng khung giờ.
+        </p>
       </div>
 
       <div class="stats-card" style="margin-top:20px">
@@ -570,9 +578,46 @@ function parseWorkbook(wb) {
       }
     });
   }
+  // Sheet Lịch thi (chia sẻ mọi máy qua file Excel trên GitHub)
+  try {
+    const lichName = wb.SheetNames.find(n => /lich|schedule|khung/i.test(n));
+    if (lichName) {
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[lichName], { header: 1, defval: "" });
+      const slots = [];
+      rows.slice(1).forEach((row, i) => {
+        const lop = String(row[0] || "").trim();
+        let from = row[1], to = row[2];
+        if (!lop || from === "" || to === "") return;
+        // Excel serial date → ISO
+        const toIso = (v) => {
+          if (v instanceof Date) return v.toISOString();
+          if (typeof v === "number" && window.XLSX && XLSX.SSF) {
+            const d = XLSX.SSF.parse_date_code(v);
+            if (d) return new Date(d.y, d.m - 1, d.d, d.H || 0, d.M || 0, d.S || 0).toISOString();
+          }
+          const s = String(v).trim();
+          if (!s) return "";
+          // datetime-local or vi string
+          const d2 = new Date(s);
+          if (!isNaN(d2)) return d2.toISOString();
+          return s;
+        };
+        const fromIso = toIso(from);
+        const toIsoV = toIso(to);
+        if (!fromIso || !toIsoV) return;
+        slots.push({ id: "xls_" + i + "_" + Date.now(), lop, from: fromIso, to: toIsoV });
+      });
+      if (slots.length) {
+        saveSchedule(slots);
+        console.log("Đã nạp", slots.length, "suất lịch từ Excel");
+      }
+    }
+  } catch (e) { console.warn("LichThi parse", e); }
+
   localStorage.setItem(DATA_KEY, JSON.stringify({ students: studentsByClass, bank: questionBank }));
   dataReady = true;
   refreshClassDropdown();
+  try { if (typeof renderScheduleList === "function") renderScheduleList(); } catch(e) {}
   loadBar.style.display = "none";
   if (isAdmin) renderScoreTable();
 }
@@ -810,6 +855,13 @@ document.getElementById("btn-download-scores").addEventListener("click", functio
   const ws = XLSX.utils.aoa_to_sheet(data);
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "Diem");
+  try {
+    const schRows = getScheduleRowsForExcel();
+    if (schRows.length > 1) {
+      const wsL = XLSX.utils.aoa_to_sheet(schRows);
+      XLSX.utils.book_append_sheet(wb, wsL, "LichThi");
+    }
+  } catch (e) {}
   XLSX.writeFile(wb, "Diem_KTTX_Tin12_" + new Date().toISOString().slice(0, 10) + ".xlsx");
 });
 document.getElementById("btn-clear-scores").addEventListener("click", function () {
@@ -1404,6 +1456,25 @@ function buildQuestionLookup() {
   return map;
 }
 
+
+function getScheduleRowsForExcel() {
+  const list = (typeof loadSchedule === "function") ? loadSchedule() : [];
+  const rows = [["Lớp", "Từ (ISO hoặc yyyy-mm-dd hh:mm)", "Đến (ISO hoặc yyyy-mm-dd hh:mm)"]];
+  list.forEach(s => {
+    rows.push([s.lop, s.from, s.to]);
+  });
+  return rows;
+}
+function downloadScheduleExcel() {
+  const rows = getScheduleRowsForExcel();
+  if (rows.length <= 1) { alert("Chưa có suất lịch nào để tải."); return; }
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "LichThi");
+  XLSX.writeFile(wb, "LichThi_Tin12_" + new Date().toISOString().slice(0, 10) + ".xlsx");
+  alert("Đã tải file lịch.\\nUpload file này (hoặc gộp sheet LichThi vào Mau_De…xlsx) lên GitHub thư mục data/ để mọi máy cùng thấy lịch.");
+}
+
 function showAnswerReview(r) {
   if (!r) return;
   const modal = document.getElementById("modal-review");
@@ -1698,8 +1769,13 @@ document.getElementById("btn-sch-add")?.addEventListener("click", function () {
   saveSchedule(arr);
   renderScheduleList();
   if (typeof refreshClassDropdown === "function") refreshClassDropdown();
-  alert("Đã thêm suất thi cho lớp " + lop + "\n" + new Date(from).toLocaleString("vi-VN") + " → " + new Date(to).toLocaleString("vi-VN"));
+  alert("Đã thêm suất thi cho lớp " + lop + "\n" + new Date(from).toLocaleString("vi-VN") + " → " + new Date(to).toLocaleString("vi-VN") + "\n\nNhớ bấm «Tải lịch .xlsx» và upload lên GitHub để máy khác thấy lịch.");
 });
+
+document.getElementById("btn-sch-download")?.addEventListener("click", function () {
+  downloadScheduleExcel();
+});
+
 document.getElementById("btn-sch-clear")?.addEventListener("click", function () {
   if (!confirm("Xóa tất cả khung giờ khóa lớp?")) return;
   saveSchedule([]);
