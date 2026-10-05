@@ -770,6 +770,14 @@ function exitAdminHint() {
   // link về trang học sinh đã có
 }
 
+
+(function seedCloudDefaults() {
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx2HUAcp8VmX4mBZzAg8lzt72rAThLjXM7R3K5H4cmKV3v4225mA-MFRGNfK4Dw_iTP/exec";
+  var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
+  if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
+  if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
+})();
+
 (function init() {
   // Chỉ vào admin nếu đã đăng nhập trong phiên (sessionStorage), KHÔNG dựa vào ?admin=1 công khai
   if (sessionStorage.getItem(ADMIN_SESSION_KEY) === "1") {
@@ -1545,10 +1553,14 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx2HUAcp8VmX4mBZzAg8lzt72rAThLjXM7R3K5H4cmKV3v4225mA-MFRGNfK4Dw_iTP/exec";
+  const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
+  if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
+  if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
   const w = document.getElementById("cloud-webhook");
   const r = document.getElementById("cloud-read-url");
-  if (w) w.value = localStorage.getItem(CLOUD_WEBHOOK_KEY) || "";
-  if (r) r.value = localStorage.getItem(CLOUD_READ_KEY) || "";
+  if (w) w.value = localStorage.getItem(CLOUD_WEBHOOK_KEY) || DEFAULT_WEBHOOK;
+  if (r) r.value = localStorage.getItem(CLOUD_READ_KEY) || DEFAULT_READ;
 }
 function saveCloudConfig() {
   const w = (document.getElementById("cloud-webhook")?.value || "").trim();
