@@ -839,7 +839,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx2HUAcp8VmX4mBZzAg8lzt72rAThLjXM7R3K5H4cmKV3v4225mA-MFRGNfK4Dw_iTP/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -1624,7 +1624,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbx2HUAcp8VmX4mBZzAg8lzt72rAThLjXM7R3K5H4cmKV3v4225mA-MFRGNfK4Dw_iTP/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -1641,47 +1641,65 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 async function pushScoreToCloud(record) {
-  const FALLBACK = "https://script.google.com/macros/s/AKfycbx2HUAcp8VmX4mBZzAg8lzt72rAThLjXM7R3K5H4cmKV3v4225mA-MFRGNfK4Dw_iTP/exec";
-  const url = (localStorage.getItem(CLOUD_WEBHOOK_KEY) || localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim();
-  if (!url) { console.warn("No webhook URL"); return false; }
-  const payload = JSON.stringify({
-    action: "append",
-    class: record.class,
-    name: record.name,
-    score: record.score,
-    correct: record.correct,
-    wrong: record.wrong,
-    skip: record.skip,
-    pattern: record.pattern || "",
-    time: record.time || "",
-    maDe: record.maDe || "",
-    elapsed: record.elapsed || 0
-  });
+  const FALLBACK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
+  const url = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url") || localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim();
+  if (!url) { console.warn("No webhook"); return false; }
+
+  // 1) GET + query (Apps Script doGet) — hoạt động tốt từ mọi trình duyệt, ít bị 403/CORS
   try {
-    // sendBeacon: tin cậy hơn khi vừa nộp xong / chuyển trang
+    const q = new URLSearchParams({
+      action: "append",
+      class: String(record.class || ""),
+      name: String(record.name || ""),
+      score: String(record.score ?? ""),
+      correct: String(record.correct ?? "0"),
+      wrong: String(record.wrong ?? "0"),
+      skip: String(record.skip ?? "0"),
+      pattern: String(record.pattern || "").slice(0, 500),
+      time: String(record.time || ""),
+      maDe: String(record.maDe || "")
+    });
+    const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
+    // Image beacon
+    await new Promise(function (resolve) {
+      const img = new Image();
+      img.onload = img.onerror = function () { resolve(); };
+      img.src = getUrl;
+      setTimeout(resolve, 2500);
+    });
+    // fetch no-cors GET
+    try {
+      await fetch(getUrl, { method: "GET", mode: "no-cors", cache: "no-store" });
+    } catch (e1) {}
+  } catch (e) { console.warn("GET push", e); }
+
+  // 2) POST JSON (doPost) — nếu GV đã Deploy đúng Anyone
+  try {
+    const payload = JSON.stringify({
+      action: "append",
+      class: record.class,
+      name: record.name,
+      score: record.score,
+      correct: record.correct,
+      wrong: record.wrong,
+      skip: record.skip,
+      pattern: record.pattern || "",
+      time: record.time || "",
+      maDe: record.maDe || ""
+    });
     if (navigator.sendBeacon) {
-      const blob = new Blob([payload], { type: "text/plain;charset=UTF-8" });
-      const ok = navigator.sendBeacon(url, blob);
-      if (ok) { console.log("Beacon sent to Sheet"); return true; }
+      navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
     }
     await fetch(url, {
       method: "POST",
       mode: "no-cors",
-      redirect: "follow",
       headers: { "Content-Type": "text/plain;charset=UTF-8" },
       body: payload
     });
-    console.log("Fetch posted to Sheet");
-    return true;
-  } catch (e) {
-    console.warn("pushScoreToCloud", e);
-    // fallback image/form trick
-    try {
-      const img = new Image();
-      img.src = url + "?n=" + encodeURIComponent(record.name || "") + "&s=" + encodeURIComponent(record.score) + "&c=" + encodeURIComponent(record.class || "") + "&t=" + Date.now();
-    } catch (e2) {}
-    return false;
-  }
+  } catch (e2) { console.warn("POST push", e2); }
+
+  console.log("Đã gửi điểm lên Sheet:", record.name, record.score);
+  return true;
 }
 async function pullScoresFromCloud() {
   const url = (localStorage.getItem(CLOUD_READ_KEY) || "").trim();
@@ -1753,30 +1771,17 @@ async function pullScoresFromCloud() {
   }
 }
 function showCloudGuide() {
-  const guide = `HƯỚNG DẪN ĐỒNG BỘ ĐIỂM (Google Sheet)
-
-1) Tạo Google Sheet mới, sheet1 cột:
-Lớp | Họ và tên | Điểm | Đúng | Sai | Bỏ qua | Bài làm | Thời điểm nộp | Mã đề
-
-2) Extensions → Apps Script, dán code:
-
-function doPost(e) {
-  var ss = SpreadsheetApp.getActiveSpreadsheet();
-  var sh = ss.getSheets()[0];
-  var d = JSON.parse(e.postData.contents);
-  sh.appendRow([d.class, d.name, d.score, d.correct, d.wrong, d.skip, d.pattern, d.time, d.maDe]);
-  return ContentService.createTextOutput("ok");
-}
-
-3) Deploy → New deployment → Web app
-   - Execute as: Me
-   - Who has access: Anyone
-   Copy URL → dán vào ô Webhook trên trang GV → Lưu cấu hình
-
-4) File → Share → Publish to web → CSV
-   Copy link CSV → dán ô URL đọc điểm → Lưu
-
-5) Máy GV bấm "Tải điểm từ cloud" để gom điểm từ mọi máy học sinh đã nộp.`;
+  const guide =
+"BẮT BUỘC CẬP NHẬT APPS SCRIPT (nếu chưa có doGet):\n\n" +
+"1. Mở Sheet → Extensions → Apps Script\n" +
+"2. Xóa code cũ, dán code MỚI (có doGet + doPost) — xem hướng dẫn chat\n" +
+"3. Deploy → Manage deployments → Edit → Version: New version\n" +
+"   Execute as: Me | Who has access: ANYONE\n" +
+"4. Deploy → copy URL /exec\n" +
+"5. Trang GV dán Webhook + Lưu cấu hình\n" +
+"6. Thử mở URL trên trình duyệt phải thấy: Webhook OK\n" +
+"7. HS nộp bài → F5 Sheet phải có dòng mới\n" +
+"8. GV bấm Tải điểm từ cloud";
   alert(guide);
 }
 
