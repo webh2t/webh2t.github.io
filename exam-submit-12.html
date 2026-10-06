@@ -142,8 +142,14 @@
 
 
 .q-text{font-size:1.25rem!important;font-weight:800!important;color:#B91C1C!important;line-height:1.55!important}
-.opt .content{font-size:1.05rem!important}
-.opt .letter{width:30px!important;height:30px!important;font-size:.95rem!important}
+.opt .content{font-size:1.2rem!important;font-weight:700!important;color:#0F172A!important;line-height:1.45!important}
+.opt .letter{width:36px!important;height:36px!important;font-size:1.05rem!important;font-weight:800!important}
+.opt{padding:14px 16px!important;border-width:2px!important}
+.opt.selected{background:#EEF2FF!important;border-color:#4F46E5!important}
+.opt.selected .content{color:#1E3A8A!important}
+.tf-statement .stmt{font-size:1.15rem!important;font-weight:700!important;color:#0F172A!important}
+.tf-btn{font-size:1.05rem!important;font-weight:700!important;padding:10px 18px!important}
+.short-input{font-size:1.2rem!important;font-weight:600!important;padding:16px!important}
 .tf-statement .stmt{font-size:1.05rem!important}
 .short-input{font-size:1.1rem!important;padding:14px!important}
 .q-badge{font-size:.85rem!important}
@@ -274,7 +280,7 @@
 
       <div class="schedule-box" id="schedule-box">
         <h4>⏰ Khóa lớp / khung giờ làm bài</h4>
-        <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Mỗi lớp có thể có nhiều suất (ngày/giờ khác nhau). Thêm từng suất bằng nút <b>Thêm / Cập nhật</b>. Ví dụ: 12A1 suất sáng 5/10 và suất chiều 6/10.</p>
+        <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Chỉ <b>hiện lớp đang trong khung giờ</b>. Lớp không có suất hoặc ngoài giờ → <b>ẩn</b>. Thêm suất → Sửa/Xóa → <b>Lưu lên GitHub</b> để mọi máy đồng bộ.</p>
         <div class="schedule-row">
           <label>Lớp
             <select id="sch-class"><option value="">-- Chọn lớp --</option></select>
@@ -297,6 +303,19 @@
           bấm <b>Tải lịch .xlsx</b> → upload lên GitHub <code>data/</code> (sheet <b>LichThi</b> trong file đề hoặc file riêng rồi gộp vào Mau_De…xlsx).
           Trang thi tải lại file Excel → mọi thiết bị có cùng khung giờ.
         </p>
+        <div style="margin-top:12px;padding:10px;background:#FFF7ED;border:1px solid #FED7AA;border-radius:8px">
+          <div style="font-weight:700;color:#9A3412;margin-bottom:6px;font-size:.88rem">🐙 Lưu lịch trực tiếp lên GitHub</div>
+          <label style="font-size:.8rem;display:block;margin-bottom:4px">Personal Access Token (repo)
+            <input type="password" id="gh-token" placeholder="ghp_...." style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
+          </label>
+          <label style="font-size:.8rem;display:block;margin:6px 0 4px">Đường dẫn file trong repo
+            <input type="text" id="gh-path" value="data/Mau_De_KTTX_Tin12_Bai4.xlsx" style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
+          </label>
+          <p style="font-size:.75rem;color:#9A3412;margin:4px 0 8px">Repo cố định: <code>webh2t/webh2t.github.io</code>. Token chỉ lưu trên máy GV. Tạo tại GitHub → Settings → Developer settings → PAT (classic) quyền <b>repo</b>.</p>
+          <button type="button" class="btn-t" id="btn-gh-save-lich" style="background:#F97316;color:#fff">☁ Lưu lịch lên GitHub</button>
+          <span id="gh-save-status" style="font-size:.8rem;margin-left:8px;color:#666"></span>
+        </div>
+
       </div>
 
       <div class="stats-card" style="margin-top:20px">
@@ -397,6 +416,7 @@ const EXAM_MINUTES = 15;
 const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const DEFAULT_DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/Mau_De_KTTX_Tin12_Bai4.xlsx";
+// cache-bust khi tải
 
 let studentsByClass = {};
 let questionBank = { part1: [], part2: [], part3: [] };
@@ -611,55 +631,103 @@ function parseWorkbook(wb) {
       rows.slice(1).forEach((row, i) => {
         const lop = String(row[0] || "").trim();
         if (!lop) return;
-        // (A) Lớp | Từ | Đến   (B) Lớp | Ngày dd/mm/yyyy | Giờ từ | Giờ đến
-        function parseVN(dateStr, timeStr) {
-          const ds = String(dateStr || "").trim();
-          const ts = String(timeStr || "00:00").trim();
-          let y, m, d;
-          let m1 = ds.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
-          let m2 = ds.match(/^(\d{4})[\/\-](\d{1,2})[\/\-](\d{1,2})$/);
-          if (m1) { d = +m1[1]; m = +m1[2]; y = +m1[3]; }
-          else if (m2) { y = +m2[1]; m = +m2[2]; d = +m2[3]; }
-          else {
-            const dt = new Date(ds);
-            if (isNaN(dt.getTime())) return null;
-            return dt;
-          }
-          const tm = ts.match(/^(\d{1,2}):(\d{2})/);
-          const hh = tm ? +tm[1] : 0, mm = tm ? +tm[2] : 0;
-          return new Date(y, m - 1, d, hh, mm, 0);
+
+        // Excel có thể trả: Date, số serial, "6/10/2026", time serial 0.5, "12:00"
+        function pad(n) { return String(n).padStart(2, "0"); }
+        function excelSerialToDate(n) {
+          // SheetJS/Excel serial (UTC-based epoch 1899-12-30)
+          const utc = Math.round((n - 25569) * 86400 * 1000);
+          return new Date(utc);
         }
-        function cellToIso(v) {
-          if (v instanceof Date && !isNaN(v.getTime())) return v.toISOString();
-          if (typeof v === "number" && typeof XLSX !== "undefined" && XLSX.SSF) {
-            const d = XLSX.SSF.parse_date_code(v);
-            if (d) return new Date(d.y, d.m - 1, d.d, d.H || 0, d.M || 0, d.S || 0).toISOString();
+        function timeFromValue(v) {
+          if (v == null || v === "") return null;
+          if (typeof v === "number") {
+            // time-only serial: 0..1 fraction of day
+            if (v >= 0 && v < 1) {
+              const mins = Math.round(v * 24 * 60);
+              return { h: Math.floor(mins / 60) % 24, m: mins % 60 };
+            }
+            // full datetime serial
+            const d = excelSerialToDate(v);
+            return { h: d.getHours(), m: d.getMinutes() };
           }
-          const s = String(v || "").trim();
-          if (!s) return "";
-          // "dd/mm/yyyy HH:mm"
-          const parts = s.split(/\s+/);
-          if (parts[0].match(/^\d{1,2}[\/\-]\d{1,2}[\/\-]\d{4}$/) || parts[0].match(/^\d{4}[\/\-]\d{1,2}[\/\-]\d{1,2}$/)) {
-            const p = parseVN(parts[0], parts[1] || "00:00");
-            if (p && !isNaN(p.getTime())) return p.toISOString();
+          if (v instanceof Date && !isNaN(v.getTime())) {
+            return { h: v.getHours(), m: v.getMinutes() };
           }
+          const s = String(v).trim();
+          const tm = s.match(/^(\d{1,2}):(\d{2})/);
+          if (tm) return { h: +tm[1], m: +tm[2] };
+          return null;
+        }
+        function dateFromValue(v) {
+          if (v == null || v === "") return null;
+          if (v instanceof Date && !isNaN(v.getTime())) {
+            return { y: v.getFullYear(), m: v.getMonth() + 1, d: v.getDate(), raw: v };
+          }
+          if (typeof v === "number") {
+            const d = excelSerialToDate(v);
+            // Dùng UTC components vì serial Excel theo UTC
+            return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), raw: d };
+          }
+          const s = String(v).trim();
+          // Ưu tiên dd/mm/yyyy (Việt Nam)
+          let m1 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
+          if (m1) return { y: +m1[3], m: +m1[2], d: +m1[1], raw: null };
+          let m2 = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
+          if (m2) return { y: +m2[1], m: +m2[2], d: +m2[3], raw: null };
           const d2 = new Date(s);
-          if (!isNaN(d2.getTime())) return d2.toISOString();
-          return "";
+          if (!isNaN(d2.getTime())) return { y: d2.getFullYear(), m: d2.getMonth() + 1, d: d2.getDate(), raw: d2 };
+          return null;
         }
-        let fromIso = "", toIsoV = "";
+        function combine(datePart, timePart, defaultH, defaultM) {
+          if (!datePart) return null;
+          const h = timePart ? timePart.h : defaultH;
+          const m = timePart ? timePart.m : defaultM;
+          // Local time VN (trình duyệt máy tại VN)
+          return new Date(datePart.y, datePart.m - 1, datePart.d, h, m, 0);
+        }
+
         const c1 = row[1], c2 = row[2], c3 = row[3];
-        // Dạng B: có cột giờ đến (col 3) dạng HH:mm
-        if (c3 !== undefined && String(c3).trim() !== "" && /^\d{1,2}:\d{2}/.test(String(c2 || "").trim())) {
-          const df = parseVN(c1, c2);
-          const dt = parseVN(c1, c3);
-          if (df && dt) { fromIso = df.toISOString(); toIsoV = dt.toISOString(); }
+        let fromD = null, toD = null;
+
+        // Dạng 4 cột: Lớp | Ngày | Giờ từ | Giờ đến
+        const tFrom = timeFromValue(c2);
+        const tTo = timeFromValue(c3);
+        const dPart = dateFromValue(c1);
+        if (dPart && (tFrom || tTo || c3 !== undefined && c3 !== "")) {
+          fromD = combine(dPart, tFrom, 0, 0);
+          toD = combine(dPart, tTo, 23, 59);
         } else {
-          fromIso = cellToIso(c1);
-          toIsoV = cellToIso(c2);
+          // Dạng 3 cột: Lớp | Từ | Đến (datetime đầy đủ hoặc chuỗi)
+          const d1 = dateFromValue(c1);
+          const d2 = dateFromValue(c2);
+          const tf1 = timeFromValue(c1);
+          const tf2 = timeFromValue(c2);
+          // nếu c1 là datetime serial có giờ
+          if (typeof c1 === "number" && c1 >= 1) {
+            const full = excelSerialToDate(c1);
+            fromD = new Date(full.getUTCFullYear(), full.getUTCMonth(), full.getUTCDate(), full.getUTCHours(), full.getUTCMinutes());
+          } else if (d1) {
+            fromD = combine(d1, tf1 || timeFromValue(String(c1).split(/\s+/)[1]), 0, 0);
+          }
+          if (typeof c2 === "number" && c2 >= 1) {
+            const full = excelSerialToDate(c2);
+            toD = new Date(full.getUTCFullYear(), full.getUTCMonth(), full.getUTCDate(), full.getUTCHours(), full.getUTCMinutes());
+          } else if (d2) {
+            toD = combine(d2, tf2 || timeFromValue(String(c2).split(/\s+/)[1]), 23, 59);
+          }
         }
-        if (!fromIso || !toIsoV) return;
-        slots.push({ id: "xls_" + i + "_" + Date.now(), lop: lop, from: fromIso, to: toIsoV });
+
+        if (!fromD || !toD || isNaN(fromD.getTime()) || isNaN(toD.getTime())) {
+          console.warn("LichThi bỏ dòng", lop, c1, c2, c3);
+          return;
+        }
+        slots.push({
+          id: "xls_" + i + "_" + Date.now(),
+          lop: lop,
+          from: fromD.toISOString(),
+          to: toD.toISOString()
+        });
       });
       if (slots.length) {
         saveSchedule(slots);
@@ -679,40 +747,39 @@ function parseWorkbook(wb) {
 function refreshClassDropdown() {
   classSelect.innerHTML = '<option value="">-- Chọn lớp --</option>';
   const schList = (typeof loadSchedule === "function") ? loadSchedule() : [];
-  const hasAnySchedule = schList.length > 0;
-  const openLops = {};
-  schList.forEach(s => { if (typeof isClassOpenNow === "function" && isClassOpenNow(s.lop)) openLops[s.lop] = true; });
+  const hasAny = schList.length > 0;
   let shown = 0;
-  Object.keys(studentsByClass).sort().forEach(lop => {
-    if (!hasAnySchedule) return;
-    if (!openLops[lop]) return; // không có suất đang mở
+  Object.keys(studentsByClass || {}).sort().forEach(lop => {
+    if (!hasAny) return; // chưa có lịch nào → không hiện lớp
+    if (typeof isClassOpenNow === "function" && !isClassOpenNow(lop)) return; // ngoài giờ / không có suất → ẩn
     const opt = document.createElement("option");
     opt.value = lop;
+    const n = (studentsByClass[lop] || []).length;
     const slots = schList.filter(s => s.lop === lop);
     const active = slots.filter(s => {
       const now = Date.now();
       return now >= new Date(s.from).getTime() && now <= new Date(s.to).getTime();
     });
     const to = active[0] ? new Date(active[0].to).toLocaleString("vi-VN") : "";
-    opt.textContent = lop + " (" + studentsByClass[lop].length + " HS)" + (to ? " · đến " + to : "");
+    opt.textContent = lop + " (" + n + " HS)" + (to ? " · đến " + to : "");
     classSelect.appendChild(opt);
     shown++;
   });
-  classSelect.disabled = false;
-  if (!shown) {
-    classSelect.innerHTML = '<option value="">-- Không có lớp đang mở thi --</option>';
-    classSelect.disabled = true;
-    const lb = document.getElementById("load-bar");
-    if (lb && !hasAnySchedule) {
+  classSelect.disabled = shown === 0;
+  const lb = document.getElementById("load-bar");
+  if (lb) {
+    if (!hasAny) {
       lb.style.display = "flex";
       lb.style.background = "#FEF3C7";
       lb.style.color = "#92400E";
-      lb.textContent = "⚠️ Giáo viên chưa cấu hình khung giờ làm bài cho lớp. Vui lòng chờ.";
-    } else if (lb) {
+      lb.textContent = "⚠️ Giáo viên chưa cấu hình khung giờ. Chỉ lớp trong lịch mới được thi.";
+    } else if (!shown) {
       lb.style.display = "flex";
       lb.style.background = "#FEF3C7";
       lb.style.color = "#92400E";
       lb.textContent = "⚠️ Hiện không có lớp nào trong khung giờ được phép làm bài.";
+    } else {
+      lb.style.display = "none";
     }
   }
 }
@@ -1474,6 +1541,10 @@ async function submitExam(auto) {
   list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
   list.push(record);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  // Gửi điểm lên Google Sheet (mọi máy)
+  try {
+    await pushScoreToCloud(record);
+  } catch (e) { console.warn("cloud push", e); }
 
   if (studentsByClass[selectedClass]) {
     const st = studentsByClass[selectedClass].find(s => s.name === selectedStudent);
@@ -1570,31 +1641,45 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 async function pushScoreToCloud(record) {
-  const url = (localStorage.getItem(CLOUD_WEBHOOK_KEY) || "").trim();
-  if (!url) return false;
+  const FALLBACK = "https://script.google.com/macros/s/AKfycbx2HUAcp8VmX4mBZzAg8lzt72rAThLjXM7R3K5H4cmKV3v4225mA-MFRGNfK4Dw_iTP/exec";
+  const url = (localStorage.getItem(CLOUD_WEBHOOK_KEY) || localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim();
+  if (!url) { console.warn("No webhook URL"); return false; }
+  const payload = JSON.stringify({
+    action: "append",
+    class: record.class,
+    name: record.name,
+    score: record.score,
+    correct: record.correct,
+    wrong: record.wrong,
+    skip: record.skip,
+    pattern: record.pattern || "",
+    time: record.time || "",
+    maDe: record.maDe || "",
+    elapsed: record.elapsed || 0
+  });
   try {
+    // sendBeacon: tin cậy hơn khi vừa nộp xong / chuyển trang
+    if (navigator.sendBeacon) {
+      const blob = new Blob([payload], { type: "text/plain;charset=UTF-8" });
+      const ok = navigator.sendBeacon(url, blob);
+      if (ok) { console.log("Beacon sent to Sheet"); return true; }
+    }
     await fetch(url, {
       method: "POST",
       mode: "no-cors",
-      headers: { "Content-Type": "text/plain" },
-      body: JSON.stringify({
-        action: "append",
-        class: record.class,
-        name: record.name,
-        score: record.score,
-        correct: record.correct,
-        wrong: record.wrong,
-        skip: record.skip,
-        pattern: record.pattern,
-        time: record.time,
-        maDe: record.maDe,
-        review: record.review || [],
-        elapsed: record.elapsed
-      })
+      redirect: "follow",
+      headers: { "Content-Type": "text/plain;charset=UTF-8" },
+      body: payload
     });
+    console.log("Fetch posted to Sheet");
     return true;
   } catch (e) {
     console.warn("pushScoreToCloud", e);
+    // fallback image/form trick
+    try {
+      const img = new Image();
+      img.src = url + "?n=" + encodeURIComponent(record.name || "") + "&s=" + encodeURIComponent(record.score) + "&c=" + encodeURIComponent(record.class || "") + "&t=" + Date.now();
+    } catch (e2) {}
     return false;
   }
 }
@@ -1698,6 +1783,84 @@ function doPost(e) {
 document.getElementById("btn-cloud-save")?.addEventListener("click", saveCloudConfig);
 document.getElementById("btn-cloud-pull")?.addEventListener("click", pullScoresFromCloud);
 document.getElementById("btn-cloud-guide")?.addEventListener("click", showCloudGuide);
+
+
+/* ========== Lưu lịch lên GitHub ========== */
+const GH_TOKEN_KEY = "webh2t_gh_token";
+const GH_PATH_KEY = "webh2t_gh_path";
+const GH_OWNER = "webh2t";
+const GH_REPO = "webh2t.github.io";
+
+function loadGhForm() {
+  const t = document.getElementById("gh-token");
+  const p = document.getElementById("gh-path");
+  if (t) t.value = localStorage.getItem(GH_TOKEN_KEY) || "";
+  if (p && !p.value) p.value = localStorage.getItem(GH_PATH_KEY) || "data/Mau_De_KTTX_Tin12_Bai4.xlsx";
+  if (p && localStorage.getItem(GH_PATH_KEY)) p.value = localStorage.getItem(GH_PATH_KEY);
+}
+async function saveScheduleToGitHub() {
+  const token = (document.getElementById("gh-token")?.value || "").trim();
+  const filePath = (document.getElementById("gh-path")?.value || "data/Mau_De_KTTX_Tin12_Bai4.xlsx").trim();
+  const status = document.getElementById("gh-save-status");
+  if (!token) { alert("Nhập GitHub Personal Access Token (quyền repo)."); return; }
+  localStorage.setItem(GH_TOKEN_KEY, token);
+  localStorage.setItem(GH_PATH_KEY, filePath);
+  if (status) status.textContent = "Đang tải file hiện tại…";
+
+  const apiBase = "https://api.github.com/repos/" + GH_OWNER + "/" + GH_REPO + "/contents/" + filePath;
+  const headers = {
+    "Accept": "application/vnd.github+json",
+    "Authorization": "Bearer " + token,
+    "X-GitHub-Api-Version": "2022-11-28"
+  };
+
+  try {
+    // 1) GET current file for sha + content
+    const getRes = await fetch(apiBase, { headers });
+    if (!getRes.ok) {
+      const err = await getRes.text();
+      throw new Error("Không đọc được file trên GitHub (" + getRes.status + "). Kiểm tra token & đường dẫn.\n" + err.slice(0, 200));
+    }
+    const meta = await getRes.json();
+    const sha = meta.sha;
+    const bin = Uint8Array.from(atob(meta.content.replace(/\n/g, "")), c => c.charCodeAt(0));
+
+    // 2) Parse xlsx, replace LichThi sheet
+    const wb = XLSX.read(bin, { type: "array" });
+    const rows = getScheduleRowsForExcel();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    if (wb.SheetNames.includes("LichThi")) {
+      wb.Sheets["LichThi"] = ws;
+    } else {
+      XLSX.utils.book_append_sheet(wb, ws, "LichThi");
+    }
+    const out = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
+
+    // 3) PUT update
+    if (status) status.textContent = "Đang ghi lên GitHub…";
+    const putRes = await fetch(apiBase, {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: "Cập nhật LichThi khung giờ thi Tin12 " + new Date().toLocaleString("vi-VN"),
+        content: out,
+        sha: sha,
+        branch: "main"
+      })
+    });
+    if (!putRes.ok) {
+      const err = await putRes.text();
+      throw new Error("Ghi GitHub thất bại (" + putRes.status + "): " + err.slice(0, 300));
+    }
+    if (status) status.textContent = "✅ Đã lưu lên GitHub";
+    alert("Đã lưu sheet LichThi lên GitHub.\nFile: " + filePath + "\nMáy khác tải lại trang (Ctrl+F5) sau 1–2 phút sẽ thấy lịch mới.");
+  } catch (e) {
+    console.error(e);
+    if (status) status.textContent = "❌ Lỗi";
+    alert("Lỗi lưu GitHub: " + e.message);
+  }
+}
+document.getElementById("btn-gh-save-lich")?.addEventListener("click", saveScheduleToGitHub);
 
 function showAnswerReview(r) {
   if (!r) return;
@@ -1945,7 +2108,8 @@ function fillScheduleClasses() {
 }
 function isClassOpenNow(lop) {
   const list = loadSchedule().filter(s => s.lop === lop);
-  if (!list.length) return false; // không có suất → không mở
+  // Không có suất → khóa (ẩn). Chỉ mở khi đang trong một suất.
+  if (!list.length) return false;
   const now = Date.now();
   return list.some(s => {
     const from = new Date(s.from).getTime();
@@ -1955,7 +2119,7 @@ function isClassOpenNow(lop) {
 }
 function scheduleMessage(lop) {
   const list = loadSchedule().filter(s => s.lop === lop);
-  if (!list.length) return "Lớp " + lop + " chưa được giáo viên mở khung giờ thi.";
+  if (!list.length) return "Lớp " + lop + " chưa có suất trong lịch thi (bị khóa).";
   return "Lớp " + lop + " các suất: " + list.map(s =>
     new Date(s.from).toLocaleString("vi-VN") + " → " + new Date(s.to).toLocaleString("vi-VN")
   ).join(" ; ");
@@ -2033,6 +2197,7 @@ function saveZeroScore(reason) {
   list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
   list.push(record);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  try { pushScoreToCloud(record); } catch (e) {}
   if (studentsByClass[selectedClass]) {
     const st = studentsByClass[selectedClass].find(s => s.name === selectedStudent);
     if (st) st.score = 0;
