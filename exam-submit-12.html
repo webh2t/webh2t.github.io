@@ -1702,73 +1702,127 @@ async function pushScoreToCloud(record) {
   return true;
 }
 async function pullScoresFromCloud() {
-  const url = (localStorage.getItem(CLOUD_READ_KEY) || "").trim();
-  if (!url) {
-    alert("Chưa có URL đọc điểm (CSV Google Sheet xuất bản).");
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
+  const webhook = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url") || localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
+  const csvUrl = (localStorage.getItem(typeof CLOUD_READ_KEY !== "undefined" ? CLOUD_READ_KEY : "webh2t_cloud_read_url") || localStorage.getItem("webh2t_cloud_read_url") || "").trim();
+
+  let rows = null;
+  let source = "";
+
+  // Cách 1: Apps Script ?action=list (JSON) — không bị CORS CSV
+  try {
+    const listUrl = webhook + (webhook.indexOf("?") >= 0 ? "&" : "?") + "action=list&t=" + Date.now();
+    const res = await fetch(listUrl, { method: "GET", redirect: "follow", cache: "no-store" });
+    if (res.ok) {
+      const text = await res.text();
+      if (text && text.trim().charAt(0) === "[") {
+        rows = JSON.parse(text);
+        source = "Apps Script JSON";
+      } else if (text && text.indexOf("Lớp") >= 0) {
+        // trả về CSV text
+        rows = parseScoreCsv_(text);
+        source = "Apps Script CSV";
+      }
+    }
+  } catch (e) { console.warn("list fetch", e); }
+
+  // Cách 2: CSV qua proxy (tránh CORS)
+  if ((!rows || !rows.length) && csvUrl) {
+    const proxies = [
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(csvUrl + (csvUrl.indexOf("?")>=0?"&":"?") + "t=" + Date.now()),
+      "https://corsproxy.io/?" + encodeURIComponent(csvUrl),
+      csvUrl
+    ];
+    for (let i = 0; i < proxies.length && (!rows || !rows.length); i++) {
+      try {
+        const res = await fetch(proxies[i], { cache: "no-store" });
+        const text = await res.text();
+        if (text && text.indexOf("_bootstrap") >= 0) continue;
+        if (text && (text.indexOf("Lớp") >= 0 || text.indexOf("class") >= 0 || text.indexOf(",") >= 0)) {
+          rows = parseScoreCsv_(text);
+          if (rows && rows.length) { source = "CSV proxy " + i; break; }
+        }
+      } catch (e2) { console.warn("proxy", i, e2); }
+    }
+  }
+
+  if (!rows || !rows.length) {
+    alert("Không tải được điểm từ cloud.\\n\\n1) Cập nhật Apps Script: thêm nhánh action=list (xem hướng dẫn).\\n2) Deploy lại Version mới, quyền Bất kỳ ai.\\n3) Thử lại Tải điểm từ cloud.\\n\\nHoặc mở Google Sheet copy điểm thủ công.");
     return;
   }
-  try {
-    const res = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
-    const text = await res.text();
-    // Parse CSV: Class,Name,Score,Correct,Wrong,Skip,Pattern,Time,MaDe
-    const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(l => l.trim());
-    if (lines.length < 2) { alert("Sheet trống hoặc không đọc được."); return; }
-    const parseLine = (line) => {
-      const out = []; let cur = "", q = false;
-      for (let i = 0; i < line.length; i++) {
-        const ch = line[i];
-        if (ch === '"') { q = !q; continue; }
-        if (ch === "," && !q) { out.push(cur); cur = ""; continue; }
-        cur += ch;
-      }
-      out.push(cur);
-      return out;
-    };
-    const header = parseLine(lines[0]).map(h => h.trim().toLowerCase());
-    const idx = (names) => {
-      for (const n of names) {
-        const i = header.findIndex(h => h.includes(n));
-        if (i >= 0) return i;
-      }
-      return -1;
-    };
-    const iClass = idx(["lớp", "lop", "class"]);
-    const iName = idx(["họ", "ten", "name", "họ và tên"]);
-    const iScore = idx(["điểm", "diem", "score"]);
-    const iCorrect = idx(["đúng", "dung", "correct"]);
-    const iWrong = idx(["sai", "wrong"]);
-    const iSkip = idx(["bỏ", "bo", "skip"]);
-    const iPattern = idx(["bài làm", "bai lam", "pattern"]);
-    const iTime = idx(["thời", "time", "nộp"]);
-    const iMa = idx(["mã đề", "made", "ma de"]);
-    let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-    let added = 0, updated = 0;
-    for (let li = 1; li < lines.length; li++) {
-      const cols = parseLine(lines[li]);
-      const name = (iName >= 0 ? cols[iName] : cols[1] || "").trim();
-      const lop = (iClass >= 0 ? cols[iClass] : cols[0] || "").trim();
-      if (!name || !lop) continue;
-      const score = parseFloat(iScore >= 0 ? cols[iScore] : cols[2]) || 0;
-      const rec = {
-        name, class: lop, score,
-        correct: parseInt(iCorrect >= 0 ? cols[iCorrect] : 0, 10) || 0,
-        wrong: parseInt(iWrong >= 0 ? cols[iWrong] : 0, 10) || 0,
-        skip: parseInt(iSkip >= 0 ? cols[iSkip] : 0, 10) || 0,
-        pattern: (iPattern >= 0 ? cols[iPattern] : "") || "",
-        time: (iTime >= 0 ? cols[iTime] : "") || "",
-        maDe: (iMa >= 0 ? cols[iMa] : "") || "",
-        review: []
-      };
-      const ix = list.findIndex(x => x.class === lop && x.name === name);
-      if (ix >= 0) { list[ix] = { ...list[ix], ...rec }; updated++; }
-      else { list.push(rec); added++; }
+
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  let added = 0, updated = 0;
+  rows.forEach(function (rec) {
+    if (!rec.name || !rec.class) return;
+    const ix = list.findIndex(x => x.class === rec.class && x.name === rec.name);
+    if (ix >= 0) {
+      list[ix] = Object.assign({}, list[ix], rec);
+      updated++;
+    } else {
+      list.push(rec);
+      added++;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-    if (typeof renderScoreTable === "function") renderScoreTable();
-    alert("Đã tải điểm từ cloud.\\nThêm mới: " + added + " · Cập nhật: " + updated);
-  } catch (e) {
-    alert("Lỗi tải cloud: " + e.message);
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  if (typeof renderScoreTable === "function") renderScoreTable();
+  alert("Đã tải điểm từ cloud (" + source + ").\\nThêm mới: " + added + " · Cập nhật: " + updated + " · Tổng: " + list.length);
+}
+
+function parseScoreCsv_(text) {
+  text = String(text || "").replace(/^\uFEFF/, "").replace(/_bootstrap\\([^)]*\\);?/g, "");
+  const lines = text.split(/\\r?\\n/).filter(l => l.trim());
+  if (lines.length < 2) return [];
+  const parseLine = function (line) {
+    const out = []; let cur = "", q = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { q = !q; continue; }
+      if (ch === "," && !q) { out.push(cur); cur = ""; continue; }
+      cur += ch;
+    }
+    out.push(cur);
+    return out;
+  };
+  const header = parseLine(lines[0]).map(h => h.trim().toLowerCase());
+  const idx = function (names) {
+    for (let n = 0; n < names.length; n++) {
+      const i = header.findIndex(h => h.indexOf(names[n]) >= 0);
+      if (i >= 0) return i;
+    }
+    return -1;
+  };
+  const iClass = idx(["lớp", "lop", "class"]);
+  const iName = idx(["họ", "ten", "name"]);
+  const iScore = idx(["điểm", "diem", "score"]);
+  const iCorrect = idx(["đúng", "dung", "correct"]);
+  const iWrong = idx(["sai", "wrong"]);
+  const iSkip = idx(["bỏ", "bo", "skip"]);
+  const iPattern = idx(["bài làm", "bai lam", "pattern"]);
+  const iTime = idx(["thời", "time", "nộp"]);
+  const iMa = idx(["mã đề", "made", "ma de"]);
+  const rows = [];
+  for (let li = 1; li < lines.length; li++) {
+    const cols = parseLine(lines[li]);
+    if (cols.length < 2) continue;
+    const name = (iName >= 0 ? cols[iName] : cols[1] || "").trim();
+    const lop = (iClass >= 0 ? cols[iClass] : cols[0] || "").trim();
+    if (!name || !lop) continue;
+    if (name.indexOf("bootstrap") >= 0) continue;
+    rows.push({
+      name: name,
+      class: lop,
+      score: parseFloat(iScore >= 0 ? cols[iScore] : cols[2]) || 0,
+      correct: parseInt(iCorrect >= 0 ? cols[iCorrect] : "0", 10) || 0,
+      wrong: parseInt(iWrong >= 0 ? cols[iWrong] : "0", 10) || 0,
+      skip: parseInt(iSkip >= 0 ? cols[iSkip] : "0", 10) || 0,
+      pattern: (iPattern >= 0 ? cols[iPattern] : "") || "",
+      time: (iTime >= 0 ? cols[iTime] : "") || "",
+      maDe: (iMa >= 0 ? cols[iMa] : "") || "",
+      review: []
+    });
   }
+  return rows;
 }
 function showCloudGuide() {
   const guide =
