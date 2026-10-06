@@ -339,9 +339,9 @@
   <div class="anti-cheat-bar">⚠️ Bài thi chỉ làm 1 lần. Thoát / Reload / đóng tab → lưu 0 điểm, không được làm lại. Cấm copy · đổi tab · F5 · Ctrl+R.</div>
   <div class="exam-body">
     <aside class="sidebar">
-      <h3>Phần 1: Trắc nghiệm</h3><div class="q-grid" id="q-grid-p1"></div>
-      <h3>Phần 2: Đúng – Sai</h3><div class="q-grid" id="q-grid-p2"></div>
-      <h3>Phần 3: Trả lời ngắn</h3><div class="q-grid" id="q-grid-p3"></div>
+      <h3>Phần 1: Trắc nghiệm <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(6đ · 12×0,5)</span></h3><div class="q-grid" id="q-grid-p1"></div>
+      <h3>Phần 2: Đúng – Sai <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(2đ · 2×1)</span></h3><div class="q-grid" id="q-grid-p2"></div>
+      <h3>Phần 3: Trả lời ngắn <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(2đ · 2×1)</span></h3><div class="q-grid" id="q-grid-p3"></div>
     </aside>
     <main class="question-area" id="question-area"></main>
   </div>
@@ -1292,16 +1292,17 @@ function updateSidebar() {
     btn.classList.toggle("current", idx === currentQ);
     btn.classList.toggle("answered", isAnswered(q));
     const info = formatSideContent(q);
+    const ptsBadge = "<span class=\"pts-badge\">" + (info.pts || "") + "</span>";
     if (q.type === "tf") {
       const cells = (info.tf || []).map(c =>
         "<span class=\"tf-cell\">" + c.L + ". " + c.v + "</span>"
       ).join("");
-      btn.innerHTML = "<span class=\"ans-main\">" + info.main + "</span><div class=\"tf-row\">" + cells + "</div>";
+      btn.innerHTML = "<div class=\"side-top\"><span class=\"ans-main\">" + info.main + "</span>" + ptsBadge + "</div><div class=\"tf-row\">" + cells + "</div>";
     } else if (q.type === "sa") {
-      btn.innerHTML = "<span class=\"ans-main\">" + info.main + "</span>" +
+      btn.innerHTML = "<div class=\"side-top\"><span class=\"ans-main\">" + info.main + "</span>" + ptsBadge + "</div>" +
         (info.sub ? "<span class=\"ans-sub\">" + info.sub + "</span>" : "");
     } else {
-      btn.innerHTML = "<span class=\"ans-main\">" + info.main + "</span>";
+      btn.innerHTML = "<div class=\"side-top\"><span class=\"ans-main\">" + info.main + "</span>" + ptsBadge + "</div>";
     }
   });
 }
@@ -1701,6 +1702,36 @@ async function pushScoreToCloud(record) {
   console.log("Đã gửi điểm lên Sheet:", record.name, record.score);
   return true;
 }
+
+function normalizeScore_(v) {
+  if (v === null || v === undefined || v === "") return 0;
+  if (typeof v === "number" && !isNaN(v) && v >= 0 && v <= 10) return Math.round(v * 100) / 100;
+  const s = String(v).trim();
+  // Google Sheet trả Date ISO khi ô Điểm bị định dạng ngày/giờ
+  if (/^\d{4}-\d{2}-\d{2}T/.test(s) || s.indexOf("1900-") === 0) {
+    // Không tin được — để 0 và GV sửa Sheet; hoặc cố parse display khác
+    return 0;
+  }
+  const n = parseFloat(s.replace(",", "."));
+  if (!isNaN(n) && n >= 0 && n <= 10) return Math.round(n * 100) / 100;
+  if (!isNaN(n) && n > 10 && n < 100) return Math.round(n) / 10; // 11 -> 1.1?
+  return 0;
+}
+function normalizeCloudRow_(rec) {
+  return {
+    name: String(rec.name || "").trim(),
+    class: String(rec.class || rec.lop || "").trim(),
+    score: normalizeScore_(rec.score),
+    correct: parseInt(rec.correct, 10) || 0,
+    wrong: parseInt(rec.wrong, 10) || 0,
+    skip: parseInt(rec.skip, 10) || 0,
+    pattern: String(rec.pattern || ""),
+    time: String(rec.time || ""),
+    maDe: String(rec.maDe || ""),
+    review: rec.review || []
+  };
+}
+
 async function pullScoresFromCloud() {
   const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
   const webhook = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url") || localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
@@ -1754,13 +1785,18 @@ async function pullScoresFromCloud() {
   let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   let added = 0, updated = 0;
   rows.forEach(function (rec) {
-    if (!rec.name || !rec.class) return;
-    const ix = list.findIndex(x => x.class === rec.class && x.name === rec.name);
+    const r = normalizeCloudRow_(rec);
+    if (!r.name || !r.class) return;
+    // Nếu score = 0 do lỗi Date nhưng pattern có dữ liệu, giữ score cũ nếu có
+    const ix = list.findIndex(x => x.class === r.class && x.name === r.name);
     if (ix >= 0) {
-      list[ix] = Object.assign({}, list[ix], rec);
+      if (r.score === 0 && list[ix].score > 0 && /1900-|T\d{2}:/.test(String(rec.score||""))) {
+        r.score = list[ix].score;
+      }
+      list[ix] = Object.assign({}, list[ix], r);
       updated++;
     } else {
-      list.push(rec);
+      list.push(r);
       added++;
     }
   });
@@ -1812,7 +1848,7 @@ function parseScoreCsv_(text) {
     rows.push({
       name: name,
       class: lop,
-      score: parseFloat(iScore >= 0 ? cols[iScore] : cols[2]) || 0,
+      score: normalizeScore_(iScore >= 0 ? cols[iScore] : cols[2]),
       correct: parseInt(iCorrect >= 0 ? cols[iCorrect] : "0", 10) || 0,
       wrong: parseInt(iWrong >= 0 ? cols[iWrong] : "0", 10) || 0,
       skip: parseInt(iSkip >= 0 ? cols[iSkip] : "0", 10) || 0,
@@ -1926,10 +1962,7 @@ function showAnswerReview(r) {
   const modal = document.getElementById("modal-review");
   document.getElementById("review-title").textContent = (r.name || "") + " · " + (r.class || "");
   const rev = r.review || [];
-  const lookup = typeof buildQuestionLookup === "function" ? buildQuestionLookup() : {};
-
-  // Tổng điểm ưu tiên điểm đã chấm khi nộp (bảng điểm), không cộng lại từ review cũ
-  const tableScore = (r.score !== undefined && r.score !== null && r.score !== "") ? Number(r.score) : null;
+  const tableScore = (r.score !== undefined && r.score !== null && r.score !== "") ? normalizeScore_(r.score) : null;
   let sumFromReview = 0;
   if (rev.length) {
     sumFromReview = rev.reduce((s, it) => s + (Number(it.pts) || 0), 0);
@@ -1943,97 +1976,98 @@ function showAnswerReview(r) {
     " · Đúng: " + (r.correct ?? "—") + " · Sai: " + (r.wrong ?? "—") + " · Bỏ: " + (r.skip ?? "—");
 
   const body = document.getElementById("review-body");
-  if (!rev.length) {
-    body.innerHTML = "<p style=\"color:#888\">Bài này chưa có chi tiết từng câu. <b>Điểm đã ghi nhận: " + sumPts + "/10</b>. Chuỗi bài làm: <code>" +
-      (r.pattern || "—") + "</code></p>";
-    modal.style.display = "flex";
-    return;
-  }
 
-  body.innerHTML = rev.map(item => {
-    let pts = Number(item.pts);
-    if (isNaN(pts)) pts = 0;
-    const maxP = Number(item.maxPts) || (item.type === "mc" ? 0.5 : 1);
-
-    let userLine = item.user || "—";
-    let correctLine = item.correct || "—";
-    let optsBlock = "";
-    let userLetter = item.userLetter || "";
-    let correctLetter = item.correctLetter || "";
-
-    if (item.type === "mc") {
-      if (!userLetter && item.user) {
-        const m1 = String(item.user).trim().match(/^([A-D])/i);
-        if (m1) userLetter = m1[1].toUpperCase();
+  if (rev.length) {
+    body.innerHTML = rev.map(item => {
+      let pts = Number(item.pts) || 0;
+      const maxP = Number(item.maxPts) || (item.type === "mc" ? 0.5 : 1);
+      const full = pts >= maxP - 0.001;
+      const partial = pts > 0 && !full;
+      const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
+      const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
+      let userLine = item.user || "—";
+      let correctLine = item.correct || "—";
+      let optsBlock = "";
+      if (item.type === "mc" && item.options && item.options.length) {
+        optsBlock = "<div style=\"margin:6px 0;padding:8px;background:#F8FAFC;border-radius:6px;font-size:.82rem\">" +
+          item.options.map(o => "<div style=\"padding:2px 4px\">" + o + "</div>").join("") + "</div>";
       }
-      if (!correctLetter && item.correct) {
-        const m2 = String(item.correct).trim().match(/^([A-D])/i);
-        if (m2) correctLetter = m2[1].toUpperCase();
-      }
-
-      // Chỉ lấy nội dung chữ từ ngân hàng khi thiếu options — KHÔNG ghi đè đáp án đúng của đề đã xáo
-      let options = (item.options && item.options.length) ? item.options.slice() : null;
-      const qkey = String(item.text || "").trim().toLowerCase().replace(/\s+/g, " ");
-      const bank = lookup[qkey];
-
-      if ((!options || !options.length) && bank && bank.options) {
-        options = bank.options.slice();
-        // map đúng theo nội dung, không theo vị trí chữ cái ngân hàng
-      }
-
-      if (options && options.length) {
-        const byLetter = {};
-        options.forEach(o => {
-          const mm = String(o).match(/^([A-D])\.\s*(.*)$/i);
-          if (mm) byLetter[mm[1].toUpperCase()] = mm[2];
-        });
-        if (userLetter && byLetter[userLetter] !== undefined) {
-          userLine = userLetter + ". " + byLetter[userLetter];
-        } else if (userLetter && (!item.user || String(item.user).length <= 3)) {
-          userLine = userLetter + (byLetter[userLetter] ? ". " + byLetter[userLetter] : "");
-        }
-        if (correctLetter && byLetter[correctLetter] !== undefined) {
-          correctLine = correctLetter + ". " + byLetter[correctLetter];
-        }
-
-        // Tính lại điểm MC nếu review cũ pts=0 nhưng có đáp án
-        if (userLetter && correctLetter) {
-          pts = (userLetter === correctLetter) ? maxP : 0;
-        }
-
-        optsBlock = "<div style=\"margin:6px 0 4px;padding:8px;background:#F8FAFC;border-radius:6px;font-size:.82rem;line-height:1.5\">" +
-          options.map(function(o) {
-            const mm = String(o).match(/^([A-D])/i);
-            const L = mm ? mm[1].toUpperCase() : "";
-            let st = "padding:3px 6px;border-radius:4px;margin:2px 0;";
-            if (L && userLetter && L === userLetter && L === correctLetter) st += "background:#D1FAE5;font-weight:700;";
-            else if (L && userLetter && L === userLetter) st += "background:#FEE2E2;font-weight:700;";
-            else if (L && correctLetter && L === correctLetter) st += "background:#D1FAE5;font-weight:600;";
-            return "<div style=\"" + st + "\">" + o + "</div>";
-          }).join("") + "</div>";
-      }
-    } else if (item.type === "tf") {
-      // giữ pts đã lưu (có thể từng ý 0.25)
+      return "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:" + bg + "\">" +
+        "<div style=\"display:flex;justify-content:space-between\"><b style=\"color:#1E3A8A\">Câu " + item.id + "</b>" +
+        "<span style=\"font-weight:800;color:" + color + "\">" + pts + " / " + maxP + "</span></div>" +
+        "<div style=\"margin:4px 0;color:#334155\">" + (item.text || "") + "</div>" + optsBlock +
+        "<div style=\"font-size:.88rem\"><b>HS chọn:</b> " + userLine + "</div>" +
+        "<div style=\"font-size:.88rem\"><b>Đáp án đúng:</b> <span style=\"color:#065F46\">" + correctLine + "</span></div></div>";
+    }).join("") +
+    "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
+  } else {
+    // Phân tích chuỗi pattern thành bảng đẹp
+    const pattern = String(r.pattern || "");
+    let htmlP = "";
+    if (!pattern || pattern === "—") {
+      htmlP = "<p style=\"color:#888\">Không có chuỗi bài làm.</p>";
     } else {
-      // SA
+      // MC: 1A 2B ... 12D
+      const mcParts = [];
+      const reMc = /(\d{1,2})([A-D])/gi;
+      let m1;
+      const used = new Set();
+      while ((m1 = reMc.exec(pattern)) !== null) {
+        const num = +m1[1];
+        if (num >= 1 && num <= 12 && !used.has(num)) {
+          used.add(num);
+          mcParts.push({ id: num, ans: m1[2].toUpperCase() });
+        }
+      }
+      mcParts.sort((a, b) => a.id - b.id);
+      // TF 13 14: 13ĐĐSS or 13ĐĐĐĐ
+      const tfParts = [];
+      const reTf = /(13|14)([ĐđSsĐS\-]+)/g;
+      let m2;
+      while ((m2 = reTf.exec(pattern)) !== null) {
+        const letters = m2[2].split("").filter(ch => /[ĐđSs\-D]/.test(ch));
+        const labels = ["a", "b", "c", "d"];
+        const detail = labels.map((lb, i) => {
+          const ch = (letters[i] || "-").toUpperCase().replace("D", "Đ");
+          return lb + "." + (ch === "Đ" || ch === "D" ? "Đ" : ch === "S" ? "S" : "—");
+        }).join("  ");
+        tfParts.push({ id: m2[1], detail: detail });
+      }
+      // SA 15 16
+      const saParts = [];
+      const reSa = /(15|16)([^0-9]*?)(?=1[3-6]|$)/g;
+      let m3;
+      while ((m3 = reSa.exec(pattern)) !== null) {
+        let t = (m3[2] || "").replace(/^[:\s=\-]+/, "").trim();
+        if (t === "-" || t === "") t = "(bỏ)";
+        saParts.push({ id: m3[1], text: t });
+      }
+
+      htmlP = "<p style=\"font-size:.85rem;color:#64748B;margin-bottom:10px\">Chi tiết từng câu (từ chuỗi bài làm trên Sheet). Điểm đã ghi nhận: <b>" + sumPts + "/10</b>.</p>";
+      htmlP += "<div style=\"display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px\">";
+      for (let i = 1; i <= 12; i++) {
+        const found = mcParts.find(x => x.id === i);
+        const ans = found ? found.ans : "—";
+        htmlP += "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:8px 10px;background:#F8FAFC\">" +
+          "<div style=\"font-size:.75rem;color:#64748B\">Câu " + i + " (0.5đ)</div>" +
+          "<div style=\"font-size:1.15rem;font-weight:800;color:#1E3A8A\">" + ans + "</div></div>";
+      }
+      htmlP += "</div>";
+      tfParts.forEach(tf => {
+        htmlP += "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;background:#FFF7ED\">" +
+          "<b style=\"color:#9A3412\">Câu " + tf.id + " (Đúng/Sai · tối đa 1đ)</b>" +
+          "<div style=\"margin-top:6px;font-size:.95rem;font-weight:600\">" + tf.detail + "</div></div>";
+      });
+      saParts.forEach(sa => {
+        htmlP += "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;background:#F0FDF4\">" +
+          "<b style=\"color:#166534\">Câu " + sa.id + " (Trả lời ngắn · 1đ)</b>" +
+          "<div style=\"margin-top:6px;font-size:1rem;font-weight:600\">" + sa.text + "</div></div>";
+      });
+      htmlP += "<div style=\"margin-top:8px;padding:10px;background:#F1F5F9;border-radius:8px;font-size:.8rem;word-break:break-all\"><b>Chuỗi gốc:</b> " + pattern + "</div>";
+      htmlP += "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
     }
-
-    const full = pts >= maxP - 0.001;
-    const partial = pts > 0 && !full;
-    const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
-    const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
-
-    return "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:" + bg + "\">" +
-      "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap\">" +
-      "<div style=\"font-weight:700;color:#1E3A8A\">Câu " + item.id + ". <span style=\"color:" + color + "\">" + pts + " điểm</span></div>" +
-      "<div style=\"font-weight:800;font-size:.9rem;color:" + color + "\">" + pts + " / " + maxP + "</div></div>" +
-      "<div style=\"margin:6px 0;color:#334155;font-weight:600\">" + (item.text || "") + "</div>" +
-      optsBlock +
-      "<div style=\"font-size:.88rem;margin-top:6px\"><b>HS chọn:</b> " + userLine + "</div>" +
-      "<div style=\"font-size:.88rem\"><b>Đáp án đúng:</b> <span style=\"color:#065F46;font-weight:600\">" + correctLine + "</span></div></div>";
-  }).join("") +
-  "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.1rem;color:#1D4ED8\">Tổng điểm (đã ghi nhận): " + sumPts + " / 10</div>";
-
+    body.innerHTML = htmlP;
+  }
   modal.style.display = "flex";
 }
 
