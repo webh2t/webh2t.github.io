@@ -1544,7 +1544,7 @@ async function submitExam(auto) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   // Gửi điểm lên Google Sheet (mọi máy)
   try {
-    await pushScoreToCloud(record);
+    pushScoreToCloud(record);
   } catch (e) { console.warn("cloud push", e); }
 
   if (studentsByClass[selectedClass]) {
@@ -1641,65 +1641,58 @@ function saveCloudConfig() {
   localStorage.setItem(CLOUD_READ_KEY, r);
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
-async function pushScoreToCloud(record) {
+function pushScoreToCloud(record) {
+  // Không chặn UI — gửi nền, trả về ngay
   const FALLBACK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
-  const url = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url") || localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim();
-  if (!url) { console.warn("No webhook"); return false; }
-
-  // 1) GET + query (Apps Script doGet) — hoạt động tốt từ mọi trình duyệt, ít bị 403/CORS
+  let url = "";
   try {
-    const q = new URLSearchParams({
-      action: "append",
-      class: String(record.class || ""),
-      name: String(record.name || ""),
-      score: String(record.score ?? ""),
-      correct: String(record.correct ?? "0"),
-      wrong: String(record.wrong ?? "0"),
-      skip: String(record.skip ?? "0"),
-      pattern: String(record.pattern || "").slice(0, 500),
-      time: String(record.time || ""),
-      maDe: String(record.maDe || "")
-    });
-    const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
-    // Image beacon
-    await new Promise(function (resolve) {
-      const img = new Image();
-      img.onload = img.onerror = function () { resolve(); };
-      img.src = getUrl;
-      setTimeout(resolve, 2500);
-    });
-    // fetch no-cors GET
-    try {
-      await fetch(getUrl, { method: "GET", mode: "no-cors", cache: "no-store" });
-    } catch (e1) {}
-  } catch (e) { console.warn("GET push", e); }
+    url = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url")
+      || localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim();
+  } catch (e) { url = FALLBACK; }
+  if (!url) return false;
 
-  // 2) POST JSON (doPost) — nếu GV đã Deploy đúng Anyone
+  const q = new URLSearchParams({
+    action: "append",
+    class: String(record.class || ""),
+    name: String(record.name || ""),
+    score: String(record.score ?? ""),
+    correct: String(record.correct ?? "0"),
+    wrong: String(record.wrong ?? "0"),
+    skip: String(record.skip ?? "0"),
+    pattern: String(record.pattern || "").slice(0, 450),
+    time: String(record.time || ""),
+    maDe: String(record.maDe || "")
+  });
+  const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
+
+  try {
+    if (navigator.sendBeacon) {
+      navigator.sendBeacon(getUrl);
+    }
+  } catch (e1) {}
+  try {
+    const img = new Image();
+    img.src = getUrl;
+  } catch (e2) {}
+  try {
+    fetch(getUrl, { method: "GET", mode: "no-cors", cache: "no-store", keepalive: true }).catch(function () {});
+  } catch (e3) {}
   try {
     const payload = JSON.stringify({
       action: "append",
-      class: record.class,
-      name: record.name,
-      score: record.score,
-      correct: record.correct,
-      wrong: record.wrong,
-      skip: record.skip,
-      pattern: record.pattern || "",
-      time: record.time || "",
-      maDe: record.maDe || ""
+      class: record.class, name: record.name, score: record.score,
+      correct: record.correct, wrong: record.wrong, skip: record.skip,
+      pattern: record.pattern || "", time: record.time || "", maDe: record.maDe || ""
     });
     if (navigator.sendBeacon) {
       navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
     }
-    await fetch(url, {
-      method: "POST",
-      mode: "no-cors",
+    fetch(url, {
+      method: "POST", mode: "no-cors", keepalive: true,
       headers: { "Content-Type": "text/plain;charset=UTF-8" },
       body: payload
-    });
-  } catch (e2) { console.warn("POST push", e2); }
-
-  console.log("Đã gửi điểm lên Sheet:", record.name, record.score);
+    }).catch(function () {});
+  } catch (e4) {}
   return true;
 }
 
@@ -1961,114 +1954,178 @@ function showAnswerReview(r) {
   if (!r) return;
   const modal = document.getElementById("modal-review");
   document.getElementById("review-title").textContent = (r.name || "") + " · " + (r.class || "");
-  const rev = r.review || [];
-  const tableScore = (r.score !== undefined && r.score !== null && r.score !== "") ? normalizeScore_(r.score) : null;
-  let sumFromReview = 0;
-  if (rev.length) {
-    sumFromReview = rev.reduce((s, it) => s + (Number(it.pts) || 0), 0);
-    sumFromReview = Math.round(sumFromReview * 100) / 100;
-  }
-  const sumPts = (tableScore !== null && !isNaN(tableScore)) ? tableScore : sumFromReview;
-
+  const sumPts = (typeof normalizeScore_ === "function") ? normalizeScore_(r.score) : (Number(r.score) || 0);
   document.getElementById("review-meta").innerHTML =
     "<b>Tổng điểm: <span style=\"color:#1D4ED8;font-size:1.15rem\">" + sumPts + "/10</span></b>" +
     " · Mã đề: " + (r.maDe || "—") + " · Nộp: " + (r.time || "—") +
     " · Đúng: " + (r.correct ?? "—") + " · Sai: " + (r.wrong ?? "—") + " · Bỏ: " + (r.skip ?? "—");
 
   const body = document.getElementById("review-body");
+  let rev = r.review || [];
 
-  if (rev.length) {
-    body.innerHTML = rev.map(item => {
-      let pts = Number(item.pts) || 0;
-      const maxP = Number(item.maxPts) || (item.type === "mc" ? 0.5 : 1);
-      const full = pts >= maxP - 0.001;
-      const partial = pts > 0 && !full;
-      const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
-      const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
-      let userLine = item.user || "—";
-      let correctLine = item.correct || "—";
-      let optsBlock = "";
-      if (item.type === "mc" && item.options && item.options.length) {
-        optsBlock = "<div style=\"margin:6px 0;padding:8px;background:#F8FAFC;border-radius:6px;font-size:.82rem\">" +
-          item.options.map(o => "<div style=\"padding:2px 4px\">" + o + "</div>").join("") + "</div>";
-      }
-      return "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px 12px;margin-bottom:8px;background:" + bg + "\">" +
-        "<div style=\"display:flex;justify-content:space-between\"><b style=\"color:#1E3A8A\">Câu " + item.id + "</b>" +
-        "<span style=\"font-weight:800;color:" + color + "\">" + pts + " / " + maxP + "</span></div>" +
-        "<div style=\"margin:4px 0;color:#334155\">" + (item.text || "") + "</div>" + optsBlock +
-        "<div style=\"font-size:.88rem\"><b>HS chọn:</b> " + userLine + "</div>" +
-        "<div style=\"font-size:.88rem\"><b>Đáp án đúng:</b> <span style=\"color:#065F46\">" + correctLine + "</span></div></div>";
-    }).join("") +
-    "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
-  } else {
-    // Phân tích chuỗi pattern thành bảng đẹp
-    const pattern = String(r.pattern || "");
-    let htmlP = "";
-    if (!pattern || pattern === "—") {
-      htmlP = "<p style=\"color:#888\">Không có chuỗi bài làm.</p>";
-    } else {
-      // MC: 1A 2B ... 12D
-      const mcParts = [];
-      const reMc = /(\d{1,2})([A-D])/gi;
-      let m1;
-      const used = new Set();
-      while ((m1 = reMc.exec(pattern)) !== null) {
-        const num = +m1[1];
-        if (num >= 1 && num <= 12 && !used.has(num)) {
-          used.add(num);
-          mcParts.push({ id: num, ans: m1[2].toUpperCase() });
-        }
-      }
-      mcParts.sort((a, b) => a.id - b.id);
-      // TF 13 14: 13ĐĐSS or 13ĐĐĐĐ
-      const tfParts = [];
-      const reTf = /(13|14)([ĐđSsĐS\-]+)/g;
-      let m2;
-      while ((m2 = reTf.exec(pattern)) !== null) {
-        const letters = m2[2].split("").filter(ch => /[ĐđSs\-D]/.test(ch));
-        const labels = ["a", "b", "c", "d"];
-        const detail = labels.map((lb, i) => {
-          const ch = (letters[i] || "-").toUpperCase().replace("D", "Đ");
-          return lb + "." + (ch === "Đ" || ch === "D" ? "Đ" : ch === "S" ? "S" : "—");
-        }).join("  ");
-        tfParts.push({ id: m2[1], detail: detail });
-      }
-      // SA 15 16
-      const saParts = [];
-      const reSa = /(15|16)([^0-9]*?)(?=1[3-6]|$)/g;
-      let m3;
-      while ((m3 = reSa.exec(pattern)) !== null) {
-        let t = (m3[2] || "").replace(/^[:\s=\-]+/, "").trim();
-        if (t === "-" || t === "") t = "(bỏ)";
-        saParts.push({ id: m3[1], text: t });
-      }
-
-      htmlP = "<p style=\"font-size:.85rem;color:#64748B;margin-bottom:10px\">Chi tiết từng câu (từ chuỗi bài làm trên Sheet). Điểm đã ghi nhận: <b>" + sumPts + "/10</b>.</p>";
-      htmlP += "<div style=\"display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-bottom:12px\">";
-      for (let i = 1; i <= 12; i++) {
-        const found = mcParts.find(x => x.id === i);
-        const ans = found ? found.ans : "—";
-        htmlP += "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:8px 10px;background:#F8FAFC\">" +
-          "<div style=\"font-size:.75rem;color:#64748B\">Câu " + i + " (0.5đ)</div>" +
-          "<div style=\"font-size:1.15rem;font-weight:800;color:#1E3A8A\">" + ans + "</div></div>";
-      }
-      htmlP += "</div>";
-      tfParts.forEach(tf => {
-        htmlP += "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;background:#FFF7ED\">" +
-          "<b style=\"color:#9A3412\">Câu " + tf.id + " (Đúng/Sai · tối đa 1đ)</b>" +
-          "<div style=\"margin-top:6px;font-size:.95rem;font-weight:600\">" + tf.detail + "</div></div>";
-      });
-      saParts.forEach(sa => {
-        htmlP += "<div style=\"border:1px solid #E2E8F0;border-radius:8px;padding:10px;margin-bottom:8px;background:#F0FDF4\">" +
-          "<b style=\"color:#166534\">Câu " + sa.id + " (Trả lời ngắn · 1đ)</b>" +
-          "<div style=\"margin-top:6px;font-size:1rem;font-weight:600\">" + sa.text + "</div></div>";
-      });
-      htmlP += "<div style=\"margin-top:8px;padding:10px;background:#F1F5F9;border-radius:8px;font-size:.8rem;word-break:break-all\"><b>Chuỗi gốc:</b> " + pattern + "</div>";
-      htmlP += "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
-    }
-    body.innerHTML = htmlP;
+  // Nếu không có review chi tiết → dựng từ pattern + ngân hàng đề
+  if (!rev.length && r.pattern) {
+    rev = buildReviewFromPattern_(r.pattern);
   }
+
+  if (!rev.length) {
+    body.innerHTML = "<p style=\"color:#888\">Không có dữ liệu bài làm.</p>" +
+      "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
+    modal.style.display = "flex";
+    return;
+  }
+
+  body.innerHTML = rev.map(function (item) {
+    const pts = Number(item.pts) || 0;
+    const maxP = Number(item.maxPts) || (item.type === "mc" ? 0.5 : 1);
+    const full = pts >= maxP - 0.001;
+    const partial = pts > 0 && !full;
+    const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
+    const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
+    let optsHtml = "";
+    if (item.type === "mc" && item.options && item.options.length) {
+      optsHtml = "<div style=\"margin:8px 0;padding:8px;background:#F8FAFC;border-radius:8px;font-size:.86rem;line-height:1.5\">" +
+        item.options.map(function (o) {
+          const mm = String(o).match(/^([A-D])/i);
+          const L = mm ? mm[1].toUpperCase() : "";
+          let st = "padding:4px 6px;border-radius:4px;margin:2px 0;";
+          if (L && item.userLetter && L === item.userLetter && L === item.correctLetter) st += "background:#D1FAE5;font-weight:700;";
+          else if (L && item.userLetter && L === item.userLetter) st += "background:#FEE2E2;font-weight:700;";
+          else if (L && item.correctLetter && L === item.correctLetter) st += "background:#D1FAE5;font-weight:600;";
+          return "<div style=\"" + st + "\">" + o + "</div>";
+        }).join("") + "</div>";
+    }
+    return "<div style=\"border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:10px;background:" + bg + "\">" +
+      "<div style=\"display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap\">" +
+      "<b style=\"color:#1E3A8A;font-size:1rem\">Câu " + item.id + "</b>" +
+      "<span style=\"font-weight:800;color:" + color + "\">" + pts + " / " + maxP + " điểm</span></div>" +
+      "<div style=\"margin:6px 0;color:#1E293B;font-weight:600;line-height:1.45\">" + (item.text || "") + "</div>" +
+      optsHtml +
+      "<div style=\"font-size:.9rem;margin-top:6px\"><b>HS chọn:</b> " + (item.user || "—") + "</div>" +
+      "<div style=\"font-size:.9rem\"><b>Đáp án đúng:</b> <span style=\"color:#065F46;font-weight:700\">" + (item.correct || "—") + "</span></div></div>";
+  }).join("") +
+  "<div style=\"margin-top:12px;padding:14px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.1rem;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
+
   modal.style.display = "flex";
+}
+
+/** Dựng chi tiết từ chuỗi pattern + ngân hàng câu hỏi đã tải */
+function buildReviewFromPattern_(pattern) {
+  const p = String(pattern || "");
+  const lookup = typeof buildQuestionLookup === "function" ? buildQuestionLookup() : {};
+  const bankMc = (questionBank && questionBank.part1) ? questionBank.part1.slice() : [];
+  const bankTf = (questionBank && questionBank.part2) ? questionBank.part2.slice() : [];
+  const bankSa = (questionBank && questionBank.part3) ? questionBank.part3.slice() : [];
+  // Thêm từ examCodes
+  try {
+    Object.keys(window.examCodes || {}).forEach(function (code) {
+      const c = window.examCodes[code] || {};
+      (c.part1 || []).forEach(function (q) { bankMc.push(q); });
+      (c.part2 || []).forEach(function (q) { bankTf.push(q); });
+      (c.part3 || []).forEach(function (q) { bankSa.push(q); });
+    });
+  } catch (e) {}
+
+  const mcAns = {};
+  const reMc = /(\d{1,2})([A-D])/gi;
+  let m;
+  while ((m = reMc.exec(p)) !== null) {
+    const n = +m[1];
+    if (n >= 1 && n <= 12 && mcAns[n] === undefined) mcAns[n] = m[2].toUpperCase();
+  }
+  const tfAns = {};
+  const reTf = /(13|14)([ĐđSsĐDS\-]+)/g;
+  while ((m = reTf.exec(p)) !== null) {
+    tfAns[m[1]] = m[2];
+  }
+  const saAns = {};
+  const reSa = /(15|16)([^0-9]*?)(?=1[3-6]|$)/g;
+  while ((m = reSa.exec(p)) !== null) {
+    let t = (m[2] || "").replace(/^[:\s=\-]+/, "").trim();
+    saAns[m[1]] = (!t || t === "-") ? "" : t;
+  }
+
+  const rev = [];
+  // MC 1-12: lấy câu theo thứ tự display — dùng bank theo index xoay vòng nếu không khớp đề đã xáo
+  for (let i = 1; i <= 12; i++) {
+    const q = bankMc[i - 1] || bankMc[(i - 1) % Math.max(bankMc.length, 1)] || null;
+    const userL = mcAns[i] || "";
+    let options = [];
+    let correctL = "";
+    let correctShow = "—";
+    let text = "Câu " + i;
+    if (q) {
+      text = q.text || text;
+      const opts = (q.options || []).map(String);
+      options = opts.map(function (o, idx) { return String.fromCharCode(65 + idx) + ". " + o; });
+      correctL = String.fromCharCode(65 + (q.correct || 0));
+      correctShow = correctL + ". " + (opts[q.correct] || "");
+    }
+    const userShow = userL ? (options.length && options[userL.charCodeAt(0) - 65]
+      ? options[userL.charCodeAt(0) - 65]
+      : userL) : "(bỏ)";
+    const ok = userL && correctL && userL === correctL;
+    rev.push({
+      id: i, type: "mc", text: text, options: options,
+      user: userShow, correct: correctShow,
+      userLetter: userL, correctLetter: correctL,
+      pts: ok ? 0.5 : 0, maxPts: 0.5
+    });
+  }
+  // TF 13-14
+  [13, 14].forEach(function (id, ti) {
+    const q = bankTf[ti] || bankTf[ti % Math.max(bankTf.length, 1)] || null;
+    const raw = tfAns[String(id)] || "";
+    const letters = raw.split("").filter(function (ch) { return /[ĐđSs\-D]/i.test(ch); });
+    const labels = ["a", "b", "c", "d"];
+    let pts = 0;
+    let userParts = [];
+    let correctParts = [];
+    let text = "Câu " + id;
+    if (q && q.statements) {
+      text = q.text || text;
+      q.statements.forEach(function (st, si) {
+        const ch = (letters[si] || "-").toUpperCase().replace("D", "Đ");
+        const userBool = ch === "Đ" ? true : ch === "S" ? false : null;
+        const cor = !!st.correct;
+        if (userBool === cor) pts += 0.25;
+        userParts.push(labels[si] + "." + (userBool === true ? "Đ" : userBool === false ? "S" : "—"));
+        correctParts.push(labels[si] + "." + (cor ? "Đ" : "S") + " " + (st.text || ""));
+      });
+    } else {
+      labels.forEach(function (lb, si) {
+        const ch = (letters[si] || "-").toUpperCase().replace("D", "Đ");
+        userParts.push(lb + "." + (ch === "Đ" ? "Đ" : ch === "S" ? "S" : "—"));
+        correctParts.push(lb + ".?");
+      });
+    }
+    rev.push({
+      id: id, type: "tf", text: text,
+      user: userParts.join("  "), correct: correctParts.join(" | "),
+      pts: Math.round(pts * 100) / 100, maxPts: 1
+    });
+  });
+  // SA 15-16
+  [15, 16].forEach(function (id, si) {
+    const q = bankSa[si] || bankSa[si % Math.max(bankSa.length, 1)] || null;
+    const user = saAns[String(id)] || "";
+    let correctShow = "—";
+    let text = "Câu " + id;
+    let ok = false;
+    if (q) {
+      text = q.text || text;
+      const arr = q.correct || [];
+      correctShow = arr.join(" | ");
+      const u = user.toLowerCase().trim();
+      ok = u && arr.some(function (c) { return String(c).toLowerCase().trim() === u; });
+    }
+    rev.push({
+      id: id, type: "sa", text: text,
+      user: user || "(bỏ)", correct: correctShow,
+      pts: ok ? 1 : 0, maxPts: 1
+    });
+  });
+  return rev;
 }
 
 /* ========== Lịch khóa lớp (nhiều suất / lớp) ========== */
