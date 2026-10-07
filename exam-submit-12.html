@@ -977,34 +977,36 @@ document.getElementById("file-upload").addEventListener("change", function (e) {
 document.getElementById("btn-download-scores").addEventListener("click", function () {
   const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   if (!list.length) { alert("Chưa có dữ liệu điểm."); return; }
-  // Sắp xếp theo lớp + thứ tự danh sách Excel (studentsByClass)
-  const orderMap = {};
-  let ord = 0;
-  Object.keys(studentsByClass).sort().forEach(lop => {
-    (studentsByClass[lop] || []).forEach(s => {
-      orderMap[lop + "|" + s.name] = ord++;
+  const wb = XLSX.utils.book_new();
+  const scores = [["ExamID","STT","Lớp","Họ và tên","Điểm","Đúng (ý)","Sai (ý)","Bỏ (ý)","Phần 1","Phần 2","Phần 3","Thời điểm nộp","Mã đề","Bài làm legacy"]];
+  const exams = [["ExamID","Lớp","Họ và tên","Mã đề","Thời điểm nộp","Thời gian (giây)","Điểm","Phần 1","Phần 2","Phần 3","Trạng thái"]];
+  const details = [["ExamID","Lớp","Họ và tên","Câu","QID","Loại","Phần","Ý","Nội dung","HS trả lời","Đáp án chuẩn","Điểm","Điểm tối đa","Kết quả"]];
+  const questions = [["QID","Câu hiển thị","ExamID","Lớp","Họ và tên","Loại","Phần","Nội dung","A","B","C","D","Đáp án chuẩn","Đáp án HS","Điểm","Điểm tối đa"]];
+  list.forEach(function(r,i){
+    const ps = r.partScores || {};
+    scores.push([r.examId||"",i+1,r.class||"",r.name||"",r.score??"",r.correct??"",r.wrong??"",r.skip??"",ps.p1??"",ps.p2??"",ps.p3??"",r.time||"",r.maDe||"",r.examId?"":(r.pattern||"")]);
+    exams.push([r.examId||"LEGACY",r.class||"",r.name||"",r.maDe||"",r.time||"",r.elapsed||"",r.score??"",ps.p1??"",ps.p2??"",ps.p3??"",r.detailRows?"OK":"LEGACY - không có chi tiết"]);
+    (r.detailRows||[]).forEach(function(d){
+      details.push([d.examId,d.class,d.name,d.qNo,d.qid,d.type,d.part,d.statement,d.question,d.userAnswer,d.correctAnswer,d.points,d.maxPoints,d.result]);
+    });
+    (r.review||[]).forEach(function(it){
+      const opts = it.options || [];
+      questions.push([r.examId||"LEGACY",it.id||"",r.examId||"",r.class||"",r.name||"",String(it.type||"").toUpperCase(),it.part||"",it.text||"",opts[0]||"",opts[1]||"",opts[2]||"",opts[3]||"",it.correctLetter||it.correct||"",it.userLetter||it.user||"",it.pts??"",it.maxPts??""]);
     });
   });
-  const sorted = [...list].sort((a, b) => {
-    const ka = a.class + "|" + a.name, kb = b.class + "|" + b.name;
-    const oa = orderMap[ka] !== undefined ? orderMap[ka] : 99999;
-    const ob = orderMap[kb] !== undefined ? orderMap[kb] : 99999;
-    if (oa !== ob) return oa - ob;
-    return (a.class + a.name).localeCompare(b.class + b.name);
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(scores), "Diem");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(exams), "DeThi");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(details), "BaiLam");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(questions), "CauDaThi");
+  const audit = [["ExamID","Họ và tên","Điểm lưu","Điểm tính từ BaiLam","Chênh lệch","Trạng thái"]];
+  list.forEach(function(r){
+    const ds=(r.detailRows||[]).reduce((a,d)=>a+(Number(d.points)||0),0);
+    const saved=Number(r.score)||0; const diff=Math.round((saved-ds)*100)/100;
+    audit.push([r.examId||"LEGACY",r.name||"",saved,r.detailRows?Math.round(ds*100)/100:"",r.detailRows?diff:"",""+(r.detailRows?(Math.abs(diff)<0.001?"OK":"LỖI - cần kiểm tra"):"LEGACY - chưa đủ dữ liệu")]);
   });
-  const data = [["STT", "Lớp", "Họ và tên", "Điểm", "Đúng", "Sai", "Bỏ qua", "Bài làm", "Thời điểm nộp", "Mã đề"]];
-  sorted.forEach((r, i) => data.push([i + 1, r.class, r.name, r.score, r.correct, r.wrong, r.skip, r.pattern || "", r.time, r.maDe || ""]));
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "Diem");
-  try {
-    const schRows = getScheduleRowsForExcel();
-    if (schRows.length > 1) {
-      const wsL = XLSX.utils.aoa_to_sheet(schRows);
-      XLSX.utils.book_append_sheet(wb, wsL, "LichThi");
-    }
-  } catch (e) {}
-  XLSX.writeFile(wb, "Diem_KTTX_Tin12_" + new Date().toISOString().slice(0, 10) + ".xlsx");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(audit), "Audit");
+  try { const schRows=getScheduleRowsForExcel(); if(schRows.length>1) XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(schRows),"LichThi"); } catch(e){}
+  XLSX.writeFile(wb, "DuLieuThi_Tin12_5Sheet_" + new Date().toISOString().slice(0,10) + ".xlsx");
 });
 document.getElementById("btn-clear-scores").addEventListener("click", function () {
   if (confirm("Xóa sạch toàn bộ dữ liệu điểm trên máy này?")) {
@@ -1490,6 +1492,46 @@ function buildPattern() {
   }).join("");
 }
 
+function newExamId_() {
+  const t = new Date();
+  const stamp = t.getFullYear().toString()
+    + String(t.getMonth()+1).padStart(2,'0')
+    + String(t.getDate()).padStart(2,'0') + '-'
+    + String(t.getHours()).padStart(2,'0')
+    + String(t.getMinutes()).padStart(2,'0')
+    + String(t.getSeconds()).padStart(2,'0');
+  const safeName = String(selectedStudent || 'HS').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,32) || 'HS';
+  return 'EX-' + stamp + '-' + safeName + '-' + Math.random().toString(36).slice(2,7).toUpperCase();
+}
+function buildDetailedRows_(examId, reviewList) {
+  const rows = [];
+  (reviewList || []).forEach(function(it, idx) {
+    const qid = it.qid || it.questionId || '';
+    if (it.type === 'tf' && Array.isArray(it.lines)) {
+      it.lines.forEach(function(line, j) {
+        rows.push({
+          examId: examId, name: selectedStudent, class: selectedClass,
+          qNo: idx + 1, qid: qid, type: 'TF', part: 2, statement: line.label,
+          question: line.text || '', userAnswer: line.user === true ? 'Đ' : line.user === false ? 'S' : '',
+          correctAnswer: line.correct ? 'Đ' : 'S',
+          points: line.ok ? 0.25 : 0, maxPoints: 0.25,
+          result: line.user == null ? 'Bỏ' : (line.ok ? 'Đúng' : 'Sai')
+        });
+      });
+    } else {
+      rows.push({
+        examId: examId, name: selectedStudent, class: selectedClass,
+        qNo: idx + 1, qid: qid, type: String(it.type || '').toUpperCase(), part: it.part || '', statement: '',
+        question: it.text || '', userAnswer: it.userLetter || it.user || '',
+        correctAnswer: it.correctLetter || it.correct || '',
+        points: Number(it.pts) || 0, maxPoints: Number(it.maxPts) || (it.type === 'mc' ? 0.5 : 1),
+        result: it.user === '(bỏ)' ? 'Bỏ' : (it.ok ? 'Đúng' : (Number(it.pts) > 0 ? 'Một phần' : 'Sai'))
+      });
+    }
+  });
+  return rows;
+}
+
 async function submitExam(auto) {
   if (examCancelled) return;
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e) {}
@@ -1623,6 +1665,7 @@ async function submitExam(auto) {
     }
     return {
       id: q.displayId,
+      qid: ensureQuestionId_(q),
       type: q.type,
       part: q.part,
       text: q.text,
@@ -1639,10 +1682,14 @@ async function submitExam(auto) {
   });
   window._lastReviewList = reviewList;
 
+  const examId = newExamId_();
+  const detailRows = buildDetailedRows_(examId, reviewList);
   const record = {
+    examId: examId,
     name: selectedStudent, class: selectedClass, score: totalScore,
     correct: correctCount, wrong: wrongCount, skip: skipCount,
-    elapsed, time: new Date().toLocaleString("vi-VN"), pattern, maDe: window._currentMaDe || "", review: reviewList, partScores: window._lastPartScores || null
+    elapsed, time: new Date().toLocaleString("vi-VN"), pattern, maDe: window._currentMaDe || "",
+    review: reviewList, detailRows: detailRows, partScores: window._lastPartScores || null
   };
   let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   // Ghi đè nếu đã có điểm cùng HS (làm lại)
@@ -1805,7 +1852,6 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  // Không chặn UI — gửi nền, trả về ngay
   const FALLBACK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
   let url = "";
   try {
@@ -1814,48 +1860,35 @@ function pushScoreToCloud(record) {
   } catch (e) { url = FALLBACK; }
   if (!url) return false;
 
+  // Bài mới: gửi toàn bộ hồ sơ thi bằng POST JSON. Không gửi GET song song để tránh ghi trùng chi tiết.
+  if (record.examId) {
+    const payload = JSON.stringify({
+      action: "appendExam", examId: record.examId || "", class: record.class || "", name: record.name || "",
+      score: record.score, correct: record.correct, wrong: record.wrong, skip: record.skip,
+      pattern: record.pattern || "", time: record.time || "", maDe: record.maDe || "", elapsed: record.elapsed || 0,
+      partScores: record.partScores || {}, detailRows: record.detailRows || [], review: record.review || []
+    });
+    try {
+      if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
+    } catch (e1) {}
+    try {
+      fetch(url, { method: "POST", mode: "no-cors", keepalive: true,
+        headers: { "Content-Type": "text/plain;charset=UTF-8" }, body: payload }).catch(function () {});
+    } catch (e2) {}
+    return true;
+  }
+
+  // Bài cũ/legacy: giữ cách gửi cũ để không phá dữ liệu hiện tại.
   const q = new URLSearchParams({
-    action: "append",
-    class: String(record.class || ""),
-    name: String(record.name || ""),
-    score: String(record.score ?? ""),
-    correct: String(record.correct ?? "0"),
-    wrong: String(record.wrong ?? "0"),
-    skip: String(record.skip ?? "0"),
-    pattern: String(record.pattern || "").slice(0, 1200),
-    time: String(record.time || ""),
-    maDe: String(record.maDe || "")
+    action: "append", class: String(record.class || ""), name: String(record.name || ""),
+    score: String(record.score ?? ""), correct: String(record.correct ?? "0"), wrong: String(record.wrong ?? "0"),
+    skip: String(record.skip ?? "0"), pattern: String(record.pattern || "").slice(0, 1200),
+    time: String(record.time || ""), maDe: String(record.maDe || "")
   });
   const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
-
-  try {
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(getUrl);
-    }
-  } catch (e1) {}
-  try {
-    const img = new Image();
-    img.src = getUrl;
-  } catch (e2) {}
-  try {
-    fetch(getUrl, { method: "GET", mode: "no-cors", cache: "no-store", keepalive: true }).catch(function () {});
-  } catch (e3) {}
-  try {
-    const payload = JSON.stringify({
-      action: "append",
-      class: record.class, name: record.name, score: record.score,
-      correct: record.correct, wrong: record.wrong, skip: record.skip,
-      pattern: record.pattern || "", time: record.time || "", maDe: record.maDe || ""
-    });
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
-    }
-    fetch(url, {
-      method: "POST", mode: "no-cors", keepalive: true,
-      headers: { "Content-Type": "text/plain;charset=UTF-8" },
-      body: payload
-    }).catch(function () {});
-  } catch (e4) {}
+  try { if (navigator.sendBeacon) navigator.sendBeacon(getUrl); } catch (e3) {}
+  try { const img = new Image(); img.src = getUrl; } catch (e4) {}
+  try { fetch(getUrl, { method: "GET", mode: "no-cors", cache: "no-store", keepalive: true }).catch(function () {}); } catch (e5) {}
   return true;
 }
 
@@ -1875,6 +1908,7 @@ function normalizeScore_(v) {
 }
 function normalizeCloudRow_(rec) {
   return {
+    examId: String(rec.examId || "").trim(),
     name: String(rec.name || "").trim(),
     class: String(rec.class || rec.lop || "").trim(),
     score: normalizeScore_(rec.score),
@@ -1883,8 +1917,8 @@ function normalizeCloudRow_(rec) {
     skip: parseInt(rec.skip, 10) || 0,
     pattern: String(rec.pattern || ""),
     time: String(rec.time || ""),
-    maDe: String(rec.maDe || ""),
-    review: rec.review || []
+    maDe: String(rec.maDe || "")
+    // Không gán review/detailRows rỗng ở đây: khi cloud chỉ trả tổng điểm, phải giữ nguyên review chi tiết đang có trên máy.
   };
 }
 
