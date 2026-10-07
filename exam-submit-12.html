@@ -367,6 +367,13 @@
         <div class="stat sai">Sai: <span id="res-wrong">0</span></div>
         <div class="stat bo">Bỏ: <span id="res-skip">0</span></div>
       </div>
+      <div id="res-parts" style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.88rem;line-height:1.55;border:1px solid #E2E8F0">
+        <div style="font-weight:800;color:#1E3A8A;margin-bottom:6px">Chi tiết điểm từng phần</div>
+        <div>Phần 1 (TN 12 câu × 0,5): <b id="res-p1">0</b>/6</div>
+        <div>Phần 2 (Đúng/Sai, mỗi ý 0,25): <b id="res-p2">0</b>/2</div>
+        <div>Phần 3 (Trả lời ngắn × 1): <b id="res-p3">0</b>/2</div>
+        <div style="margin-top:4px;color:#64748B;font-size:.8rem">Phần 1: đúng <span id="res-mc-right">0</span>/12 câu · sai <span id="res-mc-wrong">0</span> · bỏ <span id="res-mc-skip">0</span></div>
+      </div>
       <p class="result-note">Cảm ơn bạn đã hoàn thành bài kiểm tra thường xuyên môn Tin học 12!</p>
       <div style="text-align:center;margin-top:16px">
         <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Về trang chủ</a>
@@ -1457,29 +1464,50 @@ async function submitExam(auto) {
 
   const elapsed = Math.floor((Date.now() - startTime) / 1000);
   let totalScore = 0, correctCount = 0, wrongCount = 0, skipCount = 0;
+  // Điểm từng phần để đối chiếu
+  let scoreP1 = 0, scoreP2 = 0, scoreP3 = 0;
+  let mcRight = 0, mcWrong = 0, mcSkip = 0;
   activeQuestions.forEach(q => {
     const key = q.uid; let score = 0;
     if (q.type === "mc") {
-      if (answers[key] === undefined) skipCount++;
-      else if (answers[key] === q.correct) { score = 0.5; correctCount++; }
-      else wrongCount++;
+      // Phần 1: mỗi câu đúng = 0.5 điểm
+      if (answers[key] === undefined) { skipCount++; mcSkip++; }
+      else if (answers[key] === q.correct) { score = 0.5; correctCount++; mcRight++; }
+      else { wrongCount++; mcWrong++; }
+      scoreP1 += score;
     } else if (q.type === "tf") {
+      // Phần 2: mỗi ý đúng = 0.25 (tối đa 1.0/câu)
       const ans = answers[key] || [null, null, null, null];
-      let partial = 0, answered = 0;
+      let partial = 0, answered = 0, rightSt = 0, wrongSt = 0;
       q.statements.forEach((s, i) => {
-        if (ans[i] != null) { answered++; if (ans[i] === s.correct) partial += 0.25; }
+        if (ans[i] == null) return;
+        answered++;
+        if (ans[i] === s.correct) { partial += 0.25; rightSt++; }
+        else wrongSt++;
       });
       score = partial;
-      if (answered === 0) skipCount++; else if (partial > 0) correctCount++; else wrongCount++;
+      // Đếm theo từng ý (không đếm cả câu như 1 đúng)
+      correctCount += rightSt;
+      wrongCount += wrongSt;
+      if (answered === 0) skipCount += 4;
+      else skipCount += (4 - answered);
+      scoreP2 += score;
     } else {
+      // Phần 3: mỗi câu đúng = 1.0 điểm
       const user = (answers[key] || "").trim().toLowerCase();
       if (!user) skipCount++;
       else if (q.correct.some(c => c.toLowerCase().trim() === user)) { score = 1; correctCount++; }
       else wrongCount++;
+      scoreP3 += score;
     }
     totalScore += score;
   });
-  totalScore = Math.round(totalScore * 10) / 10;
+  // Làm tròn 2 chữ thập phân (tránh 5.999 → 6)
+  totalScore = Math.round(totalScore * 100) / 100;
+  scoreP1 = Math.round(scoreP1 * 100) / 100;
+  scoreP2 = Math.round(scoreP2 * 100) / 100;
+  scoreP3 = Math.round(scoreP3 * 100) / 100;
+  window._lastPartScores = { p1: scoreP1, p2: scoreP2, p3: scoreP3, mcRight: mcRight, mcWrong: mcWrong, mcSkip: mcSkip };
   const pattern = buildPattern();
   // Chi tiết đáp án để GV xem lại
   const reviewList = activeQuestions.map(q => {
@@ -1556,7 +1584,7 @@ async function submitExam(auto) {
   const record = {
     name: selectedStudent, class: selectedClass, score: totalScore,
     correct: correctCount, wrong: wrongCount, skip: skipCount,
-    elapsed, time: new Date().toLocaleString("vi-VN"), pattern, maDe: window._currentMaDe || "", review: reviewList
+    elapsed, time: new Date().toLocaleString("vi-VN"), pattern, maDe: window._currentMaDe || "", review: reviewList, partScores: window._lastPartScores || null
   };
   let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   // Ghi đè nếu đã có điểm cùng HS (làm lại)
@@ -1583,6 +1611,14 @@ async function submitExam(auto) {
   document.getElementById("res-correct").textContent = correctCount;
   document.getElementById("res-wrong").textContent = wrongCount;
   document.getElementById("res-skip").textContent = skipCount;
+  const ps = window._lastPartScores || {};
+  const el = (id, v) => { const n = document.getElementById(id); if (n) n.textContent = v; };
+  el("res-p1", ps.p1 != null ? ps.p1 : "—");
+  el("res-p2", ps.p2 != null ? ps.p2 : "—");
+  el("res-p3", ps.p3 != null ? ps.p3 : "—");
+  el("res-mc-right", ps.mcRight != null ? ps.mcRight : "—");
+  el("res-mc-wrong", ps.mcWrong != null ? ps.mcWrong : "—");
+  el("res-mc-skip", ps.mcSkip != null ? ps.mcSkip : "—");
 }
 </script>
 
