@@ -1782,7 +1782,7 @@ function pushScoreToCloud(record) {
     correct: String(record.correct ?? "0"),
     wrong: String(record.wrong ?? "0"),
     skip: String(record.skip ?? "0"),
-    pattern: String(record.pattern || "").slice(0, 450),
+    pattern: String(record.pattern || "").slice(0, 1200),
     time: String(record.time || ""),
     maDe: String(record.maDe || "")
   });
@@ -2091,8 +2091,22 @@ function showAnswerReview(r) {
 
   const body = document.getElementById("review-body");
   let rev = r.review || [];
-  if (!rev.length && r.pattern) {
+  const hasFullReview = rev.length > 0 && rev.some(function (x) { return x.text && x.pts != null; });
+  if (!hasFullReview && r.pattern) {
     rev = buildReviewFromPattern_(r.pattern);
+  }
+
+  // Nếu có #S# trong pattern → ghi đè pts từng câu bằng điểm lúc nộp (khớp tổng)
+  const rawPat = String(r.pattern || "");
+  const sIdx = rawPat.indexOf("#S#");
+  if (sIdx >= 0 && rev.length) {
+    const ptsArr = rawPat.slice(sIdx + 3).split(",").map(function (x) { return parseFloat(x) || 0; });
+    rev.forEach(function (it, idx) {
+      if (ptsArr[idx] != null && !isNaN(ptsArr[idx])) {
+        it.pts = ptsArr[idx];
+        it.scoreReliable = true;
+      }
+    });
   }
 
   if (!rev.length) {
@@ -2104,13 +2118,13 @@ function showAnswerReview(r) {
 
   let sumDetail = 0;
   body.innerHTML = rev.map(function (item) {
-    const pts = Number(item.pts) || 0;
-    sumDetail += pts;
     const maxP = Number(item.maxPts) || (item.type === "mc" ? 0.5 : 1);
-    const full = pts >= maxP - 0.001;
-    const partial = pts > 0 && !full;
-    const color = full ? "#065F46" : partial ? "#92400E" : "#991B1B";
-    const bg = full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
+    let pts = item.hidePts ? null : (Number(item.pts) || 0);
+    if (pts != null) sumDetail += pts;
+    const full = pts != null && pts >= maxP - 0.001;
+    const partial = pts != null && pts > 0 && !full;
+    const color = item.hidePts ? "#64748B" : full ? "#065F46" : partial ? "#92400E" : "#991B1B";
+    const bg = item.hidePts ? "#F8FAFC" : full ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
 
     let detailHtml = "";
     if (item.type === "mc" && item.options && item.options.length) {
@@ -2152,15 +2166,22 @@ function showAnswerReview(r) {
     return "<div style=\"border:1px solid #E2E8F0;border-radius:10px;padding:12px;margin-bottom:10px;background:" + bg + "\">" +
       "<div style=\"display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap\">" +
       "<b style=\"color:#1E3A8A;font-size:1rem\">Câu " + item.id + "</b>" +
-      "<span style=\"font-weight:800;color:" + color + "\">" + pts + " / " + maxP + " điểm</span></div>" +
+      "<span style=\"font-weight:800;color:" + color + "\">" + (item.hidePts ? "— / " + maxP : (pts + " / " + maxP)) + " điểm</span></div>" +
       "<div style=\"margin:6px 0;color:#1E293B;font-weight:600;line-height:1.45\">" + (item.text || "") + "</div>" +
       detailHtml + "</div>";
   }).join("");
 
   sumDetail = Math.round(sumDetail * 100) / 100;
-  const note = (Math.abs(sumDetail - sumPts) > 0.05)
-    ? "<p style=\"font-size:.82rem;color:#92400E;margin-top:8px;text-align:center\">※ Tổng điểm <b>chính thức</b> khi nộp: <b>" + sumPts + "/10</b>. Cộng chi tiết trên màn hình: " + sumDetail + " . Điểm từng câu trên màn hình chỉ đúng khi có mã #S# (nộp sau bản cập nhật). Bài cũ: chỉ tin tổng điểm chính thức.</p>"
-    : "";
+  let note = "";
+  const hasS = String(r.pattern || "").indexOf("#S#") >= 0;
+  if (hasS || hasFullReview) {
+    note = "<p style=\"font-size:.85rem;color:#065F46;margin-top:8px;text-align:center;background:#ECFDF5;padding:8px;border-radius:8px\">✓ Điểm từng câu lấy từ lúc nộp bài. Cộng cột điểm = <b>" + sumDetail + "</b> · Tổng chính thức = <b>" + sumPts + "/10</b>" +
+      (Math.abs(sumDetail - sumPts) > 0.05 ? " (lệch nhẹ — ưu tiên tổng chính thức)" : " — khớp") + ".</p>";
+  } else {
+    note = "<p style=\"font-size:.85rem;color:#92400E;margin-top:8px;text-align:center;background:#FFFBEB;padding:10px;border-radius:8px\"><b>Bài nộp trước khi cập nhật</b> — không lưu điểm từng câu. Cột điểm/ màu đúng-sai bên dưới <b>chỉ tham khảo</b> (đề đã xáo, so ngân hàng gốc sẽ lệch). <b>Chỉ tin tổng điểm chính thức: " + sumPts + "/10</b>. Cho HS làm lại sau cập nhật để có bảng điểm từng câu khớp tổng.</p>";
+    // Không hiện điểm từng câu giả (0) gây hiểu nhầm — ẩn cột điểm giả
+    rev.forEach(function (it) { it.pts = null; it.hidePts = true; });
+  }
   body.innerHTML += note +
     "<div style=\"margin-top:12px;padding:14px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.15rem;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
 
