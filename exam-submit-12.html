@@ -2090,23 +2090,52 @@ function showAnswerReview(r) {
     " · Đúng: " + (r.correct ?? "—") + " · Sai: " + (r.wrong ?? "—") + " · Bỏ: " + (r.skip ?? "—");
 
   const body = document.getElementById("review-body");
-  let rev = r.review || [];
-  const hasFullReview = rev.length > 0 && rev.some(function (x) { return x.text && x.pts != null; });
-  if (!hasFullReview && r.pattern) {
+  let rev = Array.isArray(r.review) ? r.review.slice() : [];
+
+  // ĐIỂM CHI TIẾT CHỈ ĐƯỢC LẤY TỪ DỮ LIỆU ĐÃ LƯU KHI NỘP.
+  // Tuyệt đối không suy ngược điểm từ ngân hàng câu hỏi hiện tại vì đề đã xáo.
+  const rawPat = String(r.pattern || "");
+  const sIdx = rawPat.indexOf("#S#");
+  let storedPts = null;
+  if (sIdx >= 0) {
+    const rawPts = rawPat.slice(sIdx + 3).split(",").map(function (x) {
+      const n = Number(String(x).trim());
+      return Number.isFinite(n) ? n : null;
+    });
+    // Bản thi hiện tại có 16 mục: 12 MC + 2 TF + 2 SA.
+    // Chỉ coi #S# là dữ liệu đáng tin khi đủ toàn bộ điểm và không có phần tử lỗi.
+    if (rawPts.length === 16 && rawPts.every(function (x) { return x != null; })) {
+      storedPts = rawPts;
+    }
+  }
+
+  // Nếu review không được lưu (ví dụ tải từ cloud), chỉ dựng lại nội dung/đáp án.
+  // Hàm buildReviewFromPattern_ không còn tự chấm điểm khi thiếu #S#.
+  if (!rev.length && r.pattern) {
     rev = buildReviewFromPattern_(r.pattern);
   }
 
-  // Nếu có #S# trong pattern → ghi đè pts từng câu bằng điểm lúc nộp (khớp tổng)
-  const rawPat = String(r.pattern || "");
-  const sIdx = rawPat.indexOf("#S#");
-  if (sIdx >= 0 && rev.length) {
-    const ptsArr = rawPat.slice(sIdx + 3).split(",").map(function (x) { return parseFloat(x) || 0; });
+  // Ưu tiên #S# vì đây là điểm từng câu đúng tại thời điểm nộp.
+  // Nếu không có #S#, chỉ dùng pts trong review nếu TẤT CẢ câu đều có điểm số hợp lệ.
+  let detailScoreSource = "none";
+  if (storedPts && rev.length === storedPts.length) {
     rev.forEach(function (it, idx) {
-      if (ptsArr[idx] != null && !isNaN(ptsArr[idx])) {
-        it.pts = ptsArr[idx];
-        it.scoreReliable = true;
-      }
+      it.pts = storedPts[idx];
+      it.scoreReliable = true;
+      it.hidePts = false;
     });
+    detailScoreSource = "pattern";
+  } else {
+    const reviewPtsReliable = rev.length > 0 && rev.every(function (x) {
+      return x && x.pts != null && Number.isFinite(Number(x.pts));
+    });
+    if (reviewPtsReliable) {
+      rev.forEach(function (it) { it.pts = Number(it.pts); it.scoreReliable = true; it.hidePts = false; });
+      detailScoreSource = "review";
+    } else {
+      // Không có điểm từng câu đáng tin cậy → ẩn điểm chi tiết, nhưng vẫn cho xem bài làm.
+      rev.forEach(function (it) { it.pts = null; it.hidePts = true; it.scoreReliable = false; });
+    }
   }
 
   if (!rev.length) {
@@ -2173,14 +2202,16 @@ function showAnswerReview(r) {
 
   sumDetail = Math.round(sumDetail * 100) / 100;
   let note = "";
-  const hasS = String(r.pattern || "").indexOf("#S#") >= 0;
-  if (hasS || hasFullReview) {
-    note = "<p style=\"font-size:.85rem;color:#065F46;margin-top:8px;text-align:center;background:#ECFDF5;padding:8px;border-radius:8px\">✓ Điểm từng câu lấy từ lúc nộp bài. Cộng cột điểm = <b>" + sumDetail + "</b> · Tổng chính thức = <b>" + sumPts + "/10</b>" +
-      (Math.abs(sumDetail - sumPts) > 0.05 ? " (lệch nhẹ — ưu tiên tổng chính thức)" : " — khớp") + ".</p>";
+  if (detailScoreSource !== "none") {
+    const diff = Math.abs(sumDetail - sumPts);
+    note = "<p style=\"font-size:.85rem;margin-top:8px;text-align:center;padding:8px;border-radius:8px;" +
+      (diff <= 0.05 ? "color:#065F46;background:#ECFDF5" : "color:#92400E;background:#FFFBEB") + "\">" +
+      (diff <= 0.05
+        ? "✓ Điểm từng câu lấy đúng từ dữ liệu lúc nộp. Cộng cột điểm = <b>" + sumDetail + "</b> · Tổng chính thức = <b>" + sumPts + "/10</b> — khớp."
+        : "⚠️ Có dữ liệu điểm từng câu nhưng không khớp tổng chính thức. Cộng chi tiết = <b>" + sumDetail + "</b> · Tổng chính thức = <b>" + sumPts + "/10</b>. <b>Ưu tiên tổng chính thức.</b>") +
+      "</p>";
   } else {
-    note = "<p style=\"font-size:.85rem;color:#92400E;margin-top:8px;text-align:center;background:#FFFBEB;padding:10px;border-radius:8px\"><b>Bài nộp trước khi cập nhật</b> — không lưu điểm từng câu. Cột điểm/ màu đúng-sai bên dưới <b>chỉ tham khảo</b> (đề đã xáo, so ngân hàng gốc sẽ lệch). <b>Chỉ tin tổng điểm chính thức: " + sumPts + "/10</b>. Cho HS làm lại sau cập nhật để có bảng điểm từng câu khớp tổng.</p>";
-    // Không hiện điểm từng câu giả (0) gây hiểu nhầm — ẩn cột điểm giả
-    rev.forEach(function (it) { it.pts = null; it.hidePts = true; });
+    note = "<p style=\"font-size:.85rem;color:#92400E;margin-top:8px;text-align:center;background:#FFFBEB;padding:10px;border-radius:8px\"><b>Không có dữ liệu điểm từng câu được lưu khi nộp bài.</b> Bài làm vẫn được hiển thị để tham khảo, nhưng cột điểm từng câu được ẩn để tránh chấm lại theo ngân hàng hiện tại (đề đã xáo). <b>Chỉ tin tổng điểm chính thức: " + sumPts + "/10</b>.</p>";
   }
   body.innerHTML += note +
     "<div style=\"margin-top:12px;padding:14px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.15rem;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
@@ -2248,9 +2279,8 @@ function buildReviewFromPattern_(pattern) {
       ? (options[userL.charCodeAt(0) - 65] || userL)
       : "(bỏ)";
     // Ưu tiên điểm đã lưu khi nộp (#S#), không suy từ ngân hàng (sai vì đề đã xáo)
-    let pts = 0;
-    if (detailPts && detailPts[i - 1] != null) pts = detailPts[i - 1];
-    else if (userL && correctL && userL === correctL) pts = 0.5;
+    // Chỉ lấy điểm đã lưu trong #S#. Không tự chấm lại từ ngân hàng vì đề đã xáo.
+    let pts = (detailPts && detailPts[i - 1] != null) ? detailPts[i - 1] : null;
     rev.push({
       id: i, type: "mc", text: text, options: options,
       user: userShow, correct: correctShow,
@@ -2268,7 +2298,6 @@ function buildReviewFromPattern_(pattern) {
     const labels = ["a", "b", "c", "d"];
     let lines = [], text = "Câu " + id;
     let pts = (detailPts && detailPts[12 + ti] != null) ? detailPts[12 + ti] : null;
-    let calcPts = 0;
     if (q && q.statements) {
       text = q.text || text;
       q.statements.forEach(function (st, si) {
@@ -2276,7 +2305,6 @@ function buildReviewFromPattern_(pattern) {
         const userBool = ch === "Đ" ? true : ch === "S" ? false : null;
         const cor = !!st.correct;
         const ok = userBool !== null && userBool === cor;
-        if (ok) calcPts += 0.25;
         lines.push({ label: labels[si], text: st.text || "", user: userBool, correct: cor, ok: ok });
       });
     } else {
@@ -2286,7 +2314,6 @@ function buildReviewFromPattern_(pattern) {
         lines.push({ label: lb, text: "", user: userBool, correct: null, ok: false });
       });
     }
-    if (pts == null) pts = calcPts;
     rev.push({
       id: id, type: "tf", text: text, lines: lines,
       user: lines.map(function (ln) { return ln.label + "." + (ln.user === true ? "Đ" : ln.user === false ? "S" : "—"); }).join(" "),
@@ -2299,15 +2326,15 @@ function buildReviewFromPattern_(pattern) {
   [15, 16].forEach(function (id, si) {
     const q = bankSa[si] || null;
     const user = saAns[String(id)] || "";
-    let text = "Câu " + id, correctShow = "—", calc = 0;
+    let text = "Câu " + id, correctShow = "—";
     if (q) {
       text = q.text || text;
       const arr = q.correct || [];
       correctShow = arr.join(" | ");
       const u = user.toLowerCase().trim();
-      if (u && arr.some(function (c) { return String(c).toLowerCase().trim() === u; })) calc = 1;
+      // Không tự chấm điểm lại ở màn hình xem đáp án.
     }
-    let pts = (detailPts && detailPts[14 + si] != null) ? detailPts[14 + si] : calc;
+    let pts = (detailPts && detailPts[14 + si] != null) ? detailPts[14 + si] : null;
     rev.push({
       id: id, type: "sa", text: text,
       user: user || "(bỏ)", correct: correctShow,
