@@ -1123,6 +1123,34 @@ document.getElementById("file-upload-docx")?.addEventListener("change", async fu
 });
 
 
+/* ===== SỬA LỖI XEM ĐÁP ÁN / LƯU ĐỀ ĐÃ XÁO ===== */
+function examHash_(s) {
+  s = String(s == null ? "" : s); let h = 2166136261;
+  for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h,16777619); }
+  return ("00000000"+(h>>>0).toString(16)).slice(-8);
+}
+function ensureQuestionId_(q) {
+  if (!q) return "";
+  if (!q.qid) {
+    let raw=q.type+"|"+(q.text||"");
+    if(q.type==="mc") raw+="|"+(q.options||[]).join("|")+"|"+q.correct;
+    if(q.type==="tf") raw+="|"+(q.statements||[]).map(s=>(s.text||"")+"|"+!!s.correct).join("|");
+    if(q.type==="sa") raw+="|"+(q.correct||[]).join("|");
+    q.qid="q"+examHash_(raw);
+  }
+  return q.qid;
+}
+function findQuestionById_(qid) {
+  const wanted=String(qid||""), seen=new Set();
+  function scan(arr){ for(const q of (arr||[])){ if(!q||seen.has(q)) continue; seen.add(q); if(ensureQuestionId_(q)===wanted)return q; } return null; }
+  let q=scan(questionBank&&questionBank.part1); if(q)return q;
+  q=scan(questionBank&&questionBank.part2); if(q)return q;
+  q=scan(questionBank&&questionBank.part3); if(q)return q;
+  for(const code of Object.keys(window.examCodes||{})){ const c=window.examCodes[code]||{}; q=scan(c.part1);if(q)return q;q=scan(c.part2);if(q)return q;q=scan(c.part3);if(q)return q; }
+  return null;
+}
+function applyMcOrder_(q,order){ const copy={...q}; if(q.type!=="mc"||!Array.isArray(order)||order.length!==4)return copy; const old=+q.correct; copy.options=order.map(i=>q.options[i]); copy.correct=order.indexOf(old); copy._optOrder=order.slice(); return copy; }
+
 function shuffle(a) {
   const arr = [...a];
   for (let i = arr.length - 1; i > 0; i--) {
@@ -1132,8 +1160,12 @@ function shuffle(a) {
   return arr;
 }
 function shuffleMC(q) {
+  // Gán ID khi câu còn ở trạng thái gốc, rồi mới xáo phương án.
+  ensureQuestionId_(q);
   const idxs = shuffle([0, 1, 2, 3]);
-  return { ...q, options: idxs.map(i => q.options[i]), correct: idxs.indexOf(q.correct) };
+  const out = { ...q, options: idxs.map(i => q.options[i]), correct: idxs.indexOf(q.correct) };
+  out._optOrder = idxs.slice();
+  return out;
 }
 function buildExam() {
   // Gộp ngân hàng theo mức độ từ mọi mã đề → giảm trùng lặp
@@ -1187,7 +1219,10 @@ function buildExam() {
 
   const all = [...p1, ...p2, ...p3];
   const selectedCode = "MIX-" + (codes.length ? codes.join("/") : "1");
-  all.forEach((q, i) => { q.displayId = i + 1; q.uid = "q" + i + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6); q.maDe = selectedCode; });
+  all.forEach((q, i) => {
+    ensureQuestionId_(q); q.displayId = i + 1;
+    q.uid = "q" + i + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6); q.maDe = selectedCode;
+  });
   window._currentMaDe = selectedCode;
   return all;
 }
@@ -1525,8 +1560,13 @@ async function submitExam(auto) {
     if (!user) return 0;
     return (q.correct || []).some(c => c.toLowerCase().trim() === user) ? 1 : 0;
   });
-  // Ghép điểm từng câu vào pattern để máy khác / Sheet vẫn xem đúng điểm từng câu
-  let pattern = buildPattern() + "#S#" + detailPts.join(",");
+  // Lưu đúng câu đã chọn + thứ tự phương án + điểm từng câu.
+  const questionSnapshot = activeQuestions.map(function(q){
+    ensureQuestionId_(q);
+    const order=(q.type==="mc" && Array.isArray(q._optOrder)) ? q._optOrder.join("") : "";
+    return ensureQuestionId_(q)+":"+order;
+  }).join(",");
+  let pattern = buildPattern() + "#Q#" + questionSnapshot + "#S#" + detailPts.join(",");
   // Chi tiết đáp án để GV xem lại
   const reviewList = activeQuestions.map(q => {
     const key = q.uid;
@@ -1919,7 +1959,17 @@ async function pullScoresFromCloud() {
     const r = typeof normalizeCloudRow_ === "function" ? normalizeCloudRow_(rec) : rec;
     if (!r.name || !r.class) return;
     const ix = list.findIndex(x => x.class === r.class && x.name === r.name);
-    if (ix >= 0) { list[ix] = Object.assign({}, list[ix], r); updated++; }
+    if (ix >= 0) {
+      // Cloud cũ chỉ có điểm/pattern; tuyệt đối không ghi đè review đầy đủ
+      // đang còn trong localStorage của máy đã nộp bài.
+      const old = list[ix] || {};
+      const merged = Object.assign({}, old, r);
+      if ((!r.review || !r.review.length) && Array.isArray(old.review) && old.review.length) {
+        merged.review = old.review;
+      }
+      list[ix] = merged;
+      updated++;
+    }
     else { list.push(r); added++; }
   });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
@@ -2090,59 +2140,29 @@ function showAnswerReview(r) {
     " · Đúng: " + (r.correct ?? "—") + " · Sai: " + (r.wrong ?? "—") + " · Bỏ: " + (r.skip ?? "—");
 
   const body = document.getElementById("review-body");
-  let rev = Array.isArray(r.review) ? r.review.slice() : [];
-
-  // ĐIỂM CHI TIẾT CHỈ ĐƯỢC LẤY TỪ DỮ LIỆU ĐÃ LƯU KHI NỘP.
-  // Tuyệt đối không suy ngược điểm từ ngân hàng câu hỏi hiện tại vì đề đã xáo.
-  const rawPat = String(r.pattern || "");
-  const sIdx = rawPat.indexOf("#S#");
-  let storedPts = null;
-  if (sIdx >= 0) {
-    const rawPts = rawPat.slice(sIdx + 3).split(",").map(function (x) {
-      const n = Number(String(x).trim());
-      return Number.isFinite(n) ? n : null;
-    });
-    // Bản thi hiện tại có 16 mục: 12 MC + 2 TF + 2 SA.
-    // Chỉ coi #S# là dữ liệu đáng tin khi đủ toàn bộ điểm và không có phần tử lỗi.
-    if (rawPts.length === 16 && rawPts.every(function (x) { return x != null; })) {
-      storedPts = rawPts;
-    }
-  }
-
-  // Nếu review không được lưu (ví dụ tải từ cloud), chỉ dựng lại nội dung/đáp án.
-  // Hàm buildReviewFromPattern_ không còn tự chấm điểm khi thiếu #S#.
-  if (!rev.length && r.pattern) {
+  let rev = r.review || [];
+  const hasFullReview = rev.length > 0 && rev.some(function (x) { return x.text && x.pts != null; });
+  if (!hasFullReview && r.pattern) {
     rev = buildReviewFromPattern_(r.pattern);
   }
 
-  // Ưu tiên #S# vì đây là điểm từng câu đúng tại thời điểm nộp.
-  // Nếu không có #S#, chỉ dùng pts trong review nếu TẤT CẢ câu đều có điểm số hợp lệ.
-  let detailScoreSource = "none";
-  if (storedPts && rev.length === storedPts.length) {
+  // Nếu có #S# trong pattern → ghi đè pts từng câu bằng điểm lúc nộp (khớp tổng)
+  const rawPat = String(r.pattern || "");
+  const sIdx = rawPat.indexOf("#S#");
+  if (sIdx >= 0 && rev.length) {
+    const ptsArr = rawPat.slice(sIdx + 3).split(",").map(function (x) { return parseFloat(x) || 0; });
     rev.forEach(function (it, idx) {
-      it.pts = storedPts[idx];
-      it.scoreReliable = true;
-      it.hidePts = false;
+      if (ptsArr[idx] != null && !isNaN(ptsArr[idx])) {
+        it.pts = ptsArr[idx];
+        it.scoreReliable = true;
+      }
     });
-    detailScoreSource = "pattern";
-  } else {
-    const reviewPtsReliable = rev.length > 0 && rev.every(function (x) {
-      return x && x.pts != null && Number.isFinite(Number(x.pts));
-    });
-    if (reviewPtsReliable) {
-      rev.forEach(function (it) { it.pts = Number(it.pts); it.scoreReliable = true; it.hidePts = false; });
-      detailScoreSource = "review";
-    } else {
-      // Không có điểm từng câu đáng tin cậy → ẩn điểm chi tiết, nhưng vẫn cho xem bài làm.
-      rev.forEach(function (it) { it.pts = null; it.hidePts = true; it.scoreReliable = false; });
-    }
   }
 
   if (!rev.length) {
-    body.innerHTML = "<p style=\"color:#888\">Không có dữ liệu bài làm.</p>" +
+    body.innerHTML = "<div style=\"padding:14px;background:#FFFBEB;border-radius:10px;color:#92400E;line-height:1.6\"><b>Bài nộp cũ chưa lưu bản đồ câu hỏi sau khi xáo đề.</b><br>Hệ thống chỉ có chuỗi đáp án và mã đề <b>" + (r.maDe || "—") + "</b>, nên không thể xác định chắc chắn từng câu để chấm lại. Để tránh hiển thị sai, hệ thống không tự đoán điểm từng câu.<br><b>Điểm chính thức vẫn là " + sumPts + "/10.</b></div>" +
       "<div style=\"margin-top:12px;padding:12px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
-    modal.style.display = "flex";
-    return;
+    modal.style.display = "flex"; return;
   }
 
   let sumDetail = 0;
@@ -2202,16 +2222,14 @@ function showAnswerReview(r) {
 
   sumDetail = Math.round(sumDetail * 100) / 100;
   let note = "";
-  if (detailScoreSource !== "none") {
-    const diff = Math.abs(sumDetail - sumPts);
-    note = "<p style=\"font-size:.85rem;margin-top:8px;text-align:center;padding:8px;border-radius:8px;" +
-      (diff <= 0.05 ? "color:#065F46;background:#ECFDF5" : "color:#92400E;background:#FFFBEB") + "\">" +
-      (diff <= 0.05
-        ? "✓ Điểm từng câu lấy đúng từ dữ liệu lúc nộp. Cộng cột điểm = <b>" + sumDetail + "</b> · Tổng chính thức = <b>" + sumPts + "/10</b> — khớp."
-        : "⚠️ Có dữ liệu điểm từng câu nhưng không khớp tổng chính thức. Cộng chi tiết = <b>" + sumDetail + "</b> · Tổng chính thức = <b>" + sumPts + "/10</b>. <b>Ưu tiên tổng chính thức.</b>") +
-      "</p>";
+  const hasS = String(r.pattern || "").indexOf("#S#") >= 0;
+  if (hasS || hasFullReview) {
+    note = "<p style=\"font-size:.85rem;color:#065F46;margin-top:8px;text-align:center;background:#ECFDF5;padding:8px;border-radius:8px\">✓ Điểm từng câu lấy từ lúc nộp bài. Cộng cột điểm = <b>" + sumDetail + "</b> · Tổng chính thức = <b>" + sumPts + "/10</b>" +
+      (Math.abs(sumDetail - sumPts) > 0.05 ? " (lệch nhẹ — ưu tiên tổng chính thức)" : " — khớp") + ".</p>";
   } else {
-    note = "<p style=\"font-size:.85rem;color:#92400E;margin-top:8px;text-align:center;background:#FFFBEB;padding:10px;border-radius:8px\"><b>Không có dữ liệu điểm từng câu được lưu khi nộp bài.</b> Bài làm vẫn được hiển thị để tham khảo, nhưng cột điểm từng câu được ẩn để tránh chấm lại theo ngân hàng hiện tại (đề đã xáo). <b>Chỉ tin tổng điểm chính thức: " + sumPts + "/10</b>.</p>";
+    note = "<p style=\"font-size:.85rem;color:#92400E;margin-top:8px;text-align:center;background:#FFFBEB;padding:10px;border-radius:8px\"><b>Bài nộp trước khi cập nhật</b> — không lưu điểm từng câu. Cột điểm/ màu đúng-sai bên dưới <b>chỉ tham khảo</b> (đề đã xáo, so ngân hàng gốc sẽ lệch). <b>Chỉ tin tổng điểm chính thức: " + sumPts + "/10</b>. Cho HS làm lại sau cập nhật để có bảng điểm từng câu khớp tổng.</p>";
+    // Không hiện điểm từng câu giả (0) gây hiểu nhầm — ẩn cột điểm giả
+    rev.forEach(function (it) { it.pts = null; it.hidePts = true; });
   }
   body.innerHTML += note +
     "<div style=\"margin-top:12px;padding:14px;background:#EEF2FF;border-radius:10px;text-align:center;font-weight:800;font-size:1.15rem;color:#1D4ED8\">Tổng điểm: " + sumPts + " / 10</div>";
@@ -2220,131 +2238,36 @@ function showAnswerReview(r) {
 }
 
 function buildReviewFromPattern_(pattern) {
-  const raw = String(pattern || "");
-  // Tách chuỗi điểm từng câu: ...#S#0.5,0,0.5,...
-  let detailPts = null;
-  let p = raw;
-  const sIdx = raw.indexOf("#S#");
-  if (sIdx >= 0) {
-    const ptsStr = raw.slice(sIdx + 3);
-    p = raw.slice(0, sIdx);
-    detailPts = ptsStr.split(",").map(function (x) { return parseFloat(x) || 0; });
-  }
-
-  const bankMc = (questionBank && questionBank.part1) ? questionBank.part1.slice() : [];
-  const bankTf = (questionBank && questionBank.part2) ? questionBank.part2.slice() : [];
-  const bankSa = (questionBank && questionBank.part3) ? questionBank.part3.slice() : [];
-  try {
-    Object.keys(window.examCodes || {}).forEach(function (code) {
-      const c = window.examCodes[code] || {};
-      (c.part1 || []).forEach(function (q) { bankMc.push(q); });
-      (c.part2 || []).forEach(function (q) { bankTf.push(q); });
-      (c.part3 || []).forEach(function (q) { bankSa.push(q); });
-    });
-  } catch (e) {}
-
-  const mcAns = {};
-  const reMc = /(\d{1,2})([A-D])/gi;
-  let m;
-  while ((m = reMc.exec(p)) !== null) {
-    const n = +m[1];
-    if (n >= 1 && n <= 12 && mcAns[n] === undefined) mcAns[n] = m[2].toUpperCase();
-  }
-  const tfAns = {};
-  const reTf = /(13|14)([ĐđSsĐDS\-]+)/g;
-  while ((m = reTf.exec(p)) !== null) {
-    tfAns[m[1]] = m[2];
-  }
-  const saAns = {};
-  const reSa = /(15|16)([^0-9#]*?)(?=1[3-6]|#|$)/g;
-  while ((m = reSa.exec(p)) !== null) {
-    let t = (m[2] || "").replace(/^[:\s=\-]+/, "").trim();
-    saAns[m[1]] = (!t || t === "-") ? "" : t;
-  }
-
-  const rev = [];
-  // MC 1-12
-  for (let i = 1; i <= 12; i++) {
-    const q = bankMc[i - 1] || null;
-    const userL = mcAns[i] || "";
-    let options = [], text = "Câu " + i, correctL = "", correctShow = "—";
-    if (q) {
-      text = q.text || text;
-      const opts = (q.options || []).map(String);
-      options = opts.map(function (o, idx) { return String.fromCharCode(65 + idx) + ". " + o; });
-      correctL = String.fromCharCode(65 + (q.correct || 0));
-      correctShow = correctL + ". " + (opts[q.correct] || "");
+  const raw=String(pattern||""); let p=raw, detailPts=null, snapshot=null;
+  const sIdx=raw.indexOf("#S#");
+  if(sIdx>=0){ detailPts=raw.slice(sIdx+3).split(",").map(x=>{const n=parseFloat(x);return isFinite(n)?n:0;}); p=raw.slice(0,sIdx); }
+  const qIdx=p.indexOf("#Q#");
+  if(qIdx>=0){ snapshot=p.slice(qIdx+3).split(",").filter(Boolean).map(x=>{const a=x.split(":");return {qid:a[0]||"",order:a[1]||""};}); p=p.slice(0,qIdx); }
+  // Dữ liệu cũ không có #Q#: không được đoán câu theo ngân hàng hiện tại.
+  if(!snapshot||!snapshot.length) return [];
+  const answers=[]; let m;
+  const reMc=/(\d{1,2})([A-D])/gi; while((m=reMc.exec(p))!==null) answers[+m[1]-1]=m[2].toUpperCase();
+  const reTf=/(13|14)([ĐđDdSs\-]{4})/g; while((m=reTf.exec(p))!==null) answers[+m[1]-1]=m[2].toUpperCase().replace(/D/g,"Đ");
+  const reSa=/(15|16)([^0-9#]*?)(?=1[3-6]|$)/g; while((m=reSa.exec(p))!==null){const s=(m[2]||"").replace(/^[:\s=\-]+/,"").trim();answers[+m[1]-1]=(!s||s==="-")?"":s;}
+  const rev=[];
+  snapshot.forEach(function(snap,idx){
+    const base=findQuestionById_(snap.qid); if(!base)return;
+    let q={...base};
+    if(q.type==="mc"&&snap.order){const o=snap.order.split("").map(Number);if(o.length===4&&o.every(n=>n>=0&&n<=3))q=applyMcOrder_(q,o);}
+    const pts=detailPts&&detailPts[idx]!=null?detailPts[idx]:null;
+    if(q.type==="mc"){
+      const L=["A","B","C","D"],u=answers[idx]||"",ci=+q.correct;
+      rev.push({id:idx+1,type:"mc",part:1,text:q.text||"",user:u?u+". "+(q.options[u.charCodeAt(0)-65]||""):"(bỏ)",correct:L[ci]+". "+(q.options[ci]||""),ok:u===L[ci],pts:pts==null?(u===L[ci]?0.5:0):pts,maxPts:.5,options:L.map((x,i)=>x+". "+(q.options[i]||"")),userLetter:u,correctLetter:L[ci],scoreReliable:!!detailPts});
+    }else if(q.type==="tf"){
+      const labs=["a","b","c","d"],u=String(answers[idx]||"----").padEnd(4,"-").slice(0,4),lines=(q.statements||[]).map((s,i)=>{const ch=u[i]==="Đ"?"Đ":u[i]==="S"?"S":null,cor=!!s.correct;return {label:labs[i],text:s.text||"",user:ch==="Đ"?true:ch==="S"?false:null,correct:cor,ok:ch!=null&&((ch==="Đ")===cor)};}),calc=lines.reduce((a,x)=>a+(x.ok?.25:0),0);
+      rev.push({id:idx+1,type:"tf",part:2,text:q.text||"",user:lines.map(x=>x.label+"."+(x.user===true?"Đ":x.user===false?"S":"—")).join(" "),correct:lines.map(x=>x.label+"."+(x.correct?"Đ":"S")).join(" | "),ok:calc>=.999,pts:pts==null?calc:pts,maxPts:1,lines,scoreReliable:!!detailPts});
+    }else{
+      const u=String(answers[idx]||""),arr=q.correct||[],ok=!!u&&arr.some(c=>String(c).trim().toLowerCase()===u.trim().toLowerCase());
+      rev.push({id:idx+1,type:"sa",part:3,text:q.text||"",user:u||"(bỏ)",correct:arr.join(" | "),ok,pts:pts==null?(ok?1:0):pts,maxPts:1,scoreReliable:!!detailPts});
     }
-    const userShow = userL
-      ? (options[userL.charCodeAt(0) - 65] || userL)
-      : "(bỏ)";
-    // Ưu tiên điểm đã lưu khi nộp (#S#), không suy từ ngân hàng (sai vì đề đã xáo)
-    // Chỉ lấy điểm đã lưu trong #S#. Không tự chấm lại từ ngân hàng vì đề đã xáo.
-    let pts = (detailPts && detailPts[i - 1] != null) ? detailPts[i - 1] : null;
-    rev.push({
-      id: i, type: "mc", text: text, options: options,
-      user: userShow, correct: correctShow,
-      userLetter: userL, correctLetter: correctL,
-      pts: pts, maxPts: 0.5,
-      fromPattern: true,
-      scoreReliable: !!(detailPts)
-    });
-  }
-  // TF 13-14 → index 12, 13 in detailPts
-  [13, 14].forEach(function (id, ti) {
-    const q = bankTf[ti] || null;
-    const rawT = tfAns[String(id)] || "";
-    const letters = rawT.split("").filter(function (ch) { return /[ĐđSs\-D]/i.test(ch); });
-    const labels = ["a", "b", "c", "d"];
-    let lines = [], text = "Câu " + id;
-    let pts = (detailPts && detailPts[12 + ti] != null) ? detailPts[12 + ti] : null;
-    if (q && q.statements) {
-      text = q.text || text;
-      q.statements.forEach(function (st, si) {
-        const ch = (letters[si] || "-").toUpperCase().replace("D", "Đ");
-        const userBool = ch === "Đ" ? true : ch === "S" ? false : null;
-        const cor = !!st.correct;
-        const ok = userBool !== null && userBool === cor;
-        lines.push({ label: labels[si], text: st.text || "", user: userBool, correct: cor, ok: ok });
-      });
-    } else {
-      labels.forEach(function (lb, si) {
-        const ch = (letters[si] || "-").toUpperCase().replace("D", "Đ");
-        const userBool = ch === "Đ" ? true : ch === "S" ? false : null;
-        lines.push({ label: lb, text: "", user: userBool, correct: null, ok: false });
-      });
-    }
-    rev.push({
-      id: id, type: "tf", text: text, lines: lines,
-      user: lines.map(function (ln) { return ln.label + "." + (ln.user === true ? "Đ" : ln.user === false ? "S" : "—"); }).join(" "),
-      correct: lines.map(function (ln) { return ln.label + "." + (ln.correct ? "Đ" : "S"); }).join(" | "),
-      pts: Math.round(pts * 100) / 100, maxPts: 1,
-      fromPattern: true, scoreReliable: !!(detailPts)
-    });
   });
-  // SA 15-16 → index 14, 15
-  [15, 16].forEach(function (id, si) {
-    const q = bankSa[si] || null;
-    const user = saAns[String(id)] || "";
-    let text = "Câu " + id, correctShow = "—";
-    if (q) {
-      text = q.text || text;
-      const arr = q.correct || [];
-      correctShow = arr.join(" | ");
-      const u = user.toLowerCase().trim();
-      // Không tự chấm điểm lại ở màn hình xem đáp án.
-    }
-    let pts = (detailPts && detailPts[14 + si] != null) ? detailPts[14 + si] : null;
-    rev.push({
-      id: id, type: "sa", text: text,
-      user: user || "(bỏ)", correct: correctShow,
-      pts: pts, maxPts: 1,
-      fromPattern: true, scoreReliable: !!(detailPts)
-    });
-  });
-  return rev;
+  return rev.length===snapshot.length?rev:[];
 }
-
 function loadSchedule() {
   // Trả về mảng: [{ id, lop, from, to }, ...]
   try {
