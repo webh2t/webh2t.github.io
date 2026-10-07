@@ -367,13 +367,14 @@
         <div class="stat sai">Sai: <span id="res-wrong">0</span></div>
         <div class="stat bo">Bỏ: <span id="res-skip">0</span></div>
       </div>
-      <div id="res-parts" style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.88rem;line-height:1.55;border:1px solid #E2E8F0">
-        <div style="font-weight:800;color:#1E3A8A;margin-bottom:6px">Chi tiết điểm từng phần</div>
-        <div>Phần 1 (TN 12 câu × 0,5): <b id="res-p1">0</b>/6</div>
-        <div>Phần 2 (Đúng/Sai, mỗi ý 0,25): <b id="res-p2">0</b>/2</div>
-        <div>Phần 3 (Trả lời ngắn × 1): <b id="res-p3">0</b>/2</div>
-        <div style="margin-top:4px;color:#64748B;font-size:.8rem">Phần 1: đúng <span id="res-mc-right">0</span>/12 câu · sai <span id="res-mc-wrong">0</span> · bỏ <span id="res-mc-skip">0</span></div>
+      <div id="res-parts" style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.88rem;line-height:1.55;border:1px solid #E2E8F0">
+        <div style="font-weight:800;color:#1E3A8A;margin-bottom:6px">Điểm theo phần</div>
+        <div>Phần 1 – Trắc nghiệm (12×0,5): <b id="res-p1">0</b> / 6</div>
+        <div>Phần 2 – Đúng/Sai (mỗi ý 0,25): <b id="res-p2">0</b> / 2</div>
+        <div>Phần 3 – Trả lời ngắn (2×1): <b id="res-p3">0</b> / 2</div>
+        <div style="margin-top:6px;font-weight:800;color:#1D4ED8">Tổng = Phần1 + Phần2 + Phần3</div>
       </div>
+      <div id="res-breakdown" style="margin-bottom:14px;max-height:320px;overflow:auto;border:1px solid #E2E8F0;border-radius:10px"></div>
       <p class="result-note">Cảm ơn bạn đã hoàn thành bài kiểm tra thường xuyên môn Tin học 12!</p>
       <div style="text-align:center;margin-top:16px">
         <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Về trang chủ</a>
@@ -1596,7 +1597,7 @@ async function submitExam(auto) {
       lines: tfLines
     };
   });
-
+  window._lastReviewList = reviewList;
 
   const record = {
     name: selectedStudent, class: selectedClass, score: totalScore,
@@ -1633,9 +1634,57 @@ async function submitExam(auto) {
   el("res-p1", ps.p1 != null ? ps.p1 : "—");
   el("res-p2", ps.p2 != null ? ps.p2 : "—");
   el("res-p3", ps.p3 != null ? ps.p3 : "—");
-  el("res-mc-right", ps.mcRight != null ? ps.mcRight : "—");
-  el("res-mc-wrong", ps.mcWrong != null ? ps.mcWrong : "—");
-  el("res-mc-skip", ps.mcSkip != null ? ps.mcSkip : "—");
+  // Bảng tham chiếu từng câu (điểm thật lúc chấm — khớp tổng)
+  try {
+    renderResultBreakdown(window._lastReviewList || [], window._lastPartScores || {}, totalScore);
+  } catch (e) { console.warn(e); }
+}
+
+function renderResultBreakdown(reviewList, partScores, totalScore) {
+  const box = document.getElementById("res-breakdown");
+  if (!box) return;
+  if (!reviewList || !reviewList.length) {
+    box.innerHTML = "<p style=\"padding:10px;color:#888;font-size:.85rem\">Không có bảng chi tiết câu.</p>";
+    return;
+  }
+  let sum = 0;
+  let rows = reviewList.map(function (it) {
+    const pts = Number(it.pts) || 0;
+    sum += pts;
+    const maxP = Number(it.maxPts) || (it.type === "mc" ? 0.5 : 1);
+    const ok = pts >= maxP - 0.001;
+    const partial = pts > 0 && !ok;
+    const status = ok ? "Đúng" : (partial ? "Đúng một phần" : (String(it.user || "").indexOf("bỏ") >= 0 || it.user === "(bỏ)" ? "Bỏ" : "Sai"));
+    const col = ok ? "#065F46" : partial ? "#92400E" : "#991B1B";
+    const bg = ok ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
+    let chon = it.user || "—";
+    if (it.type === "tf" && it.lines) {
+      chon = it.lines.map(function (ln) {
+        return ln.label + ":" + (ln.user === true ? "Đ" : ln.user === false ? "S" : "—");
+      }).join(" ");
+    }
+    return "<tr style=\"background:" + bg + "\">" +
+      "<td style=\"padding:6px 8px;font-weight:700;color:#1E3A8A\">" + it.id + "</td>" +
+      "<td style=\"padding:6px 8px;font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\" title=\"" + (it.text || "").replace(/"/g, "'") + "\">" + (it.text || "").slice(0, 42) + (it.text && it.text.length > 42 ? "…" : "") + "</td>" +
+      "<td style=\"padding:6px 8px;font-size:.82rem\">" + chon + "</td>" +
+      "<td style=\"padding:6px 8px;font-weight:700;color:" + col + "\">" + status + "</td>" +
+      "<td style=\"padding:6px 8px;font-weight:800;text-align:right;color:" + col + "\">" + pts + "/" + maxP + "</td></tr>";
+  }).join("");
+  sum = Math.round(sum * 100) / 100;
+  box.innerHTML =
+    "<table style=\"width:100%;border-collapse:collapse;font-size:.84rem\">" +
+    "<thead><tr style=\"background:#1E3A8A;color:#fff\">" +
+    "<th style=\"padding:8px;text-align:left\">Câu</th>" +
+    "<th style=\"padding:8px;text-align:left\">Nội dung (rút gọn)</th>" +
+    "<th style=\"padding:8px;text-align:left\">HS chọn</th>" +
+    "<th style=\"padding:8px;text-align:left\">Kết quả</th>" +
+    "<th style=\"padding:8px;text-align:right\">Điểm</th></tr></thead>" +
+    "<tbody>" + rows + "</tbody>" +
+    "<tfoot><tr style=\"background:#EEF2FF\">" +
+    "<td colspan=\"4\" style=\"padding:10px;font-weight:800;color:#1E3A8A\">Cộng điểm các câu = Tổng điểm</td>" +
+    "<td style=\"padding:10px;font-weight:900;text-align:right;color:#1D4ED8;font-size:1.05rem\">" + sum + " / 10</td></tr></tfoot>" +
+    "</table>" +
+    "<p style=\"padding:8px 10px;margin:0;font-size:.78rem;color:#64748B\">Bảng này lấy đúng điểm lúc hệ thống chấm (sau khi xáo đề). Cộng cột Điểm phải bằng tổng <b>" + (totalScore != null ? totalScore : sum) + "/10</b> trên cùng màn hình.</p>";
 }
 </script>
 
