@@ -1727,75 +1727,81 @@ function normalizeCloudRow_(rec) {
 
 async function pullScoresFromCloud() {
   const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
-  const webhook = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url") || localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
-  const csvUrl = (localStorage.getItem(typeof CLOUD_READ_KEY !== "undefined" ? CLOUD_READ_KEY : "webh2t_cloud_read_url") || localStorage.getItem("webh2t_cloud_read_url") || "").trim();
+  const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
+  const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
+  const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
 
   let rows = null;
   let source = "";
 
-  // Cách 1: Apps Script ?action=list (JSON) — không bị CORS CSV
-  try {
-    const listUrl = webhook + (webhook.indexOf("?") >= 0 ? "&" : "?") + "action=list&t=" + Date.now();
-    const res = await fetch(listUrl, { method: "GET", redirect: "follow", cache: "no-store" });
-    if (res.ok) {
-      const text = await res.text();
-      if (text && text.trim().charAt(0) === "[") {
-        rows = JSON.parse(text);
-        source = "Apps Script JSON";
-      } else if (text && text.indexOf("Lớp") >= 0) {
-        // trả về CSV text
-        rows = parseScoreCsv_(text);
-        source = "Apps Script CSV";
-      }
-    }
-  } catch (e) { console.warn("list fetch", e); }
+  function tryParseJson(text) {
+    if (!text) return null;
+    text = String(text).trim();
+    if (text.charAt(0) !== "[") return null;
+    try { return JSON.parse(text); } catch (e) { return null; }
+  }
 
-  // Cách 2: CSV qua proxy (tránh CORS)
-  if ((!rows || !rows.length) && csvUrl) {
-    const proxies = [
-      "https://api.allorigins.win/raw?url=" + encodeURIComponent(csvUrl + (csvUrl.indexOf("?")>=0?"&":"?") + "t=" + Date.now()),
-      "https://corsproxy.io/?" + encodeURIComponent(csvUrl),
-      csvUrl
+  async function fetchText(url) {
+    const res = await fetch(url, { cache: "no-store", redirect: "follow" });
+    return await res.text();
+  }
+
+  const listDirect = webhook + (webhook.indexOf("?") >= 0 ? "&" : "?") + "action=list&t=" + Date.now();
+  const listUrls = [
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(listDirect),
+    listDirect
+  ];
+  for (let i = 0; i < listUrls.length; i++) {
+    try {
+      const text = await fetchText(listUrls[i]);
+      const arr = tryParseJson(text);
+      if (arr && Array.isArray(arr) && (arr.length > 0 || text.trim() === "[]")) {
+        rows = arr;
+        source = "Apps Script JSON";
+        break;
+      }
+    } catch (e) { console.warn("list", i, e); }
+  }
+
+  if (!rows || !rows.length) {
+    const stamp = "?t=" + Date.now();
+    const csvTargets = [
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(csvUrl + (csvUrl.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now()),
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(FALLBACK_CSV + stamp),
+      csvUrl + (csvUrl.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now()
     ];
-    for (let i = 0; i < proxies.length && (!rows || !rows.length); i++) {
+    for (let i = 0; i < csvTargets.length; i++) {
       try {
-        const res = await fetch(proxies[i], { cache: "no-store" });
-        const text = await res.text();
-        if (text && text.indexOf("_bootstrap") >= 0) continue;
-        if (text && (text.indexOf("Lớp") >= 0 || text.indexOf("class") >= 0 || text.indexOf(",") >= 0)) {
-          rows = parseScoreCsv_(text);
-          if (rows && rows.length) { source = "CSV proxy " + i; break; }
+        const text = await fetchText(csvTargets[i]);
+        if (!text || text.indexOf("_bootstrap") >= 0) continue;
+        if (text.indexOf(",") < 0) continue;
+        const parsed = parseScoreCsv_(text);
+        if (parsed && parsed.length) {
+          rows = parsed;
+          source = "CSV/" + i;
+          break;
         }
-      } catch (e2) { console.warn("proxy", i, e2); }
+      } catch (e2) { console.warn("csv", i, e2); }
     }
   }
 
   if (!rows || !rows.length) {
-    alert("Không tải được điểm từ cloud.\\n\\n1) Cập nhật Apps Script: thêm nhánh action=list (xem hướng dẫn).\\n2) Deploy lại Version mới, quyền Bất kỳ ai.\\n3) Thử lại Tải điểm từ cloud.\\n\\nHoặc mở Google Sheet copy điểm thủ công.");
+    alert("Không tải được điểm từ cloud.\n\n1) Dán lại Apps Script đầy đủ và Deploy New version (Bất kỳ ai).\n2) Mở thử: " + listDirect + "\n   Phải thấy JSON [...]\n3) Thử lại Tải điểm từ cloud.");
     return;
   }
 
   let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   let added = 0, updated = 0;
   rows.forEach(function (rec) {
-    const r = normalizeCloudRow_(rec);
+    const r = typeof normalizeCloudRow_ === "function" ? normalizeCloudRow_(rec) : rec;
     if (!r.name || !r.class) return;
-    // Nếu score = 0 do lỗi Date nhưng pattern có dữ liệu, giữ score cũ nếu có
     const ix = list.findIndex(x => x.class === r.class && x.name === r.name);
-    if (ix >= 0) {
-      if (r.score === 0 && list[ix].score > 0 && /1900-|T\d{2}:/.test(String(rec.score||""))) {
-        r.score = list[ix].score;
-      }
-      list[ix] = Object.assign({}, list[ix], r);
-      updated++;
-    } else {
-      list.push(r);
-      added++;
-    }
+    if (ix >= 0) { list[ix] = Object.assign({}, list[ix], r); updated++; }
+    else { list.push(r); added++; }
   });
   localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   if (typeof renderScoreTable === "function") renderScoreTable();
-  alert("Đã tải điểm từ cloud (" + source + ").\\nThêm mới: " + added + " · Cập nhật: " + updated + " · Tổng: " + list.length);
+  alert("Đã tải " + rows.length + " bài từ cloud (" + source + ").\nThêm mới: " + added + " · Cập nhật: " + updated + " · Tổng: " + list.length);
 }
 
 function parseScoreCsv_(text) {
@@ -2327,7 +2333,15 @@ document.getElementById("btn-sch-clear")?.addEventListener("click", function () 
   const _orig = window.enterAdminMode || enterAdminMode;
   window.enterAdminMode = function () {
     _orig();
-    try { fillScheduleClasses(); renderScheduleList(); } catch (e) { console.warn(e); }
+    try {
+      fillScheduleClasses();
+      renderScheduleList();
+      if (typeof loadCloudConfig === "function") loadCloudConfig();
+      if (typeof loadGhForm === "function") loadGhForm();
+      setTimeout(function () {
+        if (typeof pullScoresFromCloud === "function") pullScoresFromCloud().catch(function () {});
+      }, 800);
+    } catch (e) { console.warn(e); }
   };
 })();
 
