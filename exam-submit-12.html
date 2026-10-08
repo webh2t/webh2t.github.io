@@ -1953,83 +1953,68 @@ function pushScoreToCloud(record) {
   const FALLBACK = "https://script.google.com/macros/s/AKfycbzJG28txRaD90fT5oWlpH0YLZvzfKg0Fy8XGnBAOlymk6j6R5XNezUTfLzuSiJFQgbfSQ/exec";
   let url = FALLBACK;
   try {
-    url = (localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim() || FALLBACK;
+    const saved = (localStorage.getItem("webh2t_webhook_url") || "").trim();
+    if (saved && saved.indexOf("script.google.com") >= 0 && saved.indexOf("...") < 0) url = saved;
   } catch (e) {}
-  if (!url) return false;
 
   const ps = record.partScores || {};
-  // BaiLam rút gọn (giới hạn độ dài)
+  // BaiLam gọn: Câu:QID:HS:điểm;
   let baiLam = "";
   try {
     if (record.review && record.review.length) {
       baiLam = record.review.map(function (it) {
-        const hs = (it.userLetter || "").toString() || String(it.user || "-").slice(0, 12);
-        return (it.id || "") + ":" + (it.qid || "") + ":" + hs + ":" + (it.pts != null ? it.pts : "");
+        let hs = it.userLetter || "";
+        if (!hs && it.type === "tf" && it.lines) {
+          hs = it.lines.map(function (ln) {
+            return (ln.label || "") + (ln.user === true ? "Đ" : ln.user === false ? "S" : "-");
+          }).join("");
+        }
+        if (!hs) hs = String(it.user || "-").replace(/\s+/g, " ").slice(0, 20);
+        return (it.id || "") + ":" + (it.qid || "") + ":" + hs + ":" + (it.pts != null ? it.pts : "0");
       }).join(";");
     }
   } catch (e1) {}
 
-  const payload = {
-    action: "append",
-    class: String(record.class || ""),
-    name: String(record.name || ""),
-    score: String(record.score ?? ""),
-    correct: String(record.correct ?? "0"),
-    wrong: String(record.wrong ?? "0"),
-    skip: String(record.skip ?? "0"),
-    pattern: String(record.pattern || "").slice(0, 900),
-    time: String(record.time || ""),
-    maDe: String(record.maDe || ""),
-    examId: String(record.examId || ""),
-    p1: String(ps.p1 != null ? ps.p1 : ""),
-    p2: String(ps.p2 != null ? ps.p2 : ""),
-    p3: String(ps.p3 != null ? ps.p3 : ""),
-    baiLam: String(baiLam).slice(0, 1500)
-  };
+  const q = new URLSearchParams();
+  q.set("action", "append");
+  q.set("class", String(record.class || "").slice(0, 20));
+  q.set("name", String(record.name || "").slice(0, 60));
+  q.set("score", String(record.score ?? ""));
+  q.set("correct", String(record.correct ?? "0"));
+  q.set("wrong", String(record.wrong ?? "0"));
+  q.set("skip", String(record.skip ?? "0"));
+  q.set("pattern", String(record.pattern || "").slice(0, 450));
+  q.set("time", String(record.time || "").slice(0, 40));
+  q.set("maDe", String(record.maDe || "").slice(0, 40));
+  q.set("examId", String(record.examId || window._currentExamId || "").slice(0, 40));
+  q.set("p1", String(ps.p1 != null ? ps.p1 : ""));
+  q.set("p2", String(ps.p2 != null ? ps.p2 : ""));
+  q.set("p3", String(ps.p3 != null ? ps.p3 : ""));
+  q.set("baiLam", baiLam.slice(0, 1600));
 
-  // 1) POST (ưu tiên — không bị giới hạn URL)
-  try {
-    const body = JSON.stringify(payload);
-    if (navigator.sendBeacon) {
-      const blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
-      navigator.sendBeacon(url, blob);
-    }
-  } catch (e2) {}
-  try {
-    fetch(url, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=UTF-8" },
-      body: JSON.stringify(payload),
-      keepalive: true
-    }).catch(function () {});
-  } catch (e3) {}
+  const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
+  console.log("Cloud GET len:", getUrl.length, record.name, record.score, "baiLam", baiLam.length);
 
-  // 2) GET ngắn (dự phòng) — chỉ điểm chính, không baiLam dài
   try {
-    const q = new URLSearchParams({
-      action: "append",
-      class: payload.class,
-      name: payload.name,
-      score: payload.score,
-      correct: payload.correct,
-      wrong: payload.wrong,
-      skip: payload.skip,
-      pattern: String(record.pattern || "").slice(0, 400),
-      time: payload.time,
-      maDe: payload.maDe,
-      examId: payload.examId,
-      p1: payload.p1,
-      p2: payload.p2,
-      p3: payload.p3
-    });
-    const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
-    if (navigator.sendBeacon) navigator.sendBeacon(getUrl);
     const img = new Image();
     img.src = getUrl;
+  } catch (e2) {}
+  try {
+    if (navigator.sendBeacon) navigator.sendBeacon(getUrl);
+  } catch (e3) {}
+  try {
+    fetch(getUrl, { method: "GET", mode: "no-cors", keepalive: true }).catch(function () {});
   } catch (e4) {}
-
-  console.log("Đã gửi điểm lên cloud:", payload.name, payload.score);
+  try {
+    let f = document.getElementById("_cloud_frame");
+    if (!f) {
+      f = document.createElement("iframe");
+      f.id = "_cloud_frame";
+      f.style.cssText = "width:0;height:0;border:0;position:absolute;left:-9999px";
+      document.body.appendChild(f);
+    }
+    f.src = getUrl;
+  } catch (e5) {}
   return true;
 }
 
