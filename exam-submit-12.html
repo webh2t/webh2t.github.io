@@ -77,8 +77,8 @@
 @keyframes blink-red{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.75;transform:scale(1.12)}}
 
 .anti-cheat-bar{background:#FEF3C7;color:#92400E;padding:7px 18px;font-size:.82rem;font-weight:600;text-align:center;border-bottom:2px solid #F59E0B}
-.exam-body{display:flex;flex:1;max-width:1400px;margin:0 auto;width:100%;padding:14px;gap:14px}
-.sidebar{width:240px;flex-shrink:0;background:var(--card);border-radius:16px;box-shadow:var(--shadow);padding:14px 12px;height:fit-content;position:sticky;top:95px;border:1px solid #E8EEF7}
+.exam-body{display:flex;flex:1;max-width:1600px;margin:0 auto;width:100%;padding:8px 10px 12px 6px;gap:10px}
+.sidebar{width:200px;flex-shrink:0;background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:10px 8px;margin-left:0;height:fit-content;position:sticky;top:95px;border:1px solid #E8EEF7}
 .sidebar h3{font-size:.78rem;font-weight:700;color:#5B4BCC;margin:12px 0 8px;padding:0 2px;letter-spacing:.02em}.sidebar h3:first-child{margin-top:0}
 .q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}.q-grid.tf-grid{grid-template-columns:1fr;gap:8px}.q-grid.sa-grid{grid-template-columns:repeat(2,1fr);gap:8px}
 .q-btn{width:100%;min-height:44px;border-radius:10px;font-weight:700;font-size:.8rem;line-height:1.25;padding:8px 6px;background:#EEF3FF;color:#3B5BDB;border:1.5px solid #C5D4F7;cursor:pointer;transition:all .15s;text-align:center}
@@ -95,7 +95,7 @@
 .q-btn.sa-btn-side .ans-sub{font-size:.75rem;font-style:italic}
 
 
-.question-area{flex:1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px 26px;min-height:460px;display:flex;flex-direction:column}
+.question-area{flex:1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;min-height:460px;display:flex;flex-direction:column}
 .q-badge{display:inline-block;background:var(--purple);color:#fff;font-size:.75rem;font-weight:700;padding:3px 10px;border-radius:14px;margin-bottom:10px}
 .q-text{font-size:1.05rem;font-weight:600;line-height:1.5;margin-bottom:18px}
 .options{display:flex;flex-direction:column;gap:9px}
@@ -112,7 +112,7 @@
 .nav-btns{display:flex;justify-content:space-between;gap:10px;margin-top:auto;padding-top:20px}
 .btn-nav{padding:10px 18px;border-radius:9px;font-weight:600;font-size:.88rem}.btn-prev{background:#F1F5F9;color:var(--text-soft)}.btn-next{background:var(--primary);color:#fff}.btn-submit{background:var(--green);color:#fff;padding:10px 22px}
 #screen-result{display:none;min-height:100vh;padding:40px 24px}
-.result-card{max-width:540px;margin:0 auto;background:var(--card);border-radius:20px;box-shadow:0 20px 60px rgba(39,82,214,.12);overflow:hidden}
+.result-card{max-width:760px;width:96%;margin:0 auto;background:var(--card);border-radius:20px;box-shadow:0 20px 60px rgba(39,82,214,.12);overflow:hidden}
 .result-header{background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff;padding:26px;text-align:center}
 .result-header h2{font-size:1.3rem;margin-bottom:6px}.result-score{font-size:3rem;font-weight:800;line-height:1.1}.result-score span{font-size:1.3rem;opacity:.85}
 .result-body{padding:22px 26px}.result-info{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:18px}
@@ -166,6 +166,17 @@
 .schedule-row button{padding:6px 12px;border-radius:6px;font-weight:600;font-size:.82rem;background:#0EA5E9;color:#fff}
 .schedule-list{font-size:.82rem;margin-top:8px}
 .schedule-list li{padding:4px 0;border-bottom:1px dashed #E2E8F0}
+
+
+.btn-nav-row{display:flex;justify-content:center;align-items:center;gap:16px;padding:18px 8px 8px;flex-wrap:wrap;width:100%}
+.btn-nav-row .btn-prev{order:1;padding:12px 20px;font-size:1rem;border-radius:10px}
+.btn-nav-row .btn-next{order:2;padding:14px 36px;font-size:1.15rem;font-weight:800;border-radius:12px;background:linear-gradient(135deg,#2752D6,#6C5CE7)!important;color:#fff!important;box-shadow:0 4px 14px rgba(39,82,214,.35);min-width:180px}
+.btn-nav-row .btn-submit-wrap{order:2}
+.btn-nav-row .btn-submit{font-size:1.2rem!important;padding:14px 40px!important;min-width:200px}
+.result-card{max-width:720px!important;width:95%!important}
+.result-info{grid-template-columns:1fr 1fr!important}
+.result-info .info-item{word-break:break-word;overflow-wrap:anywhere}
+@media(max-width:640px){.result-info{grid-template-columns:1fr!important}.sidebar{width:100%}}
 
 </style>
 </head>
@@ -362,11 +373,7 @@
         <div class="info-item">📅 <strong id="res-date">—</strong></div>
         <div class="info-item">⏱️ Thời gian: <strong id="res-time">—</strong></div>
       </div>
-      <div class="result-stats">
-        <div class="stat dung">Đúng: <span id="res-correct">0</span></div>
-        <div class="stat sai">Sai: <span id="res-wrong">0</span></div>
-        <div class="stat bo">Bỏ: <span id="res-skip">0</span></div>
-      </div>
+<!-- ẩn Đúng/Sai/Bỏ -->
       <div id="res-parts" style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.88rem;line-height:1.55;border:1px solid #E2E8F0">
         <div style="font-weight:800;color:#1E3A8A;margin-bottom:6px">Điểm theo phần</div>
         <div>Phần 1 – Trắc nghiệm (24×0,25): <b id="res-p1">0</b> / 6</div>
@@ -1266,59 +1273,93 @@ function shuffleMC(q) {
   };
 }
 function buildExam() {
-  // Gộp ngân hàng theo mức độ từ mọi mã đề → giảm trùng lặp
-  const codes = Object.keys(window.examCodes || {}).filter(k => k && k !== "default");
-  const pools = { b0: [], b1: [], b2: [], b3: [], tf: [], saLow: [], saHigh: [] };
-
+  // P1: 24 MC × 0.25 | P2: 3 TF × 1 | P3: 2 SA × 0.5 → 10 điểm
+  const pools = { mc: [], tf: [], sa: [] };
+  function ensureQid(q) {
+    if (q.qid) return q;
+    let h = 0;
+    const t = String(q.text || "");
+    for (let i = 0; i < t.length; i++) h = ((h << 5) - h + t.charCodeAt(i)) | 0;
+    q.qid = "Q" + String(Math.abs(h) % 100000).padStart(5, "0");
+    return q;
+  }
   function absorb(bank) {
-    const p1 = bank.part1 || [];
-    // 4 band: 0-2 Biết, 3-5 Hiểu, 6-8 VĐ thấp, 9-11 VĐ cao
-    p1.forEach((q, i) => {
-      const b = i < 3 ? "b0" : i < 6 ? "b1" : i < 9 ? "b2" : "b3";
-      pools[b].push({ ...q });
+    (bank.part1 || []).forEach(function (q) { pools.mc.push(ensureQid(Object.assign({}, q))); });
+    (bank.part2 || []).forEach(function (q) { pools.tf.push(ensureQid(Object.assign({}, q))); });
+    (bank.part3 || []).forEach(function (q) { pools.sa.push(ensureQid(Object.assign({}, q))); });
+  }
+  // Ngân hàng đầy đủ từ CauHoi
+  absorb(questionBank);
+  const codes = Object.keys(window.examCodes || {});
+  codes.forEach(function (c) {
+    if (c === "BANK") return;
+    absorb(window.examCodes[c] || {});
+  });
+  // Khử trùng theo qid/text
+  function unique(arr) {
+    const seen = {};
+    return arr.filter(function (q) {
+      const k = q.qid || q.text;
+      if (seen[k]) return false;
+      seen[k] = true;
+      return true;
     });
-    (bank.part2 || []).forEach(q => pools.tf.push({ ...q }));
-    const p3 = bank.part3 || [];
-    if (p3[0]) pools.saLow.push({ ...p3[0] });
-    if (p3[1]) pools.saHigh.push({ ...p3[1] });
   }
-
-  if (codes.length) {
-    codes.forEach(c => absorb(window.examCodes[c]));
-  } else {
-    absorb(questionBank);
-  }
+  pools.mc = unique(pools.mc);
+  pools.tf = unique(pools.tf);
+  pools.sa = unique(pools.sa);
 
   function pick(arr, n) {
-    return shuffle(arr).slice(0, Math.min(n, arr.length));
+    return shuffle(arr.slice()).slice(0, Math.min(n, arr.length));
   }
 
-  // Mỗi band lấy 3 câu (xáo trong band); nếu thiếu thì lấy từ toàn bộ MC
-  let p1 = [];
-  ["b0", "b1", "b2", "b3"].forEach(b => {
-    let got = pick(pools[b], 3);
-    if (got.length < 3) {
-      const rest = shuffle((questionBank.part1 || []).map(q => ({ ...q })));
-      for (const q of rest) {
-        if (got.length >= 3) break;
-        if (!got.some(x => x.text === q.text)) got.push(q);
-      }
-    }
-    p1 = p1.concat(got);
+  let p1 = pick(pools.mc, 24);
+  // Nếu thiếu (ngân hàng nhỏ) — lặp có kiểm soát
+  while (p1.length < 24 && pools.mc.length) {
+    const more = pick(pools.mc, 24 - p1.length);
+    more.forEach(function (q) {
+      if (p1.length < 24) p1.push(Object.assign({}, q));
+    });
+    if (!more.length) break;
+  }
+  p1 = p1.slice(0, 24).map(function (q) {
+    return shuffleMC(ensureQid(Object.assign({}, q, { part: 1, type: "mc" })));
   });
-  p1 = p1.slice(0, 12).map(q => shuffleMC({ ...q, part: 1 }));
 
-  // Phần 2: lấy 2 câu TF ngẫu nhiên từ mọi đề, đảo thứ tự câu
-  const p2 = shuffle(pick(pools.tf.length ? pools.tf : (questionBank.part2 || []), 2)).map(q => ({ ...q, part: 2 }));
-  // Phần 3: lấy câu VĐ thấp + VĐ cao rồi đảo thứ tự hiển thị ngẫu nhiên
-  const saL = pick(pools.saLow.length ? pools.saLow : (questionBank.part3 || []).slice(0, 1), 1);
-  const saH = pick(pools.saHigh.length ? pools.saHigh : (questionBank.part3 || []).slice(1, 2), 1);
-  const p3 = shuffle([...saL, ...saH]).map(q => ({ ...q, part: 3 }));
+  let p2 = pick(pools.tf, 3);
+  while (p2.length < 3 && pools.tf.length) {
+    const more = pick(pools.tf, 3 - p2.length);
+    more.forEach(function (q) { if (p2.length < 3) p2.push(Object.assign({}, q)); });
+    if (!more.length) break;
+  }
+  p2 = p2.slice(0, 3).map(function (q) {
+    return ensureQid(Object.assign({}, q, { part: 2, type: "tf" }));
+  });
 
-  const all = [...p1, ...p2, ...p3];
-  const selectedCode = "MIX-" + (codes.length ? codes.join("/") : "1");
-  all.forEach((q, i) => { q.displayId = i + 1; q.uid = "q" + i + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6); q.maDe = selectedCode; });
+  let p3 = pick(pools.sa, 2);
+  while (p3.length < 2 && pools.sa.length) {
+    const more = pick(pools.sa, 2 - p3.length);
+    more.forEach(function (q) { if (p3.length < 2) p3.push(Object.assign({}, q)); });
+    if (!more.length) break;
+  }
+  p3 = p3.slice(0, 2).map(function (q) {
+    return ensureQid(Object.assign({}, q, { part: 3, type: "sa" }));
+  });
+
+  const all = p1.concat(p2, p3);
+  const selectedCode = "MIX-BANK";
+  const examId = "E" + new Date().toISOString().slice(0, 10).replace(/-/g, "") + "-" +
+    Math.random().toString(36).slice(2, 8).toUpperCase();
+  all.forEach(function (q, i) {
+    q.displayId = i + 1;
+    q.uid = "q" + i + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 6);
+    q.maDe = selectedCode;
+    q.examId = examId;
+    ensureQid(q);
+  });
   window._currentMaDe = selectedCode;
+  window._currentExamId = examId;
+  console.log("Đề:", p1.length, "MC +", p2.length, "TF +", p3.length, "SA");
   return all;
 }
 
@@ -1480,10 +1521,13 @@ function renderQuestion(idx) {
   } else {
     html += '<input type="text" class="short-input" id="sa-input" placeholder="Nhập câu trả lời..." value="' + (answers[key] || "") + '" autocomplete="off" spellcheck="false">';
   }
-  html += '<div class="nav-btns"><button class="btn-nav btn-prev" id="btn-prev" ' + (idx === 0 ? "disabled" : "") + '>← Câu trước</button><div>';
-  if (idx < activeQuestions.length - 1) html += '<button class="btn-nav btn-next" id="btn-next">Câu tiếp theo →</button>';
-  else html += '<div class="btn-submit-wrap"><button class="btn-nav btn-submit" id="btn-submit">🚀 Nộp bài</button></div>';
-  html += "</div></div>";
+  html += '<div class="btn-nav-row">';
+  html += '<button class="btn-nav btn-prev" id="btn-prev" ' + (idx === 0 ? "disabled" : "") + '>← Câu trước</button>';
+  if (idx < activeQuestions.length - 1)
+    html += '<button class="btn-nav btn-next" id="btn-next">Câu tiếp theo →</button>';
+  else
+    html += '<div class="btn-submit-wrap"><button class="btn-nav btn-submit" id="btn-submit">🚀 Nộp bài</button></div>';
+  html += "</div>";
   area.innerHTML = html;
   updateSidebar();
   if (q.type === "mc") area.querySelectorAll(".opt").forEach(el => el.onclick = () => { answers[key] = +el.dataset.idx; renderQuestion(idx); });
@@ -1770,11 +1814,11 @@ async function submitExam(auto) {
   document.getElementById("res-class").textContent = selectedClass;
   document.getElementById("res-date").textContent = new Date().toLocaleString("vi-VN");
   document.getElementById("res-time").textContent = Math.floor(elapsed / 60) + ":" + String(elapsed % 60).padStart(2, "0");
-  document.getElementById("res-correct").textContent = correctCount;
-  document.getElementById("res-wrong").textContent = wrongCount;
-  document.getElementById("res-skip").textContent = skipCount;
-  const ps = window._lastPartScores || {};
   const el = (id, v) => { const n = document.getElementById(id); if (n) n.textContent = v; };
+  el("res-correct", correctCount);
+  el("res-wrong", wrongCount);
+  el("res-skip", skipCount);
+  const ps = window._lastPartScores || {};
   el("res-p1", ps.p1 != null ? ps.p1 : "—");
   el("res-p2", ps.p2 != null ? ps.p2 : "—");
   el("res-p3", ps.p3 != null ? ps.p3 : "—");
@@ -1798,18 +1842,22 @@ function renderResultBreakdown(reviewList, partScores, totalScore) {
     const maxP = Number(it.maxPts) || (it.type === "mc" ? 0.25 : (it.type === "sa" ? 0.5 : 1));
     const ok = pts >= maxP - 0.001;
     const partial = pts > 0 && !ok;
-    const status = ok ? "Đúng" : (partial ? "Đúng một phần" : (String(it.user || "").indexOf("bỏ") >= 0 || it.user === "(bỏ)" ? "Bỏ" : "Sai"));
+    const status = ok ? "Đúng" : (partial ? "Một phần" : (String(it.user || "").indexOf("bỏ") >= 0 || it.user === "(bỏ)" ? "Bỏ" : "Sai"));
     const col = ok ? "#065F46" : partial ? "#92400E" : "#991B1B";
     const bg = ok ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
-    let chon = it.user || "—";
+    let chon = it.userLetter || it.user || "—";
     if (it.type === "tf" && it.lines) {
       chon = it.lines.map(function (ln) {
         return ln.label + ":" + (ln.user === true ? "Đ" : ln.user === false ? "S" : "—");
       }).join(" ");
     }
+    const qid = it.qid ? String(it.qid) : "";
+    const short = (it.text || "").replace(/\s+/g, " ").trim();
+    const shortShow = short.length > 48 ? short.slice(0, 48) + "…" : short;
+    const label = (qid ? qid + " · " : "") + shortShow;
     return "<tr style=\"background:" + bg + "\">" +
       "<td style=\"padding:6px 8px;font-weight:700;color:#1E3A8A\">" + it.id + "</td>" +
-      "<td style=\"padding:6px 8px;font-size:.8rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap\" title=\"" + (it.text || "").replace(/"/g, "'") + "\">" + (it.text || "").slice(0, 42) + (it.text && it.text.length > 42 ? "…" : "") + "</td>" +
+      "<td style=\"padding:6px 8px;font-size:.8rem;max-width:220px\" title=\"" + (qid + " " + short).replace(/"/g, "'") + "\">" + label + "</td>" +
       "<td style=\"padding:6px 8px;font-size:.82rem\">" + chon + "</td>" +
       "<td style=\"padding:6px 8px;font-weight:700;color:" + col + "\">" + status + "</td>" +
       "<td style=\"padding:6px 8px;font-weight:800;text-align:right;color:" + col + "\">" + pts + "/" + maxP + "</td></tr>";
@@ -1819,23 +1867,16 @@ function renderResultBreakdown(reviewList, partScores, totalScore) {
     "<table style=\"width:100%;border-collapse:collapse;font-size:.84rem\">" +
     "<thead><tr style=\"background:#1E3A8A;color:#fff\">" +
     "<th style=\"padding:8px;text-align:left\">Câu</th>" +
-    "<th style=\"padding:8px;text-align:left\">Nội dung (rút gọn)</th>" +
+    "<th style=\"padding:8px;text-align:left\">QID + nội dung</th>" +
     "<th style=\"padding:8px;text-align:left\">HS chọn</th>" +
-    "<th style=\"padding:8px;text-align:left\">Kết quả</th>" +
+    "<th style=\"padding:8px;text-align:left\">KQ</th>" +
     "<th style=\"padding:8px;text-align:right\">Điểm</th></tr></thead>" +
     "<tbody>" + rows + "</tbody>" +
     "<tfoot><tr style=\"background:#EEF2FF\">" +
-    "<td colspan=\"4\" style=\"padding:10px;font-weight:800;color:#1E3A8A\">Cộng điểm các câu = Tổng điểm</td>" +
+    "<td colspan=\"4\" style=\"padding:10px;font-weight:800;color:#1E3A8A\">Tổng điểm</td>" +
     "<td style=\"padding:10px;font-weight:900;text-align:right;color:#1D4ED8;font-size:1.05rem\">" + sum + " / 10</td></tr></tfoot>" +
-    "</table>" +
-    "<p style=\"padding:8px 10px;margin:0;font-size:.78rem;color:#64748B\">Bảng này lấy đúng điểm lúc hệ thống chấm (sau khi xáo đề). Cộng cột Điểm phải bằng tổng <b>" + (totalScore != null ? totalScore : sum) + "/10</b> trên cùng màn hình.</p>";
+    "</table>";
 }
-</script>
-
-<script>
-
-
-
 
 function buildQuestionLookup() {
   const map = {};
