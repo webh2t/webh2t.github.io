@@ -437,6 +437,7 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec"); } catch (e) {}
 const DEFAULT_DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/KTTX_TIN12.xlsx";
 // cache-bust khi tải
 
@@ -1950,15 +1951,14 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const FALLBACK = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
-  let url = FALLBACK;
+  const WH = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
+  // Luôn dùng webhook mới — bỏ URL cũ trong localStorage
+  let url = WH;
   try {
-    const saved = (localStorage.getItem("webh2t_webhook_url") || "").trim();
-    if (saved && saved.indexOf("script.google.com") >= 0 && saved.indexOf("...") < 0) url = saved;
+    localStorage.setItem("webh2t_webhook_url", WH);
   } catch (e) {}
 
   const ps = record.partScores || {};
-  // BaiLam gọn: Câu:QID:HS:điểm;
   let baiLam = "";
   try {
     if (record.review && record.review.length) {
@@ -1969,52 +1969,110 @@ function pushScoreToCloud(record) {
             return (ln.label || "") + (ln.user === true ? "Đ" : ln.user === false ? "S" : "-");
           }).join("");
         }
-        if (!hs) hs = String(it.user || "-").replace(/\s+/g, " ").slice(0, 20);
+        if (!hs) hs = String(it.user || "-").replace(/\s+/g, " ").slice(0, 16);
         return (it.id || "") + ":" + (it.qid || "") + ":" + hs + ":" + (it.pts != null ? it.pts : "0");
       }).join(";");
     }
   } catch (e1) {}
 
-  const q = new URLSearchParams();
-  q.set("action", "append");
-  q.set("class", String(record.class || "").slice(0, 20));
-  q.set("name", String(record.name || "").slice(0, 60));
-  q.set("score", String(record.score ?? ""));
-  q.set("correct", String(record.correct ?? "0"));
-  q.set("wrong", String(record.wrong ?? "0"));
-  q.set("skip", String(record.skip ?? "0"));
-  q.set("pattern", String(record.pattern || "").slice(0, 450));
-  q.set("time", String(record.time || "").slice(0, 40));
-  q.set("maDe", String(record.maDe || "").slice(0, 40));
-  q.set("examId", String(record.examId || window._currentExamId || "").slice(0, 40));
-  q.set("p1", String(ps.p1 != null ? ps.p1 : ""));
-  q.set("p2", String(ps.p2 != null ? ps.p2 : ""));
-  q.set("p3", String(ps.p3 != null ? ps.p3 : ""));
-  q.set("baiLam", baiLam.slice(0, 1600));
+  function buildQs(extra) {
+    const q = new URLSearchParams();
+    q.set("action", "append");
+    q.set("class", String(record.class || "").slice(0, 20));
+    q.set("name", String(record.name || "").slice(0, 80));
+    q.set("score", String(record.score ?? ""));
+    q.set("correct", String(record.correct ?? "0"));
+    q.set("wrong", String(record.wrong ?? "0"));
+    q.set("skip", String(record.skip ?? "0"));
+    q.set("pattern", String(record.pattern || "").slice(0, 400));
+    q.set("time", String(record.time || "").slice(0, 40));
+    q.set("maDe", String(record.maDe || "").slice(0, 40));
+    q.set("examId", String(record.examId || "").slice(0, 40));
+    q.set("p1", String(ps.p1 != null ? ps.p1 : ""));
+    q.set("p2", String(ps.p2 != null ? ps.p2 : ""));
+    q.set("p3", String(ps.p3 != null ? ps.p3 : ""));
+    if (extra && extra.baiLam) q.set("baiLam", String(extra.baiLam).slice(0, 1500));
+    return q.toString();
+  }
 
-  const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
-  console.log("Cloud GET len:", getUrl.length, record.name, record.score, "baiLam", baiLam.length);
-
-  try {
-    const img = new Image();
-    img.src = getUrl;
-  } catch (e2) {}
-  try {
-    if (navigator.sendBeacon) navigator.sendBeacon(getUrl);
-  } catch (e3) {}
-  try {
-    fetch(getUrl, { method: "GET", mode: "no-cors", keepalive: true }).catch(function () {});
-  } catch (e4) {}
-  try {
-    let f = document.getElementById("_cloud_frame");
-    if (!f) {
-      f = document.createElement("iframe");
-      f.id = "_cloud_frame";
+  function fire(getUrl) {
+    // 1) Image
+    try {
+      const img = new Image();
+      img.src = getUrl;
+    } catch (e) {}
+    // 2) sendBeacon
+    try {
+      if (navigator.sendBeacon) navigator.sendBeacon(getUrl);
+    } catch (e) {}
+    // 3) fetch no-cors
+    try {
+      fetch(getUrl, { method: "GET", mode: "no-cors", keepalive: true, cache: "no-store" }).catch(function () {});
+    } catch (e) {}
+    // 4) iframe
+    try {
+      const f = document.createElement("iframe");
       f.style.cssText = "width:0;height:0;border:0;position:absolute;left:-9999px";
+      f.src = getUrl;
       document.body.appendChild(f);
+      setTimeout(function () { try { f.remove(); } catch (x) {} }, 8000);
+    } catch (e) {}
+    // 5) form GET vào iframe ẩn (không popup)
+    try {
+      let iframe = document.getElementById("_cloud_iframe_form");
+      if (!iframe) {
+        iframe = document.createElement("iframe");
+        iframe.id = "_cloud_iframe_form";
+        iframe.name = "_cloud_iframe_form";
+        iframe.style.cssText = "width:0;height:0;border:0;position:absolute;left:-9999px";
+        document.body.appendChild(iframe);
+      }
+      const form = document.createElement("form");
+      form.method = "GET";
+      form.action = url;
+      form.target = "_cloud_iframe_form";
+      form.style.display = "none";
+      const u = new URL(getUrl);
+      u.searchParams.forEach(function (val, key) {
+        const inp = document.createElement("input");
+        inp.type = "hidden";
+        inp.name = key;
+        inp.value = val;
+        form.appendChild(inp);
+      });
+      document.body.appendChild(form);
+      form.submit();
+      setTimeout(function () { try { form.remove(); } catch (x) {} }, 4000);
+    } catch (e) {}
+  }
+
+  // Bước 1: điểm chính (bắt buộc, URL ngắn)
+  const url1 = url + "?" + buildQs(null);
+  console.log("[Cloud] Gửi điểm:", record.name, record.score, "len", url1.length);
+  fire(url1);
+
+  // Bước 2: chi tiết BaiLam (sau 600ms, có thể trùng dòng KetQua — Script có thể ghi 2 dòng; chấp nhận hoặc lọc sau)
+  if (baiLam) {
+    setTimeout(function () {
+      const url2 = url + "?" + buildQs({ baiLam: baiLam });
+      console.log("[Cloud] Gửi BaiLam len", baiLam.length, "url", url2.length);
+      fire(url2);
+    }, 700);
+  }
+
+  // Hiện trạng thái trên màn hình kết quả
+  try {
+    let tip = document.getElementById("cloud-status");
+    if (!tip) {
+      tip = document.createElement("div");
+      tip.id = "cloud-status";
+      tip.style.cssText = "margin:12px auto;max-width:760px;padding:10px 14px;border-radius:10px;background:#ECFDF5;color:#065F46;font-weight:700;text-align:center;font-size:.9rem";
+      const card = document.querySelector(".result-card") || document.getElementById("screen-result");
+      if (card) card.appendChild(tip);
     }
-    f.src = getUrl;
-  } catch (e5) {}
+    tip.textContent = "✅ Đã gửi điểm lên Google Sheet: " + record.name + " — " + record.score + "/10. Mở Sheet → KetQua (F5) để xem.";
+  } catch (e) {}
+
   return true;
 }
 
