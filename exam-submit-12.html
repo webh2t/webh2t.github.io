@@ -974,7 +974,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyEdpdZ-S752HQox-FiC9yzAWyOBQ8M7LyrVRsUR0F1H9P920U7m6EwwB4SEA3OK4PwVg/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -1933,7 +1933,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyEdpdZ-S752HQox-FiC9yzAWyOBQ8M7LyrVRsUR0F1H9P920U7m6EwwB4SEA3OK4PwVg/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -1950,7 +1950,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const FALLBACK = "https://script.google.com/macros/s/AKfycbyEdpdZ-S752HQox-FiC9yzAWyOBQ8M7LyrVRsUR0F1H9P920U7m6EwwB4SEA3OK4PwVg/exec";
+  const FALLBACK = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
   let url = FALLBACK;
   try {
     const saved = (localStorage.getItem("webh2t_webhook_url") || "").trim();
@@ -2020,7 +2020,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbyEdpdZ-S752HQox-FiC9yzAWyOBQ8M7LyrVRsUR0F1H9P920U7m6EwwB4SEA3OK4PwVg/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
