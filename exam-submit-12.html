@@ -639,117 +639,157 @@ function parseWorkbook(wb) {
   try {
     const lichName = wb.SheetNames.find(n => /lich|schedule|khung/i.test(n));
     if (lichName) {
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[lichName], { header: 1, defval: "" });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[lichName], { header: 1, defval: "", raw: true });
       const slots = [];
-      rows.slice(1).forEach((row, i) => {
-        const lop = String(row[0] || "").trim();
-        if (!lop) return;
-
-        // Excel có thể trả: Date, số serial, "6/10/2026", time serial 0.5, "12:00"
-        function pad(n) { return String(n).padStart(2, "0"); }
-        function excelSerialToDate(n) {
-          // SheetJS/Excel serial (UTC-based epoch 1899-12-30)
-          const utc = Math.round((n - 25569) * 86400 * 1000);
-          return new Date(utc);
+      if (!rows.length) { /* empty */ }
+      else {
+      // Map cột theo tiêu đề (hỗ trợ: STT | Lớp | Ngày | Từ | Đến)
+      const header = (rows[0] || []).map(function (h) { return String(h || "").trim().toLowerCase(); });
+      function colIdx(names) {
+        for (let n = 0; n < names.length; n++) {
+          const i = header.findIndex(function (h) { return h.indexOf(names[n]) >= 0; });
+          if (i >= 0) return i;
         }
-        function timeFromValue(v) {
-          if (v == null || v === "") return null;
-          if (typeof v === "number") {
-            // time-only serial: 0..1 fraction of day
-            if (v >= 0 && v < 1) {
-              const mins = Math.round(v * 24 * 60);
-              return { h: Math.floor(mins / 60) % 24, m: mins % 60 };
-            }
-            // full datetime serial
-            const d = excelSerialToDate(v);
-            return { h: d.getHours(), m: d.getMinutes() };
-          }
-          if (v instanceof Date && !isNaN(v.getTime())) {
-            return { h: v.getHours(), m: v.getMinutes() };
-          }
-          const s = String(v).trim();
-          const tm = s.match(/^(\d{1,2}):(\d{2})/);
-          if (tm) return { h: +tm[1], m: +tm[2] };
-          return null;
-        }
-        function dateFromValue(v) {
-          if (v == null || v === "") return null;
-          if (v instanceof Date && !isNaN(v.getTime())) {
-            return { y: v.getFullYear(), m: v.getMonth() + 1, d: v.getDate(), raw: v };
-          }
-          if (typeof v === "number") {
-            const d = excelSerialToDate(v);
-            // Dùng UTC components vì serial Excel theo UTC
-            return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate(), raw: d };
-          }
-          const s = String(v).trim();
-          // Ưu tiên dd/mm/yyyy (Việt Nam)
-          let m1 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/);
-          if (m1) return { y: +m1[3], m: +m1[2], d: +m1[1], raw: null };
-          let m2 = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/);
-          if (m2) return { y: +m2[1], m: +m2[2], d: +m2[3], raw: null };
-          const d2 = new Date(s);
-          if (!isNaN(d2.getTime())) return { y: d2.getFullYear(), m: d2.getMonth() + 1, d: d2.getDate(), raw: d2 };
-          return null;
-        }
-        function combine(datePart, timePart, defaultH, defaultM) {
-          if (!datePart) return null;
-          const h = timePart ? timePart.h : defaultH;
-          const m = timePart ? timePart.m : defaultM;
-          // Local time VN (trình duyệt máy tại VN)
-          return new Date(datePart.y, datePart.m - 1, datePart.d, h, m, 0);
-        }
-
-        const c1 = row[1], c2 = row[2], c3 = row[3];
-        let fromD = null, toD = null;
-
-        // Dạng 4 cột: Lớp | Ngày | Giờ từ | Giờ đến
-        const tFrom = timeFromValue(c2);
-        const tTo = timeFromValue(c3);
-        const dPart = dateFromValue(c1);
-        if (dPart && (tFrom || tTo || c3 !== undefined && c3 !== "")) {
-          fromD = combine(dPart, tFrom, 0, 0);
-          toD = combine(dPart, tTo, 23, 59);
+        return -1;
+      }
+      let iLop = colIdx(["lớp", "lop", "class"]);
+      let iNgay = colIdx(["ngày", "ngay", "date", "ngày thi"]);
+      let iTu = colIdx(["giờ từ", "gio tu", "từ", "tu", "from", "bắt đầu", "start"]);
+      let iDen = colIdx(["giờ đến", "gio den", "đến", "den", "to", "kết thúc", "end"]);
+      // Không có header rõ → mặc định 4 cột Lớp|Ngày|Từ|Đến hoặc 5 cột STT|Lớp|...
+      if (iLop < 0) {
+        const c0 = String(rows[0][0] || "").trim().toLowerCase();
+        if (c0 === "stt" || c0 === "thứ tự" || c0 === "tt" || c0 === "#") {
+          iLop = 1; iNgay = 2; iTu = 3; iDen = 4;
         } else {
-          // Dạng 3 cột: Lớp | Từ | Đến (datetime đầy đủ hoặc chuỗi)
-          const d1 = dateFromValue(c1);
-          const d2 = dateFromValue(c2);
-          const tf1 = timeFromValue(c1);
-          const tf2 = timeFromValue(c2);
-          // nếu c1 là datetime serial có giờ
-          if (typeof c1 === "number" && c1 >= 1) {
-            const full = excelSerialToDate(c1);
-            fromD = new Date(full.getUTCFullYear(), full.getUTCMonth(), full.getUTCDate(), full.getUTCHours(), full.getUTCMinutes());
-          } else if (d1) {
-            fromD = combine(d1, tf1 || timeFromValue(String(c1).split(/\s+/)[1]), 0, 0);
+          iLop = 0; iNgay = 1; iTu = 2; iDen = 3;
+        }
+      }
+      if (iNgay < 0) iNgay = iLop + 1;
+      if (iTu < 0) iTu = iNgay + 1;
+      if (iDen < 0) iDen = iTu + 1;
+
+      function excelSerialToDate(n) {
+        const utc = Math.round((n - 25569) * 86400 * 1000);
+        return new Date(utc);
+      }
+      function timeFromValue(v) {
+        if (v == null || v === "") return null;
+        if (typeof v === "number") {
+          if (v >= 0 && v < 1) {
+            const mins = Math.round(v * 24 * 60);
+            return { h: Math.floor(mins / 60) % 24, m: mins % 60 };
           }
-          if (typeof c2 === "number" && c2 >= 1) {
-            const full = excelSerialToDate(c2);
-            toD = new Date(full.getUTCFullYear(), full.getUTCMonth(), full.getUTCDate(), full.getUTCHours(), full.getUTCMinutes());
-          } else if (d2) {
-            toD = combine(d2, tf2 || timeFromValue(String(c2).split(/\s+/)[1]), 23, 59);
+          // datetime serial
+          const d = excelSerialToDate(v);
+          return { h: d.getUTCHours(), m: d.getUTCMinutes() };
+        }
+        if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime())) {
+          return { h: v.getHours(), m: v.getMinutes() };
+        }
+        const s = String(v).trim();
+        // 7:00, 07:00, 7:00:00, 23:30
+        const tm = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?/);
+        if (tm) return { h: +tm[1], m: +tm[2] };
+        return null;
+      }
+      function dateFromValue(v) {
+        if (v == null || v === "") return null;
+        if (Object.prototype.toString.call(v) === "[object Date]" && !isNaN(v.getTime())) {
+          return { y: v.getFullYear(), m: v.getMonth() + 1, d: v.getDate() };
+        }
+        if (typeof v === "number") {
+          const d = excelSerialToDate(v);
+          return { y: d.getUTCFullYear(), m: d.getUTCMonth() + 1, d: d.getUTCDate() };
+        }
+        const s = String(v).trim();
+        // ISO yyyy-mm-dd
+        let mIso = s.match(/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+        if (mIso) return { y: +mIso[1], m: +mIso[2], d: +mIso[3] };
+        // dd/mm/yyyy (Việt Nam) — ưu tiên
+        let m1 = s.match(/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})/);
+        if (m1) {
+          const a = +m1[1], b = +m1[2], y = +m1[3];
+          // Nếu a > 12 → chắc chắn a là ngày (dd/mm)
+          // Nếu b > 12 → chắc chắn b là ngày nhưng format mm/dd → đổi
+          if (a > 12) return { y: y, m: b, d: a };
+          if (b > 12) return { y: y, m: a, d: b };
+          // Cả hai ≤ 12: mặc định dd/mm/yyyy (VN)
+          return { y: y, m: b, d: a };
+        }
+        const d2 = new Date(s);
+        if (!isNaN(d2.getTime())) return { y: d2.getFullYear(), m: d2.getMonth() + 1, d: d2.getDate() };
+        return null;
+      }
+      function combine(datePart, timePart, defaultH, defaultM) {
+        if (!datePart) return null;
+        const hh = timePart ? timePart.h : defaultH;
+        const mm = timePart ? timePart.m : defaultM;
+        return new Date(datePart.y, datePart.m - 1, datePart.d, hh, mm, 0);
+      }
+
+      rows.slice(1).forEach(function (row, i) {
+        const lop = String(row[iLop] || "").trim();
+        if (!lop || /^(stt|tt|#|thứ tự)$/i.test(lop)) return;
+        // Bỏ dòng tiêu đề lặp
+        if (/^lớp$/i.test(lop)) return;
+
+        const cNgay = row[iNgay];
+        const cTu = row[iTu];
+        const cDen = row[iDen];
+        const dPart = dateFromValue(cNgay);
+        let tFrom = timeFromValue(cTu);
+        let tTo = timeFromValue(cDen);
+
+        // Nếu cột "Từ"/"Đến" là datetime đầy đủ (có ngày)
+        if (!dPart && cTu != null) {
+          const d1 = dateFromValue(cTu);
+          const d2 = dateFromValue(cDen);
+          if (d1 && d2) {
+            const fromD = combine(d1, timeFromValue(cTu) || { h: 0, m: 0 }, 0, 0);
+            const toD = combine(d2, timeFromValue(cDen) || { h: 23, m: 59 }, 23, 59);
+            if (fromD && toD && !isNaN(fromD.getTime()) && !isNaN(toD.getTime())) {
+              slots.push({ id: "xls_" + i + "_" + Date.now(), lop: lop, from: fromD.toISOString(), to: toD.toISOString() });
+            }
+            return;
           }
         }
 
-        if (!fromD || !toD || isNaN(fromD.getTime()) || isNaN(toD.getTime())) {
-          console.warn("LichThi bỏ dòng", lop, c1, c2, c3);
+        if (!dPart) {
+          console.warn("LichThi bỏ dòng (ngày không đọc được)", lop, cNgay, cTu, cDen);
           return;
+        }
+        const fromD = combine(dPart, tFrom, 0, 0);
+        const toD = combine(dPart, tTo, 23, 59);
+        if (!fromD || !toD || isNaN(fromD.getTime()) || isNaN(toD.getTime())) {
+          console.warn("LichThi bỏ dòng", lop, cNgay, cTu, cDen);
+          return;
+        }
+        // Nếu đến < từ (qua đêm) → cộng 1 ngày cho đến
+        let toFinal = toD;
+        if (toFinal.getTime() <= fromD.getTime()) {
+          toFinal = new Date(toFinal.getTime() + 24 * 3600 * 1000);
         }
         slots.push({
           id: "xls_" + i + "_" + Date.now(),
           lop: lop,
           from: fromD.toISOString(),
-          to: toD.toISOString()
+          to: toFinal.toISOString()
         });
       });
       if (slots.length) {
         saveSchedule(slots);
-        console.log("Đã nạp", slots.length, "suất lịch từ Excel");
+        console.log("Đã nạp", slots.length, "suất lịch từ Excel", slots);
+      } else {
+        console.warn("LichThi: không có suất hợp lệ. Header=", header, "cols", iLop, iNgay, iTu, iDen);
+      }
       }
     }
   } catch (e) { console.warn("LichThi parse", e); }
 
   localStorage.setItem(DATA_KEY, JSON.stringify({ students: studentsByClass, bank: questionBank }));
+
+  
   dataReady = true;
   refreshClassDropdown();
   try { if (typeof renderScheduleList === "function") renderScheduleList(); } catch(e) {}
