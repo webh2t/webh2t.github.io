@@ -595,45 +595,85 @@ function parseWorkbook(wb) {
     });
   }
   questionBank = { part1: [], part2: [], part3: [] };
-  window.examCodes = {}; // maDe -> {part1,part2,part3}
+  window.examCodes = {}; // pool theo mã (nếu có) — buildExam xáo từ toàn bộ ngân hàng
   if (wb.Sheets["CauHoi"]) {
-    XLSX.utils.sheet_to_json(wb.Sheets["CauHoi"], { header: 1 }).forEach((row, idx) => {
-      if (idx === 0 && /phần|phan|loại/i.test(String(row[0] || ""))) return;
-      const part = parseInt(row[0]);
-      const type = String(row[1] || "").trim().toUpperCase();
-      const text = String(row[2] || "").trim();
-      if (!text || ![1, 2, 3].includes(part)) return;
+    const rawRows = XLSX.utils.sheet_to_json(wb.Sheets["CauHoi"], { header: 1, defval: "" });
+    // Header mới: QID | Phần | Loại | Nội dung | A | B | C | D | Đáp án | Điểm tối đa
+    // Header cũ: Phần | Loại | Nội dung | A | B | C | D | Đáp án | Mã đề
+    let fmt = "old";
+    if (rawRows.length) {
+      const h0 = String(rawRows[0][0] || "").trim().toLowerCase();
+      if (/^qid|mã câu|ma cau/i.test(h0) || (String(rawRows[0][1] || "").match(/phần|phan/i) && String(rawRows[0][2] || "").match(/loại|loai/i))) {
+        fmt = "new";
+      }
+    }
+    const letterMap = { A: 0, B: 1, C: 2, D: 3 };
+    function isTrueTF(ch) {
+      return /[đd1t]|đúng|dung|true/i.test(String(ch || "").trim());
+    }
+    rawRows.forEach(function (row, idx) {
+      if (idx === 0 && /qid|phần|phan|loại|loai|nội dung/i.test(String(row[0] || "") + String(row[1] || ""))) return;
+      let qid = "", part, type, text, opts, ansRaw, maxPts;
+      if (fmt === "new") {
+        qid = String(row[0] || "").trim();
+        part = parseInt(row[1], 10);
+        type = String(row[2] || "").trim().toUpperCase();
+        text = String(row[3] || "").trim();
+        opts = [4, 5, 6, 7].map(function (i) { return String(row[i] || "").trim(); });
+        ansRaw = String(row[8] || "").trim();
+        maxPts = parseFloat(String(row[9] || "").replace(",", ".")) || null;
+      } else {
+        part = parseInt(row[0], 10);
+        type = String(row[1] || "").trim().toUpperCase();
+        text = String(row[2] || "").trim();
+        opts = [3, 4, 5, 6].map(function (i) { return String(row[i] || "").trim(); });
+        ansRaw = String(row[7] || "").trim();
+        maxPts = null;
+      }
+      if (!text || [1, 2, 3].indexOf(part) < 0) return;
+      if (!qid) {
+        let h = 0;
+        for (let i = 0; i < text.length; i++) h = ((h << 5) - h + text.charCodeAt(i)) | 0;
+        qid = "Q" + String(Math.abs(h) % 100000).padStart(5, "0");
+      }
       if (type === "MC" && part === 1) {
-        const options = [0, 1, 2, 3].map(i => String(row[3 + i] || "").trim());
-        const map = { A: 0, B: 1, C: 2, D: 3 };
-        const qmc = { type: "mc", text, options, correct: map[String(row[7] || "A").trim().toUpperCase()] ?? 0 };
+        const qmc = {
+          type: "mc", qid: qid, text: text, options: opts,
+          correct: letterMap[ansRaw.charAt(0).toUpperCase()] != null ? letterMap[ansRaw.charAt(0).toUpperCase()] : 0,
+          maxPts: maxPts != null ? maxPts : 0.25
+        };
         questionBank.part1.push(qmc);
-        const maDeMc = String(row[8] || "").trim() || "default";
-        if (!window.examCodes[maDeMc]) window.examCodes[maDeMc] = { part1: [], part2: [], part3: [] };
-        window.examCodes[maDeMc].part1.push(qmc);
       } else if (type === "TF" && part === 2) {
-        const ansStr = String(row[7] || "ĐSSD");
+        // Đáp án dạng ĐĐĐS hoặc Đ/S từng ý
+        const ansClean = ansRaw.replace(/[\s\/|,;]/g, "");
         const qtf = {
-          type: "tf", text,
-          statements: [0, 1, 2, 3].map(i => ({
-            text: String(row[3 + i] || "").trim(),
-            correct: /đ|d|true|1|đúng/i.test(ansStr.charAt(i) || "")
-          }))
+          type: "tf", qid: qid, text: text,
+          statements: [0, 1, 2, 3].map(function (i) {
+            return {
+              text: opts[i] || "",
+              correct: isTrueTF(ansClean.charAt(i) || ansRaw.charAt(i))
+            };
+          }),
+          maxPts: maxPts != null ? maxPts : 1
         };
         questionBank.part2.push(qtf);
-        const maDeTf = String(row[8] || "").trim() || "default";
-        if (!window.examCodes[maDeTf]) window.examCodes[maDeTf] = { part1: [], part2: [], part3: [] };
-        window.examCodes[maDeTf].part2.push(qtf);
       } else if (type === "SA" && part === 3) {
-        const correctStr = String(row[7] || "").trim();
-        const correct = correctStr.split("|").map(s => s.trim()).filter(Boolean);
-        const qsa = { type: "sa", text, correct: correct.length ? correct : [correctStr] };
+        const correct = ansRaw.split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+        const qsa = {
+          type: "sa", qid: qid, text: text,
+          correct: correct.length ? correct : [ansRaw],
+          maxPts: maxPts != null ? maxPts : 0.5
+        };
         questionBank.part3.push(qsa);
-        const maDeSa = String(row[8] || "").trim() || "default";
-        if (!window.examCodes[maDeSa]) window.examCodes[maDeSa] = { part1: [], part2: [], part3: [] };
-        window.examCodes[maDeSa].part3.push(qsa);
       }
     });
+    // Một pool duy nhất → buildExam xáo 24+3+2 mỗi lần
+    window.examCodes["BANK"] = {
+      part1: questionBank.part1.slice(),
+      part2: questionBank.part2.slice(),
+      part3: questionBank.part3.slice()
+    };
+    console.log("CauHoi:", questionBank.part1.length, "MC,", questionBank.part2.length, "TF,", questionBank.part3.length, "SA");
   }
   // Sheet Lịch thi (chia sẻ mọi máy qua file Excel trên GitHub)
   try {
@@ -1835,6 +1875,17 @@ function pushScoreToCloud(record) {
   } catch (e) { url = FALLBACK; }
   if (!url) return false;
 
+  // BaiLam rút gọn: QNo:QID:HS:điểm;...  (để Sheet lưu đối chiếu)
+  let baiLam = "";
+  try {
+    if (record.review && record.review.length) {
+      baiLam = record.review.map(function (it) {
+        const hs = (it.userLetter || (it.user || "").toString().slice(0, 40) || "-");
+        return (it.id || "") + ":" + (it.qid || "") + ":" + hs + ":" + (it.pts != null ? it.pts : "");
+      }).join(";");
+    }
+  } catch (e) {}
+  const ps = record.partScores || {};
   const q = new URLSearchParams({
     action: "append",
     class: String(record.class || ""),
@@ -1843,9 +1894,14 @@ function pushScoreToCloud(record) {
     correct: String(record.correct ?? "0"),
     wrong: String(record.wrong ?? "0"),
     skip: String(record.skip ?? "0"),
-    pattern: String(record.pattern || "").slice(0, 1200),
+    pattern: String(record.pattern || "").slice(0, 1500),
     time: String(record.time || ""),
-    maDe: String(record.maDe || "")
+    maDe: String(record.maDe || ""),
+    examId: String(record.examId || ""),
+    p1: String(ps.p1 != null ? ps.p1 : ""),
+    p2: String(ps.p2 != null ? ps.p2 : ""),
+    p3: String(ps.p3 != null ? ps.p3 : ""),
+    baiLam: String(baiLam).slice(0, 1800)
   });
   const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
 
