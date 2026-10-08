@@ -314,7 +314,7 @@
             <input type="password" id="gh-token" placeholder="ghp_...." style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
           </label>
           <label style="font-size:.8rem;display:block;margin:6px 0 4px">Đường dẫn file trong repo
-            <input type="text" id="gh-path" value="data/Mau_De_KTTX_Tin12_Bai4.xlsx" style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
+            <input type="text" id="gh-path" value="data/KTTX_TIN12.xlsx" style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
           </label>
           <p style="font-size:.75rem;color:#9A3412;margin:4px 0 8px">Repo cố định: <code>webh2t/webh2t.github.io</code>. Token chỉ lưu trên máy GV. Tạo tại GitHub → Settings → Developer settings → PAT (classic) quyền <b>repo</b>.</p>
           <button type="button" class="btn-t" id="btn-gh-save-lich" style="background:#F97316;color:#fff">☁ Lưu lịch lên GitHub</button>
@@ -428,7 +428,7 @@
 const EXAM_MINUTES = 15;
 const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
-const DEFAULT_DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/Mau_De_KTTX_Tin12_Bai4.xlsx";
+const DEFAULT_DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/KTTX_TIN12.xlsx";
 // cache-bust khi tải
 
 let studentsByClass = {};
@@ -2104,12 +2104,12 @@ function loadGhForm() {
   const t = document.getElementById("gh-token");
   const p = document.getElementById("gh-path");
   if (t) t.value = localStorage.getItem(GH_TOKEN_KEY) || "";
-  if (p && !p.value) p.value = localStorage.getItem(GH_PATH_KEY) || "data/Mau_De_KTTX_Tin12_Bai4.xlsx";
+  if (p && !p.value) p.value = localStorage.getItem(GH_PATH_KEY) || "data/KTTX_TIN12.xlsx";
   if (p && localStorage.getItem(GH_PATH_KEY)) p.value = localStorage.getItem(GH_PATH_KEY);
 }
 async function saveScheduleToGitHub() {
   const token = (document.getElementById("gh-token")?.value || "").trim();
-  const filePath = (document.getElementById("gh-path")?.value || "data/Mau_De_KTTX_Tin12_Bai4.xlsx").trim();
+  const filePath = (document.getElementById("gh-path")?.value || "data/KTTX_TIN12.xlsx").trim();
   const status = document.getElementById("gh-save-status");
   if (!token) { alert("Nhập GitHub Personal Access Token (quyền repo)."); return; }
   localStorage.setItem(GH_TOKEN_KEY, token);
