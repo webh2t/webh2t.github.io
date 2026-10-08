@@ -1192,12 +1192,12 @@ Quy định nhập thi đua (Leader)
 <ol class="list-decimal ml-4 space-y-1.5" style="color:#292524;font-size:0.82rem">
 <li><b>Nhiều Leader cùng nhập một lúc cùng thời điểm người dùng nhiều</b> → lượng dữ liệu truyền tải hoặc số lượng yêu cầu truy cập vượt quá khả năng xử lý của hạ tầng mạng Cloud. Leader nên chia nhiều đợt nhập theo từng ngày có điểm thi đua hoặc tập trung nhập vào <b>2 ngày Thứ 6 và Thứ 7</b>. <b>Chậm nhất trước 20:00 Thứ 7 hàng tuần.</b></li>
 <li><b>Chụp hình lưu lại danh mục nhập thi đua hàng tuần</b> (có sai sót gửi hình nhập về GVCN).</li>
-<li>Số bản ghi cho phép nhập online 1 ngày = <b style="color:#b91c1c"><span id="dailyLimitNum">20</span> lần / bản ghi / Leader</b>.</li>
-<li>Vượt giới hạn ngày <b>20 lần / bản ghi</b> → Leader chọn <b>1 trong 3 cách</b> thực hiện sau:
+<li>Nhập <b>offline-first không giới hạn</b> phía trình duyệt (SaaS). Giới hạn gói dịch vụ (nếu có) sẽ do <b>backend/tenant</b> kiểm soát.</li>
+<li>Khi nhiều Leader cùng lúc hoặc mạng chậm → ưu tiên:
 <ol class="ml-3 mt-1 space-y-0.5" style="list-style-type:lower-alpha">
-<li>Chuyển sang ngày tiếp theo sau <b>07:30</b> (giờ VN) rồi nhập tiếp trên website hệ thống bình thường. <i>(hạn chế không nhập Chủ nhật trừ có sai sót)</i></li>
-<li><b>Tải file mẫu Excel</b> → nhập offline trên máy → Lưu <b>Ctrl+S</b> → <b>Update offline</b> file mẫu Excel lên QLNN website hệ thống → <b>Đồng bộ cloud</b>.</li>
-<li>Gửi file mẫu Excel đã nhập qua <b>Zalo cho GVCN</b> upload.</li>
+<li>Chia đợt nhập (Thứ 6–7, trước 20:00).</li>
+<li><b>Tải file mẫu Excel</b> → nhập offline → <b>Update offline</b> → <b>Đồng bộ cloud</b>.</li>
+<li>Gửi file Excel qua <b>Zalo cho GVCN</b> upload.</li>
 </ol>
 </li>
 </ol>
@@ -1486,12 +1486,20 @@ Hướng dẫn nhập nhanh
 <button data-sub="catalogs" class="subtab-btn px-3 py-1.5 rounded-lg text-sm">Danh mục điểm</button>
 <button data-sub="deadline" class="subtab-btn px-3 py-1.5 rounded-lg text-sm">Dữ liệu</button>
 <button data-sub="syncdash" class="subtab-btn px-3 py-1.5 rounded-lg text-sm">☁ Đồng bộ</button>
+<button data-sub="saas" id="subSaasBtn" class="subtab-btn px-3 py-1.5 rounded-lg text-sm hidden">🏢 SaaS Console</button>
 <button data-sub="pending" id="subPendingBtn" class="subtab-btn px-3 py-1.5 rounded-lg text-sm hidden">Chờ duyệt GVCN</button>
 </div>
 <div id="sub-syncdash" class="admin-sub hidden">
 <div class="bg-white rounded-xl p-5 border border-slate-200">
 <h3 class="font-bold mb-3" style="color:#0f172a">☁ Dashboard đồng bộ (Phase 2–3)</h3>
 <div id="syncDashboardPanel"></div>
+</div>
+</div>
+<div id="sub-saas" class="admin-sub hidden">
+<div class="bg-white rounded-xl p-5 border border-slate-200">
+<h3 class="font-bold mb-3" style="color:#0f172a">🏢 SaaS Console · Tenant / Gói / Auth</h3>
+<p class="text-sm text-slate-600 mb-3">Quản trị multi-tenant: trường (tenant) · gói Free/School/District · soft quota · Firebase Auth tùy chọn. Không thay login ID/mật khẩu hiện tại.</p>
+<div id="saasConsolePanel"></div>
 </div>
 </div>
 
@@ -1817,6 +1825,8 @@ function initFirebase() {
       var el = document.getElementById("fbStatus");
       if (el) el.textContent = "Cloud: " + FIREBASE_CONFIG.projectId;
     } catch (e3) {}
+    try { initFirebaseAuthOptional(); } catch (e4) {}
+    try { loadSaaSTenants(); pullSaaSTenants(); } catch (e5) {}
   } catch (e) {
     console.warn("[QLNN] Firebase init lỗi, fallback localStorage:", e);
     firebaseReady = false;
@@ -2299,6 +2309,7 @@ function pullFirebaseThen(cb) {
             if (String(k).toLowerCase() === d) delete accounts[k];
           });
         });
+        try { if (typeof normalizeAllAccountMemberships === "function") normalizeAllAccountMemberships(); } catch (e) {}
         localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts));
         console.info("[QLNN] accounts từ cloud:", Object.keys(accounts).length);
         if (Object.keys(accounts).length > Object.keys(remote).length) {
@@ -2392,11 +2403,50 @@ function resolveSharedClassId(u) {
 }
 
 /**
- * KHÓA ĐỒNG BỘ DUY NHẤT theo tên lớp (11B9 → 11b9)
- * Leader máy / ĐT / GVCN → CÙNG một document Firestore
- * Không phụ thuộc classId lệch giữa thiết bị.
+ * ========== QLNN SaaS MULTI-TENANT FOUNDATION ==========
+ * schemaVersion 3 · tenant → school → class → membership
+ * Cloud path ưu tiên: qlnn_sync/{tenantClassKey}/entries/{uuid}
+ * Legacy path: qlnn_sync/{classNameSlug}/entries (đọc fallback)
  */
-function sharedSyncKey(u) {
+var QLNN_SCHEMA_VERSION = 3;
+var QLNN_DEFAULT_TENANT = "webh2t";
+
+function slugPart(s) {
+  return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+/** tenantId ổn định theo tài khoản / trường */
+function resolveTenantId(u) {
+  u = u || currentUser;
+  if (!u) return QLNN_DEFAULT_TENANT;
+  if (u.tenantId) return slugPart(u.tenantId) || QLNN_DEFAULT_TENANT;
+  if (u.role === "super" || u.role === "admin") return QLNN_DEFAULT_TENANT;
+  // GVCN: tenant = school slug (hoặc id)
+  if (u.role === "gvcn") {
+    return slugPart(u.school || u.id || u.className) || QLNN_DEFAULT_TENANT;
+  }
+  // Leader/viewer: theo parent GVCN
+  if (u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
+    var p = accounts[u.parentId];
+    if (p.tenantId) return slugPart(p.tenantId);
+    return slugPart(p.school || p.id || p.className) || QLNN_DEFAULT_TENANT;
+  }
+  return slugPart(u.school || "") || QLNN_DEFAULT_TENANT;
+}
+function resolveSchoolId(u) {
+  u = u || currentUser;
+  if (!u) return "";
+  if (u.schoolId) return slugPart(u.schoolId);
+  if (u.school) return slugPart(u.school);
+  if (u.parentId && accounts && accounts[u.parentId] && accounts[u.parentId].school) {
+    return slugPart(accounts[u.parentId].school);
+  }
+  return resolveTenantId(u);
+}
+/**
+ * Legacy key (tên lớp) — vẫn dùng để ĐỌC dữ liệu cũ
+ * 11B9 → 11b9
+ */
+function legacyClassSyncKey(u) {
   if (!u) return "";
   var cn = String(u.className || "").trim();
   if (!cn && u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
@@ -2413,12 +2463,46 @@ function sharedSyncKey(u) {
     }
   }
   if (!cn && u.classId) {
-    // lấy phần sau dấu _ cuối (school_11b9 → 11b9)
     var parts = String(u.classId).split("_");
     cn = parts[parts.length - 1] || "";
   }
-  var key = cn.toLowerCase().replace(/[^a-z0-9]/g, "");
-  return key || "";
+  return slugPart(cn);
+}
+/**
+ * Khóa SaaS mới: tenant + class
+ * vd: webh2t__11b9  hoặc  thpthahuytap__11b9
+ */
+function tenantClassKey(u) {
+  u = u || currentUser;
+  var tenant = resolveTenantId(u);
+  var cls = legacyClassSyncKey(u);
+  if (!cls && u && u.classId) cls = slugPart(String(u.classId).split("_").pop());
+  if (!cls) return tenant ? (tenant + "__default") : "";
+  return tenant + "__" + cls;
+}
+/**
+ * sharedSyncKey — GIỮ TÊN HÀM cũ (tương thích toàn bộ code)
+ * Ưu tiên khóa SaaS; callers ghi cloud dùng tenantClassKey qua hàm này.
+ * Đặt window._QLNN_USE_LEGACY_SYNC_KEY = true để ép ghi path cũ (migration).
+ */
+function sharedSyncKey(u) {
+  if (window._QLNN_USE_LEGACY_SYNC_KEY) return legacyClassSyncKey(u);
+  var k = tenantClassKey(u);
+  return k || legacyClassSyncKey(u);
+}
+/** Danh sách key để ĐỌC (SaaS trước, legacy sau) — tránh mất dữ liệu khi nâng cấp */
+function syncKeyCandidates(u) {
+  u = u || currentUser;
+  var keys = [];
+  var saas = tenantClassKey(u);
+  var leg = legacyClassSyncKey(u);
+  if (saas) keys.push(saas);
+  if (leg && keys.indexOf(leg) < 0) keys.push(leg);
+  if (u && u.classId) {
+    var cid = slugPart(u.classId);
+    if (cid && keys.indexOf(cid) < 0) keys.push(cid);
+  }
+  return keys;
 }
 
 function syncEntriesCol() {
@@ -2435,11 +2519,382 @@ function syncMetaRef() {
 /** Giữ tương thích tên cũ */
 function canonicalClassDocId(uOrClassName, school) {
   if (uOrClassName && typeof uOrClassName === "object") return sharedSyncKey(uOrClassName);
-  return String(uOrClassName || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  return slugPart(uOrClassName);
 }
 function classDocIdCandidates(u) {
-  var k = sharedSyncKey(u);
-  return k ? [k] : [];
+  return syncKeyCandidates(u);
+}
+
+/**
+ * Gắn metadata SaaS vào entry (idempotent)
+ */
+function stampEntrySaaSMetadata(entry, u) {
+  u = u || currentUser;
+  if (!entry) return entry;
+  entry.schemaVersion = QLNN_SCHEMA_VERSION;
+  entry.tenantId = entry.tenantId || resolveTenantId(u);
+  entry.schoolId = entry.schoolId || resolveSchoolId(u);
+  entry.classId = entry.classId || (u && u.classId) || "";
+  entry.className = entry.className || (u && u.className) || "";
+  entry.syncKey = entry.syncKey || tenantClassKey(u) || legacyClassSyncKey(u);
+  entry.legacySyncKey = entry.legacySyncKey || legacyClassSyncKey(u);
+  entry.deviceId = entry.deviceId || (typeof _deviceId !== "undefined" ? _deviceId : "");
+  entry.updatedAt = new Date().toISOString();
+  entry.updatedBy = (u && u.id) || entry.updatedBy || "";
+  entry.updatedByRole = (u && u.role) || entry.updatedByRole || "";
+  if (!entry.createdByUid) entry.createdByUid = (u && u.id) || "";
+  if (!entry.createdAt) entry.createdAt = entry.updatedAt;
+  entry.version = (Number(entry.version) || 0) + 1;
+  entry.syncStatus = entry.syncStatus || "pending";
+  return entry;
+}
+
+/**
+ * QLNNDataProvider — ranh giới backend (Firestore hiện tại → API/PG sau)
+ */
+var QLNNDataProvider = {
+  backend: "firestore", // sau: "https-api"
+  entriesPath: function(u) {
+    var key = sharedSyncKey(u || currentUser);
+    return key ? ("qlnn_sync/" + key + "/entries") : "";
+  },
+  readEntryKeys: function(u) {
+    return syncKeyCandidates(u || currentUser);
+  },
+  writeEntry: function(entry) {
+    if (typeof SyncManager !== "undefined") return SyncManager.enqueueCreate(entry);
+    return Promise.resolve(false);
+  },
+  deleteEntry: function(eid, ent) {
+    if (typeof SyncManager !== "undefined") return SyncManager.enqueueDelete(eid, ent);
+    return Promise.resolve(false);
+  },
+  flush: function() {
+    if (typeof SyncManager !== "undefined") return SyncManager.flush();
+    return Promise.resolve({});
+  },
+  stats: function() {
+    var nEnt = (entries || []).length;
+    var nStu = (students || []).length;
+    var nAcc = typeof accounts === "object" ? Object.keys(accounts).length : 0;
+    var plan = typeof getTenantPlan === "function" ? getTenantPlan(resolveTenantId(currentUser)) : null;
+    return {
+      schemaVersion: QLNN_SCHEMA_VERSION,
+      tenantId: resolveTenantId(currentUser),
+      schoolId: resolveSchoolId(currentUser),
+      classId: currentUser && currentUser.classId,
+      syncKey: sharedSyncKey(currentUser),
+      legacyKey: legacyClassSyncKey(currentUser),
+      entries: nEnt,
+      students: nStu,
+      accounts: nAcc,
+      backend: this.backend,
+      planId: plan && plan.id,
+      planName: plan && plan.name
+    };
+  }
+};
+
+/* ============================================================
+   SaaS PHASE B — Plans / Quota / Tenant Console / Optional Auth
+   ============================================================ */
+var QLNN_PLANS = {
+  free: {
+    id: "free",
+    name: "Free (Spark)",
+    maxClasses: 2,
+    maxLeadersPerClass: 8,
+    maxStudentsPerClass: 50,
+    softEntriesPerDay: 40,
+    hardEntriesPerDay: 0, // 0 = không chặn client
+    priceNote: "Miễn phí · Firestore Spark"
+  },
+  school: {
+    id: "school",
+    name: "School",
+    maxClasses: 20,
+    maxLeadersPerClass: 12,
+    maxStudentsPerClass: 60,
+    softEntriesPerDay: 200,
+    hardEntriesPerDay: 0,
+    priceNote: "Theo trường · nhiều lớp"
+  },
+  district: {
+    id: "district",
+    name: "District / Pro",
+    maxClasses: 200,
+    maxLeadersPerClass: 16,
+    maxStudentsPerClass: 80,
+    softEntriesPerDay: 0,
+    hardEntriesPerDay: 0,
+    priceNote: "Nhiều trường · API/PostgreSQL"
+  }
+};
+
+var saasTenants = {}; // tenantId -> { name, schoolName, planId, status, createdAt, ... }
+
+function loadSaaSTenants() {
+  try {
+    saasTenants = JSON.parse(localStorage.getItem("qlnn_saas_tenants_v1") || "{}") || {};
+  } catch (e) { saasTenants = {}; }
+  return saasTenants;
+}
+function saveSaaSTenantsLocal() {
+  try { localStorage.setItem("qlnn_saas_tenants_v1", JSON.stringify(saasTenants || {})); } catch (e) {}
+}
+function saveSaaSTenantsCloud() {
+  saveSaaSTenantsLocal();
+  if (!firebaseReady || !db) return Promise.resolve(false);
+  return db.collection("qlnn_meta").doc("saas_tenants").set({
+    data: saasTenants,
+    updatedAt: new Date().toISOString(),
+    schemaVersion: QLNN_SCHEMA_VERSION
+  }, { merge: true }).then(function() { return true; }).catch(function() { return false; });
+}
+function pullSaaSTenants() {
+  if (!firebaseReady || !db) return Promise.resolve(loadSaaSTenants());
+  return db.collection("qlnn_meta").doc("saas_tenants").get().then(function(snap) {
+    if (snap.exists) {
+      var d = snap.data() || {};
+      if (d.data && typeof d.data === "object") {
+        saasTenants = Object.assign({}, saasTenants, d.data);
+        saveSaaSTenantsLocal();
+      }
+    }
+    return saasTenants;
+  }).catch(function() { return loadSaaSTenants(); });
+}
+
+function ensureTenantRecord(tenantId, extras) {
+  loadSaaSTenants();
+  tenantId = slugPart(tenantId) || QLNN_DEFAULT_TENANT;
+  if (!saasTenants[tenantId]) {
+    saasTenants[tenantId] = {
+      tenantId: tenantId,
+      name: (extras && extras.name) || tenantId,
+      schoolName: (extras && extras.schoolName) || "",
+      planId: (extras && extras.planId) || "free",
+      status: "active",
+      createdAt: new Date().toISOString(),
+      schemaVersion: QLNN_SCHEMA_VERSION
+    };
+    saveSaaSTenantsLocal();
+  } else if (extras) {
+    Object.keys(extras).forEach(function(k) {
+      if (extras[k] != null && extras[k] !== "") saasTenants[tenantId][k] = extras[k];
+    });
+  }
+  return saasTenants[tenantId];
+}
+function getTenantPlan(tenantId) {
+  loadSaaSTenants();
+  var t = saasTenants[tenantId] || ensureTenantRecord(tenantId);
+  var pid = (t && t.planId) || "free";
+  return QLNN_PLANS[pid] || QLNN_PLANS.free;
+}
+
+/** Soft quota check — trả về { ok, reason, plan } không chặn cứng trừ khi hard > 0 */
+function checkPlanQuota(kind, u) {
+  u = u || currentUser;
+  var tenantId = resolveTenantId(u);
+  var plan = getTenantPlan(tenantId);
+  var result = { ok: true, reason: "", plan: plan, tenantId: tenantId };
+  if (!plan) return result;
+
+  if (kind === "entries_day") {
+    var used = typeof countEntriesTodayLocal === "function" ? countEntriesTodayLocal() : 0;
+    if (plan.hardEntriesPerDay > 0 && used >= plan.hardEntriesPerDay) {
+      result.ok = false;
+      result.reason = "Gói " + plan.name + " giới hạn " + plan.hardEntriesPerDay + " bản ghi/ngày (backend).";
+    } else if (plan.softEntriesPerDay > 0 && used >= plan.softEntriesPerDay) {
+      result.ok = true;
+      result.soft = true;
+      result.reason = "Đã vượt soft limit gói " + plan.name + " (" + used + "/" + plan.softEntriesPerDay + "). Nên dùng Excel offline.";
+    }
+  }
+  if (kind === "students") {
+    var n = (students || []).length;
+    if (plan.maxStudentsPerClass > 0 && n > plan.maxStudentsPerClass) {
+      result.ok = true;
+      result.soft = true;
+      result.reason = "Sĩ số " + n + " > trần gói " + plan.maxStudentsPerClass;
+    }
+  }
+  if (kind === "leaders") {
+    var leaders = Object.keys(accounts || {}).filter(function(id) {
+      var a = accounts[id];
+      return a && a.role === "leader" && (
+        (u && u.classId && a.classId === u.classId) ||
+        (u && u.id && a.parentId === u.id)
+      );
+    }).length;
+    if (plan.maxLeadersPerClass > 0 && leaders > plan.maxLeadersPerClass) {
+      result.ok = true;
+      result.soft = true;
+      result.reason = "Leader " + leaders + " > trần gói " + plan.maxLeadersPerClass;
+    }
+  }
+  return result;
+}
+
+/** Bootstrap tenant records từ danh sách GVCN hiện có */
+function bootstrapTenantsFromAccounts() {
+  loadSaaSTenants();
+  var n = 0;
+  Object.keys(accounts || {}).forEach(function(id) {
+    var a = accounts[id];
+    if (!a || String(a.role || "").toLowerCase() !== "gvcn") return;
+    var tid = slugPart(a.tenantId || a.school || id) || QLNN_DEFAULT_TENANT;
+    ensureTenantRecord(tid, {
+      name: a.school || tid,
+      schoolName: a.school || "",
+      planId: a.planId || (saasTenants[tid] && saasTenants[tid].planId) || "free"
+    });
+    a.tenantId = tid;
+    if (!a.schoolId) a.schoolId = slugPart(a.school || tid);
+    n++;
+  });
+  saveSaaSTenantsLocal();
+  return n;
+}
+
+/* ---------- Optional Firebase Auth (không thay login ID/MK hiện tại) ---------- */
+var qlnnAuth = null;
+var qlnnAuthUser = null;
+function initFirebaseAuthOptional() {
+  try {
+    if (typeof firebase === "undefined" || !firebase.apps || !firebase.apps.length) return;
+    if (!firebase.auth) return;
+    qlnnAuth = firebase.auth();
+    qlnnAuth.onAuthStateChanged(function(user) {
+      qlnnAuthUser = user || null;
+      console.info("[QLNN Auth]", user ? ("signed in " + user.uid) : "signed out (dùng login app)");
+    });
+  } catch (e) {
+    console.info("[QLNN] Firebase Auth optional chưa bật:", e && e.message);
+  }
+}
+/** Liên kết anonymous Auth để sau gắn custom claims — không bắt buộc */
+function ensureAnonymousAuth() {
+  if (!qlnnAuth) return Promise.resolve(null);
+  if (qlnnAuth.currentUser) return Promise.resolve(qlnnAuth.currentUser);
+  return qlnnAuth.signInAnonymously().then(function(cred) {
+    return cred.user;
+  }).catch(function(e) {
+    console.warn("[QLNN Auth] anonymous fail (cần bật Anonymous trong Console):", e && e.message);
+    return null;
+  });
+}
+
+function renderSaaSConsole(containerId) {
+  var el = document.getElementById(containerId || "saasConsolePanel");
+  if (!el) return;
+  loadSaaSTenants();
+  bootstrapTenantsFromAccounts();
+  var tids = Object.keys(saasTenants).sort();
+  var gvcnN = Object.keys(accounts || {}).filter(function(k) {
+    return accounts[k] && String(accounts[k].role).toLowerCase() === "gvcn";
+  }).length;
+  var leaderN = Object.keys(accounts || {}).filter(function(k) {
+    return accounts[k] && String(accounts[k].role).toLowerCase() === "leader";
+  }).length;
+  var planOpts = Object.keys(QLNN_PLANS).map(function(pid) {
+    var p = QLNN_PLANS[pid];
+    return '<option value="' + pid + '">' + p.name + " — " + p.priceNote + "</option>";
+  }).join("");
+
+  el.innerHTML =
+    '<div class="space-y-4">' +
+    '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">' +
+    '<div class="rounded-lg border p-3" style="border-color:#e2e8f0"><div class="text-xs text-slate-500">Tenants</div><div class="text-xl font-bold text-sky-700">' + tids.length + '</div></div>' +
+    '<div class="rounded-lg border p-3" style="border-color:#e2e8f0"><div class="text-xs text-slate-500">GVCN</div><div class="text-xl font-bold text-emerald-700">' + gvcnN + '</div></div>' +
+    '<div class="rounded-lg border p-3" style="border-color:#e2e8f0"><div class="text-xs text-slate-500">Leader</div><div class="text-xl font-bold text-violet-700">' + leaderN + '</div></div>' +
+    '<div class="rounded-lg border p-3" style="border-color:#e2e8f0"><div class="text-xs text-slate-500">Auth</div><div class="text-sm font-bold">' + (qlnnAuthUser ? ("UID " + String(qlnnAuthUser.uid).slice(0, 8) + "…") : "App login (chưa Auth)") + '</div></div>' +
+    '</div>' +
+
+    '<div class="rounded-xl border p-4" style="border-color:#cbd5e1;background:#f8fafc">' +
+    '<h4 class="font-bold text-slate-800 mb-2">Thêm / cập nhật Tenant (trường)</h4>' +
+    '<div class="grid md:grid-cols-2 gap-2 text-sm">' +
+    '<input id="saasTenantId" class="border rounded-lg px-3 py-2" placeholder="tenantId (vd thpthahuytap)" style="border-color:#94a3b8">' +
+    '<input id="saasTenantName" class="border rounded-lg px-3 py-2" placeholder="Tên trường" style="border-color:#94a3b8">' +
+    '<select id="saasTenantPlan" class="border rounded-lg px-3 py-2" style="border-color:#94a3b8">' + planOpts + '</select>' +
+    '<select id="saasTenantStatus" class="border rounded-lg px-3 py-2" style="border-color:#94a3b8">' +
+    '<option value="active">active</option><option value="suspended">suspended</option><option value="trial">trial</option></select>' +
+    '</div>' +
+    '<div class="mt-2 flex flex-wrap gap-2">' +
+    '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#0ea5e9" onclick="saasSaveTenant()">Lưu Tenant</button>' +
+    '<button type="button" class="px-3 py-2 rounded-lg text-sm font-semibold border" onclick="bootstrapTenantsFromAccounts();renderSaaSConsole();">↻ Từ danh sách GVCN</button>' +
+    '<button type="button" class="px-3 py-2 rounded-lg text-sm font-semibold border" onclick="saveSaaSTenantsCloud().then(function(ok){alert(ok?\'Đã lưu cloud\':\'Chỉ local\')})">☁ Lưu cloud</button>' +
+    '<button type="button" class="px-3 py-2 rounded-lg text-sm font-semibold border" onclick="pullSaaSTenants().then(function(){renderSaaSConsole()})">⬇ Kéo cloud</button>' +
+    '<button type="button" class="px-3 py-2 rounded-lg text-sm font-semibold border" onclick="ensureAnonymousAuth().then(function(u){alert(u?\'Auth UID: \'+u.uid:\'Chưa bật Anonymous Auth\');renderSaaSConsole()})">🔑 Auth ẩn danh (thử)</button>' +
+    '</div></div>' +
+
+    '<div class="overflow-x-auto"><table class="w-full text-sm" style="border-collapse:collapse">' +
+    '<thead><tr style="background:#e2e8f0;color:#0f172a">' +
+    '<th class="text-left p-2">Tenant</th><th class="text-left p-2">Trường</th><th class="text-left p-2">Gói</th><th class="text-left p-2">Status</th><th class="text-left p-2">GVCN</th><th class="p-2"></th></tr></thead><tbody>' +
+    tids.map(function(tid) {
+      var t = saasTenants[tid];
+      var plan = QLNN_PLANS[t.planId] || QLNN_PLANS.free;
+      var gvcns = Object.keys(accounts || {}).filter(function(id) {
+        var a = accounts[id];
+        if (!a || String(a.role).toLowerCase() !== "gvcn") return false;
+        var at = slugPart(a.tenantId || a.school || id);
+        return at === tid;
+      });
+      return '<tr style="border-bottom:1px solid #e2e8f0">' +
+        '<td class="p-2 font-mono text-sky-700">' + tid + '</td>' +
+        '<td class="p-2">' + (t.schoolName || t.name || "") + '</td>' +
+        '<td class="p-2"><b>' + plan.name + '</b><div class="text-xs text-slate-500">lớp≤' + plan.maxClasses + ' · HS≤' + plan.maxStudentsPerClass + '</div></td>' +
+        '<td class="p-2">' + (t.status || "active") + '</td>' +
+        '<td class="p-2">' + gvcns.length + (gvcns.length ? '<div class="text-xs text-slate-500">' + gvcns.slice(0, 3).join(", ") + (gvcns.length > 3 ? "…" : "") + '</div>' : "") + '</td>' +
+        '<td class="p-2 whitespace-nowrap">' +
+        '<button type="button" class="text-sky-600 text-xs mr-2" onclick="saasEditTenant(\'' + tid + '\')">Sửa</button>' +
+        '<button type="button" class="text-red-600 text-xs" onclick="saasDeleteTenant(\'' + tid + '\')">Xóa</button></td></tr>';
+    }).join("") +
+    '</tbody></table></div>' +
+
+    '<div class="rounded-xl border p-4 text-sm" style="border-color:#fde68a;background:#fffbeb">' +
+    '<b>Gói dịch vụ (client soft · backend thật sau)</b>' +
+    '<ul class="mt-2 space-y-1 text-slate-700">' +
+    Object.keys(QLNN_PLANS).map(function(pid) {
+      var p = QLNN_PLANS[pid];
+      return '<li><b>' + p.name + '</b>: max ' + p.maxClasses + ' lớp · ' + p.maxLeadersPerClass + ' Leader/lớp · ' + p.maxStudentsPerClass + ' HS · soft ' + (p.softEntriesPerDay || "∞") + ' bản ghi/ngày · ' + p.priceNote + '</li>';
+    }).join("") +
+    '</ul>' +
+    '<p class="mt-2 text-xs text-slate-600">Firebase Auth: bật Anonymous (hoặc Email) trong Console → nút «Auth ẩn danh». Custom claims (tenantId/role) gắn qua Admin SDK / Cloud Functions khi có backend.</p>' +
+    '</div></div>';
+}
+
+function saasSaveTenant() {
+  var tid = slugPart((document.getElementById("saasTenantId") || {}).value);
+  var name = ((document.getElementById("saasTenantName") || {}).value || "").trim();
+  var planId = ((document.getElementById("saasTenantPlan") || {}).value || "free");
+  var status = ((document.getElementById("saasTenantStatus") || {}).value || "active");
+  if (!tid) { alert("Nhập tenantId"); return; }
+  ensureTenantRecord(tid, { name: name || tid, schoolName: name, planId: planId, status: status });
+  saveSaaSTenantsCloud().then(function(ok) {
+    alert(ok ? "Đã lưu tenant (local + cloud)" : "Đã lưu local");
+    renderSaaSConsole();
+  });
+}
+function saasEditTenant(tid) {
+  loadSaaSTenants();
+  var t = saasTenants[tid];
+  if (!t) return;
+  var elId = document.getElementById("saasTenantId");
+  var elName = document.getElementById("saasTenantName");
+  var elPlan = document.getElementById("saasTenantPlan");
+  var elSt = document.getElementById("saasTenantStatus");
+  if (elId) elId.value = tid;
+  if (elName) elName.value = t.schoolName || t.name || "";
+  if (elPlan) elPlan.value = t.planId || "free";
+  if (elSt) elSt.value = t.status || "active";
+}
+function saasDeleteTenant(tid) {
+  if (!confirm("Xóa tenant " + tid + " khỏi registry? (Không xóa dữ liệu lớp/entries)")) return;
+  loadSaaSTenants();
+  delete saasTenants[tid];
+  saveSaaSTenantsCloud().then(function() { renderSaaSConsole(); });
 }
 
 function setSyncStatus(msg, ok) {
@@ -2482,10 +2937,11 @@ function subscribeClassData(cid) {
    - KHÔNG ghi toàn bộ entries[] lên class document
    ============================================================ */
 var QLNN_IDB_NAME = "QLNN2026";
-var QLNN_IDB_VER = 2;
+var QLNN_IDB_VER = 3; // SaaS: tenantId / updatedAt indexes + migration
 var _qlnnIdb = null;
 var _syncFlushBusy = false;
 var TOMBSTONE_TTL_MS = 90 * 24 * 60 * 60 * 1000; // giữ tombstone 90 ngày
+var OUTBOX_BACKOFF_MS = [10000, 30000, 60000, 300000, 900000]; // 10s→30s→1m→5m→15m
 var _deviceId = (function() {
   try {
     var d = localStorage.getItem("qlnn_deviceId");
@@ -2510,15 +2966,25 @@ function openQLNNIdb() {
       var req = indexedDB.open(QLNN_IDB_NAME, QLNN_IDB_VER);
       req.onupgradeneeded = function(ev) {
         var dbx = ev.target.result;
+        var oldV = ev.oldVersion || 0;
         if (!dbx.objectStoreNames.contains("entries")) {
           var es = dbx.createObjectStore("entries", { keyPath: "id" });
           try { es.createIndex("classId", "classId", { unique: false }); } catch (e) {}
           try { es.createIndex("syncStatus", "syncStatus", { unique: false }); } catch (e) {}
+          try { es.createIndex("tenantId", "tenantId", { unique: false }); } catch (e) {}
+          try { es.createIndex("updatedAt", "updatedAt", { unique: false }); } catch (e) {}
+        } else if (oldV < 3) {
+          try {
+            var es2 = ev.target.transaction.objectStore("entries");
+            try { es2.createIndex("tenantId", "tenantId", { unique: false }); } catch (e) {}
+            try { es2.createIndex("updatedAt", "updatedAt", { unique: false }); } catch (e) {}
+          } catch (e) {}
         }
         if (!dbx.objectStoreNames.contains("outbox")) {
           var os = dbx.createObjectStore("outbox", { keyPath: "operationId" });
           try { os.createIndex("status", "status", { unique: false }); } catch (e) {}
           try { os.createIndex("entityId", "entityId", { unique: false }); } catch (e) {}
+          try { os.createIndex("nextRetryAt", "nextRetryAt", { unique: false }); } catch (e) {}
         }
         if (!dbx.objectStoreNames.contains("syncMeta")) {
           dbx.createObjectStore("syncMeta", { keyPath: "key" });
@@ -2526,7 +2992,6 @@ function openQLNNIdb() {
         if (!dbx.objectStoreNames.contains("settings")) {
           dbx.createObjectStore("settings", { keyPath: "key" });
         }
-        // Phase 2: cache master data
         if (!dbx.objectStoreNames.contains("students")) {
           dbx.createObjectStore("students", { keyPath: "cacheKey" });
         }
@@ -2538,10 +3003,19 @@ function openQLNNIdb() {
           try { au.createIndex("at", "at", { unique: false }); } catch (e) {}
         }
         if (!dbx.objectStoreNames.contains("tombstones")) {
-          dbx.createObjectStore("tombstones", { keyPath: "entityId" });
+          var ts = dbx.createObjectStore("tombstones", { keyPath: "entityId" });
+          try { ts.createIndex("tenantId", "tenantId", { unique: false }); } catch (e) {}
+          try { ts.createIndex("deletedAt", "deletedAt", { unique: false }); } catch (e) {}
+        }
+        if (!dbx.objectStoreNames.contains("tenants")) {
+          dbx.createObjectStore("tenants", { keyPath: "tenantId" });
         }
       };
-      req.onsuccess = function() { _qlnnIdb = req.result; resolve(_qlnnIdb); };
+      req.onsuccess = function() {
+        _qlnnIdb = req.result;
+        try { migrateLocalStorageEntriesToIdb(); } catch (e) {}
+        resolve(_qlnnIdb);
+      };
       req.onerror = function() { reject(req.error); };
     } catch (err) { reject(err); }
   });
@@ -2576,6 +3050,53 @@ function idbGetAll(store) {
   }).catch(function() { return []; });
 }
 
+/** Migration localStorage → IndexedDB (1 lần / thiết bị) */
+function migrateLocalStorageEntriesToIdb() {
+  try {
+    if (localStorage.getItem("qlnn_idb_migrated_v3") === "1") return;
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("qlnn_entries_") === 0) keys.push(k);
+    }
+    var migrated = 0;
+    keys.forEach(function(k) {
+      try {
+        var arr = JSON.parse(localStorage.getItem(k) || "[]");
+        if (!Array.isArray(arr)) return;
+        arr.forEach(function(e) {
+          if (!e || !e.id) return;
+          if (typeof stampEntrySaaSMetadata === "function") stampEntrySaaSMetadata(e, currentUser);
+          e.syncStatus = e.syncStatus || "local";
+          idbPut("entries", e);
+          migrated++;
+        });
+      } catch (err) {}
+    });
+    localStorage.setItem("qlnn_idb_migrated_v3", "1");
+    console.info("[QLNN SaaS] Migrated", migrated, "entries localStorage → IDB");
+  } catch (e) {
+    console.warn("[QLNN] migration", e);
+  }
+}
+
+/** Tombstone per-entry (IDB) — giảm phụ thuộc deletedEntryIds map */
+function writeEntryTombstone(eid, meta) {
+  if (!eid) return Promise.resolve(false);
+  var row = {
+    entityId: String(eid),
+    deletedAt: Date.now(),
+    deletedAtISO: new Date().toISOString(),
+    tenantId: resolveTenantId(currentUser),
+    classId: (meta && meta.classId) || (currentUser && currentUser.classId) || "",
+    deletedBy: (currentUser && currentUser.id) || "",
+    deletedByRole: (currentUser && currentUser.role) || "",
+    deviceId: typeof _deviceId !== "undefined" ? _deviceId : "",
+    schemaVersion: QLNN_SCHEMA_VERSION
+  };
+  return idbPut("tombstones", row);
+}
+
 function idbDelete(store, key) {
   return openQLNNIdb().then(function(dbx) {
     return new Promise(function(resolve) {
@@ -2592,6 +3113,7 @@ function idbDelete(store, key) {
 /** Lưu entry local (memory đã cập nhật → mirror IDB + localStorage) */
 function saveLocalEntry(entry) {
   if (!entry || !entry.id) return Promise.resolve(false);
+  try { if (typeof stampEntrySaaSMetadata === "function") stampEntrySaaSMetadata(entry, currentUser); } catch (e) {}
   entry.syncStatus = entry.syncStatus || "pending";
   entry.deviceId = entry.deviceId || _deviceId;
   entry.updatedAt = new Date().toISOString();
@@ -2621,7 +3143,7 @@ function enqueueOutbox(op) {
     lastError: "",
     payload: op.payload || null,
     classId: op.classId || (currentUser && currentUser.classId) || "",
-    syncKey: op.syncKey || ""
+    syncKey: op.syncKey || (typeof tenantClassKey === "function" ? tenantClassKey(currentUser) : "") || (typeof sharedSyncKey === "function" ? sharedSyncKey(currentUser) : "")
   };
   return idbPut("outbox", item).then(function() {
     try {
@@ -2636,19 +3158,30 @@ function enqueueOutbox(op) {
 }
 
 function loadOutboxPending() {
+  var now = Date.now();
+  function ready(x) {
+    if (!x) return false;
+    if (x.status === "synced") return false;
+    if (x.status !== "pending" && x.status !== "error" && x.status !== "syncing") return false;
+    // Không retry item còn trong cửa sổ backoff
+    if (x.nextRetryAt) {
+      var t = Date.parse(x.nextRetryAt);
+      if (!isNaN(t) && t > now) return false;
+    }
+    return true;
+  }
   return idbGetAll("outbox").then(function(rows) {
-    var list = (rows || []).filter(function(x) {
-      return x && (x.status === "pending" || x.status === "error" || x.status === "syncing");
-    });
+    var list = (rows || []).filter(ready);
     if (list.length) return list;
-    // fallback localStorage
     try {
       var q = JSON.parse(localStorage.getItem("qlnn_outbox") || "[]");
-      return (q || []).filter(function(x) {
-        return x && (x.status === "pending" || x.status === "error");
-      });
+      return (q || []).filter(ready);
     } catch (e) { return []; }
   });
+}
+function outboxBackoffMs(retryCount) {
+  var i = Math.min(Math.max(0, retryCount || 0), OUTBOX_BACKOFF_MS.length - 1);
+  return OUTBOX_BACKOFF_MS[i];
 }
 
 /**
@@ -2738,7 +3271,8 @@ var SyncManager = {
           }
           item.status = "error";
           item.retryCount = (item.retryCount || 0) + 1;
-          item.nextRetryAt = new Date(Date.now() + Math.min(60000, 2000 * Math.pow(2, item.retryCount))).toISOString();
+          var wait = typeof outboxBackoffMs === "function" ? outboxBackoffMs(item.retryCount - 1) : 30000;
+          item.nextRetryAt = new Date(Date.now() + wait).toISOString();
           return idbPut("outbox", item).then(function() { return runOne(i + 1); });
         }).catch(function() {
           return runOne(i + 1);
@@ -2766,6 +3300,7 @@ var SyncManager = {
     }
     var key = item.syncKey || "";
     try {
+      if (!key && typeof tenantClassKey === "function") key = tenantClassKey(currentUser) || "";
       if (!key && typeof sharedSyncKey === "function") key = sharedSyncKey(currentUser) || "";
     } catch (e) {}
     if (!key && item.classId) key = String(item.classId).toLowerCase().replace(/[^a-z0-9]/g, "");
@@ -2780,15 +3315,33 @@ var SyncManager = {
       var delMap = Object.assign({}, window._deletedEntryIds || {});
       delMap[eid] = Date.now();
       window._deletedEntryIds = delMap;
-      return Promise.all([
+      try { if (typeof writeEntryTombstone === "function") writeEntryTombstone(eid, item.payload || {}); } catch (e) {}
+      var ops = [
         db.collection("qlnn_sync").doc(key).collection("entries").doc(eid).delete().catch(function() {}),
+        db.collection("qlnn_sync").doc(key).collection("tombstones").doc(eid).set({
+          entityId: eid,
+          deletedAt: Date.now(),
+          deletedBy: (currentUser && currentUser.id) || "",
+          tenantId: resolveTenantId(currentUser),
+          schemaVersion: QLNN_SCHEMA_VERSION
+        }, { merge: true }).catch(function() {}),
         db.collection("qlnn_sync").doc(key).set({
           deletedEntryIds: delMap,
           deletedFingerprints: window._deletedEntryFingerprints || {},
           updatedAt: new Date().toISOString(),
-          updatedBy: (currentUser && currentUser.id) || ""
+          updatedBy: (currentUser && currentUser.id) || "",
+          schemaVersion: QLNN_SCHEMA_VERSION,
+          tenantId: resolveTenantId(currentUser)
         }, { merge: true }).catch(function() {})
-      ]).then(function() { return true; }).catch(function(err) {
+      ];
+      // Xóa luôn path legacy nếu khác key SaaS
+      try {
+        var leg = legacyClassSyncKey(currentUser);
+        if (leg && leg !== key) {
+          ops.push(db.collection("qlnn_sync").doc(leg).collection("entries").doc(eid).delete().catch(function() {}));
+        }
+      } catch (e) {}
+      return Promise.all(ops).then(function() { return true; }).catch(function(err) {
         item.lastError = (err && err.message) || String(err);
         if (/quota|resource.exhausted|429/i.test(item.lastError)) {
           if (typeof setSyncStatus === "function") setSyncStatus("⚠ Hết quota Spark — bản ghi vẫn trên máy", false);
@@ -2797,15 +3350,19 @@ var SyncManager = {
       });
     }
 
-    // create / update — idempotent theo entry.id
+    // create / update — idempotent theo entry.id + metadata SaaS
     var payload = Object.assign({}, item.payload || {}, {
       id: eid,
       classId: item.classId || (item.payload && item.payload.classId) || "",
       syncKey: key,
       syncedAt: new Date().toISOString(),
       deviceId: _deviceId,
-      syncStatus: "synced"
+      syncStatus: "synced",
+      schemaVersion: QLNN_SCHEMA_VERSION,
+      tenantId: (item.payload && item.payload.tenantId) || resolveTenantId(currentUser),
+      schoolId: (item.payload && item.payload.schoolId) || resolveSchoolId(currentUser)
     });
+    try { if (typeof stampEntrySaaSMetadata === "function") stampEntrySaaSMetadata(payload, currentUser); } catch (e) {}
     return db.collection("qlnn_sync").doc(key).collection("entries").doc(eid)
       .set(payload, { merge: true })
       .then(function() { return true; })
@@ -2996,36 +3553,48 @@ function renderSyncDashboard(containerId) {
   var offline = !navigator.onLine;
   function paint(st) {
     pendingN = (st && st.pending) || 0;
-    var cid = (currentUser && currentUser.classId) || "—";
-    var key = "";
-    try { key = sharedSyncKey(currentUser) || ""; } catch (e) {}
+    var stats = (typeof QLNNDataProvider !== "undefined" && QLNNDataProvider.stats) ? QLNNDataProvider.stats() : {};
+    var cid = stats.classId || (currentUser && currentUser.classId) || "—";
+    var key = stats.syncKey || "";
+    var leg = stats.legacyKey || "";
+    var tenant = stats.tenantId || "—";
     var auditN = 0;
     try { auditN = (JSON.parse(localStorage.getItem("qlnn_audit") || "[]") || []).length; } catch (e) {}
     el.innerHTML =
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;font-size:13px">' +
       '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
-      '<div style="color:#64748b;font-size:11px">Thiết bị</div>' +
-      '<div style="font-weight:700;color:#0f172a;word-break:break-all">' + String(_deviceId || "").slice(0, 18) + "…</div></div>" +
+      '<div style="color:#64748b;font-size:11px">Tenant / School</div>' +
+      '<div style="font-weight:700;color:#0f172a">' + tenant + " · " + (stats.schoolId || "—") + "</div></div>" +
       '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
-      '<div style="color:#64748b;font-size:11px">Outbox chờ cloud</div>' +
+      '<div style="color:#64748b;font-size:11px">Schema</div>' +
+      '<div style="font-weight:800;font-size:18px;color:#0369a1">v' + (stats.schemaVersion || QLNN_SCHEMA_VERSION) + "</div></div>" +
+      '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
+      '<div style="color:#64748b;font-size:11px">Outbox (chờ cloud)</div>' +
       '<div style="font-weight:800;font-size:20px;color:' + (pendingN ? "#d97706" : "#059669") + '">' + pendingN + "</div></div>" +
       '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
       '<div style="color:#64748b;font-size:11px">Mạng</div>' +
       '<div style="font-weight:700;color:' + (offline ? "#b91c1c" : "#059669") + '">' + (offline ? "Offline" : "Online") + "</div></div>" +
       '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
-      '<div style="color:#64748b;font-size:11px">Lớp / syncKey</div>' +
-      '<div style="font-weight:700;color:#0f172a">' + cid + (key ? " · " + key : "") + "</div></div>" +
+      '<div style="color:#64748b;font-size:11px">syncKey SaaS</div>' +
+      '<div style="font-weight:700;color:#0f172a;word-break:break-all;font-size:11px">' + (key || "—") + "</div></div>" +
+      '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
+      '<div style="color:#64748b;font-size:11px">Legacy key (đọc cũ)</div>' +
+      '<div style="font-weight:700;color:#64748b;font-size:11px">' + (leg || "—") + "</div></div>" +
+      '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
+      '<div style="color:#64748b;font-size:11px">Bản ghi / HS / TK</div>' +
+      '<div style="font-weight:700;color:#0f172a">' + (stats.entries || 0) + " · " + (stats.students || 0) + " · " + (stats.accounts || 0) + "</div></div>" +
       '<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px">' +
       '<div style="color:#64748b;font-size:11px">Audit local</div>' +
-      '<div style="font-weight:700;color:#0f172a">' + auditN + " sự kiện</div></div>" +
+      '<div style="font-weight:700;color:#0f172a">' + auditN + " · backend " + (stats.backend || "firestore") + "</div></div>" +
       "</div>" +
       '<div class="mt-3 flex flex-wrap gap-2">' +
       '<button type="button" class="btn-secondary text-sm" onclick="forcePullClassEntries(function(){renderSyncDashboard();})">☁ Đồng bộ ngay</button>' +
       '<button type="button" class="btn-secondary text-sm" onclick="if(typeof SyncManager!==\'undefined\')SyncManager.flush().then(function(){renderSyncDashboard();alert(\'Đã flush outbox\');})">⬆ Flush Outbox</button>' +
+      '<button type="button" class="btn-secondary text-sm" onclick="migrateLegacyEntriesToSaaS()">⬆ Migration legacy→SaaS</button>' +
       '<button type="button" class="btn-secondary text-sm" onclick="downloadFirestoreRulesTemplate()">📜 Tải Rules mẫu</button>' +
       '<button type="button" class="btn-secondary text-sm" onclick="exportAuditLog()">📋 Xuất Audit</button>' +
       "</div>" +
-      '<p class="text-xs mt-2" style="color:#64748b">Phase 2–3: Offline-first · Delta sync · Tombstone 90 ngày · Audit · Class isolation (client). Firebase Auth đầy đủ = Phase 3 mở rộng.</p>';
+      '<p class="text-xs mt-2" style="color:#64748b">SaaS: multi-tenant · IDB v3 · Outbox 10s→15m · tombstone · DataProvider · đọc SaaS+legacy · Migration không xóa path cũ. Giới hạn gói = backend.</p>';
   }
   if (typeof SyncManager !== "undefined") {
     SyncManager.status().then(paint).catch(function() { paint({ pending: 0 }); });
@@ -3396,22 +3965,27 @@ function deleteOneEntryFromCloud(eid, ent) {
  */
 function loadEntriesSubcollection(cid, cb) {
   if (!firebaseReady || !db) { if (cb) cb(); return; }
-  var key = "";
-  try { key = sharedSyncKey(currentUser); } catch (e) {}
-  if (!key && currentUser && currentUser.className) {
-    key = String(currentUser.className).toLowerCase().replace(/[^a-z0-9]/g, "");
+  // SaaS: đọc nhiều key (tenantClassKey → legacy className → classId)
+  var keys = [];
+  try {
+    if (typeof syncKeyCandidates === "function") keys = syncKeyCandidates(currentUser);
+  } catch (e) {}
+  if (!keys.length) {
+    try { keys = [sharedSyncKey(currentUser)].filter(Boolean); } catch (e) {}
   }
-  if (!key && cid) {
-    key = String(cid).toLowerCase().replace(/[^a-z0-9]/g, "");
+  if (!keys.length && currentUser && currentUser.className) {
+    keys.push(String(currentUser.className).toLowerCase().replace(/[^a-z0-9]/g, ""));
   }
-  if (!key && !cid) {
+  if (!keys.length && cid) {
+    keys.push(String(cid).toLowerCase().replace(/[^a-z0-9]/g, ""));
+  }
+  if (!keys.length && !cid) {
     console.warn("[QLNN] loadEntries: thiếu key");
     if (cb) cb();
     return;
   }
-
-  // Phase 2: ưu tiên 1 nguồn qlnn_sync (tiết kiệm read). Legacy qlnn_classes chỉ khi sync trống.
-  var cursorKey = "qlnn_sync_cursor_" + (key || cid);
+  var primaryKey = keys[0];
+  var cursorKey = "qlnn_sync_cursor_" + (primaryKey || cid);
   var lastCursor = "";
   try { lastCursor = localStorage.getItem(cursorKey) || ""; } catch (e) {}
 
@@ -3419,9 +3993,8 @@ function loadEntriesSubcollection(cid, cb) {
     try { purgeDeletedEntries(); } catch (e) {}
     if (remote.length) entries = mergeEntryLists(entries, remote);
     try { purgeDeletedEntries(); } catch (e) {}
-    var saveCid = cid || (currentUser && currentUser.classId) || key;
+    var saveCid = cid || (currentUser && currentUser.classId) || primaryKey;
     try { if (saveCid) localStorage.setItem("qlnn_entries_" + saveCid, JSON.stringify(entries)); } catch (e) {}
-    // Cập nhật cursor = max syncedAt
     try {
       var maxAt = lastCursor || "";
       remote.forEach(function(e) {
@@ -3430,49 +4003,52 @@ function loadEntriesSubcollection(cid, cb) {
       });
       if (maxAt) localStorage.setItem(cursorKey, maxAt);
     } catch (e) {}
-    console.info("[QLNN] load remote=", remote.length, "total=", (entries || []).length, "key=", key);
+    console.info("[QLNN SaaS] load keys=", keys.join(","), "remote=", remote.length, "total=", (entries || []).length);
     if (typeof setSyncStatus === "function") {
-      setSyncStatus("☁ " + (key || cid) + " · +" + remote.length + " remote · tổng " + (entries || []).length, true);
+      setSyncStatus("☁ " + keys.join(" | ") + " · +" + remote.length + " · tổng " + (entries || []).length, true);
     }
     if (cb) cb();
   }
 
-  var colRef = key ? db.collection("qlnn_sync").doc(key).collection("entries") : null;
-  var metaP = key
-    ? db.collection("qlnn_sync").doc(key).get().then(function(msnap) {
-        if (msnap.exists) {
-          var md = msnap.data() || {};
-          if (md.deletedEntryIds && typeof md.deletedEntryIds === "object") {
-            window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, md.deletedEntryIds);
-          }
+  function fetchKey(k) {
+    var colRef = db.collection("qlnn_sync").doc(k).collection("entries");
+    var metaP = db.collection("qlnn_sync").doc(k).get().then(function(msnap) {
+      if (msnap.exists) {
+        var md = msnap.data() || {};
+        if (md.deletedEntryIds && typeof md.deletedEntryIds === "object") {
+          window._deletedEntryIds = Object.assign({}, window._deletedEntryIds || {}, md.deletedEntryIds);
         }
-      }).catch(function() {})
-    : Promise.resolve();
-
-  metaP.then(function() {
-    if (!colRef) {
-      // fallback legacy
-      return db.collection("qlnn_classes").doc(cid).collection("entries").get();
-    }
-    // Delta: nếu có cursor, chỉ lấy syncedAt > cursor (giảm read khi lớp lớn)
-    if (lastCursor) {
-      return colRef.where("syncedAt", ">", lastCursor).orderBy("syncedAt", "asc").limit(500).get()
-        .catch(function() {
-          // Index thiếu / field cũ → full get 1 lần
-          return colRef.get();
+      }
+    }).catch(function() {});
+    return metaP.then(function() {
+      if (lastCursor && k === primaryKey) {
+        return colRef.where("syncedAt", ">", lastCursor).orderBy("syncedAt", "asc").limit(500).get()
+          .catch(function() { return colRef.limit(800).get(); });
+      }
+      return colRef.limit(800).get();
+    }).then(function(qs) {
+      var remote = [];
+      if (qs && qs.forEach) {
+        qs.forEach(function(doc) {
+          var d = doc.data();
+          if (d) { if (!d.id) d.id = doc.id; remote.push(d); }
         });
-    }
-    return colRef.get();
-  }).then(function(qs) {
-    var remote = [];
-    if (qs && qs.forEach) {
-      qs.forEach(function(doc) {
-        var d = doc.data();
-        if (d) { if (!d.id) d.id = doc.id; remote.push(d); }
+      }
+      return remote;
+    }).catch(function() { return []; });
+  }
+
+  // Fetch tuần tự các key (SaaS trước, legacy sau) rồi merge
+  var chain = Promise.resolve([]);
+  keys.forEach(function(k) {
+    chain = chain.then(function(acc) {
+      return fetchKey(k).then(function(part) {
+        return acc.concat(part || []);
       });
-    }
-    // Lần đầu cursor trống mà remote rỗng → thử legacy 1 lần
-    if (!remote.length && cid && key) {
+    });
+  });
+  chain.then(function(remote) {
+    if (!remote.length && cid) {
       return db.collection("qlnn_classes").doc(cid).collection("entries").get().then(function(qs2) {
         var remote2 = [];
         qs2.forEach(function(doc) {
@@ -3482,7 +4058,7 @@ function loadEntriesSubcollection(cid, cb) {
         applyRemote(remote2);
       }).catch(function() { applyRemote([]); });
     }
-    applyRemote(remote);
+    applyRemote(remote || []);
   }).catch(function(err) {
     console.warn("loadEntriesSubcollection", err);
     if (cb) cb();
@@ -3519,6 +4095,105 @@ function forcePullClassEntries(cb) {
   }).catch(function() {
     if (cb) cb();
   });
+}
+
+/**
+ * Migration: copy entries từ path legacy → path SaaS (tenant__class)
+ * Không xóa legacy — an toàn, có thể chạy nhiều lần (idempotent theo id)
+ */
+function migrateLegacyEntriesToSaaS() {
+  if (!currentUser) { alert("Chưa đăng nhập"); return; }
+  if (!firebaseReady || !db) { alert("Firebase chưa sẵn sàng"); return; }
+  var leg = typeof legacyClassSyncKey === "function" ? legacyClassSyncKey(currentUser) : "";
+  var saas = typeof tenantClassKey === "function" ? tenantClassKey(currentUser) : "";
+  if (!leg || !saas) {
+    alert("Thiếu legacy key hoặc SaaS key (cần className / tenant)");
+    return;
+  }
+  if (leg === saas) {
+    alert("Legacy key trùng SaaS key — không cần migration cho lớp này.\nKey: " + saas);
+    return;
+  }
+  if (!confirm("Migration legacy → SaaS?\n\nTừ: qlnn_sync/" + leg + "/entries\nSang: qlnn_sync/" + saas + "/entries\n\nKhông xóa dữ liệu cũ. Có thể chạy lại an toàn.")) return;
+  if (typeof setSyncStatus === "function") setSyncStatus("⬆ Đang migration " + leg + " → " + saas + "…", null);
+  var src = db.collection("qlnn_sync").doc(leg).collection("entries");
+  var dst = db.collection("qlnn_sync").doc(saas).collection("entries");
+  src.get().then(function(qs) {
+    var docs = [];
+    qs.forEach(function(doc) { docs.push({ id: doc.id, data: doc.data() }); });
+    if (!docs.length) {
+      alert("Không có bản ghi trên path legacy: " + leg);
+      if (typeof setSyncStatus === "function") setSyncStatus("Migration: 0 bản ghi", false);
+      return;
+    }
+    var i = 0, ok = 0, fail = 0;
+    function next() {
+      if (i >= docs.length) {
+        // meta doc
+        return db.collection("qlnn_sync").doc(saas).set({
+          tenantId: resolveTenantId(currentUser),
+          schoolId: resolveSchoolId(currentUser),
+          legacyKey: leg,
+          schemaVersion: QLNN_SCHEMA_VERSION,
+          migratedAt: new Date().toISOString(),
+          migratedBy: currentUser.id || ""
+        }, { merge: true }).then(function() {
+          alert("Migration xong: " + ok + " OK · " + fail + " lỗi · tổng " + docs.length +
+            "\n\nGVCN/Leader bấm Đồng bộ cloud để nạp path SaaS.");
+          if (typeof setSyncStatus === "function") setSyncStatus("✓ Migration " + ok + "/" + docs.length, true);
+          try { forcePullClassEntries(); } catch (e) {}
+        });
+      }
+      var row = docs[i++];
+      var payload = Object.assign({}, row.data || {}, {
+        id: row.id,
+        schemaVersion: QLNN_SCHEMA_VERSION,
+        tenantId: resolveTenantId(currentUser),
+        schoolId: resolveSchoolId(currentUser),
+        syncKey: saas,
+        legacySyncKey: leg,
+        migratedFrom: leg,
+        migratedAt: new Date().toISOString()
+      });
+      return dst.doc(row.id).set(payload, { merge: true }).then(function() {
+        ok++;
+        return next();
+      }).catch(function() {
+        fail++;
+        return next();
+      });
+    }
+    return next();
+  }).catch(function(err) {
+    alert("Lỗi migration: " + (err && err.message ? err.message : err));
+    if (typeof setSyncStatus === "function") setSyncStatus("Migration lỗi", false);
+  });
+}
+
+/** Chuẩn hóa membership trên account (tenant/school/class) — không đổi mật khẩu */
+function ensureAccountMembership(acc, id) {
+  if (!acc || typeof acc !== "object") return acc;
+  if (!acc.tenantId) {
+    if (acc.role === "gvcn") acc.tenantId = slugPart(acc.school || id) || QLNN_DEFAULT_TENANT;
+    else if (acc.parentId && accounts[acc.parentId]) {
+      var p = accounts[acc.parentId];
+      acc.tenantId = p.tenantId || slugPart(p.school || acc.parentId) || QLNN_DEFAULT_TENANT;
+    } else acc.tenantId = QLNN_DEFAULT_TENANT;
+  }
+  if (!acc.schoolId && acc.school) acc.schoolId = slugPart(acc.school);
+  if (!acc.schemaVersion) acc.schemaVersion = QLNN_SCHEMA_VERSION;
+  return acc;
+}
+function normalizeAllAccountMemberships() {
+  if (typeof accounts !== "object") return 0;
+  var n = 0;
+  Object.keys(accounts).forEach(function(id) {
+    if (accounts[id]) {
+      ensureAccountMembership(accounts[id], id);
+      n++;
+    }
+  });
+  return n;
 }
 
 /** Hàng đợi lưu — tránh nhiều Leader / nút Lưu liên tiếp ghi đè lẫn nhau */
@@ -4803,6 +5478,11 @@ function renderApp() {
   }
 
   document.getElementById("subPendingBtn").classList.toggle("hidden", currentUser.role !== "super");
+  try {
+    var saasBtn = document.getElementById("subSaasBtn");
+    if (saasBtn) saasBtn.classList.toggle("hidden", currentUser.role !== "super" && currentUser.role !== "admin");
+  } catch (e) {}
+  try { if (typeof bootstrapTenantsFromAccounts === "function") bootstrapTenantsFromAccounts(); } catch (e) {}
 
   renderOverview();
   renderRecent();
@@ -4962,6 +5642,9 @@ function switchAdminSub(name) {
     if (name === "syncdash") {
       if (typeof renderSyncDashboard === "function") renderSyncDashboard();
     }
+    if (name === "saas") {
+      if (typeof renderSaaSConsole === "function") renderSaaSConsole();
+    }
     if (name === "deadline") {
       fillDeadlinePersons();
       checkDeadlineStatus();
@@ -4984,21 +5667,52 @@ function renderOverview() {
     const gvcns = Object.entries(accounts)
       .filter(([, a]) => a && String(a.role || "").toLowerCase() === "gvcn")
       .map(([id, a]) => Object.assign({}, a, { _id: id }));
+    const leaders = Object.entries(accounts).filter(([, a]) => a && String(a.role || "").toLowerCase() === "leader");
+    const viewers = Object.entries(accounts).filter(([, a]) => a && String(a.role || "").toLowerCase() === "viewer");
+    // Group by tenant/school for SaaS dashboard
+    const bySchool = {};
+    gvcns.forEach(function(a) {
+      const sch = a.school || a.tenantId || "(chưa gắn trường)";
+      if (!bySchool[sch]) bySchool[sch] = [];
+      bySchool[sch].push(a);
+    });
+    const schoolKeys = Object.keys(bySchool).sort(function(x, y) { return String(x).localeCompare(String(y), "vi"); });
+    var saasStats = (typeof QLNNDataProvider !== "undefined" && QLNNDataProvider.stats) ? QLNNDataProvider.stats() : {};
     box.innerHTML = '<div class="bg-slate-800 rounded-xl p-6 border border-slate-700"><div class="flex flex-wrap justify-between gap-3">' +
-      '<div><h2 class="text-2xl font-bold text-yellow-400">Admin WEBH2T</h2>' +
-      '<p class="text-slate-400 text-sm mt-1">websiteh2t@gmail.com · Duyệt / gia hạn GVCN</p></div>' +
+      '<div><h2 class="text-2xl font-bold text-yellow-400">Admin WEBH2T · SaaS</h2>' +
+      '<p class="text-slate-400 text-sm mt-1">websiteh2t@gmail.com · Multi-tenant schema v' + (typeof QLNN_SCHEMA_VERSION !== "undefined" ? QLNN_SCHEMA_VERSION : 3) + '</p></div>' +
       '<div class="flex flex-wrap gap-2"><button type="button" onclick="openSuperSelfEdit()" class="btn-ocean text-sm">Đổi ID / mật khẩu Admin</button>' +
-      '<button type="button" onclick="dedupeGvcnAccounts()" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:#f59e0b;color:#111">Gộp GVCN trùng</button></div></div>' +
-      '<div class="grid grid-cols-2 md:grid-cols-3 gap-3 mt-4 text-sm">' +
+      '<button type="button" onclick="dedupeGvcnAccounts()" class="px-4 py-2 rounded-lg text-sm font-semibold" style="background:#f59e0b;color:#111">Gộp GVCN trùng</button>' +
+      '<button type="button" onclick="migrateLegacyEntriesToSaaS()" class="px-4 py-2 rounded-lg text-sm font-semibold text-white" style="background:#0ea5e9">⬆ Migration legacy→SaaS</button></div></div>' +
+      '<div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4 text-sm">' +
       '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">Chờ duyệt</div><div class="text-xl font-bold text-amber-400">' + pending + '</div></div>' +
-      '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">GVCN đang hoạt động</div><div class="text-xl font-bold text-sky-400">' + gvcns.length + '</div></div>' +
-      '</div><h3 class="font-semibold text-sky-400 mt-6 mb-2">Tài khoản GVCN</h3>' +
+      '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">GVCN</div><div class="text-xl font-bold text-sky-400">' + gvcns.length + '</div></div>' +
+      '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">Leader</div><div class="text-xl font-bold text-emerald-400">' + leaders.length + '</div></div>' +
+      '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">Viewer PH/HS</div><div class="text-xl font-bold text-violet-400">' + viewers.length + '</div></div>' +
+      '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">Trường (tenant)</div><div class="text-xl font-bold text-cyan-400">' + schoolKeys.length + '</div></div>' +
+      '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600"><div class="text-xs text-slate-400">Bản ghi (máy này)</div><div class="text-xl font-bold text-orange-400">' + (saasStats.entries || (entries || []).length) + '</div></div>' +
+      '<div class="bg-slate-900 rounded-lg p-3 border border-slate-600 col-span-2"><div class="text-xs text-slate-400">Backend</div><div class="text-sm font-bold text-slate-200">' + (saasStats.backend || "firestore") + " · IDB v3 · Outbox offline-first</div></div>" +
+      '</div>' +
+      '<h3 class="font-semibold text-cyan-400 mt-6 mb-2">Theo trường / tenant</h3>' +
+      '<div class="space-y-2 mb-4">' +
+      schoolKeys.map(function(sch) {
+        var list = bySchool[sch];
+        return '<div class="bg-slate-900/80 rounded-lg p-3 border border-slate-600 text-sm">' +
+          '<div class="font-bold text-sky-300">' + sch + ' <span class="text-slate-400 font-normal">· ' + list.length + ' lớp/GVCN</span></div>' +
+          '<div class="text-slate-400 text-xs mt-1">' + list.map(function(a) {
+            return (a.name || a._id) + " (" + (a.className || "?") + ")";
+          }).join(" · ") + "</div></div>";
+      }).join("") +
+      '</div>' +
+      '<h3 class="font-semibold text-sky-400 mt-4 mb-2">Tài khoản GVCN</h3>' +
       '<div class="overflow-x-auto"><table class="w-full text-sm"><thead class="text-slate-400 border-b border-slate-600"><tr>' +
-      '<th class="text-left py-2">ID</th><th class="text-left">Họ tên</th><th class="text-left">Trường</th><th class="text-left">Lớp</th><th class="text-left">Hết hạn</th><th></th></tr></thead><tbody>' +
-      gvcns.map(a => { const id = Object.keys(accounts).find(k => accounts[k]===a) || a.email;
-        const kid = Object.entries(accounts).find(([,v]) => v===a)?.[0] || "";
+      '<th class="text-left py-2">ID</th><th class="text-left">Họ tên</th><th class="text-left">Trường</th><th class="text-left">Lớp</th><th class="text-left">syncKey SaaS</th><th class="text-left">Hết hạn</th><th></th></tr></thead><tbody>' +
+      gvcns.map(function(a) {
+        const kid = a._id || Object.entries(accounts).find(function(kv) { return kv[1] === a; })?.[0] || "";
+        var sk = "";
+        try { sk = tenantClassKey(Object.assign({}, a, { id: kid, role: "gvcn" })) || legacyClassSyncKey(a); } catch (e) { sk = "—"; }
         return '<tr class="border-b border-slate-700/50"><td class="py-2 font-mono text-sky-400">' + kid + '</td><td>' + (a.name||"") +
-        '</td><td>' + (a.school||"") + '</td><td>' + (a.className||"") + '</td><td>' + (a.expiresAt?new Date(a.expiresAt).toLocaleDateString("vi-VN"):"—") +
+        '</td><td>' + (a.school||"") + '</td><td>' + (a.className||"") + '</td><td class="font-mono text-xs text-slate-400">' + sk + '</td><td>' + (a.expiresAt?new Date(a.expiresAt).toLocaleDateString("vi-VN"):"—") +
         '</td><td><button type="button" class="text-sky-400 text-xs" onclick="openGvcnEdit(\''+kid+'\')">Sửa</button></td></tr>';
       }).join("") + '</tbody></table></div></div>';
     return;
@@ -5481,17 +6195,17 @@ function saveEntryFromForm(e) {
     alert("Tài khoản chưa gắn lớp (classId). Báo GVCN kiểm tra phân tổ / tài khoản Leader (className, parentId).");
     return;
   }
-  // Giới hạn bản ghi online / ngày (Spark)
+  // SaaS plan soft quota (hard chỉ khi plan.hardEntriesPerDay > 0 — backend thật)
   try {
-    var usedToday = typeof countEntriesTodayLocal === "function" ? countEntriesTodayLocal() : 0;
-    var lim = typeof QLN_DAILY_ENTRY_LIMIT === "number" ? QLN_DAILY_ENTRY_LIMIT : 20;
-    if (usedToday >= lim) {
-      alert("Đã đủ " + lim + " bản ghi online hôm nay.\n\nChọn 1 cách:\n" +
-        "a) Nhập tiếp sau 07:30 sáng mai (giờ VN) — hạn chế Chủ nhật\n" +
-        "b) Tải file mẫu Excel → nhập offline → Ctrl+S → Update offline → Đồng bộ cloud\n" +
-        "c) Gửi file Excel qua Zalo cho GVCN");
-      try { refreshDailyLimitUI(); } catch (e) {}
-      return;
+    if (typeof checkPlanQuota === "function") {
+      var q = checkPlanQuota("entries_day", currentUser);
+      if (!q.ok) {
+        alert(q.reason || "Vượt hạn mức gói dịch vụ");
+        return;
+      }
+      if (q.soft && q.reason) {
+        console.info("[QLNN SaaS]", q.reason);
+      }
     }
   } catch (e) {}
   // Leader: đảm bảo có team + danh sách HS
@@ -7041,8 +7755,8 @@ function downloadEntriesTemplate() {
   XLSX.writeFile(wb2, outName);
 }
 
-/** Giới hạn bản ghi online / ngày (Spark) */
-var QLN_DAILY_ENTRY_LIMIT = 20;
+/** Soft limit gợi ý (0 = tắt chặn). Giới hạn gói SaaS thật phải ở backend/API. */
+var QLN_DAILY_ENTRY_LIMIT = 0;
 function countEntriesTodayLocal() {
   var uid = currentUser && currentUser.id ? String(currentUser.id).toLowerCase() : "";
   var today = new Date();
