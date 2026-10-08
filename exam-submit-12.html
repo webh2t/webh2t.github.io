@@ -1950,27 +1950,26 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  // Không chặn UI — gửi nền, trả về ngay
   const FALLBACK = "https://script.google.com/macros/s/AKfycbzJG28txRaD90fT5oWlpH0YLZvzfKg0Fy8XGnBAOlymk6j6R5XNezUTfLzuSiJFQgbfSQ/exec";
-  let url = "";
+  let url = FALLBACK;
   try {
-    url = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url")
-      || localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim();
-  } catch (e) { url = FALLBACK; }
+    url = (localStorage.getItem("webh2t_webhook_url") || FALLBACK).trim() || FALLBACK;
+  } catch (e) {}
   if (!url) return false;
 
-  // BaiLam rút gọn: QNo:QID:HS:điểm;...  (để Sheet lưu đối chiếu)
+  const ps = record.partScores || {};
+  // BaiLam rút gọn (giới hạn độ dài)
   let baiLam = "";
   try {
     if (record.review && record.review.length) {
       baiLam = record.review.map(function (it) {
-        const hs = (it.userLetter || (it.user || "").toString().slice(0, 40) || "-");
+        const hs = (it.userLetter || "").toString() || String(it.user || "-").slice(0, 12);
         return (it.id || "") + ":" + (it.qid || "") + ":" + hs + ":" + (it.pts != null ? it.pts : "");
       }).join(";");
     }
-  } catch (e) {}
-  const ps = record.partScores || {};
-  const q = new URLSearchParams({
+  } catch (e1) {}
+
+  const payload = {
     action: "append",
     class: String(record.class || ""),
     name: String(record.name || ""),
@@ -1978,76 +1977,62 @@ function pushScoreToCloud(record) {
     correct: String(record.correct ?? "0"),
     wrong: String(record.wrong ?? "0"),
     skip: String(record.skip ?? "0"),
-    pattern: String(record.pattern || "").slice(0, 1500),
+    pattern: String(record.pattern || "").slice(0, 900),
     time: String(record.time || ""),
     maDe: String(record.maDe || ""),
     examId: String(record.examId || ""),
     p1: String(ps.p1 != null ? ps.p1 : ""),
     p2: String(ps.p2 != null ? ps.p2 : ""),
     p3: String(ps.p3 != null ? ps.p3 : ""),
-    baiLam: String(baiLam).slice(0, 1800)
-  });
-  const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
+    baiLam: String(baiLam).slice(0, 1500)
+  };
 
+  // 1) POST (ưu tiên — không bị giới hạn URL)
   try {
+    const body = JSON.stringify(payload);
     if (navigator.sendBeacon) {
-      navigator.sendBeacon(getUrl);
+      const blob = new Blob([body], { type: "text/plain;charset=UTF-8" });
+      navigator.sendBeacon(url, blob);
     }
-  } catch (e1) {}
-  try {
-    const img = new Image();
-    img.src = getUrl;
   } catch (e2) {}
   try {
-    fetch(getUrl, { method: "GET", mode: "no-cors", cache: "no-store", keepalive: true }).catch(function () {});
-  } catch (e3) {}
-  try {
-    const payload = JSON.stringify({
-      action: "append",
-      class: record.class, name: record.name, score: record.score,
-      correct: record.correct, wrong: record.wrong, skip: record.skip,
-      pattern: record.pattern || "", time: record.time || "", maDe: record.maDe || ""
-    });
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=UTF-8" }));
-    }
     fetch(url, {
-      method: "POST", mode: "no-cors", keepalive: true,
+      method: "POST",
+      mode: "no-cors",
       headers: { "Content-Type": "text/plain;charset=UTF-8" },
-      body: payload
+      body: JSON.stringify(payload),
+      keepalive: true
     }).catch(function () {});
+  } catch (e3) {}
+
+  // 2) GET ngắn (dự phòng) — chỉ điểm chính, không baiLam dài
+  try {
+    const q = new URLSearchParams({
+      action: "append",
+      class: payload.class,
+      name: payload.name,
+      score: payload.score,
+      correct: payload.correct,
+      wrong: payload.wrong,
+      skip: payload.skip,
+      pattern: String(record.pattern || "").slice(0, 400),
+      time: payload.time,
+      maDe: payload.maDe,
+      examId: payload.examId,
+      p1: payload.p1,
+      p2: payload.p2,
+      p3: payload.p3
+    });
+    const getUrl = url + (url.indexOf("?") >= 0 ? "&" : "?") + q.toString();
+    if (navigator.sendBeacon) navigator.sendBeacon(getUrl);
+    const img = new Image();
+    img.src = getUrl;
   } catch (e4) {}
+
+  console.log("Đã gửi điểm lên cloud:", payload.name, payload.score);
   return true;
 }
 
-function normalizeScore_(v) {
-  if (v === null || v === undefined || v === "") return 0;
-  if (typeof v === "number" && !isNaN(v) && v >= 0 && v <= 10) return Math.round(v * 100) / 100;
-  const s = String(v).trim();
-  // Google Sheet trả Date ISO khi ô Điểm bị định dạng ngày/giờ
-  if (/^\d{4}-\d{2}-\d{2}T/.test(s) || s.indexOf("1900-") === 0) {
-    // Không tin được — để 0 và GV sửa Sheet; hoặc cố parse display khác
-    return 0;
-  }
-  const n = parseFloat(s.replace(",", "."));
-  if (!isNaN(n) && n >= 0 && n <= 10) return Math.round(n * 100) / 100;
-  if (!isNaN(n) && n > 10 && n < 100) return Math.round(n) / 10; // 11 -> 1.1?
-  return 0;
-}
-function normalizeCloudRow_(rec) {
-  return {
-    name: String(rec.name || "").trim(),
-    class: String(rec.class || rec.lop || "").trim(),
-    score: normalizeScore_(rec.score),
-    correct: parseInt(rec.correct, 10) || 0,
-    wrong: parseInt(rec.wrong, 10) || 0,
-    skip: parseInt(rec.skip, 10) || 0,
-    pattern: String(rec.pattern || ""),
-    time: String(rec.time || ""),
-    maDe: String(rec.maDe || ""),
-    review: rec.review || []
-  };
-}
 
 async function pullScoresFromCloud() {
   const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzJG28txRaD90fT5oWlpH0YLZvzfKg0Fy8XGnBAOlymk6j6R5XNezUTfLzuSiJFQgbfSQ/exec";
