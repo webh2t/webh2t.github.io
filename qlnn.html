@@ -1213,7 +1213,6 @@ Hướng dẫn nhập nhanh
 <li><b>Ưu điểm cùng môn cùng ngày</b> → chọn <b>tổng số lần</b> rồi Lưu.</li>
 <li>Trường hợp khác → đủ <b>Ngày · Môn · Họ tên HS · Nội dung · Số lần</b> → Lưu.</li>
 <li>Sai → <b>Bản ghi gần đây</b> → Sửa / Xóa.</li>
-<li class="mt-1" style="color:#b45309"><b>Cloud lỗi / hết quota?</b> Dùng <b>Tải mẫu Excel → Update offline</b> (miễn phí, không phụ thuộc Spark).</li>
 </ul>
 </div>
 </div>
@@ -3722,16 +3721,17 @@ const MONTH_WEEKS = {
 function weeksForMonth(m) {
   return MONTH_WEEKS[+m] || [];
 }
-/** Thứ tự xếp loại (cao → thấp) */
-var RANK_ORDER = { "XUẤT SẮC": 5, "TỐT": 4, "KHÁ": 3, "ĐẠT": 2, "CHƯA ĐẠT": 1, "KHÔNG ĐẠT": 0 };
+/** Thứ tự xếp loại (cao → thấp) — CHƯA ĐẠT = KHÔNG ĐẠT */
+var RANK_ORDER = { "XUẤT SẮC": 5, "TỐT": 4, "KHÁ": 3, "ĐẠT": 2, "CHƯA ĐẠT": 1, "KHÔNG ĐẠT": 1 };
 function rankObj(label) {
   if (label === "XUẤT SẮC") return { label: "XUẤT SẮC", cls: "rank-xs", stars: "★★★★★" };
   if (label === "TỐT") return { label: "TỐT", cls: "rank-tot", stars: "★★★" };
   if (label === "KHÁ") return { label: "KHÁ", cls: "rank-htt", stars: "★★" };
   if (label === "ĐẠT") return { label: "ĐẠT", cls: "rank-ccg", stars: "★" };
-  if (label === "KHÔNG ĐẠT") return { label: "KHÔNG ĐẠT", cls: "rank-ht", stars: "" };
+  if (label === "KHÔNG ĐẠT") return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "" };
   return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "" };
 }
+/** Xếp loại theo điểm tuần (thống nhất) */
 function rankClassByScore(s) {
   if (s >= 120) return rankObj("XUẤT SẮC");
   if (s >= 110) return rankObj("TỐT");
@@ -3739,15 +3739,44 @@ function rankClassByScore(s) {
   if (s >= 90) return rankObj("ĐẠT");
   return rankObj("CHƯA ĐẠT");
 }
+function minRankLabels(labels) {
+  var minO = 99, best = "CHƯA ĐẠT";
+  (labels || []).forEach(function(lb) {
+    if (!lb) return;
+    var o = RANK_ORDER[lb];
+    if (o == null && lb === "KHÔNG ĐẠT") o = 1;
+    if (o != null && o < minO) { minO = o; best = (lb === "KHÔNG ĐẠT" ? "CHƯA ĐẠT" : lb); }
+  });
+  return rankObj(best);
+}
+/** Phân loại mã/nội dung VP (hỗ trợ cả catalog cũ & mã vận hành lớp) */
+function classifyViolEntry(e) {
+  var code = "";
+  try { if (typeof normalizeViolCode === "function") code = String(normalizeViolCode(e) || "").toLowerCase(); } catch (err) {}
+  if (!code) code = String((e && e.contentCode) || "").toLowerCase().replace(/\s/g, "");
+  var m = code.match(/v\d{1,3}/);
+  if (m) code = m[0];
+  var tx = String((e && e.contentText) || "").toLowerCase();
+  var times = Number(e && e.times) || 1;
+  var cat = "other";
+  // Điện thoại
+  if (code === "v26" || /điện thoại|dien thoai|phone/.test(tx)) cat = "phone";
+  // Vắng không phép
+  else if (code === "v04" || code === "v02" || /vắng không phép|vang khong phep|không phép/.test(tx)) cat = "absent_noperm";
+  // Vắng có phép
+  else if (code === "v01" || /vắng có phép|vang co phep|có phép/.test(tx)) cat = "absent_perm";
+  // Đi học trễ
+  else if (code === "v03" || code === "v06" || /đi học trễ|di hoc tre|đi trễ|di tre/.test(tx)) cat = "late";
+  // Không chuẩn bị bài
+  else if (/chuẩn bị bài|chuan bi bai|không đem sách|không mang sách|không chuẩn bị/.test(tx) || code === "v07") cat = "unprepared";
+  return { code: code, cat: cat, times: times };
+}
 /**
- * Thống kê VP theo kỳ (weekNos = mảng tuần; null = mọi bản ghi)
- * Quy tắc xếp loại bổ sung:
- *  - v26 (điện thoại) → KHÔNG ĐẠT
- *  - tổng lần v01+v03+v04 > 3 → tối đa ĐẠT
- *  - có v04 hoặc tổng lần VP > 2 → tối đa KHÁ
+ * Thống kê VP theo kỳ phục vụ xếp loại tháng
+ * v26, v04, v01, v03, totalVp
  */
 function countViolStatsForRank(sid, weekNos) {
-  var st = { v26: 0, absentGroup: 0, v04: 0, totalVp: 0 };
+  var st = { v26: 0, v04: 0, v01: 0, v03: 0, absentGroup: 0, totalVp: 0, absent_perm: 0, absent_noperm: 0, late: 0, unprepared: 0 };
   var weeks = weekNos && weekNos.length ? weekNos.map(String) : null;
   (entries || []).forEach(function(e) {
     if (!e || String(e.studentId) !== String(sid)) return;
@@ -3765,39 +3794,58 @@ function countViolStatsForRank(sid, weekNos) {
       }
       if (!ok) return;
     }
-    var code = "";
-    if (typeof normalizeViolCode === "function") code = String(normalizeViolCode(e) || "").toLowerCase();
-    if (!code) code = String(e.contentCode || "").toLowerCase().replace(/\s/g, "");
-    var m = code.match(/v\d{1,3}/);
-    if (m) code = m[0];
-    var times = Number(e.times) || 1;
-    st.totalVp += times;
-    if (code === "v26") st.v26 += times;
-    if (code === "v01" || code === "v03" || code === "v04") st.absentGroup += times;
-    if (code === "v04") st.v04 += times;
+    var info = classifyViolEntry(e);
+    st.totalVp += info.times;
+    if (info.cat === "phone" || info.code === "v26") st.v26 += info.times;
+    if (info.cat === "absent_noperm" || info.code === "v04" || info.code === "v02") st.v04 += info.times;
+    if (info.cat === "absent_perm" || info.code === "v01") st.v01 += info.times;
+    if (info.cat === "late" || info.code === "v03" || info.code === "v06") st.v03 += info.times;
+    if (info.cat === "absent_perm") st.absent_perm += info.times;
+    if (info.cat === "absent_noperm") st.absent_noperm += info.times;
+    if (info.cat === "late") st.late += info.times;
+    if (info.cat === "unprepared") st.unprepared += info.times;
+    st.absentGroup = st.v01 + st.v03 + st.v04;
   });
   return st;
 }
+/**
+ * Trần xếp loại tháng do vi phạm (MIN với xếp loại theo điểm)
+ * v26×1→ĐẠT · v26≥2→CHƯA ĐẠT
+ * v04×1→TỐT · v04≥2→KHÁ
+ * v01+v03 <3→TỐT · ≥3→KHÁ
+ * Tổng VP: 0–1 không trần · 2–3 TỐT · 4–5 KHÁ · 6–7 ĐẠT · ≥8 CHƯA ĐẠT
+ */
+function monthViolationCaps(st) {
+  var caps = [];
+  if (st.v26 >= 2) caps.push("CHƯA ĐẠT");
+  else if (st.v26 >= 1) caps.push("ĐẠT");
+  if (st.v04 >= 2) caps.push("KHÁ");
+  else if (st.v04 >= 1) caps.push("TỐT");
+  var v01v03 = (st.v01 || 0) + (st.v03 || 0);
+  if (v01v03 >= 3) caps.push("KHÁ");
+  else if (v01v03 > 0 && v01v03 < 3) caps.push("TỐT");
+  var tv = st.totalVp || 0;
+  if (tv >= 8) caps.push("CHƯA ĐẠT");
+  else if (tv >= 6) caps.push("ĐẠT");
+  else if (tv >= 4) caps.push("KHÁ");
+  else if (tv >= 2) caps.push("TỐT");
+  return caps;
+}
+/** Xếp loại tháng = MIN(điểm TB tuần, các trần VP) */
+function rankMonthFinal(avgScore, sid, weekNos) {
+  var base = rankClassByScore(avgScore);
+  if (sid == null || sid === "") return base;
+  var st = countViolStatsForRank(sid, weekNos);
+  var caps = monthViolationCaps(st);
+  return minRankLabels([base.label].concat(caps));
+}
+/** Tuần: điểm + trần VP tháng áp dụng nhẹ (cùng bộ mã) */
 function applyViolationRankRules(baseRk, sid, weekNos) {
   if (sid == null || sid === "") return baseRk;
   var st = countViolStatsForRank(sid, weekNos);
-  // 1) Điện thoại v26 → KHÔNG ĐẠT
-  if (st.v26 > 0) return rankObj("KHÔNG ĐẠT");
-  var base = baseRk || rankObj("ĐẠT");
-  var bo = RANK_ORDER[base.label] != null ? RANK_ORDER[base.label] : 2;
-  // 2) Tổng lần vắng (v01+v03+v04) > 3 → tối đa ĐẠT
-  if (st.absentGroup > 3) {
-    if (bo > RANK_ORDER["ĐẠT"]) return rankObj("ĐẠT");
-    return base;
-  }
-  // 3) Có v04 hoặc tổng lần VP > 2 → tối đa KHÁ
-  if (st.v04 > 0 || st.totalVp > 2) {
-    if (bo > RANK_ORDER["KHÁ"]) return rankObj("KHÁ");
-    return base;
-  }
-  return base;
+  var caps = monthViolationCaps(st);
+  return minRankLabels([(baseRk && baseRk.label) || "ĐẠT"].concat(caps));
 }
-/** sid, weekNos tùy chọn — áp dụng quy tắc VP khi có */
 function rankClass(s, sid, weekNos) {
   var base = rankClassByScore(s);
   if (arguments.length >= 2 && sid != null && sid !== "") {
@@ -3805,21 +3853,133 @@ function rankClass(s, sid, weekNos) {
   }
   return base;
 }
+/** total = tổng điểm các tuần; n = số tuần → điểm TB rồi xếp loại tháng */
 function rankClassScaled(total, n, sid, weekNos) {
   if (!n || n < 1) n = 1;
-  var base;
-  if (total >= 120 * n) base = rankObj("XUẤT SẮC");
-  else if (total >= 110 * n) base = rankObj("TỐT");
-  else if (total >= 100 * n) base = rankObj("KHÁ");
-  else if (total >= 90 * n) base = rankObj("ĐẠT");
-  else base = rankObj("CHƯA ĐẠT");
-  if (arguments.length >= 3 && sid != null && sid !== "") {
-    return applyViolationRankRules(base, sid, weekNos);
-  }
-  return base;
+  var avg = Number(total) / n;
+  return rankMonthFinal(avg, sid, weekNos);
 }
 function rankClassMonth(total, nWeeks, sid, weekNos) {
   return rankClassScaled(total, nWeeks || 4, sid, weekNos);
+}
+/**
+ * Xếp loại học kỳ từ danh sách nhãn tháng
+ * ≥70% tháng ≥ TỐT, không CHƯA ĐẠT → TỐT
+ * không CHƯA ĐẠT, chủ yếu KHÁ/TỐT → KHÁ
+ * có CHƯA ĐẠT hoặc chưa ổn → ĐẠT
+ * nhiều VP nghiêm trọng → CHƯA ĐẠT
+ */
+function rankSemesterFromMonthLabels(labels) {
+  labels = (labels || []).filter(Boolean);
+  if (!labels.length) return rankObj("KHÁ");
+  var n = labels.length;
+  var nXS = 0, nTot = 0, nKha = 0, nDat = 0, nCd = 0;
+  labels.forEach(function(lb) {
+    if (lb === "XUẤT SẮC") nXS++;
+    else if (lb === "TỐT") nTot++;
+    else if (lb === "KHÁ") nKha++;
+    else if (lb === "ĐẠT") nDat++;
+    else nCd++;
+  });
+  if (nCd >= 2) return rankObj("CHƯA ĐẠT");
+  if (nCd >= 1) return rankObj("ĐẠT");
+  var good = nXS + nTot;
+  if (good / n >= 0.7 && nCd === 0) return rankObj("TỐT");
+  if (nCd === 0 && (nKha + nTot + nXS) >= n * 0.5) return rankObj("KHÁ");
+  if (nDat > 0 || nKha > 0) return rankObj("ĐẠT");
+  return rankObj("KHÁ");
+}
+/**
+ * Cả năm từ HK I + HK II (bảng quy định — không trung bình điểm)
+ */
+function rankYearFromHK(hk1Label, hk2Label) {
+  var a = hk1Label || "ĐẠT";
+  var b = hk2Label || "ĐẠT";
+  if (a === "KHÔNG ĐẠT") a = "CHƯA ĐẠT";
+  if (b === "KHÔNG ĐẠT") b = "CHƯA ĐẠT";
+  // Ưu tiên HKII theo quy tắc mô tả
+  if (b === "TỐT" && (a === "TỐT" || a === "KHÁ" || a === "XUẤT SẮC")) return rankObj("TỐT");
+  if (b === "TỐT" && a === "ĐẠT") return rankObj("KHÁ");
+  if (b === "TỐT" && a === "CHƯA ĐẠT") return rankObj("KHÁ");
+  if (b === "KHÁ" && (a === "TỐT" || a === "XUẤT SẮC")) return rankObj(a === "TỐT" || a === "XUẤT SẮC" ? "TỐT" : "KHÁ");
+  // bảng: Khá+Tốt → Tốt; Tốt+Khá → Khá
+  if (a === "KHÁ" && b === "TỐT") return rankObj("TỐT");
+  if (a === "TỐT" && b === "KHÁ") return rankObj("KHÁ");
+  if (a === "KHÁ" && b === "KHÁ") return rankObj("KHÁ");
+  if (a === "XUẤT SẮC" && b === "XUẤT SẮC") return rankObj("XUẤT SẮC");
+  if ((a === "XUẤT SẮC" || a === "TỐT") && (b === "XUẤT SẮC" || b === "TỐT")) return rankObj("TỐT");
+  if (b === "KHÁ" && a === "ĐẠT") return rankObj("ĐẠT");
+  if (b === "KHÁ" && a === "CHƯA ĐẠT") return rankObj("ĐẠT");
+  if (b === "ĐẠT" && a === "TỐT") return rankObj("KHÁ");
+  if (b === "ĐẠT" && a === "KHÁ") return rankObj("ĐẠT");
+  if (b === "ĐẠT" && a === "ĐẠT") return rankObj("ĐẠT");
+  if (b === "ĐẠT" && a === "CHƯA ĐẠT") return rankObj("ĐẠT");
+  if (b === "ĐẠT" && a === "XUẤT SẮC") return rankObj("KHÁ");
+  if (b === "CHƯA ĐẠT") return rankObj("CHƯA ĐẠT");
+  if (a === "CHƯA ĐẠT" && b === "CHƯA ĐẠT") return rankObj("CHƯA ĐẠT");
+  return rankObj("ĐẠT");
+}
+/** Thống kê chuyên đề tuần: vắng phép / không phép / trễ / không CB bài */
+function weekCategoryStatsHtml(list, poolIds, weekNo) {
+  var weeks = weekNo != null && weekNo !== "" ? [String(weekNo)] : null;
+  var buckets = {
+    absent_perm: { title: "Vắng có phép", total: 0, rows: {} },
+    absent_noperm: { title: "Vắng không phép", total: 0, rows: {} },
+    late: { title: "Đi học trễ", total: 0, rows: {} },
+    unprepared: { title: "Không chuẩn bị bài", total: 0, rows: {} }
+  };
+  (list || entries || []).forEach(function(e) {
+    if (!e || e.type !== "violation") return;
+    if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+    if (poolIds && poolIds.size && !poolIds.has(String(e.studentId))) return;
+    if (weeks) {
+      var ok = weeks.indexOf(String(e.weekNo)) >= 0;
+      if (!ok && e.date && typeof SCHOOL_WEEKS !== "undefined") {
+        var sw = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(weeks[0]); });
+        if (sw) {
+          var d = String(e.date).slice(0, 10);
+          ok = d >= sw.from && d <= sw.to;
+        }
+      }
+      if (!ok) return;
+    }
+    var info = classifyViolEntry(e);
+    if (!buckets[info.cat]) return;
+    var sid = String(e.studentId || "");
+    var name = e.studentName || sid;
+    var team = e.team || "";
+    if (!team && sid) {
+      var st = (students || []).find(function(s) { return String(s.id) === sid; });
+      if (st) team = st.team || "";
+    }
+    if (!buckets[info.cat].rows[sid]) {
+      buckets[info.cat].rows[sid] = { name: name, team: team, times: 0 };
+    }
+    buckets[info.cat].rows[sid].times += info.times;
+    buckets[info.cat].total += info.times;
+  });
+  var h = '<div class="legend-box mt-3 text-xs" style="color:#0f172a;border:1px solid #fda4af;background:#fff1f2">';
+  h += '<b style="color:#9f1239">THỐNG KÊ CHUYÊN ĐỀ TUẦN' + (weekNo ? " " + weekNo : "") + " (cả lớp)</b>";
+  Object.keys(buckets).forEach(function(k) {
+    var b = buckets[k];
+    var ids = Object.keys(b.rows);
+    h += '<div class="mt-2"><b style="color:#be123c">' + b.title + ":</b> <span style=\"color:#0f172a\">" + b.total + " lần · " + ids.length + " HS</span>";
+    if (ids.length) {
+      h += "<ul style=\"margin:4px 0 0 1rem;padding:0;list-style:disc\">";
+      ids.sort(function(a, c) {
+        return (b.rows[c].times - b.rows[a].times) || String(b.rows[a].name).localeCompare(String(b.rows[c].name), "vi");
+      }).forEach(function(id) {
+        var r = b.rows[id];
+        h += "<li>" + r.name + " · Tổ " + (r.team || "?") + " · <b>" + r.times + "</b> lần</li>";
+      });
+      h += "</ul>";
+    } else {
+      h += '<div style="color:#64748b;margin-left:0.5rem">Không có</div>';
+    }
+    h += "</div>";
+  });
+  h += "</div>";
+  return h;
 }
 function formatDate(iso) {
   if (!iso) return "";
@@ -8562,6 +8722,9 @@ function renderWeekMonthBoards(list, agg) {
       rowData.forEach(function(r) { window._weekScoreMap[String(r.s.id)] = r.score; });
       const poolIds = new Set(members.map(s => String(s.id)));
       html += rankStatsHtml(scored);
+      try {
+        html += weekCategoryStatsHtml(list, poolIds, weekNo);
+      } catch (eCat) { console.warn(eCat); }
       html += (_skipViolBoard ? "" : violStatsHtml(list, poolIds, window._weekScoreMap || null));
       html += '</div>';
     });
@@ -8586,10 +8749,10 @@ function renderWeekMonthBoards(list, agg) {
     html += '<div class="text-center mb-2"><div style="font-size:0.7rem;color:#0369a1;font-weight:700">BẢNG TỔNG HỢP THI ĐUA</div>';
     html += '<div style="font-size:1.15rem;font-weight:800;color:#0c4a6e">BÁO CÁO THEO THÁNG ' + month + ' · ' + pool.length + ' học sinh</div>';
     html += '<div style="font-size:0.85rem;color:#9f1239;font-weight:700">Tháng ' + month + (mRange ? ': từ ngày ' + mRange : '') + ' · Tuần ' + weekNos.join(", ") + '</div></div>';
-    html += '<p class="text-center text-xs mb-2" style="color:#111">Tổng điểm tháng = Σ điểm cuối tuần · Xếp loại = thang tuần × ' + nW + '</p>';
+    html += '<p class="text-center text-xs mb-2" style="color:#111">Điểm tháng = <b>Σ điểm tuần / ' + nW + '</b> · Xếp loại = MIN(thang điểm tuần, trần vi phạm tháng)</p>';
     html += '<div class="overflow-x-auto"><table><thead><tr><th>STT</th><th class="name-col">Họ và tên</th><th>Ngày sinh</th><th>GT</th><th>Tổ</th>';
     weekNos.forEach(wn => { html += '<th>T' + wn + '</th>'; });
-    html += '<th>Tổng tháng</th><th>Xếp loại tháng</th></tr></thead><tbody>';
+    html += '<th>Điểm TB tháng</th><th>Xếp loại tháng</th></tr></thead><tbody>';
     const scoredM = [];
     pool.forEach((s, idx) => {
       let sum = 0;
@@ -8607,17 +8770,18 @@ function renderWeekMonthBoards(list, agg) {
         sum += sc;
         return sc;
       });
+      const avg = Math.round((sum / nW) * 10) / 10;
       const rk = rankClassScaled(sum, nW, s.id, weekNos);
-      scoredM.push({ name: s.name, id: s.id, score: sum, rk: rk });
+      scoredM.push({ name: s.name, id: s.id, score: avg, rk: rk });
       html += '<tr><td>' + (idx + 1) + '</td><td class="name-col">' + s.name + '</td><td class="text-xs">' + (s.dob || "—") + '</td><td class="text-xs">' + (s.gender || "—") + '</td><td>' + (s.team || "") + '</td>';
       weekScores.forEach(sc => { html += '<td>' + sc + '</td>'; });
-      html += '<td style="font-weight:800">' + sum + '</td>';
+      html += '<td style="font-weight:800">' + avg + '</td>';
       html += '<td class="' + rk.cls + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td></tr>';
     });
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredM);
     html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
-    html += '<div class="legend-box mt-1 text-xs"><b>Thang tháng (' + nW + ' tuần):</b> ≥' + (120*nW) + ' XS · ≥' + (110*nW) + ' Tốt · ≥' + (100*nW) + ' HTT · ≥' + (90*nW) + ' Cố gắng · &lt;' + (90*nW) + ' Hỗ trợ GĐ</div></div>';
+    html += '<div class="legend-box mt-1 text-xs"><b>Thang điểm tháng (TB tuần):</b> ≥120 XS · 110–119 Tốt · 100–109 Khá · 90–99 Đạt · &lt;90 Chưa đạt · <b>+ trần VP</b> (v26/v04/v01+v03/tổng lần)</div></div>';
     box.innerHTML = html;
     box.classList.remove("hidden");
   } else if (period === "hk1" || period === "hk2") {
@@ -8633,15 +8797,16 @@ function renderWeekMonthBoards(list, agg) {
     html += '<div class="text-center mb-2"><div style="font-size:0.7rem;color:#0369a1;font-weight:700">BẢNG XẾP LOẠI THI ĐUA</div>';
     html += '<div style="font-size:1.1rem;font-weight:800;color:#0c4a6e">' + (period === "hk1" ? "BÁO CÁO HỌC KỲ 1" : "BÁO CÁO HỌC KỲ 2") + ' · ' + pool.length + ' HS</div>';
     html += '<div style="font-size:0.85rem;color:#9f1239;font-weight:700">' + hkLabel + '</div></div>';
-    html += '<p class="text-center text-xs mb-2" style="color:#111">Tổng HK = Σ điểm các tháng · Xếp loại = thang tuần × ' + nW + ' tuần</p>';
+    html += '<p class="text-center text-xs mb-2" style="color:#111">Mỗi tháng = TB điểm tuần + trần VP · <b>Xếp loại HK</b> từ kết quả các tháng (không cộng dồn điểm tuần)</p>';
     html += '<div class="overflow-x-auto"><table><thead><tr><th>STT</th><th class="name-col">Họ và tên</th><th>Ngày sinh</th><th>GT</th><th>Tổ</th>';
     months.forEach(m => { html += '<th>Thg ' + m + '</th>'; });
-    html += '<th>Tổng HK</th><th>Xếp loại HK</th></tr></thead><tbody>';
+    html += '<th>Xếp loại các tháng</th><th>Xếp loại HK</th></tr></thead><tbody>';
     const scoredH = [];
     pool.forEach((s, idx) => {
-      let sumHK = 0;
-      const monthTotals = months.map(m => {
+      const monthLabels = [];
+      const monthAvgs = months.map(m => {
         const wnos = weeksForMonth(m);
+        const nWm = wnos.length || 1;
         let sumM = 0;
         wnos.forEach(wn => {
           const wmeta = SCHOOL_WEEKS.find(x => String(x.w) === String(wn));
@@ -8655,22 +8820,26 @@ function renderWeekMonthBoards(list, agg) {
           });
           sumM += 100 + b + v;
         });
-        sumHK += sumM;
-        return sumM;
+        const avg = sumM / nWm;
+        const rkM = rankClassScaled(sumM, nWm, s.id, wnos);
+        monthLabels.push(rkM.label);
+        return { avg: Math.round(avg * 10) / 10, label: rkM.label, cls: rkM.cls };
       });
-      var allHkWeeks = [];
-      months.forEach(function(m) { allHkWeeks = allHkWeeks.concat(weeksForMonth(m)); });
-      const rk = rankClassScaled(sumHK, nW, s.id, allHkWeeks);
-      scoredH.push({ name: s.name, id: s.id, score: sumHK, rk: rk });
+      const rk = typeof rankSemesterFromMonthLabels === "function"
+        ? rankSemesterFromMonthLabels(monthLabels)
+        : rankClass(100);
+      scoredH.push({ name: s.name, id: s.id, score: monthAvgs.reduce(function(a, x) { return a + x.avg; }, 0) / (monthAvgs.length || 1), rk: rk });
       html += '<tr><td>' + (idx + 1) + '</td><td class="name-col">' + s.name + '</td><td class="text-xs">' + (s.dob || "—") + '</td><td class="text-xs">' + (s.gender || "—") + '</td><td>' + (s.team || "") + '</td>';
-      monthTotals.forEach(sc => { html += '<td>' + sc + '</td>'; });
-      html += '<td style="font-weight:800">' + sumHK + '</td>';
+      monthAvgs.forEach(function(x) {
+        html += '<td class="' + x.cls + '" title="TB ' + x.avg + '">' + x.label + '</td>';
+      });
+      html += '<td style="font-size:11px">' + monthLabels.join(" · ") + '</td>';
       html += '<td class="' + rk.cls + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td></tr>';
     });
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredH);
     html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
-    html += '<div class="legend-box mt-1 text-xs"><b>Thang HK (' + nW + ' tuần):</b> ≥' + (120*nW) + ' XS · ≥' + (110*nW) + ' Tốt · ≥' + (100*nW) + ' HTT · ≥' + (90*nW) + ' Cố gắng · &lt;' + (90*nW) + ' Hỗ trợ GĐ</div></div>';
+    html += '<div class="legend-box mt-1 text-xs"><b>HK:</b> ≥70% tháng ≥ Tốt &amp; không Chưa đạt → <b>Tốt</b> · chủ yếu Khá/Tốt → <b>Khá</b> · có Chưa đạt → <b>Đạt</b> · nhiều Chưa đạt → <b>Chưa đạt</b></div></div>';
     box.innerHTML = html;
     box.classList.remove("hidden");
   } else if (period === "year") {
@@ -8848,6 +9017,11 @@ function renderWeekMonthBoards(list, agg) {
     });
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredYw);
+    try {
+      html += weekCategoryStatsHtml(list.filter(function(e) {
+        return String(e.weekNo) === String(weekNo) || (wmeta && e.date >= wmeta.from && e.date <= wmeta.to);
+      }), new Set(pool.map(function(s) { return String(s.id); })), weekNo);
+    } catch (eCat2) {}
     html += (_skipViolBoard ? "" : violStatsHtml(list.filter(function(e){
       return String(e.weekNo) === String(weekNo) || (wmeta && e.date >= wmeta.from && e.date <= wmeta.to);
     }), new Set(pool.map(function(s){ return String(s.id); })), scoreMapY));
@@ -8887,10 +9061,11 @@ function renderWeekMonthBoards(list, agg) {
         });
         sum += 100 + b + v;
       });
+      var avgM = Math.round((sum / nWm) * 10) / 10;
       var rk = rankClassScaled(sum, nWm, s.id, weekNos);
-      return { s: s, score: sum, udTimes: udTimes, vpTimes: vpTimes, rk: rk };
+      return { s: s, score: avgM, sumRaw: sum, udTimes: udTimes, vpTimes: vpTimes, rk: rk };
     });
-    // Dense rank cả lớp theo điểm tháng (cao → hạng 1)
+    // Dense rank cả lớp theo điểm TB tháng (cao → hạng 1)
     monthRows.sort(function(a, b) { return b.score - a.score; });
     var rank = 0, prev = null;
     monthRows.forEach(function(r) {
@@ -9024,46 +9199,59 @@ function renderWeekMonthBoards(list, agg) {
     html += '</tbody></table></div>';
     window._reportHkExport = { hk: hk, rows: hkRows };
     html += rankStatsHtml(scoredYh);
-    // TỔNG HỢP CẢ NĂM — 10 cột + tải jpg/xlsx
-    var allYearWeeks = SCHOOL_WEEKS.map(function(w) { return String(w.w); });
-    var nYearW = allYearWeeks.length || 1;
-    var yearRows = pool.map(function(s) {
-      var sum = 0, udTimes = 0, vpTimes = 0;
-      allYearWeeks.forEach(function(wn) {
-        var wm = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(wn); });
-        var we = list.filter(function(e) {
-          if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
-          return String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to));
+    // TỔNG HỢP CẢ NĂM = bảng HK I + HK II (không TB điểm)
+    function semesterLabelForStudent(s, monthsArr) {
+      var labels = monthsArr.map(function(m) {
+        var wnos = weeksForMonth(m);
+        var nWmY = wnos.length || 1;
+        var sumM = 0;
+        wnos.forEach(function(wn) {
+          var wm = SCHOOL_WEEKS.find(function(x) { return String(x.w) === String(wn); });
+          var we = list.filter(function(e) {
+            if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
+            return String(e.studentId) === String(s.id) && (String(e.weekNo) === String(wn) || (wm && e.date >= wm.from && e.date <= wm.to));
+          });
+          var b = 0, v = 0;
+          we.forEach(function(e) {
+            if (e.type === "silent") return;
+            var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
+            if (e.type === "bonus" || tt > 0) b += Math.abs(tt);
+            else v += (tt > 0 ? -Math.abs(tt) : tt);
+          });
+          sumM += 100 + b + v;
         });
-        var b = 0, v = 0;
-        we.forEach(function(e) {
-          if (e.type === "silent") return;
-          var tt = e.total != null ? e.total : (e.points || 0) * (e.times || 1);
-          var n = e.times || 1;
-          if (e.type === "bonus" || tt > 0) { b += Math.abs(tt); udTimes += n; }
-          else if (e.type === "violation") { v += (tt > 0 ? -Math.abs(tt) : tt); vpTimes += n; }
-          else if (tt > 0) { b += tt; udTimes += n; }
-          else { v += tt; vpTimes += n; }
-        });
-        sum += 100 + b + v;
+        return rankClassScaled(sumM, nWmY, s.id, wnos).label;
       });
-      var rk = rankClassScaled(sum, nYearW, s.id, allYearWeeks);
-      return { s: s, score: sum, udTimes: udTimes, vpTimes: vpTimes, rk: rk };
+      return rankSemesterFromMonthLabels(labels);
+    }
+    var yearRows = pool.map(function(s) {
+      var rk1 = semesterLabelForStudent(s, [9, 10, 11, 12]);
+      var rk2 = semesterLabelForStudent(s, [1, 2, 3, 4]);
+      var rk = rankYearFromHK(rk1.label, rk2.label);
+      var order = RANK_ORDER[rk.label] != null ? RANK_ORDER[rk.label] : 1;
+      var udTimes = 0, vpTimes = 0;
+      (entries || []).forEach(function(e) {
+        if (String(e.studentId) !== String(s.id)) return;
+        if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+        var n = e.times || 1;
+        if (e.type === "bonus") udTimes += n;
+        else if (e.type === "violation") vpTimes += n;
+      });
+      return { s: s, score: order, udTimes: udTimes, vpTimes: vpTimes, rk: rk, hk1: rk1.label, hk2: rk2.label };
     });
-    yearRows.sort(function(a, b) { return b.score - a.score; });
+    yearRows.sort(function(a, b) {
+      if (b.score !== a.score) return b.score - a.score;
+      return String(a.s.id).localeCompare(String(b.s.id), "vi", { numeric: true });
+    });
     var rankY = 0, prevY = null;
     yearRows.forEach(function(r) {
       if (prevY === null || r.score !== prevY) { rankY += 1; prevY = r.score; }
       r.pos = rankY;
     });
-    yearRows.sort(function(a, b) {
-      if (a.pos !== b.pos) return a.pos - b.pos;
-      return String(a.s.id).localeCompare(String(b.s.id), "vi", { numeric: true });
-    });
     var topColorsY = { 1: "#dc2626", 2: "#ea580c", 3: "#ca8a04" };
     html += '<div class="week-board mb-3 compact-class mt-4">';
     html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
-    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">TỔNG HỢP CẢ NĂM · Lớp ' + (clsName || "") + ' · ' + pool.length + ' HS</b></div>';
+    html += '<div class="text-center flex-1"><b style="color:#0c4a6e">TỔNG HỢP CẢ NĂM · Lớp ' + (clsName || "") + ' · ' + pool.length + ' HS</b><br/><span style="font-size:11px;color:#64748b">Cả năm = bảng HK I × HK II (không trung bình điểm)</span></div>';
     if (!(currentUser && currentUser.role === "viewer")) {
       html += '<div class="no-print flex gap-2">';
       html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadReportBoardJpg(\'reportYearCapture\',\'CaNam\')">📷 Tải ảnh .jpg</button>';
