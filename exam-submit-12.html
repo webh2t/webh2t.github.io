@@ -932,8 +932,8 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
-  var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzJG28txRaD90fT5oWlpH0YLZvzfKg0Fy8XGnBAOlymk6j6R5XNezUTfLzuSiJFQgbfSQ/exec";
+  var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
 })();
@@ -1849,8 +1849,8 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
-  const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzJG28txRaD90fT5oWlpH0YLZvzfKg0Fy8XGnBAOlymk6j6R5XNezUTfLzuSiJFQgbfSQ/exec";
+  const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
   const w = document.getElementById("cloud-webhook");
@@ -1867,7 +1867,7 @@ function saveCloudConfig() {
 }
 function pushScoreToCloud(record) {
   // Không chặn UI — gửi nền, trả về ngay
-  const FALLBACK = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
+  const FALLBACK = "https://script.google.com/macros/s/AKfycbzJG28txRaD90fT5oWlpH0YLZvzfKg0Fy8XGnBAOlymk6j6R5XNezUTfLzuSiJFQgbfSQ/exec";
   let url = "";
   try {
     url = (localStorage.getItem(typeof CLOUD_WEBHOOK_KEY !== "undefined" ? CLOUD_WEBHOOK_KEY : "webh2t_webhook_url")
@@ -1966,8 +1966,8 @@ function normalizeCloudRow_(rec) {
 }
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwn8erhl-GMrwhlx2i4GFU64FjyEn8SLCAKhoG3dh5LcvHIfCUTfqC5Zd7u6zsG1QYt/exec";
-  const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/168UELyBNWTxE-zpTwtrVWnd1AMRD76fUlGqXsgKMZVU/export?format=csv";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzJG28txRaD90fT5oWlpH0YLZvzfKg0Fy8XGnBAOlymk6j6R5XNezUTfLzuSiJFQgbfSQ/exec";
+  const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
 
