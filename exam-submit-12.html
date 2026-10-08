@@ -428,6 +428,8 @@
 const EXAM_MINUTES = 15;
 const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
+const SCHEDULE_KEY = "webh2t_lich_thi_v2";
+const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
 const DEFAULT_DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/KTTX_TIN12.xlsx";
 // cache-bust khi tải
 
@@ -679,7 +681,9 @@ function parseWorkbook(wb) {
   try {
     const lichName = wb.SheetNames.find(n => /lich|schedule|khung/i.test(n));
     if (lichName) {
-      const rows = XLSX.utils.sheet_to_json(wb.Sheets[lichName], { header: 1, defval: "", raw: true });
+      // Xóa lịch cũ trên máy — tránh suất hết hạn trong localStorage chặn lớp
+      try { if (typeof saveSchedule === "function") saveSchedule([]); } catch (e0) {}
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[lichName], { header: 1, defval: "", raw: false });
       const slots = [];
       if (!rows.length) { /* empty */ }
       else {
@@ -771,8 +775,8 @@ function parseWorkbook(wb) {
       rows.slice(1).forEach(function (row, i) {
         const lop = String(row[iLop] || "").trim();
         if (!lop || /^(stt|tt|#|thứ tự)$/i.test(lop)) return;
-        // Bỏ dòng tiêu đề lặp
         if (/^lớp$/i.test(lop)) return;
+        if (/ghi chú|huong dan|hướng dẫn|note|chú thích/i.test(lop)) return;
 
         const cNgay = row[iNgay];
         const cTu = row[iTu];
@@ -820,8 +824,24 @@ function parseWorkbook(wb) {
       if (slots.length) {
         saveSchedule(slots);
         console.log("Đã nạp", slots.length, "suất lịch từ Excel", slots);
+        try {
+          const openNow = slots.filter(function (s) {
+            const now = Date.now();
+            return now >= new Date(s.from).getTime() && now <= new Date(s.to).getTime();
+          }).map(function (s) { return s.lop; });
+          const uniq = openNow.filter(function (v, i, a) { return a.indexOf(v) === i; });
+          window._lichThiStatus = {
+            total: slots.length,
+            open: uniq,
+            detail: slots.map(function (s) {
+              return s.lop + ": " + new Date(s.from).toLocaleString("vi-VN") + " → " + new Date(s.to).toLocaleString("vi-VN");
+            })
+          };
+          console.log("Lớp đang mở:", uniq.join(", ") || "(không)");
+        } catch (e1) {}
       } else {
         console.warn("LichThi: không có suất hợp lệ. Header=", header, "cols", iLop, iNgay, iTu, iDen);
+        window._lichThiStatus = { total: 0, open: [], detail: [] };
       }
       }
     }
@@ -870,9 +890,24 @@ function refreshClassDropdown() {
       lb.style.display = "flex";
       lb.style.background = "#FEF3C7";
       lb.style.color = "#92400E";
-      lb.textContent = "⚠️ Hiện không có lớp nào trong khung giờ được phép làm bài.";
+      let extra = "";
+      try {
+        const st = window._lichThiStatus;
+        if (st && st.detail && st.detail.length) {
+          extra = " Lịch đã nạp " + st.total + " suất (" + st.detail.join(" | ") + "). Máy: " + new Date().toLocaleString("vi-VN") + ".";
+        } else if (schList.length) {
+          extra = " Có " + schList.length + " suất nhưng ngoài giờ. Giờ máy: " + new Date().toLocaleString("vi-VN") + ".";
+        } else {
+          extra = " Chưa nạp được LichThi từ Excel. Ctrl+F5 hoặc xóa dữ liệu trang (localStorage).";
+        }
+      } catch (e) {}
+      lb.textContent = "⚠️ Hiện không có lớp nào trong khung giờ được phép làm bài." + extra;
     } else {
-      lb.style.display = "none";
+      lb.style.display = "flex";
+      lb.style.background = "#D1FAE5";
+      lb.style.color = "#065F46";
+      lb.textContent = "✅ Đang mở: " + Array.from(classSelect.options).filter(function(o){return o.value;}).map(function(o){return o.value;}).join(", ");
+      setTimeout(function () { if (lb && lb.textContent.indexOf("Đang mở") >= 0) lb.style.display = "none"; }, 8000);
     }
   }
 }
@@ -946,6 +981,14 @@ function exitAdminHint() {
     // Nếu ai đó gõ ?admin=1 → hiện form đăng nhập, không vào thẳng
     history.replaceState(null, "", location.pathname);
     document.getElementById("login-overlay").style.display = "flex";
+  }
+  if (/[?&]resetlich=1/i.test(location.search)) {
+    try {
+      localStorage.removeItem(typeof SCHEDULE_KEY !== "undefined" ? SCHEDULE_KEY : "webh2t_lich_thi_v2");
+      localStorage.removeItem("webh2t_lich_thi");
+      localStorage.removeItem("webh2t_lich_thi_v2");
+      console.log("Đã xóa cache lịch (?resetlich=1)");
+    } catch (e) {}
   }
   loadFromUrl(DEFAULT_DATA_URL);
   // Cập nhật danh sách lớp theo khung giờ mỗi 30s
