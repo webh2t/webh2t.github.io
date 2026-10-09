@@ -437,7 +437,7 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbyjPFqpUFlrMyY97OgpR4pJs5e4T7kAW5svlk7GgvrkGx1tmfHICGRpuzPJ1ufhie3qtg/exec"); } catch (e) {}
 const DEFAULT_DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/KTTX_TIN12.xlsx";
 // cache-bust khi tải
 
@@ -789,6 +789,26 @@ function parseWorkbook(wb) {
         const cNgay = row[iNgay];
         const cTu = row[iTu];
         const cDen = row[iDen];
+        // Cột Ghi chú hoặc Ngày: OPEN = luôn mở | LOCK = khóa
+        const ngayStr = String(cNgay == null ? "" : cNgay).trim();
+        const noteStr = String(row[4] != null ? row[4] : (row[iDen + 1] != null ? row[iDen + 1] : "")).trim();
+        const flag = (ngayStr + " " + noteStr).toUpperCase();
+        if (/\bLOCK\b|\bKHÓA\b|\bKHOA\b|\bĐÓNG\b|\bDONG\b/.test(flag)) {
+          // Không thêm suất → lớp bị ẩn
+          console.log("LichThi LOCK", lop);
+          return;
+        }
+        if (/\bOPEN\b|\bMỞ\b|\bMO\b|\bALWAYS\b|\bLUÔN\b|\bLUON\b|\*/.test(flag) ||
+            /^(open|mở|mo|\*|always|luôn|luon)$/i.test(ngayStr)) {
+          slots.push({
+            id: "xls_open_" + i + "_" + lop,
+            lop: lop,
+            from: new Date(2020, 0, 1, 0, 0, 0).toISOString(),
+            to: new Date(2099, 11, 31, 23, 59, 59).toISOString()
+          });
+          console.log("LichThi OPEN", lop);
+          return;
+        }
         const dPart = dateFromValue(cNgay);
         let tFrom = timeFromValue(cTu);
         let tTo = timeFromValue(cDen);
@@ -975,7 +995,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyjPFqpUFlrMyY97OgpR4pJs5e4T7kAW5svlk7GgvrkGx1tmfHICGRpuzPJ1ufhie3qtg/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -1911,6 +1931,11 @@ function getScheduleRowsForExcel() {
       rows.push([s.lop, s.from, "", s.to]);
       return;
     }
+    // Suất "OPEN" (2020→2099) xuất chữ OPEN
+    if (a.getFullYear() <= 2020 && b.getFullYear() >= 2090) {
+      rows.push([s.lop, "OPEN", "", ""]);
+      return;
+    }
     const ngay = pad(a.getDate()) + "/" + pad(a.getMonth() + 1) + "/" + a.getFullYear();
     const gf = pad(a.getHours()) + ":" + pad(a.getMinutes());
     const gt = pad(b.getHours()) + ":" + pad(b.getMinutes());
@@ -1934,7 +1959,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyjPFqpUFlrMyY97OgpR4pJs5e4T7kAW5svlk7GgvrkGx1tmfHICGRpuzPJ1ufhie3qtg/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -1951,8 +1976,13 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbyjPFqpUFlrMyY97OgpR4pJs5e4T7kAW5svlk7GgvrkGx1tmfHICGRpuzPJ1ufhie3qtg/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
+  if (window._cloudSentExamId === record.examId && record.examId) {
+    console.log("[Cloud] skip duplicate", record.examId);
+    return false;
+  }
+  window._cloudSentExamId = record.examId || ("t" + Date.now());
 
   const ps = record.partScores || {};
   let baiLam = "";
@@ -1971,13 +2001,6 @@ function pushScoreToCloud(record) {
     }
   } catch (e1) {}
 
-  // Chỉ GỬI 1 LẦN — tránh trùng dòng trên Sheet
-  if (window._cloudSentExamId === record.examId) {
-    console.log("[Cloud] Bỏ qua gửi trùng ExamID", record.examId);
-    return false;
-  }
-  window._cloudSentExamId = record.examId;
-
   const q = new URLSearchParams();
   q.set("action", "append");
   q.set("class", String(record.class || "").slice(0, 20));
@@ -1994,11 +2017,10 @@ function pushScoreToCloud(record) {
   q.set("p2", String(ps.p2 != null ? ps.p2 : ""));
   q.set("p3", String(ps.p3 != null ? ps.p3 : ""));
   q.set("baiLam", baiLam.slice(0, 1600));
-
   const getUrl = WH + "?" + q.toString();
-  console.log("[Cloud] 1 lần:", record.name, record.score, "len", getUrl.length);
+  console.log("[Cloud] once", record.name, record.score, getUrl.length);
 
-  // Một iframe + một Image (Script upsert nên an toàn nếu cả hai tới)
+  // CHỈ 1 iframe — Script có Lock + upsert
   try {
     let f = document.getElementById("_cloud_once");
     if (!f) {
@@ -2008,29 +2030,27 @@ function pushScoreToCloud(record) {
       document.body.appendChild(f);
     }
     f.src = getUrl;
-  } catch (e2) {}
-  try {
-    const img = new Image();
-    img.src = getUrl;
-  } catch (e3) {}
+  } catch (e2) {
+    try { (new Image()).src = getUrl; } catch (e3) {}
+  }
 
   try {
     let tip = document.getElementById("cloud-status");
     if (!tip) {
       tip = document.createElement("div");
       tip.id = "cloud-status";
-      tip.style.cssText = "margin:12px auto;max-width:760px;padding:10px 14px;border-radius:10px;background:#ECFDF5;color:#065F46;font-weight:700;text-align:center;font-size:.9rem";
+      tip.style.cssText = "margin:12px auto;max-width:760px;padding:10px 14px;border-radius:10px;background:#ECFDF5;color:#065F46;font-weight:700;text-align:center";
       const card = document.querySelector(".result-card") || document.getElementById("screen-result");
       if (card) card.appendChild(tip);
     }
-    tip.textContent = "✅ Đã gửi 1 bản ghi lên Google Sheet: " + record.name + " — " + record.score + "/10";
+    tip.textContent = "✅ Đã gửi 1 bản ghi: " + record.name + " — " + record.score + "/10";
   } catch (e4) {}
   return true;
 }
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzX5ng8N1Qm2xDJJwSgqhrgoqgOwh8Bqw84JpHyiZaXD4ywbFHEAF8SAUuggBAo_epShA/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbyjPFqpUFlrMyY97OgpR4pJs5e4T7kAW5svlk7GgvrkGx1tmfHICGRpuzPJ1ufhie3qtg/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -2706,6 +2726,33 @@ document.getElementById("btn-sch-add")?.addEventListener("click", function () {
   renderScheduleList();
   if (typeof refreshClassDropdown === "function") refreshClassDropdown();
   alert("Đã thêm suất thi cho lớp " + lop + "\n" + new Date(from).toLocaleString("vi-VN") + " → " + new Date(to).toLocaleString("vi-VN") + "\n\nNhớ bấm «Tải lịch .xlsx» và upload lên GitHub để máy khác thấy lịch.");
+});
+
+
+document.getElementById("btn-sch-open")?.addEventListener("click", function () {
+  const lop = document.getElementById("sch-class").value;
+  if (!lop) { alert("Chọn lớp trước khi OPEN."); return; }
+  let arr = loadSchedule().filter(function (s) { return s.lop !== lop; });
+  arr.push({
+    id: "open_" + lop + "_" + Date.now(),
+    lop: lop,
+    from: new Date(2020, 0, 1, 0, 0, 0).toISOString(),
+    to: new Date(2099, 11, 31, 23, 59, 59).toISOString()
+  });
+  saveSchedule(arr);
+  renderScheduleList();
+  if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+  alert("Đã OPEN lớp " + lop + " (luôn mở).\nNhớ Lưu lịch lên GitHub / cập nhật Excel LichThi: Ngày=OPEN.");
+});
+
+document.getElementById("btn-sch-lock")?.addEventListener("click", function () {
+  const lop = document.getElementById("sch-class").value;
+  if (!lop) { alert("Chọn lớp trước khi LOCK."); return; }
+  let arr = loadSchedule().filter(function (s) { return s.lop !== lop; });
+  saveSchedule(arr);
+  renderScheduleList();
+  if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+  alert("Đã LOCK lớp " + lop + " (ẩn khỏi danh sách thi).\nNhớ Lưu lịch lên GitHub / Excel LichThi: Ngày=LOCK.");
 });
 
 document.getElementById("btn-sch-download")?.addEventListener("click", function () {
