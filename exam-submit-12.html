@@ -367,9 +367,11 @@
   <div class="result-card">
     <div class="result-header"><h2>🎯 KẾT QUẢ KIỂM TRA</h2><div class="result-score" id="final-score">0<span>/10</span></div></div>
     <div class="result-body">
-      <div class="result-info">
-        <div class="info-item">👤 <strong id="res-name">—</strong></div>
-        <div class="info-item">🏫 Lớp: <strong id="res-class">—</strong></div>
+      <div class="result-student-hero">
+        <div class="result-student-name" id="res-name">—</div>
+        <div class="result-student-class">Lớp <span id="res-class">—</span></div>
+      </div>
+      <div class="result-info result-info-meta">
         <div class="info-item">📅 <strong id="res-date">—</strong></div>
         <div class="info-item">⏱️ Thời gian: <strong id="res-time">—</strong></div>
       </div>
@@ -1391,8 +1393,10 @@ function startExam() {
   if (!selectedClass || !selectedStudent) return;
   const takenMap = getTakenMap();
   const st = (studentsByClass[selectedClass] || []).find(s => s.name === selectedStudent);
-  if ((st && st.score !== "" && st.score != null) || takenMap[selectedClass + "|" + selectedStudent]) {
-    alert("Bạn đã hoàn thành bài kiểm tra rồi! Không thể làm lại");
+  const alreadyTaken = (st && st.score !== "" && st.score != null) || takenMap[selectedClass + "|" + selectedStudent];
+  const openRetake = typeof isClassAlwaysOpen === "function" && isClassAlwaysOpen(selectedClass);
+  if (alreadyTaken && !openRetake) {
+    alert("Bạn đã hoàn thành bài kiểm tra rồi! Không thể làm lại.\n(Lớp đang LOCK / theo lịch — chỉ 1 lần. Giáo viên bật OPEN để cho làm lại.)");
     return;
   }
   if (!isClassOpenNow(selectedClass)) {
