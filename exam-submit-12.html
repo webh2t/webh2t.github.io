@@ -178,6 +178,30 @@
 .result-info .info-item{word-break:break-word;overflow-wrap:anywhere}
 @media(max-width:640px){.result-info{grid-template-columns:1fr!important}.sidebar{width:100%}}
 
+
+.result-student-hero{
+  text-align:center!important;padding:22px 18px 18px!important;margin:0 0 16px!important;
+  background:#ffffff!important;border-radius:16px!important;border:2px solid #A5B4FC!important;
+  box-shadow:0 6px 20px rgba(79,70,229,.12)!important;
+}
+.result-student-name{
+  font-size:1.6rem!important;font-weight:900!important;color:#3730A3!important;
+  letter-spacing:.03em!important;line-height:1.4!important;word-break:break-word!important;
+  text-align:center!important;
+}
+.result-student-class{
+  font-size:1.25rem!important;font-weight:800!important;color:#4F46E5!important;
+  margin-top:8px!important;text-align:center!important;
+}
+.result-info-meta{
+  display:grid!important;grid-template-columns:1fr 1fr!important;
+  gap:10px!important;max-width:480px!important;margin:0 auto 16px!important;
+}
+.result-info-meta .info-item{
+  text-align:center!important;background:#F8FAFC!important;border:1px solid #E2E8F0!important;
+  border-radius:12px!important;padding:10px 12px!important;font-size:.9rem!important;color:#475569!important;
+}
+
 </style>
 </head>
 <body>
@@ -582,8 +606,15 @@ classSelect.addEventListener("change", function () {
       const opt = document.createElement("option");
       opt.value = s.name;
       const already = (s.score !== "" && s.score != null) || takenMap[cls + "|" + s.name];
-      opt.textContent = s.name + (already ? " (đã hoàn thành)" : "");
-      if (already) opt.disabled = true;
+      const openMode = (typeof isClassAlwaysOpen === "function" && isClassAlwaysOpen(cls));
+      if (openMode) {
+        opt.textContent = already ? (s.name + " (đã làm — làm lại được)") : s.name;
+        opt.disabled = false;
+        opt.style.color = already ? "#166534" : "";
+      } else {
+        opt.textContent = s.name + (already ? " (đã hoàn thành)" : "");
+        if (already) { opt.disabled = true; opt.style.color = "#94A3B8"; }
+      }
       studentSelect.appendChild(opt);
     });
     studentSelect.disabled = false;
@@ -868,6 +899,13 @@ function parseWorkbook(wb) {
             })
           };
           console.log("Lớp đang mở:", uniq.join(", ") || "(không)");
+          try {
+            if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+            var clsEl = document.getElementById("class-select") || document.getElementById("sel-class");
+            if (clsEl && clsEl.value) {
+              clsEl.dispatchEvent(new Event("change"));
+            }
+          } catch (e2) {}
         } catch (e1) {}
       } else {
         console.warn("LichThi: không có suất hợp lệ. Header=", header, "cols", iLop, iNgay, iTu, iDen);
@@ -2680,13 +2718,24 @@ function fillScheduleClasses() {
 }
 function isClassOpenNow(lop) {
   const list = loadSchedule().filter(s => s.lop === lop);
-  // Không có suất → khóa (ẩn). Chỉ mở khi đang trong một suất.
   if (!list.length) return false;
   const now = Date.now();
   return list.some(s => {
     const from = new Date(s.from).getTime();
     const to = new Date(s.to).getTime();
     return now >= from && now <= to;
+  });
+}
+/** OPEN = suất dài (≥360 ngày hoặc 2020–2099) → cho làm lại không giới hạn */
+function isClassAlwaysOpen(lop) {
+  const list = loadSchedule().filter(function (s) { return s.lop === lop; });
+  return list.some(function (s) {
+    const id = String(s.id || "");
+    if (id.indexOf("xls_open_") === 0 || id.indexOf("open_") === 0) return true;
+    const a = new Date(s.from), b = new Date(s.to);
+    if (isNaN(a) || isNaN(b)) return false;
+    const days = (b - a) / 86400000;
+    return (a.getFullYear() <= 2020 && b.getFullYear() >= 2090) || days >= 360;
   });
 }
 function scheduleMessage(lop) {
