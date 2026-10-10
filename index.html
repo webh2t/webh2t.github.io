@@ -312,7 +312,9 @@
       left: 50%;
       transform: translateX(-50%) translateY(10px);
       background: var(--white);
-      min-width: 230px;
+      min-width: 220px;
+      max-height: 70vh;
+      overflow-y: auto;
       border-radius: 14px;
       box-shadow: 0 15px 40px rgba(0,0,0,0.2);
       opacity: 0;
@@ -341,16 +343,17 @@
 
     .submenu a:last-child { border-bottom: none; }
 
-    .submenu a:nth-child(1) { background: linear-gradient(90deg, #E3F2FD, #BBDEFB); color: #0D47A1; }
-    .submenu a:nth-child(2) { background: linear-gradient(90deg, #E8F5E9, #C8E6C9); color: #1B5E20; }
-    .submenu a:nth-child(3) { background: linear-gradient(90deg, #FFF3E0, #FFE0B2); color: #E65100; }
-    .submenu a:nth-child(4) { background: linear-gradient(90deg, #F3E5F5, #E1BEE7); color: #4A148C; }
+    .submenu a.sub-main { background: linear-gradient(90deg, #E3F2FD, #BBDEFB); color: #0D47A1; font-weight: 800; }
+    .submenu a.sub-on { background: #f8fafc; color: #334155; font-size: 0.92rem; padding-left: 28px; font-weight: 600; }
+    .submenu a.sub-on::before { content: "↳ "; color: #94a3b8; }
+    .submenu a.sub-cd { background: linear-gradient(90deg, #F3E5F5, #E1BEE7); color: #4A148C; font-weight: 800; }
 
     .submenu a:hover {
       padding-left: 28px;
       filter: brightness(0.97);
       letter-spacing: 0.3px;
     }
+    .submenu a.sub-on:hover { padding-left: 34px; background: #eef2ff; color: #1e3a8a; }
 
     /* ========== HERO ========== */
     .hero {
@@ -1432,10 +1435,16 @@
           <span class="vi">BÀI GIẢNG</span>
         </a>
         <div class="submenu">
-          <a href="tin10.html">TIN HỌC 10</a>
-          <a href="tin11.html">TIN HỌC 11</a>
-          <a href="tin12.html">TIN HỌC 12</a>
-          <a href="chuyende.html">CHUYÊN ĐỀ</a>
+          <a class="sub-main" href="tin10.html">TIN HỌC 10</a>
+          <a class="sub-on" href="on10gk1.html">ÔN 10GK1</a>
+          <a class="sub-on" href="on10gk2.html">ÔN 10GK2</a>
+          <a class="sub-main" href="tin11.html">TIN HỌC 11</a>
+          <a class="sub-on" href="on11gk1.html">ÔN 11GK1</a>
+          <a class="sub-on" href="on11gk2.html">ÔN 11GK2</a>
+          <a class="sub-main" href="tin12.html">TIN HỌC 12</a>
+          <a class="sub-on" href="on12gk1.html">ÔN 12GK1</a>
+          <a class="sub-on" href="on12gk2.html">ÔN 12GK2</a>
+          <a class="sub-cd" href="chuyende.html">CHUYÊN ĐỀ</a>
         </div>
       </div>
 
@@ -1450,6 +1459,14 @@
           <a href="exam-submit-11.html">THI TIN 11</a>
           <a href="https://webh2t.github.io/exam-submit-12.html">THI TIN 12</a>
         </div>
+      </div>
+
+      <div class="nav-item">
+        <a href="totnghiep.html" class="nav-link">
+          <i class="fas fa-graduation-cap"></i>
+          <span class="en">Graduation</span>
+          <span class="vi">TỐT NGHIỆP</span>
+        </a>
       </div>
 
       <div class="nav-item">
@@ -2305,28 +2322,33 @@ Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải th
 
     // ========== THỐNG KÊ ==========
     (function () {
-      // Lượt xem trang chủ (theo máy / trình duyệt)
-      let visits = parseInt(localStorage.getItem('webh2t_visits') || '0') + 1;
-      localStorage.setItem('webh2t_visits', visits);
-      const v = document.getElementById('visitCount');
-      if (v) v.textContent = visits.toLocaleString('vi-VN');
-
-      // QLNN & Thi Tin 12: đọc số TOÀN CỤC
-      // countapi.xyz đã NGỪNG → dùng countapi.mileshilliard.com
-      // Trang con phải gọi /hit cùng key thì số mới tăng trên trang chủ
-      function fetchCount(key, elId) {
-        const el = document.getElementById(elId);
-        if (!el) return;
-        fetch('https://countapi.mileshilliard.com/api/v1/get/' + key)
+      // Lượt xem = Thi Tin 12 + QL Nề nếp (CountAPI toàn cục)
+      function getCount(key) {
+        return fetch('https://countapi.mileshilliard.com/api/v1/get/' + key)
           .then(function (r) { return r.json(); })
           .then(function (d) {
             var n = parseInt(d.value, 10);
-            el.textContent = (isNaN(n) ? 0 : n).toLocaleString('vi-VN');
+            return isNaN(n) ? 0 : n;
           })
-          .catch(function () { el.textContent = '0'; });
+          .catch(function () { return 0; });
       }
-      fetchCount('webh2t-qlnn', 'qlnnCount');
-      fetchCount('webh2t-exam12', 'exam12Count');
+
+      Promise.all([
+        getCount('webh2t-exam12'),
+        getCount('webh2t-qlnn')
+      ]).then(function (vals) {
+        var exam12 = vals[0];
+        var qlnn = vals[1];
+        var total = exam12 + qlnn;
+
+        var e12 = document.getElementById('exam12Count');
+        var q = document.getElementById('qlnnCount');
+        var v = document.getElementById('visitCount');
+
+        if (e12) e12.textContent = exam12.toLocaleString('vi-VN');
+        if (q) q.textContent = qlnn.toLocaleString('vi-VN');
+        if (v) v.textContent = total.toLocaleString('vi-VN');
+      });
     })();
   </script>
 </body>
