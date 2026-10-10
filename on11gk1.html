@@ -194,98 +194,122 @@ a { text-decoration: none; color: inherit; }
 .btn-clear-hist:hover { background: #FEE2E2; }
 
 /* ===== SCREEN: EXAM ===== */
-#screen-exam { display: none; min-height: 100vh; padding-bottom: 40px; }
+/* ===== SCREEN: EXAM — 2 cột ===== */
+#screen-exam { display: none; min-height: 100vh; background: #F1F5F9; }
+
 .exam-top {
   background: var(--card);
   border-bottom: 1px solid var(--border);
-  padding: 12px 16px;
+  padding: 10px 16px;
   position: sticky;
   top: 0;
   z-index: 40;
   box-shadow: 0 2px 12px rgba(0,0,0,.06);
 }
 .exam-top-inner {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
-  flex-wrap: wrap;
 }
 .exam-info {
+  font-size: 1rem;
+  color: #166534;
+  font-weight: 700;
+  justify-self: start;
+}
+.exam-info b {
+  color: #14532D;
+  font-weight: 800;
+}
+.exam-info .sep { color: #86EFAC; margin: 0 6px; font-weight: 500; }
+.exam-progress-top {
   font-size: 0.95rem;
   color: var(--text-soft);
+  font-weight: 600;
+  justify-self: end;
 }
-.exam-info b { color: var(--text); font-weight: 700; }
 .timer-box {
   background: linear-gradient(135deg, #7C3AED, #5B21B6);
   color: #fff;
-  padding: 10px 18px;
-  border-radius: 12px;
+  padding: 10px 22px;
+  border-radius: 14px;
   font-weight: 800;
-  font-size: 1.25rem;
-  letter-spacing: 0.04em;
-  min-width: 90px;
+  font-size: 1.35rem;
+  letter-spacing: 0.05em;
+  min-width: 100px;
   text-align: center;
-  box-shadow: 0 4px 14px rgba(124,58,237,.35);
+  box-shadow: 0 4px 16px rgba(124,58,237,.4);
+  justify-self: center;
 }
 .timer-box.warn { background: linear-gradient(135deg, #F59E0B, #D97706); }
-.timer-box.danger { background: linear-gradient(135deg, #DC2626, #B91C1C); animation: pulse 0.8s infinite; }
-@keyframes pulse { 50% { opacity: 0.75; } }
+.timer-box.danger {
+  background: linear-gradient(135deg, #DC2626, #B91C1C);
+  animation: blink-timer 0.5s ease-in-out infinite;
+}
+@keyframes blink-timer {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.55; transform: scale(1.06); }
+}
 
+/* 2-column body */
 .exam-body {
-  max-width: 960px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 20px 16px;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 30% 70%;
+  gap: 16px;
+  align-items: start;
 }
-.nav-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 20px;
-  flex-wrap: wrap;
+@media (max-width: 900px) {
+  .exam-body { grid-template-columns: 1fr; }
+  .exam-top-inner { grid-template-columns: 1fr; text-align: center; }
+  .exam-info, .exam-progress-top { justify-self: center; }
 }
-.btn-nav {
-  padding: 12px 20px;
-  font-size: 1rem;
-  font-weight: 700;
-  border-radius: 12px;
-  transition: transform .12s, background .12s;
-}
-.btn-prev {
-  background: #EFF6FF;
-  color: var(--primary);
-  border: 2px solid #BFDBFE;
-}
-.btn-prev:hover:not(:disabled) { background: #DBEAFE; transform: translateX(-2px); }
-.btn-next {
-  background: var(--primary);
-  color: #fff;
-  box-shadow: 0 4px 12px rgba(37,99,235,.3);
-}
-.btn-next:hover:not(:disabled) { background: var(--primary-dark); transform: translateX(2px); }
-.btn-nav:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
 
+/* Cột trái: lưới câu */
+.exam-sidebar {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.06);
+  padding: 16px 14px;
+  position: sticky;
+  top: 68px;
+  max-height: calc(100vh - 84px);
+  overflow-y: auto;
+}
 .jump-label {
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.95rem;
+  font-weight: 800;
   color: var(--text);
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+}
+.point-hint {
+  font-size: 0.85rem;
+  color: #166534;
+  font-weight: 700;
+  background: #DCFCE7;
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin-bottom: 12px;
+  line-height: 1.35;
 }
 .q-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
-  gap: 8px;
-  margin-bottom: 22px;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 14px;
 }
 .q-dot {
   aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
   font-weight: 700;
   background: #F1F5F9;
   color: var(--text-soft);
@@ -310,16 +334,16 @@ a { text-decoration: none; color: inherit; }
   color: #fff;
   border-color: var(--primary-dark);
 }
-
-.action-row {
+.sidebar-actions {
   display: flex;
-  gap: 12px;
-  margin-bottom: 28px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
 }
 .btn-submit {
-  padding: 14px 28px;
-  font-size: 1.05rem;
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 0.95rem;
   font-weight: 800;
   color: #fff;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -328,8 +352,9 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-submit:hover { transform: translateY(-1px); }
 .btn-exit {
-  padding: 14px 24px;
-  font-size: 1.05rem;
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 0.95rem;
   font-weight: 700;
   color: var(--text-soft);
   background: #F1F5F9;
@@ -338,13 +363,61 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-exit:hover { background: #E2E8F0; }
 
-/* Question card */
+/* Cột phải: câu hỏi */
+.exam-main {
+  min-width: 0;
+}
+.nav-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+.btn-nav {
+  padding: 12px 20px;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 12px;
+  transition: transform .12s, background .12s;
+}
+.btn-prev {
+  background: #EFF6FF;
+  color: var(--primary);
+  border: 2px solid #BFDBFE;
+}
+.btn-prev:hover:not(:disabled) { background: #DBEAFE; transform: translateX(-2px); }
+.btn-next {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37,99,235,.3);
+}
+.btn-next:hover:not(:disabled) { background: var(--primary-dark); transform: translateX(2px); }
+.btn-nav:disabled { opacity: 0.4; cursor: not-allowed; transform: none !important; }
+.nav-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+.btn-next-center {
+  padding: 12px 28px;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(37,99,235,.35);
+}
+.btn-next-center:hover:not(:disabled) { transform: translateY(-1px); }
+.btn-next-center:disabled { opacity: 0.4; cursor: not-allowed; }
+
 .q-card {
   background: var(--card);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0,0,0,.06);
-  padding: 28px 24px;
-  margin-bottom: 24px;
+  padding: 28px 26px;
+  margin-bottom: 16px;
 }
 .q-meta {
   display: flex;
@@ -370,9 +443,9 @@ a { text-decoration: none; color: inherit; }
   color: var(--text-soft);
 }
 .q-text {
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--text);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #B91C1C;
   line-height: 1.55;
   margin-bottom: 22px;
 }
@@ -415,9 +488,9 @@ a { text-decoration: none; color: inherit; }
   color: #fff;
 }
 .opt-content {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0F172A;
   line-height: 1.45;
   padding-top: 4px;
 }
@@ -435,9 +508,9 @@ a { text-decoration: none; color: inherit; }
   border-radius: 12px;
 }
 .tf-stmt {
-  font-size: 1.15rem;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #0F172A;
   flex: 1;
   line-height: 1.4;
 }
@@ -469,7 +542,7 @@ a { text-decoration: none; color: inherit; }
   width: 100%;
   padding: 16px 18px;
   font-size: 1.2rem;
-  font-weight: 600;
+  font-weight: 700;
   border: 2px solid var(--border);
   border-radius: 12px;
   transition: border-color .15s;
@@ -486,7 +559,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* ===== RESULT ===== */
-#screen-result { display: none; min-height: 100vh; padding: 40px 16px; }
+#screen-result { display: none; min-height: 100vh; padding: 40px 16px; background: linear-gradient(160deg, #EEF2FF, #F0FDF4 50%, #F8FAFC); }
 .result-card {
   max-width: 520px;
   margin: 0 auto;
@@ -501,7 +574,21 @@ a { text-decoration: none; color: inherit; }
   font-size: 1.5rem;
   font-weight: 800;
   color: var(--text);
-  margin-bottom: 6px;
+  margin-bottom: 10px;
+}
+.result-student-name {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #166534;
+  text-align: center;
+  margin-bottom: 4px;
+}
+.result-student-class {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #15803D;
+  text-align: center;
+  margin-bottom: 12px;
 }
 .result-score {
   font-size: 3.2rem;
@@ -585,8 +672,9 @@ a { text-decoration: none; color: inherit; }
   .opt-content { font-size: 1.05rem; }
   .tf-stmt { font-size: 1.05rem; }
   .short-input { font-size: 1.1rem; }
-  .q-grid { grid-template-columns: repeat(auto-fill, minmax(38px, 1fr)); gap: 6px; }
+  .q-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
   .result-score { font-size: 2.6rem; }
+  .exam-sidebar { position: static; max-height: none; }
 }
 </style>
 </head>
@@ -635,30 +723,37 @@ a { text-decoration: none; color: inherit; }
   <div class="exam-top">
     <div class="exam-top-inner">
       <div class="exam-info">
-        <b id="exam-name">—</b> · <span id="exam-class">—</span>
-        <span style="margin-left:8px;color:#94A3B8">·</span>
-        <span id="exam-progress" style="margin-left:8px">Câu 1/100</span>
+        <b id="exam-name">—</b><span class="sep">·</span><span id="exam-class">—</span>
       </div>
       <div class="timer-box" id="timer">05:00</div>
+      <div class="exam-progress-top" id="exam-progress">Câu 1/100</div>
     </div>
   </div>
 
   <div class="exam-body">
-    <div class="nav-row">
-      <button class="btn-nav btn-prev" id="btn-prev" disabled>← Câu trước</button>
-      <button class="btn-nav btn-next" id="btn-next">Câu tiếp theo →</button>
-    </div>
+    <!-- Cột trái 30%: lưới 100 câu -->
+    <aside class="exam-sidebar">
+      <div class="jump-label">Đi nhanh đến câu</div>
+      <div class="point-hint">📌 Mỗi câu = <b>0.1 điểm</b> · Thang điểm 10 · 100 câu</div>
+      <div class="q-grid" id="q-grid"></div>
+      <div class="sidebar-actions">
+        <button class="btn-submit" id="btn-submit">Nộp bài và xem điểm</button>
+        <button class="btn-exit" id="btn-exit">Thoát bài làm</button>
+      </div>
+    </aside>
 
-    <div class="jump-label">Đi nhanh đến câu</div>
-    <div class="q-grid" id="q-grid"></div>
-
-    <div class="action-row">
-      <button class="btn-submit" id="btn-submit">Nộp bài và xem điểm</button>
-      <button class="btn-exit" id="btn-exit">Thoát bài làm</button>
-    </div>
-
-    <div class="q-card" id="q-card">
-      <!-- filled by JS -->
+    <!-- Cột phải 70%: nội dung câu hỏi -->
+    <div class="exam-main">
+      <div class="nav-row">
+        <button class="btn-nav btn-prev" id="btn-prev" disabled>← Câu trước</button>
+        <div class="nav-center">
+          <button class="btn-next-center" id="btn-next">Câu tiếp theo →</button>
+        </div>
+        <span style="width:120px"></span>
+      </div>
+      <div class="q-card" id="q-card">
+        <!-- filled by JS -->
+      </div>
     </div>
   </div>
 </div>
@@ -668,7 +763,8 @@ a { text-decoration: none; color: inherit; }
   <div class="result-card">
     <div class="result-icon" id="result-icon">🎯</div>
     <h2>Kết quả ôn tập</h2>
-    <p style="color:var(--text-soft);font-size:1rem" id="result-student">—</p>
+    <div class="result-student-name" id="result-student-name">—</div>
+    <div class="result-student-class" id="result-student-class">—</div>
     <div class="result-score" id="result-score">0.0</div>
     <p class="result-detail">/ 10 điểm</p>
     <div class="result-stats">
@@ -1208,7 +1304,8 @@ a { text-decoration: none; color: inherit; }
     timerId = setInterval(() => {
       timeLeft--;
       timerEl.textContent = formatTime(Math.max(0, timeLeft));
-      if (timeLeft <= 30) timerEl.className = "timer-box danger";
+      // Nhấp nháy 10 giây cuối; cảnh báo vàng dưới 60s
+      if (timeLeft <= 10) timerEl.className = "timer-box danger";
       else if (timeLeft <= 60) timerEl.className = "timer-box warn";
       else timerEl.className = "timer-box";
       if (timeLeft <= 0) {
@@ -1265,8 +1362,9 @@ a { text-decoration: none; color: inherit; }
       correct, wrong, skip
     });
 
-    // result UI
-    $("result-student").textContent = studentName + " · " + studentClass;
+    // result UI — họ tên đậm màu xanh, canh giữa
+    $("result-student-name").textContent = studentName;
+    $("result-student-class").textContent = "Lớp " + studentClass;
     $("result-score").textContent = score.toFixed(1);
     $("stat-correct").textContent = correct;
     $("stat-wrong").textContent = wrong;
