@@ -305,55 +305,155 @@
       color: var(--teal-dark);
     }
 
-    /* Submenu */
+    /* ========== MENU ĐA CẤP (dropdown + flyout ngang) ========== */
     .submenu {
       position: absolute;
-      top: calc(100% + 6px);
+      top: calc(100% + 8px);
       left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background: var(--white);
-      min-width: 220px;
-      max-height: 70vh;
-      overflow-y: auto;
-      border-radius: 14px;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.2);
+      transform: translateX(-50%) translateY(8px);
+      background: rgba(255, 255, 255, 0.98);
+      min-width: 200px;
+      border-radius: 12px;
+      box-shadow: 0 12px 36px rgba(15, 40, 70, 0.18);
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
-      z-index: 999;
-      overflow: hidden;
-      border: 2px solid var(--teal);
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      z-index: 1000;
+      border: 1px solid rgba(0, 180, 180, 0.25);
+      padding: 6px 0;
+      backdrop-filter: blur(8px);
     }
 
-    .nav-item:hover .submenu {
+    .nav-item:hover > .submenu {
       opacity: 1;
       visibility: visible;
       transform: translateX(-50%) translateY(0);
     }
 
-    .submenu a {
-      display: block;
-      padding: 15px 20px;
-      font-weight: 700;
-      font-size: 1.02rem;
-      border-bottom: 1px solid #eee;
-      transition: all 0.25s;
+    /* Mục cấp 1 trong dropdown */
+    .submenu > .has-sub {
       position: relative;
     }
 
-    .submenu a:last-child { border-bottom: none; }
-
-    .submenu a.sub-main { background: linear-gradient(90deg, #E3F2FD, #BBDEFB); color: #0D47A1; font-weight: 800; }
-    .submenu a.sub-on { background: #f8fafc; color: #334155; font-size: 0.92rem; padding-left: 28px; font-weight: 600; }
-    .submenu a.sub-on::before { content: "↳ "; color: #94a3b8; }
-    .submenu a.sub-cd { background: linear-gradient(90deg, #F3E5F5, #E1BEE7); color: #4A148C; font-weight: 800; }
-
-    .submenu a:hover {
-      padding-left: 28px;
-      filter: brightness(0.97);
-      letter-spacing: 0.3px;
+    .submenu a,
+    .submenu .sub-link {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 11px 16px;
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: #1e3a5f;
+      text-decoration: none;
+      transition: background 0.2s, color 0.2s, padding-left 0.2s;
+      border: none;
+      background: transparent;
+      white-space: nowrap;
     }
-    .submenu a.sub-on:hover { padding-left: 34px; background: #eef2ff; color: #1e3a8a; }
+
+    .submenu a:hover,
+    .submenu .sub-link:hover {
+      background: rgba(0, 180, 180, 0.1);
+      color: var(--teal-dark);
+      padding-left: 20px;
+    }
+
+    .submenu .sub-link .arrow {
+      font-size: 0.7rem;
+      opacity: 0.55;
+      margin-left: 8px;
+    }
+
+    .submenu a.sub-cd {
+      color: #6a1b9a;
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      margin-top: 4px;
+    }
+    .submenu a.sub-cd:hover {
+      background: rgba(156, 39, 176, 0.1);
+      color: #4a148c;
+    }
+
+    /* Menu cấp 2 – xổ ngang bên phải */
+    .submenu-l2 {
+      position: absolute;
+      top: 0;
+      left: calc(100% + 4px);
+      min-width: 160px;
+      background: rgba(255, 255, 255, 0.98);
+      border-radius: 12px;
+      box-shadow: 0 12px 32px rgba(15, 40, 70, 0.16);
+      border: 1px solid rgba(0, 180, 180, 0.22);
+      padding: 6px 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(6px);
+      transition: opacity 0.22s ease, transform 0.22s ease, visibility 0.22s;
+      z-index: 1001;
+      backdrop-filter: blur(8px);
+    }
+
+    .submenu > .has-sub:hover > .submenu-l2 {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(0);
+    }
+
+    .submenu-l2 a {
+      display: block;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #334155;
+      background: transparent;
+    }
+
+    .submenu-l2 a:hover {
+      background: rgba(0, 180, 180, 0.12);
+      color: var(--teal-dark);
+      padding-left: 20px;
+    }
+
+    /* Màu nhẹ theo khối */
+    .has-sub.tin10 > .sub-link { color: #1565c0; }
+    .has-sub.tin11 > .sub-link { color: #2e7d32; }
+    .has-sub.tin12 > .sub-link { color: #e65100; }
+    .has-sub.tin10:hover > .sub-link { background: rgba(21, 101, 192, 0.08); }
+    .has-sub.tin11:hover > .sub-link { background: rgba(46, 125, 50, 0.08); }
+    .has-sub.tin12:hover > .sub-link { background: rgba(230, 81, 0, 0.08); }
+
+    /* Mobile: xếp dọc thay vì flyout ngang */
+    @media (max-width: 768px) {
+      .submenu {
+        left: 0;
+        transform: translateX(0) translateY(8px);
+        min-width: 200px;
+      }
+      .nav-item:hover > .submenu {
+        transform: translateX(0) translateY(0);
+      }
+      .submenu-l2 {
+        position: static;
+        box-shadow: none;
+        border: none;
+        border-radius: 0;
+        background: rgba(0, 180, 180, 0.06);
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        padding: 0 0 4px;
+        display: none;
+      }
+      .submenu > .has-sub:hover > .submenu-l2,
+      .submenu > .has-sub:focus-within > .submenu-l2 {
+        display: block;
+      }
+      .submenu-l2 a {
+        padding-left: 28px;
+        font-size: 0.88rem;
+      }
+    }
 
     /* ========== HERO ========== */
     .hero {
@@ -1435,15 +1535,30 @@
           <span class="vi">BÀI GIẢNG</span>
         </a>
         <div class="submenu">
-          <a class="sub-main" href="tin10.html">TIN HỌC 10</a>
-          <a class="sub-on" href="on10gk1.html">ÔN 10GK1</a>
-          <a class="sub-on" href="on10gk2.html">ÔN 10GK2</a>
-          <a class="sub-main" href="tin11.html">TIN HỌC 11</a>
-          <a class="sub-on" href="on11gk1.html">ÔN 11GK1</a>
-          <a class="sub-on" href="on11gk2.html">ÔN 11GK2</a>
-          <a class="sub-main" href="tin12.html">TIN HỌC 12</a>
-          <a class="sub-on" href="on12gk1.html">ÔN 12GK1</a>
-          <a class="sub-on" href="on12gk2.html">ÔN 12GK2</a>
+          <!-- Cấp 1: TIN 10 → cấp 2 xổ ngang -->
+          <div class="has-sub tin10">
+            <a class="sub-link" href="tin10.html">TIN HỌC 10 <span class="arrow">▸</span></a>
+            <div class="submenu-l2">
+              <a href="on10gk1.html">ÔN 10GK1</a>
+              <a href="on10gk2.html">ÔN 10GK2</a>
+            </div>
+          </div>
+          <!-- Cấp 1: TIN 11 -->
+          <div class="has-sub tin11">
+            <a class="sub-link" href="tin11.html">TIN HỌC 11 <span class="arrow">▸</span></a>
+            <div class="submenu-l2">
+              <a href="on11gk1.html">ÔN 11GK1</a>
+              <a href="on11gk2.html">ÔN 11GK2</a>
+            </div>
+          </div>
+          <!-- Cấp 1: TIN 12 -->
+          <div class="has-sub tin12">
+            <a class="sub-link" href="tin12.html">TIN HỌC 12 <span class="arrow">▸</span></a>
+            <div class="submenu-l2">
+              <a href="on12gk1.html">ÔN 12GK1</a>
+              <a href="on12gk2.html">ÔN 12GK2</a>
+            </div>
+          </div>
           <a class="sub-cd" href="chuyende.html">CHUYÊN ĐỀ</a>
         </div>
       </div>
