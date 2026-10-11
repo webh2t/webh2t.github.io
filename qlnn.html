@@ -1497,8 +1497,8 @@ Hướng dẫn nhập nhanh
 </div>
 <div id="sub-saas" class="admin-sub hidden">
 <div class="bg-white rounded-xl p-5 border border-slate-200">
-<h3 class="font-bold mb-3" style="color:#0f172a">🏢 SaaS Console · Tenant / Gói / Auth</h3>
-<p class="text-sm text-slate-600 mb-3">Quản trị multi-tenant: trường (tenant) · gói Free/School/District · soft quota · Firebase Auth tùy chọn. Không thay login ID/mật khẩu hiện tại.</p>
+<h3 class="font-bold mb-3" style="color:#0f172a">🏢 SaaS · Tenant / Gói / Đồng bộ</h3>
+<p class="text-sm text-slate-600 mb-3">Admin WEBH2T: quản trị mọi trường & gói. GVCN: xem tenant lớp · Migration · Đồng bộ. Không thay login ID/mật khẩu.</p>
 <div id="saasConsolePanel"></div>
 </div>
 </div>
@@ -2414,7 +2414,25 @@ var QLNN_DEFAULT_TENANT = "webh2t";
 function slugPart(s) {
   return String(s || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 }
-/** tenantId ổn định theo tài khoản / trường */
+/** Tìm account GVCN cha cho Leader/viewer (parentId hoặc cùng lớp) */
+function findParentGvcn(u) {
+  u = u || currentUser;
+  if (!u || typeof accounts !== "object") return null;
+  if (u.parentId && accounts[u.parentId] && String(accounts[u.parentId].role || "").toLowerCase() === "gvcn") {
+    return accounts[u.parentId];
+  }
+  var cn = String(u.className || "").trim().toLowerCase();
+  var cid = String(u.classId || "").trim().toLowerCase();
+  var keys = Object.keys(accounts);
+  for (var i = 0; i < keys.length; i++) {
+    var a = accounts[keys[i]];
+    if (!a || String(a.role || "").toLowerCase() !== "gvcn") continue;
+    if (cn && String(a.className || "").trim().toLowerCase() === cn) return a;
+    if (cid && String(a.classId || "").trim().toLowerCase() === cid) return a;
+  }
+  return null;
+}
+/** tenantId ổn định theo tài khoản / trường — Leader LUÔN theo GVCN cha */
 function resolveTenantId(u) {
   u = u || currentUser;
   if (!u) return QLNN_DEFAULT_TENANT;
@@ -2424,11 +2442,18 @@ function resolveTenantId(u) {
   if (u.role === "gvcn") {
     return slugPart(u.school || u.id || u.className) || QLNN_DEFAULT_TENANT;
   }
-  // Leader/viewer: theo parent GVCN
-  if (u.parentId && typeof accounts !== "undefined" && accounts[u.parentId]) {
-    var p = accounts[u.parentId];
-    if (p.tenantId) return slugPart(p.tenantId);
-    return slugPart(p.school || p.id || p.className) || QLNN_DEFAULT_TENANT;
+  // Leader/viewer: theo parent GVCN (bắt buộc cùng path với GVCN)
+  if (u.role === "leader" || u.role === "viewer") {
+    var p = typeof findParentGvcn === "function" ? findParentGvcn(u) : null;
+    if (p) {
+      if (p.tenantId) return slugPart(p.tenantId);
+      return slugPart(p.school || p.id || p.className) || QLNN_DEFAULT_TENANT;
+    }
+    if (u.parentId && accounts && accounts[u.parentId]) {
+      var p2 = accounts[u.parentId];
+      if (p2.tenantId) return slugPart(p2.tenantId);
+      return slugPart(p2.school || p2.id || p2.className) || QLNN_DEFAULT_TENANT;
+    }
   }
   return slugPart(u.school || "") || QLNN_DEFAULT_TENANT;
 }
@@ -2490,18 +2515,50 @@ function sharedSyncKey(u) {
   var k = tenantClassKey(u);
   return k || legacyClassSyncKey(u);
 }
-/** Danh sách key để ĐỌC (SaaS trước, legacy sau) — tránh mất dữ liệu khi nâng cấp */
+/** Danh sách key để ĐỌC (SaaS + legacy + biến thể tenant) — Leader/GVCN cùng lớp */
 function syncKeyCandidates(u) {
   u = u || currentUser;
   var keys = [];
-  var saas = tenantClassKey(u);
-  var leg = legacyClassSyncKey(u);
-  if (saas) keys.push(saas);
-  if (leg && keys.indexOf(leg) < 0) keys.push(leg);
-  if (u && u.classId) {
-    var cid = slugPart(u.classId);
-    if (cid && keys.indexOf(cid) < 0) keys.push(cid);
+  function add(k) {
+    k = String(k || "").trim();
+    if (k && keys.indexOf(k) < 0) keys.push(k);
   }
+  var leg = legacyClassSyncKey(u);
+  var saas = tenantClassKey(u);
+  add(saas);
+  add(leg);
+  if (u && u.classId) add(slugPart(u.classId));
+  // Biến thể tenant hay gặp (school + tên trường / id GVCN)
+  if (leg) {
+    add("schoolthpthahuytap__" + leg);
+    add("thpthahuytap__" + leg);
+    add("thpthhuytp__" + leg);
+    add("webh2t__" + leg);
+    add("gvcnb9__" + leg);
+    add("adminb9__" + leg);
+  }
+  // Mọi GVCN cùng className → thêm path SaaS của họ
+  try {
+    if (typeof accounts === "object" && leg) {
+      Object.keys(accounts).forEach(function(id) {
+        var a = accounts[id];
+        if (!a || String(a.role || "").toLowerCase() !== "gvcn") return;
+        var aLeg = slugPart(a.className || "");
+        if (aLeg && aLeg !== leg) return;
+        var t = slugPart(a.tenantId || a.school || id);
+        if (t && leg) add(t + "__" + leg);
+      });
+    }
+  } catch (e) {}
+  // Parent GVCN path
+  try {
+    var p = typeof findParentGvcn === "function" ? findParentGvcn(u) : null;
+    if (p) {
+      var pt = slugPart(p.tenantId || p.school || p.id);
+      var pc = slugPart(p.className || leg);
+      if (pt && pc) add(pt + "__" + pc);
+    }
+  } catch (e) {}
   return keys;
 }
 
@@ -2632,32 +2689,63 @@ var QLNN_PLANS = {
 };
 
 var saasTenants = {}; // tenantId -> { name, schoolName, planId, status, createdAt, ... }
+var saasTenantsDeleted = {}; // tenantId -> true (không bootstrap lại)
+
+function loadSaaSTenantsDeleted() {
+  try {
+    saasTenantsDeleted = JSON.parse(localStorage.getItem("qlnn_saas_tenants_deleted_v1") || "{}") || {};
+  } catch (e) { saasTenantsDeleted = {}; }
+  return saasTenantsDeleted;
+}
+function saveSaaSTenantsDeletedLocal() {
+  try { localStorage.setItem("qlnn_saas_tenants_deleted_v1", JSON.stringify(saasTenantsDeleted || {})); } catch (e) {}
+}
 
 function loadSaaSTenants() {
   try {
     saasTenants = JSON.parse(localStorage.getItem("qlnn_saas_tenants_v1") || "{}") || {};
   } catch (e) { saasTenants = {}; }
+  loadSaaSTenantsDeleted();
+  // loại tenant đã xóa khỏi map hiển thị
+  Object.keys(saasTenantsDeleted || {}).forEach(function(tid) {
+    if (saasTenantsDeleted[tid]) delete saasTenants[tid];
+  });
   return saasTenants;
 }
 function saveSaaSTenantsLocal() {
   try { localStorage.setItem("qlnn_saas_tenants_v1", JSON.stringify(saasTenants || {})); } catch (e) {}
+  saveSaaSTenantsDeletedLocal();
 }
 function saveSaaSTenantsCloud() {
   saveSaaSTenantsLocal();
   if (!firebaseReady || !db) return Promise.resolve(false);
+  // Ghi đè toàn bộ map data + deleted (không merge sâu làm “sống lại” tenant đã xóa)
   return db.collection("qlnn_meta").doc("saas_tenants").set({
     data: saasTenants,
+    deleted: saasTenantsDeleted,
     updatedAt: new Date().toISOString(),
     schemaVersion: QLNN_SCHEMA_VERSION
-  }, { merge: true }).then(function() { return true; }).catch(function() { return false; });
+  }).then(function() { return true; }).catch(function(err) {
+    console.warn("[QLNN] save tenants cloud", err);
+    return false;
+  });
 }
 function pullSaaSTenants() {
   if (!firebaseReady || !db) return Promise.resolve(loadSaaSTenants());
   return db.collection("qlnn_meta").doc("saas_tenants").get().then(function(snap) {
     if (snap.exists) {
       var d = snap.data() || {};
+      if (d.deleted && typeof d.deleted === "object") {
+        saasTenantsDeleted = Object.assign({}, saasTenantsDeleted, d.deleted);
+        saveSaaSTenantsDeletedLocal();
+      }
       if (d.data && typeof d.data === "object") {
-        saasTenants = Object.assign({}, saasTenants, d.data);
+        var merged = Object.assign({}, d.data);
+        // local deleted thắng — không nhận lại tenant đã xóa từ cloud cũ
+        Object.keys(saasTenantsDeleted || {}).forEach(function(tid) {
+          if (saasTenantsDeleted[tid]) delete merged[tid];
+        });
+        saasTenants = merged;
         saveSaaSTenantsLocal();
       }
     }
@@ -2668,6 +2756,8 @@ function pullSaaSTenants() {
 function ensureTenantRecord(tenantId, extras) {
   loadSaaSTenants();
   tenantId = slugPart(tenantId) || QLNN_DEFAULT_TENANT;
+  // Đã xóa có chủ đích → không tạo lại
+  if (saasTenantsDeleted[tenantId]) return null;
   if (!saasTenants[tenantId]) {
     saasTenants[tenantId] = {
       tenantId: tenantId,
@@ -2737,7 +2827,7 @@ function checkPlanQuota(kind, u) {
   return result;
 }
 
-/** Bootstrap tenant records từ danh sách GVCN hiện có */
+/** Bootstrap tenant records từ danh sách GVCN hiện có (bỏ qua tenant đã xóa) */
 function bootstrapTenantsFromAccounts() {
   loadSaaSTenants();
   var n = 0;
@@ -2745,11 +2835,22 @@ function bootstrapTenantsFromAccounts() {
     var a = accounts[id];
     if (!a || String(a.role || "").toLowerCase() !== "gvcn") return;
     var tid = slugPart(a.tenantId || a.school || id) || QLNN_DEFAULT_TENANT;
-    ensureTenantRecord(tid, {
+    if (saasTenantsDeleted[tid]) {
+      // Tài khoản còn nhưng tenant đã xóa: gắn sang tenant chính nếu có school trùng
+      if (a.school) {
+        var alt = slugPart("school" + a.school);
+        if (alt && !saasTenantsDeleted[alt] && saasTenants[alt]) {
+          a.tenantId = alt;
+        }
+      }
+      return;
+    }
+    var rec = ensureTenantRecord(tid, {
       name: a.school || tid,
       schoolName: a.school || "",
       planId: a.planId || (saasTenants[tid] && saasTenants[tid].planId) || "free"
     });
+    if (!rec) return;
     a.tenantId = tid;
     if (!a.schoolId) a.schoolId = slugPart(a.school || tid);
     n++;
@@ -2791,6 +2892,46 @@ function renderSaaSConsole(containerId) {
   if (!el) return;
   loadSaaSTenants();
   bootstrapTenantsFromAccounts();
+
+  // —— GVCN: chỉ xem tenant / lớp mình + migration ——
+  if (currentUser && currentUser.role === "gvcn") {
+    var myTid = resolveTenantId(currentUser);
+    ensureTenantRecord(myTid, {
+      name: currentUser.school || myTid,
+      schoolName: currentUser.school || "",
+      planId: (saasTenants[myTid] && saasTenants[myTid].planId) || "free"
+    });
+    var t = saasTenants[myTid] || {};
+    var plan = getTenantPlan(myTid);
+    var sk = typeof tenantClassKey === "function" ? tenantClassKey(currentUser) : "";
+    var leg = typeof legacyClassSyncKey === "function" ? legacyClassSyncKey(currentUser) : "";
+    var q = typeof checkPlanQuota === "function" ? checkPlanQuota("entries_day", currentUser) : {};
+    var used = typeof countEntriesTodayLocal === "function" ? countEntriesTodayLocal() : 0;
+    el.innerHTML =
+      '<div class="space-y-4 text-sm">' +
+      '<div class="rounded-xl border p-4" style="border-color:#bae6fd;background:#f0f9ff">' +
+      '<h4 class="font-bold text-sky-800 mb-2">Tenant lớp · ' + (currentUser.className || "") + '</h4>' +
+      '<div class="grid md:grid-cols-2 gap-2">' +
+      '<div><span class="text-slate-500">Trường / Tenant</span><div class="font-bold text-slate-900">' + (currentUser.school || myTid) + '</div><div class="font-mono text-xs text-slate-500">' + myTid + '</div></div>' +
+      '<div><span class="text-slate-500">Gói</span><div class="font-bold text-emerald-700">' + plan.name + '</div><div class="text-xs text-slate-500">' + plan.priceNote + '</div></div>' +
+      '<div><span class="text-slate-500">syncKey SaaS (ghi mới)</span><div class="font-mono text-xs break-all">' + sk + '</div></div>' +
+      '<div><span class="text-slate-500">Legacy key (đọc cũ)</span><div class="font-mono text-xs">' + leg + '</div></div>' +
+      '<div><span class="text-slate-500">Bản ghi / HS</span><div class="font-bold">' + (entries || []).length + " · " + (students || []).length + '</div></div>' +
+      '<div><span class="text-slate-500">Nhập hôm nay (soft)</span><div class="font-bold">' + used + (plan.softEntriesPerDay ? " / " + plan.softEntriesPerDay : "") + '</div></div>' +
+      '</div>' +
+      (q.reason ? '<p class="mt-2 text-amber-700 text-xs">' + q.reason + '</p>' : '') +
+      '</div>' +
+      '<div class="flex flex-wrap gap-2">' +
+      '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#0ea5e9" onclick="forcePullClassEntries(function(){renderSaaSConsole();})">☁ Đồng bộ ngay</button>' +
+      '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#0284c7" onclick="migrateLegacyEntriesToSaaS()">⬆ Migration legacy→SaaS</button>' +
+      '<button type="button" class="px-3 py-2 rounded-lg text-sm font-semibold border" onclick="if(typeof SyncManager!==\'undefined\')SyncManager.flush().then(function(){alert(\'Flush xong\');renderSaaSConsole()})">⬆ Flush Outbox</button>' +
+      '</div>' +
+      '<p class="text-xs text-slate-500">Gói / nhiều trường do <b>Admin WEBH2T</b> quản lý trong SaaS Console. GVCN chỉ đồng bộ & migration lớp mình.</p>' +
+      '</div>';
+    return;
+  }
+
+  // —— Super / Admin: full console ——
   var tids = Object.keys(saasTenants).sort();
   var gvcnN = Object.keys(accounts || {}).filter(function(k) {
     return accounts[k] && String(accounts[k].role).toLowerCase() === "gvcn";
@@ -2891,10 +3032,43 @@ function saasEditTenant(tid) {
   if (elSt) elSt.value = t.status || "active";
 }
 function saasDeleteTenant(tid) {
-  if (!confirm("Xóa tenant " + tid + " khỏi registry? (Không xóa dữ liệu lớp/entries)")) return;
+  tid = slugPart(tid);
+  if (!tid) return;
+  if (!confirm("Xóa tenant «" + tid + "» khỏi registry?\n(Không xóa dữ liệu lớp/entries trên Firestore)")) return;
   loadSaaSTenants();
+  loadSaaSTenantsDeleted();
   delete saasTenants[tid];
-  saveSaaSTenantsCloud().then(function() { renderSaaSConsole(); });
+  saasTenantsDeleted[tid] = true;
+  saveSaaSTenantsDeletedLocal();
+  saveSaaSTenantsLocal();
+
+  // Hỏi xóa luôn tài khoản GVCN trùng id tenant (vd gvcnb9) nếu còn
+  var gvcnIds = Object.keys(accounts || {}).filter(function(id) {
+    var a = accounts[id];
+    if (!a || String(a.role || "").toLowerCase() !== "gvcn") return false;
+    var at = slugPart(a.tenantId || a.school || id);
+    return at === tid || slugPart(id) === tid;
+  });
+  if (gvcnIds.length) {
+    if (confirm("Phát hiện tài khoản GVCN gắn tenant này: " + gvcnIds.join(", ") +
+      "\n\nXóa luôn (các) tài khoản này khỏi danh sách?\nChọn Cancel nếu chỉ muốn ẩn tenant, giữ tài khoản.")) {
+      gvcnIds.forEach(function(id) {
+        try { delete accounts[id]; } catch (e) {}
+      });
+      try {
+        if (typeof saveAccounts === "function") saveAccounts();
+        else localStorage.setItem("qlnn_accounts_v2", JSON.stringify(accounts || {}));
+        if (typeof saveAccountsToCloud === "function") saveAccountsToCloud();
+      } catch (e) {}
+    }
+  }
+
+  saveSaaSTenantsCloud().then(function(ok) {
+    alert(ok
+      ? ("Đã xóa tenant «" + tid + "» (local + cloud). Không bị tạo lại khi bấm «Từ danh sách GVCN».")
+      : ("Đã xóa tenant «" + tid + "» trên máy. Cloud chưa ghi được — kiểm tra mạng rồi bấm «☁ Lưu cloud»."));
+    renderSaaSConsole();
+  });
 }
 
 function setSyncStatus(msg, ok) {
@@ -3363,9 +3537,21 @@ var SyncManager = {
       schoolId: (item.payload && item.payload.schoolId) || resolveSchoolId(currentUser)
     });
     try { if (typeof stampEntrySaaSMetadata === "function") stampEntrySaaSMetadata(payload, currentUser); } catch (e) {}
+    // Ghi path chính + mirror legacy (11b9) để GVCN luôn đọc được dù tenant lệch
     return db.collection("qlnn_sync").doc(key).collection("entries").doc(eid)
       .set(payload, { merge: true })
-      .then(function() { return true; })
+      .then(function() {
+        try {
+          var leg = typeof legacyClassSyncKey === "function" ? legacyClassSyncKey(currentUser) : "";
+          if (leg && leg !== key) {
+            var mirror = Object.assign({}, payload, { syncKey: leg, mirroredFrom: key });
+            return db.collection("qlnn_sync").doc(leg).collection("entries").doc(eid)
+              .set(mirror, { merge: true }).then(function() { return true; })
+              .catch(function() { return true; }); // primary OK là đủ
+          }
+        } catch (e) {}
+        return true;
+      })
       .catch(function(err) {
         item.lastError = (err && err.message) || String(err);
         var code = err && err.code;
@@ -3965,7 +4151,7 @@ function deleteOneEntryFromCloud(eid, ent) {
  */
 function loadEntriesSubcollection(cid, cb) {
   if (!firebaseReady || !db) { if (cb) cb(); return; }
-  // SaaS: đọc nhiều key (tenantClassKey → legacy className → classId)
+  // SaaS: đọc nhiều key (tenantClassKey → legacy → biến thể)
   var keys = [];
   try {
     if (typeof syncKeyCandidates === "function") keys = syncKeyCandidates(currentUser);
@@ -3985,9 +4171,20 @@ function loadEntriesSubcollection(cid, cb) {
     return;
   }
   var primaryKey = keys[0];
+  var forceFull = !!window._forceFullPull;
+  window._forceFullPull = false;
+  // Xóa cursor khi full pull — tránh bỏ sót bản ghi Leader mới
+  if (forceFull) {
+    try {
+      keys.forEach(function(k) { localStorage.removeItem("qlnn_sync_cursor_" + k); });
+      if (cid) localStorage.removeItem("qlnn_sync_cursor_" + cid);
+    } catch (e) {}
+  }
   var cursorKey = "qlnn_sync_cursor_" + (primaryKey || cid);
   var lastCursor = "";
-  try { lastCursor = localStorage.getItem(cursorKey) || ""; } catch (e) {}
+  if (!forceFull) {
+    try { lastCursor = localStorage.getItem(cursorKey) || ""; } catch (e) {}
+  }
 
   function applyRemote(remote) {
     try { purgeDeletedEntries(); } catch (e) {}
@@ -4003,9 +4200,9 @@ function loadEntriesSubcollection(cid, cb) {
       });
       if (maxAt) localStorage.setItem(cursorKey, maxAt);
     } catch (e) {}
-    console.info("[QLNN SaaS] load keys=", keys.join(","), "remote=", remote.length, "total=", (entries || []).length);
+    console.info("[QLNN SaaS] load keys=", keys.join(","), "remote=", remote.length, "total=", (entries || []).length, forceFull ? "(FULL)" : "");
     if (typeof setSyncStatus === "function") {
-      setSyncStatus("☁ " + keys.join(" | ") + " · +" + remote.length + " · tổng " + (entries || []).length, true);
+      setSyncStatus("☁ " + (forceFull ? "FULL " : "") + keys.slice(0, 3).join(" | ") + (keys.length > 3 ? "…" : "") + " · +" + remote.length + " · tổng " + (entries || []).length, true);
     }
     if (cb) cb();
   }
@@ -4021,11 +4218,12 @@ function loadEntriesSubcollection(cid, cb) {
       }
     }).catch(function() {});
     return metaP.then(function() {
-      if (lastCursor && k === primaryKey) {
-        return colRef.where("syncedAt", ">", lastCursor).orderBy("syncedAt", "asc").limit(500).get()
-          .catch(function() { return colRef.limit(800).get(); });
+      // Full pull hoặc không phải primary: luôn lấy tối đa (không delta cursor)
+      if (forceFull || k !== primaryKey || !lastCursor) {
+        return colRef.limit(1500).get().catch(function() { return colRef.get(); });
       }
-      return colRef.limit(800).get();
+      return colRef.where("syncedAt", ">", lastCursor).orderBy("syncedAt", "asc").limit(800).get()
+        .catch(function() { return colRef.limit(1500).get(); });
     }).then(function(qs) {
       var remote = [];
       if (qs && qs.forEach) {
@@ -4038,7 +4236,6 @@ function loadEntriesSubcollection(cid, cb) {
     }).catch(function() { return []; });
   }
 
-  // Fetch tuần tự các key (SaaS trước, legacy sau) rồi merge
   var chain = Promise.resolve([]);
   keys.forEach(function(k) {
     chain = chain.then(function(acc) {
@@ -4065,30 +4262,49 @@ function loadEntriesSubcollection(cid, cb) {
   });
 }
 
-/** GVCN / Leader: kéo 1 lần từ cloud (không realtime) */
+/** GVCN / Leader: kéo FULL từ cloud (xóa cursor + mọi biến thể key) */
 function forcePullClassEntries(cb) {
   if (!currentUser) { if (cb) cb(); return; }
   try { ensureUserClassId(currentUser); } catch (e) {}
+  // Leader: copy className/tenant từ GVCN cha trước khi kéo/ghi
+  try {
+    if (currentUser.role === "leader" || currentUser.role === "viewer") {
+      var pg = typeof findParentGvcn === "function" ? findParentGvcn(currentUser) : null;
+      if (pg) {
+        if (!currentUser.className && pg.className) currentUser.className = pg.className;
+        if (!currentUser.tenantId && (pg.tenantId || pg.school)) currentUser.tenantId = pg.tenantId || slugPart(pg.school);
+        if (!currentUser.school && pg.school) currentUser.school = pg.school;
+        if (pg.classId) currentUser.classId = pg.classId;
+      }
+    }
+  } catch (e) {}
   var cid = currentUser.classId || resolveSharedClassId(currentUser);
-  if (typeof setSyncStatus === "function") setSyncStatus("☁ Đẩy outbox + kéo bản ghi…", null);
-  // 1) Flush Outbox (Leader pending) trước khi pull
+  window._forceFullPull = true;
+  if (typeof setSyncStatus === "function") setSyncStatus("☁ Đẩy outbox + kéo FULL bản ghi (mọi path)…", null);
   var pushP = (typeof SyncManager !== "undefined") ? SyncManager.flush() : Promise.resolve({});
   pushP.then(function() {
     loadEntriesSubcollection(cid, function() {
       try {
+        // Tuần 5 / tuần Leader vừa nhập: ưu tiên hiển thị
+        var fw = document.getElementById("fWeekNo");
+        if (fw && !fw.value) {
+          var cur = typeof currentSchoolWeek === "function" ? currentSchoolWeek() : null;
+          if (cur) fw.value = String(cur.w);
+        }
         if (typeof renderRecent === "function") renderRecent();
         if (typeof renderReport === "function") renderReport();
         if (typeof updateMissingAssigned === "function") updateMissingAssigned();
       } catch (e) {}
       var n = (entries || []).length;
+      var nW5 = (entries || []).filter(function(e) { return String(e.weekNo) === "5"; }).length;
       if (typeof SyncManager !== "undefined") {
         SyncManager.status().then(function(st) {
           if (typeof setSyncStatus === "function") {
-            setSyncStatus("✓ Đồng bộ · " + n + " bản ghi · pending outbox: " + (st.pending || 0) + " · " + (sharedSyncKey(currentUser) || cid), true);
+            setSyncStatus("✓ FULL · " + n + " bản ghi (tuần5: " + nW5 + ") · pending: " + (st.pending || 0), true);
           }
         });
       } else if (typeof setSyncStatus === "function") {
-        setSyncStatus("✓ Đã kéo · " + n + " bản ghi", true);
+        setSyncStatus("✓ FULL · " + n + " bản ghi (tuần5: " + nW5 + ")", true);
       }
       if (cb) cb();
     });
@@ -5480,7 +5696,12 @@ function renderApp() {
   document.getElementById("subPendingBtn").classList.toggle("hidden", currentUser.role !== "super");
   try {
     var saasBtn = document.getElementById("subSaasBtn");
-    if (saasBtn) saasBtn.classList.toggle("hidden", currentUser.role !== "super" && currentUser.role !== "admin");
+    // Super: full console · GVCN: tenant lớp mình
+    if (saasBtn) {
+      var showSaas = currentUser.role === "super" || currentUser.role === "admin" || currentUser.role === "gvcn";
+      saasBtn.classList.toggle("hidden", !showSaas);
+      saasBtn.textContent = currentUser.role === "gvcn" ? "🏢 Tenant lớp" : "🏢 SaaS Console";
+    }
   } catch (e) {}
   try { if (typeof bootstrapTenantsFromAccounts === "function") bootstrapTenantsFromAccounts(); } catch (e) {}
 
