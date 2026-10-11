@@ -47,8 +47,9 @@ a { text-decoration: none; color: inherit; }
   background: linear-gradient(160deg, #EEF2FF 0%, #F0F9FF 45%, #F8FAFC 100%);
 }
 .select-wrap {
-  width: 100%;
-  max-width: 560px;
+  width: 60%;
+  max-width: 720px;
+  min-width: 320px;
 }
 .select-card {
   background: var(--card);
@@ -56,6 +57,24 @@ a { text-decoration: none; color: inherit; }
   box-shadow: var(--shadow);
   padding: 36px 32px 28px;
   margin-bottom: 28px;
+}
+.home-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1D4ED8;
+  background: #EEF2FF;
+  border: 2px solid #C7D2FE;
+  border-radius: 12px;
+  transition: transform .15s, background .15s;
+}
+.home-link:hover {
+  background: #DBEAFE;
+  transform: translateY(-1px);
 }
 .select-card h1 {
   font-size: 1.45rem;
@@ -124,14 +143,15 @@ a { text-decoration: none; color: inherit; }
   box-shadow: none;
 }
 .status-bar {
+  display: none;
   text-align: center;
   font-size: 0.9rem;
   color: var(--text-soft);
   margin-top: 14px;
   min-height: 24px;
 }
-.status-bar.error { color: var(--red); font-weight: 600; }
-.status-bar.ok { color: var(--green); font-weight: 600; }
+.status-bar.error { display: block; color: var(--red); font-weight: 600; }
+.status-bar.ok { display: none; }
 
 /* History card */
 .history-card {
@@ -254,14 +274,14 @@ a { text-decoration: none; color: inherit; }
   50% { opacity: 0.55; transform: scale(1.06); }
 }
 
-/* 2-column body */
+/* 2-column body — trái hẹp, phải rộng */
 .exam-body {
-  max-width: 1200px;
+  max-width: 1280px;
   margin: 0 auto;
-  padding: 16px;
+  padding: 16px 20px 24px;
   display: grid;
-  grid-template-columns: 30% 70%;
-  gap: 16px;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
   align-items: start;
 }
 @media (max-width: 900px) {
@@ -270,12 +290,12 @@ a { text-decoration: none; color: inherit; }
   .exam-info, .exam-progress-top { justify-self: center; }
 }
 
-/* Cột trái: lưới câu */
+/* Cột trái: lưới câu — hẹp, sát lề hợp lý */
 .exam-sidebar {
   background: var(--card);
   border-radius: 16px;
   box-shadow: 0 4px 16px rgba(0,0,0,.06);
-  padding: 16px 14px;
+  padding: 14px 12px;
   position: sticky;
   top: 68px;
   max-height: calc(100vh - 84px);
@@ -300,8 +320,8 @@ a { text-decoration: none; color: inherit; }
 .q-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-  margin-bottom: 14px;
+  gap: 5px;
+  margin-bottom: 12px;
 }
 .q-dot {
   aspect-ratio: 1;
@@ -340,17 +360,6 @@ a { text-decoration: none; color: inherit; }
   gap: 8px;
   margin-top: 4px;
 }
-.btn-submit {
-  width: 100%;
-  padding: 12px 14px;
-  font-size: 0.95rem;
-  font-weight: 800;
-  color: #fff;
-  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-  border-radius: 12px;
-  box-shadow: 0 4px 14px rgba(37,99,235,.3);
-}
-.btn-submit:hover { transform: translateY(-1px); }
 .btn-exit {
   width: 100%;
   padding: 11px 14px;
@@ -362,6 +371,31 @@ a { text-decoration: none; color: inherit; }
   border-radius: 12px;
 }
 .btn-exit:hover { background: #E2E8F0; }
+
+/* Nộp bài — cột phải, đỏ nâu, chữ vàng */
+.btn-submit {
+  display: block;
+  width: 70%;
+  max-width: 420px;
+  margin: 20px auto 8px;
+  padding: 16px 28px;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #FDE68A;
+  background: linear-gradient(135deg, #9A3412, #7C2D12);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(124, 45, 18, 0.4);
+  text-align: center;
+}
+.btn-submit:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(135deg, #B45309, #9A3412);
+  color: #FEF3C7;
+}
+.exam-bottom-actions {
+  text-align: center;
+  padding: 8px 0 24px;
+}
 
 /* Cột phải: câu hỏi */
 .exam-main {
@@ -667,6 +701,7 @@ a { text-decoration: none; color: inherit; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 @media (max-width: 600px) {
+  .select-wrap { width: 94%; min-width: 0; }
   .select-card { padding: 28px 18px 22px; }
   .q-text { font-size: 1.15rem; }
   .opt-content { font-size: 1.05rem; }
@@ -675,6 +710,7 @@ a { text-decoration: none; color: inherit; }
   .q-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
   .result-score { font-size: 2.6rem; }
   .exam-sidebar { position: static; max-height: none; }
+  .btn-submit { width: 90%; }
 }
 </style>
 </head>
@@ -683,6 +719,7 @@ a { text-decoration: none; color: inherit; }
 <!-- ===== SELECT SCREEN ===== -->
 <div id="screen-select">
   <div class="select-wrap">
+    <a class="home-link" href="https://webh2t.github.io/" title="Về trang chủ">🏠 Về trang chủ</a>
     <div class="select-card">
       <h1><span style="font-size:1.6rem">🎓</span> Thông tin học sinh</h1>
       <p class="sub">Chọn đúng họ tên, lớp trước khi bắt đầu ôn tập đề cương Tin học 11.</p>
@@ -704,12 +741,12 @@ a { text-decoration: none; color: inherit; }
       <button class="btn-start" id="btn-start" disabled>
         Bắt đầu làm bài <span style="font-size:1.3rem">→</span>
       </button>
-      <div class="status-bar" id="status-bar">Đang tải dữ liệu…</div>
+      <div class="status-bar" id="status-bar"></div>
     </div>
 
     <div class="history-card">
       <h2><span>📊</span> Lịch sử kết quả trên thiết bị</h2>
-      <p class="hist-sub">Hiển thị các lượt làm bài đã lưu trong trình duyệt này.</p>
+      <p class="hist-sub">Hiển thị các lượt làm bài trong ngày hôm nay (tự xóa khi sang ngày mới).</p>
       <div id="hist-list">
         <p class="hist-empty">Chưa có lượt làm bài nào.</p>
       </div>
@@ -731,28 +768,27 @@ a { text-decoration: none; color: inherit; }
   </div>
 
   <div class="exam-body">
-    <!-- Cột trái 30%: lưới 100 câu -->
+    <!-- Cột trái: lưới 100 câu (hẹp) -->
     <aside class="exam-sidebar">
       <div class="jump-label">Đi nhanh đến câu</div>
-      <div class="point-hint">📌 Mỗi câu = <b>0.1 điểm</b> · Thang điểm 10 · 100 câu</div>
+      <div class="point-hint">📌 Mỗi câu = <b>0.1 điểm</b><br>Thang điểm 10 · 100 câu</div>
       <div class="q-grid" id="q-grid"></div>
       <div class="sidebar-actions">
-        <button class="btn-submit" id="btn-submit">Nộp bài và xem điểm</button>
         <button class="btn-exit" id="btn-exit">Thoát bài làm</button>
       </div>
     </aside>
 
-    <!-- Cột phải 70%: nội dung câu hỏi -->
+    <!-- Cột phải: câu hỏi + nút dưới -->
     <div class="exam-main">
-      <div class="nav-row">
-        <button class="btn-nav btn-prev" id="btn-prev" disabled>← Câu trước</button>
-        <div class="nav-center">
-          <button class="btn-next-center" id="btn-next">Câu tiếp theo →</button>
-        </div>
-        <span style="width:120px"></span>
-      </div>
       <div class="q-card" id="q-card">
         <!-- filled by JS -->
+      </div>
+      <div class="nav-row" style="justify-content:center;gap:16px;margin-top:4px">
+        <button class="btn-nav btn-prev" id="btn-prev" disabled>← Câu trước</button>
+        <button class="btn-next-center" id="btn-next">Câu tiếp theo →</button>
+      </div>
+      <div class="exam-bottom-actions">
+        <button class="btn-submit" id="btn-submit">Nộp bài và xem điểm</button>
       </div>
     </div>
   </div>
@@ -795,7 +831,11 @@ a { text-decoration: none; color: inherit; }
   const DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/ontap111.xlsx";
   const DATA_URL_FALLBACK = "https://cdn.jsdelivr.net/gh/webh2t/webh2t.github.io@main/data/ontap111.xlsx";
   const STORAGE_KEY = "webh2t_on11gk1_history";
+  const STORAGE_DATE_KEY = "webh2t_on11gk1_history_date";
   const MAX_QUESTIONS = 100;
+  const COUNT_MCQ = 65;
+  const COUNT_TF = 25;
+  const COUNT_SHORT = 10;
   const TIME_LIMIT_SEC = 5 * 60; // 5 phút
   const POINT_PER_Q = 0.1;
 
@@ -862,8 +902,31 @@ a { text-decoration: none; color: inherit; }
   }
 
   function setStatus(msg, type) {
-    statusBar.textContent = msg || "";
-    statusBar.className = "status-bar" + (type ? " " + type : "");
+    // Chỉ hiện khi lỗi; ẩn thông báo tải thành công
+    if (type === "error" && msg) {
+      statusBar.textContent = msg;
+      statusBar.className = "status-bar error";
+    } else {
+      statusBar.textContent = "";
+      statusBar.className = "status-bar";
+    }
+  }
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  /** Xóa lịch sử khi sang ngày mới */
+  function purgeHistoryIfNewDay() {
+    try {
+      const saved = localStorage.getItem(STORAGE_DATE_KEY);
+      const today = todayStr();
+      if (saved !== today) {
+        localStorage.removeItem(STORAGE_KEY);
+        localStorage.setItem(STORAGE_DATE_KEY, today);
+      }
+    } catch (e) { /* ignore */ }
   }
 
   function formatTime(sec) {
@@ -886,8 +949,9 @@ a { text-decoration: none; color: inherit; }
         const wb = XLSX.read(buf, { type: "array" });
         parseWorkbook(wb);
         dataReady = true;
-        setStatus("Đã tải " + allQuestions.length + " câu hỏi · " + Object.keys(studentsByClass).length + " lớp", "ok");
+        setStatus("", "ok");
         populateClassSelect();
+        purgeHistoryIfNewDay();
         renderHistory();
         showLoading(false);
         return;
@@ -1143,30 +1207,47 @@ a { text-decoration: none; color: inherit; }
   });
 
   /* ========== EXAM ========== */
-  function startExam() {
-    // Build random 100 from bank
-    const pool = shuffle(allQuestions);
-    examQuestions = pool.slice(0, Math.min(MAX_QUESTIONS, pool.length)).map(q => {
-      // deep-ish copy + shuffle options for MCQ
-      const cq = JSON.parse(JSON.stringify(q));
-      if (cq.type === "mcq" && cq.options && cq.options.length) {
-        const letters = ["A", "B", "C", "D"];
-        const pairs = cq.options.map((o, i) => ({ text: o, letter: letters[i] || String(i) }));
-        // keep only non-empty
-        const filled = pairs.filter(p => p.text);
-        const shuffled = shuffle(filled);
-        cq.options = shuffled.map(p => p.text);
-        // remap correct
-        const origIdx = letters.indexOf(cq.correct);
-        if (origIdx >= 0) {
-          const origText = pairs[origIdx] ? pairs[origIdx].text : "";
-          const newIdx = shuffled.findIndex(p => p.text === origText);
-          cq.correct = newIdx >= 0 ? letters[newIdx] : cq.correct;
-        }
-        cq._letterMap = shuffled.map((_, i) => letters[i]);
+  function prepareQuestion(q) {
+    const cq = JSON.parse(JSON.stringify(q));
+    if (cq.type === "mcq" && cq.options && cq.options.length) {
+      const letters = ["A", "B", "C", "D"];
+      const pairs = cq.options.map((o, i) => ({ text: o, letter: letters[i] || String(i) }));
+      const filled = pairs.filter(p => p.text);
+      const shuffled = shuffle(filled);
+      cq.options = shuffled.map(p => p.text);
+      const origIdx = letters.indexOf(cq.correct);
+      if (origIdx >= 0) {
+        const origText = pairs[origIdx] ? pairs[origIdx].text : "";
+        const newIdx = shuffled.findIndex(p => p.text === origText);
+        cq.correct = newIdx >= 0 ? letters[newIdx] : cq.correct;
       }
-      return cq;
-    });
+      cq._letterMap = shuffled.map((_, i) => letters[i]);
+    }
+    return cq;
+  }
+
+  function startExam() {
+    // Lấy đúng tỉ lệ: 65 MCQ + 25 TF + 10 Short = 100 câu
+    const mcqPool = shuffle(allQuestions.filter(q => q.type === "mcq"));
+    const tfPool = shuffle(allQuestions.filter(q => q.type === "tf"));
+    const shortPool = shuffle(allQuestions.filter(q => q.type === "short"));
+
+    const picked = []
+      .concat(mcqPool.slice(0, Math.min(COUNT_MCQ, mcqPool.length)))
+      .concat(tfPool.slice(0, Math.min(COUNT_TF, tfPool.length)))
+      .concat(shortPool.slice(0, Math.min(COUNT_SHORT, shortPool.length)));
+
+    // Nếu thiếu do ngân hàng ít, bù từ phần còn lại
+    if (picked.length < MAX_QUESTIONS) {
+      const usedIds = new Set(picked.map(q => q.id));
+      const rest = shuffle(allQuestions.filter(q => !usedIds.has(q.id)));
+      for (const q of rest) {
+        if (picked.length >= MAX_QUESTIONS) break;
+        picked.push(q);
+      }
+    }
+
+    examQuestions = shuffle(picked).map(prepareQuestion);
 
     answers = {};
     currentIdx = 0;
@@ -1407,6 +1488,7 @@ a { text-decoration: none; color: inherit; }
   });
 
   /* ========== INIT ========== */
+  purgeHistoryIfNewDay();
   loadData();
   renderHistory();
 })();
