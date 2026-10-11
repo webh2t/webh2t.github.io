@@ -274,32 +274,33 @@ a { text-decoration: none; color: inherit; }
   50% { opacity: 0.55; transform: scale(1.06); }
 }
 
-/* 2-column body — trái hẹp, phải rộng */
+/* 2-column body — trái 10×10 sát lề, phải rộng */
 .exam-body {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 16px 20px 24px;
+  max-width: 100%;
+  margin: 0;
+  padding: 12px 16px 24px 10px;
   display: grid;
-  grid-template-columns: 220px 1fr;
-  gap: 18px;
+  grid-template-columns: 260px 1fr;
+  gap: 14px;
   align-items: start;
 }
 @media (max-width: 900px) {
-  .exam-body { grid-template-columns: 1fr; }
+  .exam-body { grid-template-columns: 1fr; padding: 12px; }
   .exam-top-inner { grid-template-columns: 1fr; text-align: center; }
   .exam-info, .exam-progress-top { justify-self: center; }
 }
 
-/* Cột trái: lưới câu — hẹp, sát lề hợp lý */
+/* Cột trái: lưới 10 cột × 10 hàng, sát lề trái */
 .exam-sidebar {
   background: var(--card);
-  border-radius: 16px;
+  border-radius: 14px;
   box-shadow: 0 4px 16px rgba(0,0,0,.06);
-  padding: 14px 12px;
+  padding: 12px 10px;
   position: sticky;
   top: 68px;
   max-height: calc(100vh - 84px);
   overflow-y: auto;
+  margin-left: 0;
 }
 .jump-label {
   font-size: 0.95rem;
@@ -319,8 +320,8 @@ a { text-decoration: none; color: inherit; }
 }
 .q-grid {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 5px;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
   margin-bottom: 12px;
 }
 .q-dot {
@@ -328,14 +329,16 @@ a { text-decoration: none; color: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
-  font-size: 0.82rem;
+  border-radius: 6px;
+  font-size: 0.72rem;
   font-weight: 700;
   background: #F1F5F9;
   color: var(--text-soft);
   border: 2px solid transparent;
   cursor: pointer;
   transition: all .12s;
+  min-height: 26px;
+  padding: 0;
 }
 .q-dot:hover { background: #E2E8F0; }
 .q-dot.current {
@@ -372,20 +375,22 @@ a { text-decoration: none; color: inherit; }
 }
 .btn-exit:hover { background: #E2E8F0; }
 
-/* Nộp bài — cột phải, đỏ nâu, chữ vàng */
+/* Nộp bài — sát lề phải, cao hơn, đỏ nâu chữ vàng */
 .btn-submit {
-  display: block;
-  width: 70%;
-  max-width: 420px;
-  margin: 20px auto 8px;
-  padding: 16px 28px;
-  font-size: 1.15rem;
+  display: inline-block;
+  width: auto;
+  min-width: 200px;
+  max-width: 280px;
+  margin: 0;
+  padding: 22px 28px;
+  font-size: 1.1rem;
   font-weight: 800;
   color: #FDE68A;
   background: linear-gradient(135deg, #9A3412, #7C2D12);
   border-radius: 14px;
   box-shadow: 0 6px 18px rgba(124, 45, 18, 0.4);
   text-align: center;
+  line-height: 1.35;
 }
 .btn-submit:hover {
   transform: translateY(-2px);
@@ -393,8 +398,11 @@ a { text-decoration: none; color: inherit; }
   color: #FEF3C7;
 }
 .exam-bottom-actions {
-  text-align: center;
-  padding: 8px 0 24px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 16px 8px 28px;
+  gap: 12px;
 }
 
 /* Cột phải: câu hỏi */
@@ -707,10 +715,12 @@ a { text-decoration: none; color: inherit; }
   .opt-content { font-size: 1.05rem; }
   .tf-stmt { font-size: 1.05rem; }
   .short-input { font-size: 1.1rem; }
-  .q-grid { grid-template-columns: repeat(5, 1fr); gap: 5px; }
+  .q-grid { grid-template-columns: repeat(10, 1fr); gap: 3px; }
+  .q-dot { font-size: 0.65rem; min-height: 22px; }
   .result-score { font-size: 2.6rem; }
   .exam-sidebar { position: static; max-height: none; }
-  .btn-submit { width: 90%; }
+  .btn-submit { min-width: 160px; padding: 18px 20px; }
+  .exam-bottom-actions { justify-content: center; }
 }
 </style>
 </head>
@@ -798,7 +808,7 @@ a { text-decoration: none; color: inherit; }
 <div id="screen-result">
   <div class="result-card">
     <div class="result-icon" id="result-icon">🎯</div>
-    <h2>Kết quả ôn tập</h2>
+    <h2>Kết quả ôn tập giữa kỳ 1 Tin 11</h2>
     <div class="result-student-name" id="result-student-name">—</div>
     <div class="result-student-class" id="result-student-class">—</div>
     <div class="result-score" id="result-score">0.0</div>
@@ -1227,27 +1237,45 @@ a { text-decoration: none; color: inherit; }
   }
 
   function startExam() {
-    // Lấy đúng tỉ lệ: 65 MCQ + 25 TF + 10 Short = 100 câu
+    // Lấy ngẫu nhiên: 65 MCQ + 25 TF + 10 Short
     const mcqPool = shuffle(allQuestions.filter(q => q.type === "mcq"));
     const tfPool = shuffle(allQuestions.filter(q => q.type === "tf"));
     const shortPool = shuffle(allQuestions.filter(q => q.type === "short"));
 
-    const picked = []
-      .concat(mcqPool.slice(0, Math.min(COUNT_MCQ, mcqPool.length)))
-      .concat(tfPool.slice(0, Math.min(COUNT_TF, tfPool.length)))
-      .concat(shortPool.slice(0, Math.min(COUNT_SHORT, shortPool.length)));
+    let mcq = mcqPool.slice(0, Math.min(COUNT_MCQ, mcqPool.length));
+    let tf = tfPool.slice(0, Math.min(COUNT_TF, tfPool.length));
+    let sh = shortPool.slice(0, Math.min(COUNT_SHORT, shortPool.length));
 
-    // Nếu thiếu do ngân hàng ít, bù từ phần còn lại
-    if (picked.length < MAX_QUESTIONS) {
-      const usedIds = new Set(picked.map(q => q.id));
-      const rest = shuffle(allQuestions.filter(q => !usedIds.has(q.id)));
-      for (const q of rest) {
-        if (picked.length >= MAX_QUESTIONS) break;
-        picked.push(q);
-      }
+    // Bù nếu ngân hàng thiếu
+    const usedIds = new Set([...mcq, ...tf, ...sh].map(q => q.id));
+    const rest = shuffle(allQuestions.filter(q => !usedIds.has(q.id)));
+    for (const q of rest) {
+      if (mcq.length < COUNT_MCQ) { mcq.push(q); continue; }
+      if (tf.length < COUNT_TF) { tf.push(q); continue; }
+      if (sh.length < COUNT_SHORT) { sh.push(q); continue; }
+      break;
     }
 
-    examQuestions = shuffle(picked).map(prepareQuestion);
+    // Thứ tự khối cố định:
+    // 25 mcq > 10 tf > 5 short > 25 mcq > 10 tf > 3 short > 15 mcq > 5 tf > 2 short
+    const pattern = [
+      ["mcq", 25], ["tf", 10], ["short", 5],
+      ["mcq", 25], ["tf", 10], ["short", 3],
+      ["mcq", 15], ["tf", 5],  ["short", 2]
+    ];
+    const buckets = { mcq: mcq.slice(), tf: tf.slice(), short: sh.slice() };
+    const ordered = [];
+    pattern.forEach(function (pair) {
+      var type = pair[0], n = pair[1];
+      for (var i = 0; i < n; i++) {
+        if (buckets[type].length) ordered.push(buckets[type].shift());
+      }
+    });
+    ["mcq", "tf", "short"].forEach(function (t) {
+      while (buckets[t].length) ordered.push(buckets[t].shift());
+    });
+
+    examQuestions = ordered.map(prepareQuestion);
 
     answers = {};
     currentIdx = 0;
