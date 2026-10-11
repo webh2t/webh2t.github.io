@@ -278,9 +278,9 @@ a { text-decoration: none; color: inherit; }
 .exam-body {
   max-width: 100%;
   margin: 0;
-  padding: 12px 16px 24px 10px;
+  padding: 12px 16px 24px 8px;
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: 320px 1fr;
   gap: 14px;
   align-items: start;
 }
@@ -290,7 +290,7 @@ a { text-decoration: none; color: inherit; }
   .exam-info, .exam-progress-top { justify-self: center; }
 }
 
-/* Cột trái: lưới 10 cột × 10 hàng, sát lề trái */
+/* Cột trái: lưới 10 cột × 10 hàng, đủ rộng không bị cắt */
 .exam-sidebar {
   background: var(--card);
   border-radius: 14px;
@@ -299,8 +299,12 @@ a { text-decoration: none; color: inherit; }
   position: sticky;
   top: 68px;
   max-height: calc(100vh - 84px);
+  overflow-x: hidden;
   overflow-y: auto;
   margin-left: 0;
+  width: 320px;
+  min-width: 320px;
+  box-sizing: border-box;
 }
 .jump-label {
   font-size: 0.95rem;
@@ -309,20 +313,21 @@ a { text-decoration: none; color: inherit; }
   margin-bottom: 6px;
 }
 .point-hint {
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   color: #166534;
   font-weight: 700;
   background: #DCFCE7;
   border-radius: 8px;
-  padding: 8px 10px;
-  margin-bottom: 12px;
+  padding: 7px 8px;
+  margin-bottom: 10px;
   line-height: 1.35;
 }
 .q-grid {
   display: grid;
-  grid-template-columns: repeat(10, 1fr);
-  gap: 4px;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 3px;
   margin-bottom: 12px;
+  width: 100%;
 }
 .q-dot {
   aspect-ratio: 1;
@@ -330,15 +335,17 @@ a { text-decoration: none; color: inherit; }
   align-items: center;
   justify-content: center;
   border-radius: 6px;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 700;
   background: #F1F5F9;
   color: var(--text-soft);
   border: 2px solid transparent;
   cursor: pointer;
   transition: all .12s;
-  min-height: 26px;
+  min-height: 0;
+  min-width: 0;
   padding: 0;
+  width: 100%;
 }
 .q-dot:hover { background: #E2E8F0; }
 .q-dot.current {
