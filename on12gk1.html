@@ -7,6 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+<!-- Google Analytics GA4 — thống kê lượt nộp bài -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-JG88ZZBKGC', { send_page_view: true });
+</script>
 <style>
 :root {
   --primary: #2563EB;
@@ -28,7 +36,7 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
   font-family: 'Be Vietnam Pro', system-ui, sans-serif;
-  background: var(--bg);
+  background: #F5F3FF;
   color: var(--text);
   min-height: 100vh;
   line-height: 1.5;
@@ -44,7 +52,8 @@ a { text-decoration: none; color: inherit; }
   align-items: flex-start;
   justify-content: center;
   padding: 32px 16px 60px;
-  background: linear-gradient(160deg, #EEF2FF 0%, #F0F9FF 45%, #F8FAFC 100%);
+  /* Tím nhạt – tone bìa Tin học 12 Kết nối tri thức */
+  background: linear-gradient(165deg, #F3E8FF 0%, #EDE9FE 40%, #F5F3FF 70%, #FAF5FF 100%);
 }
 .select-wrap {
   width: 60%;
@@ -200,22 +209,11 @@ a { text-decoration: none; color: inherit; }
   padding: 20px 8px;
   font-size: 0.95rem;
 }
-.btn-clear-hist {
-  margin-top: 14px;
-  padding: 10px 18px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: var(--red);
-  background: #FEF2F2;
-  border: 1px solid #FECACA;
-  border-radius: 10px;
-  transition: background .15s;
-}
-.btn-clear-hist:hover { background: #FEE2E2; }
+/* Nút xóa lịch sử đã ẩn — bảo vệ dữ liệu; tự xóa khi sang ngày mới */
 
 /* ===== SCREEN: EXAM ===== */
 /* ===== SCREEN: EXAM — 2 cột ===== */
-#screen-exam { display: none; min-height: 100vh; background: #F1F5F9; }
+#screen-exam { display: none; min-height: 100vh; background: linear-gradient(180deg, #F5F3FF 0%, #FAF5FF 50%, #F8FAFC 100%); }
 /* Chống bôi đen / copy khi làm bài (ô short vẫn gõ được) */
 #screen-exam.no-cheat,
 #screen-exam.no-cheat *:not(input):not(textarea) {
@@ -636,7 +634,7 @@ a { text-decoration: none; color: inherit; }
 }
 
 /* ===== RESULT ===== */
-#screen-result { display: none; min-height: 100vh; padding: 40px 16px; background: linear-gradient(160deg, #EEF2FF, #F0FDF4 50%, #F8FAFC); }
+#screen-result { display: none; min-height: 100vh; padding: 40px 16px; background: linear-gradient(165deg, #F3E8FF 0%, #EDE9FE 45%, #F5F3FF 100%); }
 .result-card {
   max-width: 520px;
   margin: 0 auto;
@@ -820,11 +818,11 @@ a { text-decoration: none; color: inherit; }
 
     <div class="history-card">
       <h2><span>📊</span> Lịch sử kết quả trên thiết bị</h2>
-      <p class="hist-sub">Hiển thị các lượt làm bài trong ngày hôm nay (tự xóa khi sang ngày mới).</p>
+      <p class="hist-sub">Các lượt làm bài trong ngày hôm nay (tự làm mới khi sang ngày mới).</p>
       <div id="hist-list">
         <p class="hist-empty">Chưa có lượt làm bài nào.</p>
       </div>
-      <button class="btn-clear-hist" id="btn-clear-hist" style="display:none">Xóa lịch sử trên thiết bị</button>
+      
     </div>
   </div>
 </div>
@@ -943,7 +941,6 @@ a { text-decoration: none; color: inherit; }
   const btnStart = $("btn-start");
   const statusBar = $("status-bar");
   const histList = $("hist-list");
-  const btnClearHist = $("btn-clear-hist");
   const screenSelect = $("screen-select");
   const screenExam = $("screen-exam");
   const screenResult = $("screen-result");
@@ -1288,7 +1285,6 @@ a { text-decoration: none; color: inherit; }
     const list = getHistory();
     if (!list.length) {
       histList.innerHTML = '<p class="hist-empty">Chưa có lượt làm bài nào.</p>';
-      btnClearHist.style.display = "none";
       return;
     }
     let html = `<table class="hist-table"><thead><tr>
@@ -1305,19 +1301,39 @@ a { text-decoration: none; color: inherit; }
     });
     html += "</tbody></table>";
     histList.innerHTML = html;
-    btnClearHist.style.display = "inline-block";
   }
 
   function escapeHtml(s) {
     return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
-  btnClearHist.addEventListener("click", () => {
-    if (confirm("Xóa toàn bộ lịch sử trên thiết bị này?")) {
-      localStorage.removeItem(STORAGE_KEY);
-      renderHistory();
+  /** Gửi sự kiện GA4 khi nộp bài (thống kê lượt dùng chung property G-JG88ZZBKGC) */
+  function trackSubmitGA4(payload) {
+    try {
+      if (typeof gtag === "function") {
+        gtag("event", "nop_bai_on12gk1", {
+          event_category: "on_tap",
+          event_label: "Tin12_GK1",
+          mon: "Tin12",
+          de: "on12gk1",
+          lop: payload.lop || "",
+          diem: payload.score || "",
+          dung: payload.correct || 0,
+          sai: payload.wrong || 0,
+          bo_qua: payload.skip || 0,
+          value: parseFloat(payload.score) || 0
+        });
+        gtag("event", "exam_submit", {
+          exam_id: "on12gk1",
+          grade: "12",
+          class_name: payload.lop || "",
+          score: parseFloat(payload.score) || 0
+        });
+      }
+    } catch (e) {
+      console.warn("GA4 track error", e);
     }
-  });
+  }
 
   /* ========== EXAM ========== */
   function prepareQuestion(q) {
@@ -1712,7 +1728,7 @@ a { text-decoration: none; color: inherit; }
     const ip = await fetchClientIP();
     $("result-ip").textContent = ip;
 
-    saveHistory({
+    const histEntry = {
       time: timeStr,
       name: studentName,
       lop: studentClass,
@@ -1720,7 +1736,9 @@ a { text-decoration: none; color: inherit; }
       score: score.toFixed(1),
       correct, wrong, skip,
       ip: ip
-    });
+    };
+    saveHistory(histEntry);
+    trackSubmitGA4(histEntry);
     renderHistory();
   }
 
