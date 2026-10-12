@@ -216,6 +216,34 @@ a { text-decoration: none; color: inherit; }
 /* ===== SCREEN: EXAM ===== */
 /* ===== SCREEN: EXAM — 2 cột ===== */
 #screen-exam { display: none; min-height: 100vh; background: #F1F5F9; }
+/* Chống bôi đen / copy khi làm bài (ô short vẫn gõ được) */
+#screen-exam.no-cheat,
+#screen-exam.no-cheat *:not(input):not(textarea) {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+  -webkit-touch-callout: none !important;
+}
+#screen-exam.no-cheat input.short-input,
+#screen-exam.no-cheat textarea {
+  -webkit-user-select: text !important;
+  -moz-user-select: text !important;
+  -ms-user-select: text !important;
+  user-select: text !important;
+}
+#screen-exam.no-cheat ::selection { background: transparent; color: inherit; }
+#screen-exam.no-cheat ::-moz-selection { background: transparent; color: inherit; }
+@media print {
+  body * { display: none !important; }
+  body::after {
+    content: "Không được phép in trang kiểm tra.";
+    display: block !important;
+    font-size: 24px;
+    text-align: center;
+    padding: 40px;
+  }
+}
 
 .exam-top {
   background: var(--card);
@@ -1094,22 +1122,51 @@ a { text-decoration: none; color: inherit; }
             correct: correctLetter
           });
         } else if (type === "tf") {
-          // TF can be single statement or multi (ĐĐĐS style)
-          // Support: single True/False, or multiple sub-statements separated by | or newline
-          const parts = text.split(/\n|\|/).map(s => s.trim()).filter(Boolean);
-          if (parts.length <= 1) {
-            allQuestions.push({
-              id, type: "tf", text,
-              statements: [{ text: text, correct: isTrue(ansRaw) }]
+          // Ưu tiên lấy ý từ cột A/B/C/D (định dạng Excel ontap121)
+          const colStmts = [
+            String(row[iA] || "").trim(),
+            String(row[iB] || "").trim(),
+            String(row[iC] || "").trim(),
+            String(row[iD] || "").trim()
+          ].filter(Boolean);
+          const ansClean = ansRaw.replace(/[^ĐđDSdsTt01]/g, "");
+          function tfCorrect(i) {
+            const ch = ansClean.charAt(i) || "";
+            return isTrue(ch);
+          }
+          if (colStmts.length >= 2) {
+            // Nhiều ý: tiêu đề = Câu hỏi, các ý = A/B/C/D
+            const stmts = colStmts.map(function (p, i) {
+              return { text: p, correct: tfCorrect(i) };
             });
+            allQuestions.push({ id, type: "tf", text: text, statements: stmts });
           } else {
-            // multi TF: answer like ĐĐĐS or Đ/S/Đ/S
-            const ansClean = ansRaw.replace(/[^ĐđDSdstT01]/g, "");
-            const stmts = parts.map((p, i) => {
-              const ch = ansClean.charAt(i) || ansRaw.charAt(i) || "";
-              return { text: p, correct: isTrue(ch) };
-            });
-            allQuestions.push({ id, type: "tf", text: parts[0], statements: stmts });
+            // Tách theo | hoặc xuống dòng trong cột Câu hỏi
+            const parts = text.split(/\n|\|/).map(function (s) { return s.trim(); }).filter(Boolean);
+            if (parts.length > 1) {
+              const title = parts[0];
+              const body = parts.slice(1);
+              // Nếu phần đầu ngắn giống tiêu đề và còn các ý sau
+              const stmts = (body.length ? body : parts).map(function (p, i) {
+                return { text: p, correct: tfCorrect(i) };
+              });
+              allQuestions.push({
+                id, type: "tf",
+                text: body.length ? title : text,
+                statements: stmts
+              });
+            } else if (colStmts.length === 1) {
+              allQuestions.push({
+                id, type: "tf", text: text,
+                statements: [{ text: colStmts[0], correct: isTrue(ansRaw) }]
+              });
+            } else {
+              // Đúng/Sai đơn: nội dung chính là câu hỏi
+              allQuestions.push({
+                id, type: "tf", text: text,
+                statements: [{ text: text, correct: isTrue(ansRaw) }]
+              });
+            }
           }
         } else {
           // short
@@ -1298,7 +1355,93 @@ a { text-decoration: none; color: inherit; }
     screenSelect.style.display = "none";
     screenResult.style.display = "none";
     screenExam.style.display = "block";
+    enableAntiCheat();
     window.scrollTo(0, 0);
+  }
+
+  /* ========== CHỐNG GIAN LẬN ========== */
+  function isShortInputFocused() {
+    const el = document.activeElement;
+    return el && (el.id === "short-ans" || el.classList.contains("short-input"));
+  }
+
+  function onCheatKey(e) {
+    if (screenExam.style.display === "none") return;
+    const key = (e.key || "").toLowerCase();
+    const ctrl = e.ctrlKey || e.metaKey;
+
+    // Cho phép gõ bình thường trong ô trả lời ngắn
+    if (isShortInputFocused()) {
+      // Vẫn chặn paste / copy / cut / print / save trong short
+      if (ctrl && ["c", "x", "v", "a", "p", "s", "u"].includes(key)) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      if (key === "printscreen") {
+        e.preventDefault();
+      }
+      return;
+    }
+
+    // Chặn phím tắt gian lận trên toàn màn hình thi
+    if (ctrl && ["c", "x", "v", "a", "p", "s", "u"].includes(key)) {
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
+    if (key === "printscreen" || key === "f12" || (ctrl && key === "i") || (ctrl && shiftKey(e) && key === "i") || (ctrl && shiftKey(e) && key === "j") || (ctrl && shiftKey(e) && key === "c")) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+  function shiftKey(e) { return e.shiftKey; }
+
+  function onCheatClipboard(e) {
+    if (screenExam.style.display === "none") return;
+    // Cho phép chọn/gõ trong short nhưng không copy/paste ra ngoài
+    if (e.type === "paste" || e.type === "copy" || e.type === "cut") {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  }
+
+  function onCheatContext(e) {
+    if (screenExam.style.display === "none") return;
+    if (isShortInputFocused()) return; // cho phép chuột phải trên ô nhập ngắn nếu cần
+    e.preventDefault();
+  }
+
+  function onCheatSelectStart(e) {
+    if (screenExam.style.display === "none") return;
+    if (isShortInputFocused() || (e.target && e.target.classList && e.target.classList.contains("short-input"))) return;
+    e.preventDefault();
+  }
+
+  function onCheatDrag(e) {
+    if (screenExam.style.display === "none") return;
+    e.preventDefault();
+  }
+
+  function enableAntiCheat() {
+    screenExam.classList.add("no-cheat");
+    document.addEventListener("keydown", onCheatKey, true);
+    document.addEventListener("copy", onCheatClipboard, true);
+    document.addEventListener("cut", onCheatClipboard, true);
+    document.addEventListener("paste", onCheatClipboard, true);
+    document.addEventListener("contextmenu", onCheatContext, true);
+    document.addEventListener("dragstart", onCheatDrag, true);
+    document.addEventListener("selectstart", onCheatSelectStart, true);
+  }
+
+  function disableAntiCheat() {
+    screenExam.classList.remove("no-cheat");
+    document.removeEventListener("keydown", onCheatKey, true);
+    document.removeEventListener("copy", onCheatClipboard, true);
+    document.removeEventListener("cut", onCheatClipboard, true);
+    document.removeEventListener("paste", onCheatClipboard, true);
+    document.removeEventListener("contextmenu", onCheatContext, true);
+    document.removeEventListener("dragstart", onCheatDrag, true);
+    document.removeEventListener("selectstart", onCheatSelectStart, true);
   }
 
   function buildQGrid() {
@@ -1338,9 +1481,9 @@ a { text-decoration: none; color: inherit; }
       <span class="q-badge ${badgeClass[q.type] || "badge-mcq"}">${typeLabel[q.type] || q.type}</span>
       <span class="q-num">Câu ${idx + 1} / ${examQuestions.length}</span>
     </div>`;
-    html += `<div class="q-text">${escapeHtml(q.text)}</div>`;
 
     if (q.type === "mcq") {
+      html += `<div class="q-text">${escapeHtml(q.text)}</div>`;
       html += '<div class="opt-list">';
       const letters = ["A", "B", "C", "D"];
       (q.options || []).forEach((opt, i) => {
@@ -1356,22 +1499,39 @@ a { text-decoration: none; color: inherit; }
     } else if (q.type === "tf") {
       const stmts = q.statements || [{ text: q.text, correct: false }];
       const ansArr = Array.isArray(answers[idx]) ? answers[idx] : [];
-      html += '<div class="tf-list">';
-      stmts.forEach((s, si) => {
-        const val = ansArr[si]; // true / false / undefined
-        html += `<div class="tf-row" data-si="${si}">
-          <div class="tf-stmt">${stmts.length > 1 ? (si + 1) + ". " : ""}${escapeHtml(s.text)}</div>
+      // Nhiều ý: hiện tiêu đề + từng ý đầy đủ (không lặp tiêu đề trong ý)
+      // Một ý: chỉ hiện nội dung một lần (không nhân đôi)
+      if (stmts.length > 1) {
+        html += `<div class="q-text">${escapeHtml(q.text)}</div>`;
+        html += '<div class="tf-list">';
+        stmts.forEach((s, si) => {
+          const val = ansArr[si];
+          html += `<div class="tf-row" data-si="${si}">
+            <div class="tf-stmt">${String.fromCharCode(97 + si)}) ${escapeHtml(s.text)}</div>
+            <div class="tf-btns">
+              <button type="button" class="tf-btn ${val === true ? "active-dung" : ""}" data-val="true">Đúng</button>
+              <button type="button" class="tf-btn ${val === false ? "active-sai" : ""}" data-val="false">Sai</button>
+            </div>
+          </div>`;
+        });
+        html += "</div>";
+      } else {
+        const only = stmts[0] ? stmts[0].text : q.text;
+        html += `<div class="q-text">${escapeHtml(only)}</div>`;
+        const val = ansArr[0];
+        html += `<div class="tf-list"><div class="tf-row" data-si="0">
+          <div class="tf-stmt" style="color:var(--text-soft);font-weight:600">Chọn Đúng hoặc Sai:</div>
           <div class="tf-btns">
             <button type="button" class="tf-btn ${val === true ? "active-dung" : ""}" data-val="true">Đúng</button>
             <button type="button" class="tf-btn ${val === false ? "active-sai" : ""}" data-val="false">Sai</button>
           </div>
-        </div>`;
-      });
-      html += "</div>";
+        </div></div>`;
+      }
     } else {
-      // short
+      // short — cho phép gõ bình thường
+      html += `<div class="q-text">${escapeHtml(q.text)}</div>`;
       const val = answers[idx] != null ? answers[idx] : "";
-      html += `<input class="short-input" id="short-ans" type="text" placeholder="Nhập câu trả lời…" value="${escapeHtml(val)}" autocomplete="off">
+      html += `<input class="short-input" id="short-ans" type="text" placeholder="Nhập câu trả lời…" value="${escapeHtml(val)}" autocomplete="off" spellcheck="false">
         <p class="short-hint">Gõ đáp án ngắn gọn (không phân biệt hoa thường).</p>`;
     }
 
@@ -1487,6 +1647,7 @@ a { text-decoration: none; color: inherit; }
     $("stat-skip").textContent = skip;
     $("result-icon").textContent = score >= 8 ? "🏆" : score >= 5 ? "🎯" : "📝";
 
+    disableAntiCheat();
     screenExam.style.display = "none";
     screenResult.style.display = "block";
     window.scrollTo(0, 0);
@@ -1506,6 +1667,7 @@ a { text-decoration: none; color: inherit; }
   btnExit.addEventListener("click", () => {
     if (confirm("Thoát bài làm? Tiến trình hiện tại sẽ không được lưu điểm.")) {
       clearInterval(timerId);
+      disableAntiCheat();
       screenExam.style.display = "none";
       screenSelect.style.display = "flex";
       renderHistory();
