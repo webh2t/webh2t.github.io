@@ -214,6 +214,60 @@ a { text-decoration: none; color: inherit; }
 }
 /* Nút xóa lịch sử đã ẩn — bảo vệ dữ liệu; tự xóa khi sang ngày mới */
 
+/* Thống kê lượt nộp bài — cuối trang */
+.stats-card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.06);
+  padding: 20px 18px;
+  margin-top: 18px;
+  border: 1px solid #FDE68A;
+}
+.stats-card h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+@media (max-width: 560px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
+.stats-item {
+  background: linear-gradient(160deg, #FFFBEB, #FEF3C7);
+  border-radius: 12px;
+  padding: 14px 10px;
+  text-align: center;
+  border: 1px solid #FDE68A;
+}
+.stats-item .stats-num {
+  font-size: 1.65rem;
+  font-weight: 800;
+  color: #B45309;
+  line-height: 1.15;
+}
+.stats-item .stats-lbl {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #78716C;
+  margin-top: 4px;
+  line-height: 1.3;
+}
+.stats-note {
+  font-size: 0.82rem;
+  color: var(--text-soft);
+  margin-top: 12px;
+  line-height: 1.45;
+  text-align: center;
+}
+
 /* ===== SCREEN: EXAM ===== */
 /* ===== SCREEN: EXAM — 2 cột ===== */
 #screen-exam { display: none; min-height: 100vh; background: linear-gradient(180deg, #FFFBEB 0%, #FEF9C3 40%, #F8FAFC 100%); }
@@ -825,7 +879,26 @@ a { text-decoration: none; color: inherit; }
       <div id="hist-list">
         <p class="hist-empty">Chưa có lượt làm bài nào.</p>
       </div>
-      
+    </div>
+
+    <!-- Thống kê lượt nộp bài -->
+    <div class="stats-card" id="stats-card">
+      <h2><span>📈</span> Thống kê lượt nộp bài</h2>
+      <div class="stats-grid">
+        <div class="stats-item">
+          <div class="stats-num" id="stat-today">0</div>
+          <div class="stats-lbl">Hôm nay<br>(thiết bị này)</div>
+        </div>
+        <div class="stats-item">
+          <div class="stats-num" id="stat-device">0</div>
+          <div class="stats-lbl">Tổng trên<br>thiết bị này</div>
+        </div>
+        <div class="stats-item">
+          <div class="stats-num" id="stat-global">…</div>
+          <div class="stats-lbl">Toàn hệ thống<br>(mọi thiết bị)</div>
+        </div>
+      </div>
+      <p class="stats-note">Số liệu toàn hệ thống được đếm chung · Chi tiết theo lớp/điểm xem trên Google Analytics (G-JG88ZZBKGC).</p>
     </div>
   </div>
 </div>
@@ -1338,6 +1411,77 @@ a { text-decoration: none; color: inherit; }
     }
   }
 
+  /* ========== THỐNG KÊ LƯỢT NỘP ========== */
+  const COUNTER_NS = "webh2t";
+  const COUNTER_KEY = "on11gk1_submits";
+  const DEVICE_TOTAL_KEY = "webh2t_on11gk1_device_total";
+
+  function getDeviceTotal() {
+    return parseInt(localStorage.getItem(DEVICE_TOTAL_KEY) || "0", 10) || 0;
+  }
+  function bumpDeviceTotal() {
+    const n = getDeviceTotal() + 1;
+    localStorage.setItem(DEVICE_TOTAL_KEY, String(n));
+    return n;
+  }
+
+  function renderLocalStats() {
+    const list = getHistory();
+    const elToday = $("stat-today");
+    const elDevice = $("stat-device");
+    if (elToday) elToday.textContent = String(list.length);
+    if (elDevice) elDevice.textContent = String(Math.max(getDeviceTotal(), list.length));
+  }
+
+  async function fetchGlobalCount() {
+    const el = $("stat-global");
+    if (!el) return;
+    const urls = [
+      "https://api.countapi.xyz/get/" + COUNTER_NS + "/" + COUNTER_KEY,
+      "https://api.counterapi.dev/v1/" + COUNTER_NS + "/" + COUNTER_KEY + "/"
+    ];
+    for (const url of urls) {
+      try {
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) continue;
+        const data = await r.json();
+        const val = data.count != null ? data.count : data.value;
+        if (typeof val === "number") {
+          el.textContent = String(val);
+          return val;
+        }
+      } catch (e) { /* thử endpoint khác */ }
+    }
+    el.textContent = "—";
+    return null;
+  }
+
+  async function hitGlobalCount() {
+    const urls = [
+      "https://api.countapi.xyz/hit/" + COUNTER_NS + "/" + COUNTER_KEY,
+      "https://api.counterapi.dev/v1/" + COUNTER_NS + "/" + COUNTER_KEY + "/up"
+    ];
+    for (const url of urls) {
+      try {
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) continue;
+        const data = await r.json();
+        const val = data.count != null ? data.count : data.value;
+        if (typeof val === "number") {
+          const el = $("stat-global");
+          if (el) el.textContent = String(val);
+          return val;
+        }
+      } catch (e) { /* thử endpoint khác */ }
+    }
+    return fetchGlobalCount();
+  }
+
+  function refreshStats() {
+    renderLocalStats();
+    fetchGlobalCount();
+  }
+
   /* ========== EXAM ========== */
   function prepareQuestion(q) {
     const cq = JSON.parse(JSON.stringify(q));
@@ -1741,8 +1885,11 @@ a { text-decoration: none; color: inherit; }
       ip: ip
     };
     saveHistory(histEntry);
+    bumpDeviceTotal();
     trackSubmitGA4(histEntry);
+    hitGlobalCount();
     renderHistory();
+    renderLocalStats();
   }
 
   btnSubmit.addEventListener("click", () => {
@@ -1774,12 +1921,14 @@ a { text-decoration: none; color: inherit; }
     screenResult.style.display = "none";
     screenSelect.style.display = "flex";
     renderHistory();
+    refreshStats();
   });
 
   /* ========== INIT ========== */
   purgeHistoryIfNewDay();
   loadData();
   renderHistory();
+  refreshStats();
 })();
 </script>
 </body>
