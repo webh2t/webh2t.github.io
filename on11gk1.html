@@ -894,11 +894,10 @@ a { text-decoration: none; color: inherit; }
           <div class="stats-lbl">Tổng trên<br>thiết bị này</div>
         </div>
         <div class="stats-item">
-          <div class="stats-num" id="stat-global">…</div>
+          <div class="stats-num" id="stat-global">0</div>
           <div class="stats-lbl">Toàn hệ thống<br>(mọi thiết bị)</div>
         </div>
       </div>
-      <p class="stats-note">Số liệu toàn hệ thống được đếm chung · Chi tiết theo lớp/điểm xem trên Google Analytics (G-JG88ZZBKGC).</p>
     </div>
   </div>
 </div>
@@ -1412,8 +1411,9 @@ a { text-decoration: none; color: inherit; }
   }
 
   /* ========== THỐNG KÊ LƯỢT NỘP ========== */
-  const COUNTER_NS = "webh2t";
-  const COUNTER_KEY = "on11gk1_submits";
+  // Bộ đếm toàn hệ thống: abacus.jasoncameron.dev (countapi.xyz / counterapi v1 đã ngừng)
+  const COUNTER_GET = "https://abacus.jasoncameron.dev/get/webh2t/on11gk1_submits";
+  const COUNTER_HIT = "https://abacus.jasoncameron.dev/hit/webh2t/on11gk1_submits";
   const DEVICE_TOTAL_KEY = "webh2t_on11gk1_device_total";
 
   function getDeviceTotal() {
@@ -1433,47 +1433,50 @@ a { text-decoration: none; color: inherit; }
     if (elDevice) elDevice.textContent = String(Math.max(getDeviceTotal(), list.length));
   }
 
+  function parseCounterValue(data) {
+    if (data == null) return null;
+    if (typeof data.value === "number") return data.value;
+    if (typeof data.count === "number") return data.count;
+    return null;
+  }
+
   async function fetchGlobalCount() {
     const el = $("stat-global");
-    if (!el) return;
-    const urls = [
-      "https://api.countapi.xyz/get/" + COUNTER_NS + "/" + COUNTER_KEY,
-      "https://api.counterapi.dev/v1/" + COUNTER_NS + "/" + COUNTER_KEY + "/"
-    ];
-    for (const url of urls) {
-      try {
-        const r = await fetch(url, { cache: "no-store" });
-        if (!r.ok) continue;
+    if (!el) return null;
+    try {
+      const r = await fetch(COUNTER_GET, { cache: "no-store", mode: "cors" });
+      if (r.ok) {
         const data = await r.json();
-        const val = data.count != null ? data.count : data.value;
+        const val = parseCounterValue(data);
         if (typeof val === "number") {
           el.textContent = String(val);
           return val;
         }
-      } catch (e) { /* thử endpoint khác */ }
+      }
+    } catch (e) {
+      console.warn("fetchGlobalCount", e);
     }
-    el.textContent = "—";
+    // Giữ số đang hiện nếu có, không để dấu gạch
+    if (!/^\d+$/.test(el.textContent)) el.textContent = "0";
     return null;
   }
 
   async function hitGlobalCount() {
-    const urls = [
-      "https://api.countapi.xyz/hit/" + COUNTER_NS + "/" + COUNTER_KEY,
-      "https://api.counterapi.dev/v1/" + COUNTER_NS + "/" + COUNTER_KEY + "/up"
-    ];
-    for (const url of urls) {
-      try {
-        const r = await fetch(url, { cache: "no-store" });
-        if (!r.ok) continue;
+    const el = $("stat-global");
+    try {
+      const r = await fetch(COUNTER_HIT, { cache: "no-store", mode: "cors" });
+      if (r.ok) {
         const data = await r.json();
-        const val = data.count != null ? data.count : data.value;
+        const val = parseCounterValue(data);
         if (typeof val === "number") {
-          const el = $("stat-global");
           if (el) el.textContent = String(val);
           return val;
         }
-      } catch (e) { /* thử endpoint khác */ }
+      }
+    } catch (e) {
+      console.warn("hitGlobalCount", e);
     }
+    // Fallback: đọc lại
     return fetchGlobalCount();
   }
 
