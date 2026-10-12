@@ -7,13 +7,16 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
-<!-- Google Analytics GA4 — thống kê lượt nộp bài -->
+<!-- Google Analytics 4 – WEBH2T -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
+  function gtag(){ dataLayer.push(arguments); }
   gtag('js', new Date());
-  gtag('config', 'G-JG88ZZBKGC', { send_page_view: true });
+  gtag('config', 'G-JG88ZZBKGC', {
+    page_title: document.title,
+    page_location: window.location.href
+  });
 </script>
 <style>
 :root {
