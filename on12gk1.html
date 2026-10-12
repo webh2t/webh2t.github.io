@@ -667,6 +667,35 @@ a { text-decoration: none; color: inherit; }
   text-align: center;
   margin-bottom: 12px;
 }
+.result-meta {
+  background: #F8FAFC;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin: 8px 0 16px;
+  text-align: left;
+  font-size: 0.92rem;
+  color: var(--text-soft);
+  line-height: 1.55;
+}
+.result-meta .meta-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+.result-meta .meta-row:last-child { margin-bottom: 0; }
+.result-meta .meta-label {
+  font-weight: 700;
+  color: #475569;
+  min-width: 88px;
+  flex-shrink: 0;
+}
+.result-meta .meta-value {
+  font-weight: 600;
+  color: var(--text);
+  word-break: break-all;
+}
 .result-score {
   font-size: 3.2rem;
   font-weight: 800;
@@ -846,6 +875,16 @@ a { text-decoration: none; color: inherit; }
     <h2>Kết quả ôn tập giữa kỳ 1 Tin 12</h2>
     <div class="result-student-name" id="result-student-name">—</div>
     <div class="result-student-class" id="result-student-class">—</div>
+    <div class="result-meta">
+      <div class="meta-row">
+        <span class="meta-label">⏱ Nộp bài:</span>
+        <span class="meta-value" id="result-time">—</span>
+      </div>
+      <div class="meta-row">
+        <span class="meta-label">🌐 IP:</span>
+        <span class="meta-value" id="result-ip">Đang lấy…</span>
+      </div>
+    </div>
     <div class="result-score" id="result-score">0.0</div>
     <p class="result-detail">/ 10 điểm</p>
     <div class="result-stats">
@@ -1253,15 +1292,15 @@ a { text-decoration: none; color: inherit; }
       return;
     }
     let html = `<table class="hist-table"><thead><tr>
-      <th>Thời gian</th><th>Họ tên</th><th>Lớp</th><th>Đề</th><th>Điểm</th>
+      <th>Thời gian</th><th>Họ tên</th><th>Lớp</th><th>Điểm</th><th>IP</th>
     </tr></thead><tbody>`;
     list.forEach(r => {
       html += `<tr>
         <td>${escapeHtml(r.time)}</td>
         <td>${escapeHtml(r.name)}</td>
         <td>${escapeHtml(r.lop)}</td>
-        <td>${escapeHtml(r.de || "Tổng hợp")}</td>
         <td><b>${r.score}</b>/10</td>
+        <td style="font-size:.82rem;color:#64748B">${escapeHtml(r.ip || "—")}</td>
       </tr>`;
     });
     html += "</tbody></table>";
@@ -1610,7 +1649,33 @@ a { text-decoration: none; color: inherit; }
     });
   }
 
-  function finishExam(auto) {
+  function formatSubmitTime(d) {
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const hh = String(d.getHours()).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+    return dd + "/" + mm + "/" + yyyy + " · " + hh + ":" + mi + ":" + ss;
+  }
+
+  async function fetchClientIP() {
+    const endpoints = [
+      "https://api.ipify.org?format=json",
+      "https://api64.ipify.org?format=json"
+    ];
+    for (const url of endpoints) {
+      try {
+        const r = await fetch(url, { cache: "no-store" });
+        if (!r.ok) continue;
+        const data = await r.json();
+        if (data && data.ip) return data.ip;
+      } catch (e) { /* thử endpoint khác */ }
+    }
+    return "Không xác định";
+  }
+
+  async function finishExam(auto) {
     clearInterval(timerId);
     let correct = 0, wrong = 0, skip = 0;
     examQuestions.forEach((q, i) => {
@@ -1625,22 +1690,14 @@ a { text-decoration: none; color: inherit; }
     });
     const score = Math.round(correct * POINT_PER_Q * 10) / 10; // 1 decimal
 
-    // save history
     const now = new Date();
-    const timeStr = now.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-      + " " + now.toLocaleDateString("vi-VN");
-    saveHistory({
-      time: timeStr,
-      name: studentName,
-      lop: studentClass,
-      de: "Tổng hợp",
-      score: score.toFixed(1),
-      correct, wrong, skip
-    });
+    const timeStr = formatSubmitTime(now);
 
-    // result UI — họ tên đậm màu xanh, canh giữa
+    // result UI trước — IP cập nhật khi có
     $("result-student-name").textContent = studentName;
     $("result-student-class").textContent = "Lớp " + studentClass;
+    $("result-time").textContent = timeStr;
+    $("result-ip").textContent = "Đang lấy…";
     $("result-score").textContent = score.toFixed(1);
     $("stat-correct").textContent = correct;
     $("stat-wrong").textContent = wrong;
@@ -1651,6 +1708,20 @@ a { text-decoration: none; color: inherit; }
     screenExam.style.display = "none";
     screenResult.style.display = "block";
     window.scrollTo(0, 0);
+
+    const ip = await fetchClientIP();
+    $("result-ip").textContent = ip;
+
+    saveHistory({
+      time: timeStr,
+      name: studentName,
+      lop: studentClass,
+      de: "Tổng hợp",
+      score: score.toFixed(1),
+      correct, wrong, skip,
+      ip: ip
+    });
+    renderHistory();
   }
 
   btnSubmit.addEventListener("click", () => {
