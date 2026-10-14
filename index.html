@@ -1975,7 +1975,7 @@
     <div class="stats-section">
       <h3><i class="fas fa-chart-line"></i> Thống kê WEBH2T</h3>
       <div class="stats-bar">
-        <div class="stat-item s-visit">
+        <div class="stat-item s-visit" title="Tổng lượt xem toàn site (mọi trang)">
           <div class="stat-icon"><i class="fas fa-eye"></i></div>
           <div class="num" id="visitCount">—</div>
           <div class="label">Lượt xem</div>
@@ -1991,14 +1991,14 @@
           <div class="label">QL Nề nếp</div>
         </a>
         <a class="stat-item s-post" href="knowledge.html">
-          <div class="stat-icon"><i class="fas fa-newspaper"></i></div>
-          <div class="num" id="postCount">64</div>
-          <div class="label">Bài viết</div>
+          <div class="stat-icon"><i class="fas fa-lightbulb"></i></div>
+          <div class="num" id="postCount">—</div>
+          <div class="label">Thủ thuật</div>
         </a>
-        <a class="stat-item s-exam" href="exam.html">
-          <div class="stat-icon"><i class="fas fa-file-alt"></i></div>
-          <div class="num" id="examCount">22</div>
-          <div class="label">Đề thi</div>
+        <a class="stat-item s-exam" href="totnghiep.html">
+          <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
+          <div class="num" id="examCount">—</div>
+          <div class="label">Tốt nghiệp</div>
         </a>
       </div>
     </div>
@@ -2441,11 +2441,23 @@ Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải th
       if (e.key === 'Enter') sendMessage();
     });
 
-    // ========== THỐNG KÊ ==========
+    // ========== THỐNG KÊ (CountAPI – tổng mọi trang) ==========
     (function () {
-      // Lượt xem = Thi Tin 12 + QL Nề nếp (CountAPI toàn cục)
+      var API = 'https://countapi.mileshilliard.com/api/v1/';
+
+      // Key đồng bộ với từng trang con (mỗi trang con phải /hit đúng key)
+      var PAGE_KEYS = [
+        'webh2t-index',
+        'webh2t-tin10', 'webh2t-tin11', 'webh2t-tin12', 'webh2t-chuyende',
+        'webh2t-on10gk1', 'webh2t-on10ck1', 'webh2t-on10gk2', 'webh2t-on10ck2',
+        'webh2t-on11gk1', 'webh2t-on11ck1', 'webh2t-on11gk2', 'webh2t-on11ck2',
+        'webh2t-on12gk1', 'webh2t-on12ck1', 'webh2t-on12gk2', 'webh2t-on12ck2',
+        'webh2t-exam10', 'webh2t-exam11', 'webh2t-exam12',
+        'webh2t-totnghiep', 'webh2t-knowledge', 'webh2t-autochongoi', 'webh2t-qlnn'
+      ];
+
       function getCount(key) {
-        return fetch('https://countapi.mileshilliard.com/api/v1/get/' + key)
+        return fetch(API + 'get/' + key)
           .then(function (r) { return r.json(); })
           .then(function (d) {
             var n = parseInt(d.value, 10);
@@ -2454,21 +2466,39 @@ Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải th
           .catch(function () { return 0; });
       }
 
-      Promise.all([
-        getCount('webh2t-exam12'),
-        getCount('webh2t-qlnn')
-      ]).then(function (vals) {
-        var exam12 = vals[0];
-        var qlnn = vals[1];
-        var total = exam12 + qlnn;
+      function hitCount(key) {
+        return fetch(API + 'hit/' + key)
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var n = parseInt(d.value, 10);
+            return isNaN(n) ? 0 : n;
+          })
+          .catch(function () { return 0; });
+      }
 
+      // Cộng +1 cho trang chủ, rồi lấy toàn bộ số để cộng tổng
+      hitCount('webh2t-index').then(function () {
+        return Promise.all(PAGE_KEYS.map(getCount));
+      }).then(function (vals) {
+        var total = 0;
+        for (var i = 0; i < vals.length; i++) total += vals[i];
+
+        function at(key) {
+          var i = PAGE_KEYS.indexOf(key);
+          return i >= 0 ? vals[i] : 0;
+        }
+
+        var v = document.getElementById('visitCount');
         var e12 = document.getElementById('exam12Count');
         var q = document.getElementById('qlnnCount');
-        var v = document.getElementById('visitCount');
+        var post = document.getElementById('postCount');
+        var exam = document.getElementById('examCount');
 
-        if (e12) e12.textContent = exam12.toLocaleString('vi-VN');
-        if (q) q.textContent = qlnn.toLocaleString('vi-VN');
         if (v) v.textContent = total.toLocaleString('vi-VN');
+        if (e12) e12.textContent = at('webh2t-exam12').toLocaleString('vi-VN');
+        if (q) q.textContent = at('webh2t-qlnn').toLocaleString('vi-VN');
+        if (post) post.textContent = at('webh2t-knowledge').toLocaleString('vi-VN');
+        if (exam) exam.textContent = at('webh2t-totnghiep').toLocaleString('vi-VN');
       });
     })();
   </script>
