@@ -5,6 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover"/>
 <title>QLNN · Quản lý Nề nếp Tác phong | WEBH2T</title>
 <link rel="icon" href="https://webh2t.github.io/favicon.ico"/>
+<!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC (giống trang chủ) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-JG88ZZBKGC', {
+    page_title: document.title,
+    page_location: window.location.href
+  });
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
@@ -13926,25 +13937,13 @@ updateClock(); setInterval(updateClock, 1000);;
 const fd = document.getElementById("fDate");
 if (fd) { fd.valueAsDate = new Date(); autoWeekday(); }
 </script>
-<!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<!-- CountAPI – key webh2t-qlnn (đồng bộ lượt xem) -->
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', 'G-JG88ZZBKGC', {
-    page_title: document.title,
-    page_location: window.location.href
-  });
-</script>
-<script>
-  // ===== Đồng bộ lượt xem với trang chủ (CountAPI) =====
   fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-qlnn')
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      var n = d.value;
+      var n = d && d.value;
       console.log('QLNN views (CountAPI):', n);
-      // Cập nhật ô "TỔNG LƯỢT XEM" trên trang QLNN
       var candidates = [
         document.getElementById('totalViews'),
         document.querySelector('[data-total-views]'),
@@ -13969,7 +13968,7 @@ if (fd) { fd.valueAsDate = new Date(); autoWeekday(); }
         }
       }
     })
-    .catch(function (e) { console.warn('CountAPI lỗi:', e); });
+    .catch(function () {});
 </script>
 </body>
 </html>

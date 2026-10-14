@@ -203,6 +203,17 @@
 }
 
 </style>
+<!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-JG88ZZBKGC', {
+    page_title: document.title,
+    page_location: window.location.href
+  });
+</script>
 </head>
 <body>
 <div id="screen-select">
@@ -2886,36 +2897,16 @@ if (_cancelExam) {
 }
 
 </script>
-<!-- Google Analytics 4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<!-- CountAPI – key chung với trang chủ: webh2t-exam12 -->
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
-  gtag('js', new Date());
-  gtag('config', 'G-JG88ZZBKGC', {
-    page_title: document.title,
-    page_location: window.location.href
-  });
-</script>
-
-
-
-
-<script>
-  // Lượt xem Thi Tin 12 – đồng bộ với trang chủ WEBH2T
-  // Key: webh2t-exam12  |  Trang chủ đọc cùng key này
   fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-exam12')
     .then(function (r) { return r.json(); })
     .then(function (d) {
       console.log('Thi Tin 12 views:', d.value);
-      // Nếu trang có ô hiển thị số lượt, gán vào đây (đổi id cho khớp):
-      // var el = document.getElementById('viewCount');
-      // if (el) el.textContent = d.value;
     })
     .catch(function (e) {
       console.warn('CountAPI Thi Tin 12 lỗi:', e);
     });
 </script>
-
 </body>
 </html>

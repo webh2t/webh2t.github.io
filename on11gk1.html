@@ -1411,9 +1411,9 @@ a { text-decoration: none; color: inherit; }
   }
 
   /* ========== THỐNG KÊ LƯỢT NỘP ========== */
-  // Bộ đếm toàn hệ thống: abacus.jasoncameron.dev (countapi.xyz / counterapi v1 đã ngừng)
-  const COUNTER_GET = "https://abacus.jasoncameron.dev/get/webh2t/on11gk1_submits";
-  const COUNTER_HIT = "https://abacus.jasoncameron.dev/hit/webh2t/on11gk1_submits";
+  // Bộ đếm toàn hệ thống: countapi.mileshilliard.com
+  const COUNTER_GET = "https://countapi.mileshilliard.com/api/v1/get/webh2t-on11gk1";
+  const COUNTER_HIT = "https://countapi.mileshilliard.com/api/v1/hit/webh2t-on11gk1";
   const DEVICE_TOTAL_KEY = "webh2t_on11gk1_device_total";
 
   function getDeviceTotal() {
@@ -1933,6 +1933,16 @@ a { text-decoration: none; color: inherit; }
   renderHistory();
   refreshStats();
 })();
+</script>
+<!-- CountAPI – thống kê lượt truy cập/nộp bài (webh2t-on11gk1) -->
+<script>
+  fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-on11gk1')
+    .then(r => r.json())
+    .then(function (d) {
+      var el = document.getElementById('stat-global');
+      if (el && d && typeof d.value === 'number') el.textContent = String(d.value);
+    })
+    .catch(function () {});
 </script>
 </body>
 </html>
