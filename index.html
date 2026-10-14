@@ -1346,14 +1346,14 @@
     }
     .stats-bar {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 14px;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 12px;
       padding: 8px 0 4px;
     }
-    @media (max-width: 900px) {
-      .stats-bar { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 1100px) {
+      .stats-bar { grid-template-columns: repeat(4, 1fr); }
     }
-    @media (max-width: 560px) {
+    @media (max-width: 700px) {
       .stats-bar { grid-template-columns: repeat(2, 1fr); }
     }
     .stat-item {
@@ -1384,10 +1384,12 @@
       color: #fff;
     }
     .stat-item.s-visit .stat-icon { background: linear-gradient(135deg, #0288d1, #26c6da); }
+    .stat-item.s-qlnn .stat-icon { background: linear-gradient(135deg, #c62828, #ef5350); }
+    .stat-item.s-exam11 .stat-icon { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
     .stat-item.s-exam12 .stat-icon { background: linear-gradient(135deg, #6a1b9a, #ab47bc); }
-    .stat-item.s-qlnn .stat-icon { background: linear-gradient(135deg, #1565c0, #42a5f5); }
-    .stat-item.s-post .stat-icon { background: linear-gradient(135deg, #2e7d32, #66bb6a); }
-    .stat-item.s-exam .stat-icon { background: linear-gradient(135deg, #e65100, #ff9800); }
+    .stat-item.s-tin10 .stat-icon { background: linear-gradient(135deg, #1565c0, #42a5f5); }
+    .stat-item.s-tin11 .stat-icon { background: linear-gradient(135deg, #00695c, #26a69a); }
+    .stat-item.s-tin12 .stat-icon { background: linear-gradient(135deg, #e65100, #ff9800); }
     .stat-item .num {
       font-size: 1.7rem;
       font-weight: 800;
@@ -1975,30 +1977,40 @@
     <div class="stats-section">
       <h3><i class="fas fa-chart-line"></i> Thống kê WEBH2T</h3>
       <div class="stats-bar">
-        <div class="stat-item s-visit" title="Tổng lượt xem toàn site (mọi trang)">
+        <div class="stat-item s-visit" title="Tổng lượt xem toàn site">
           <div class="stat-icon"><i class="fas fa-eye"></i></div>
           <div class="num" id="visitCount">—</div>
           <div class="label">Lượt xem</div>
         </div>
+        <a class="stat-item s-qlnn" href="qlnn.html">
+          <div class="stat-icon"><i class="fas fa-trophy"></i></div>
+          <div class="num" id="qlnnCount">—</div>
+          <div class="label">APP THI ĐUA</div>
+        </a>
+        <a class="stat-item s-exam11" href="exam-submit-11.html">
+          <div class="stat-icon"><i class="fas fa-laptop-code"></i></div>
+          <div class="num" id="exam11Count">—</div>
+          <div class="label">THI TIN 11</div>
+        </a>
         <a class="stat-item s-exam12" href="https://webh2t.github.io/exam-submit-12.html">
           <div class="stat-icon"><i class="fas fa-laptop-code"></i></div>
           <div class="num" id="exam12Count">—</div>
-          <div class="label">Thi Tin 12</div>
+          <div class="label">THI TIN 12</div>
         </a>
-        <a class="stat-item s-qlnn" href="qlnn.html">
-          <div class="stat-icon"><i class="fas fa-clipboard-check"></i></div>
-          <div class="num" id="qlnnCount">—</div>
-          <div class="label">QL Nề nếp</div>
+        <a class="stat-item s-tin10" href="tin10.html" title="Tin 10 + ôn giữa/cuối kỳ">
+          <div class="stat-icon"><i class="fas fa-book"></i></div>
+          <div class="num" id="tin10Count">—</div>
+          <div class="label">TIN 10</div>
         </a>
-        <a class="stat-item s-post" href="knowledge.html">
-          <div class="stat-icon"><i class="fas fa-lightbulb"></i></div>
-          <div class="num" id="postCount">—</div>
-          <div class="label">Thủ thuật</div>
+        <a class="stat-item s-tin11" href="tin11.html" title="Tin 11 + ôn giữa/cuối kỳ">
+          <div class="stat-icon"><i class="fas fa-book"></i></div>
+          <div class="num" id="tin11Count">—</div>
+          <div class="label">TIN 11</div>
         </a>
-        <a class="stat-item s-exam" href="totnghiep.html">
-          <div class="stat-icon"><i class="fas fa-graduation-cap"></i></div>
-          <div class="num" id="examCount">—</div>
-          <div class="label">Tốt nghiệp</div>
+        <a class="stat-item s-tin12" href="tin12.html" title="Tin 12 + ôn giữa/cuối kỳ">
+          <div class="stat-icon"><i class="fas fa-book"></i></div>
+          <div class="num" id="tin12Count">—</div>
+          <div class="label">TIN 12</div>
         </a>
       </div>
     </div>
@@ -2487,18 +2499,29 @@ Ví dụ: <em>“Tin học 11 học những gì?”</em> hoặc <em>“Giải th
           var i = PAGE_KEYS.indexOf(key);
           return i >= 0 ? vals[i] : 0;
         }
+        function sumKeys(keys) {
+          var s = 0;
+          for (var i = 0; i < keys.length; i++) s += at(keys[i]);
+          return s;
+        }
 
-        var v = document.getElementById('visitCount');
-        var e12 = document.getElementById('exam12Count');
-        var q = document.getElementById('qlnnCount');
-        var post = document.getElementById('postCount');
-        var exam = document.getElementById('examCount');
+        var tin10 = sumKeys(['webh2t-tin10', 'webh2t-on10gk1', 'webh2t-on10ck1', 'webh2t-on10gk2', 'webh2t-on10ck2']);
+        var tin11 = sumKeys(['webh2t-tin11', 'webh2t-on11gk1', 'webh2t-on11ck1', 'webh2t-on11gk2', 'webh2t-on11ck2']);
+        var tin12 = sumKeys(['webh2t-tin12', 'webh2t-on12gk1', 'webh2t-on12ck1', 'webh2t-on12gk2', 'webh2t-on12ck2']);
 
-        if (v) v.textContent = total.toLocaleString('vi-VN');
-        if (e12) e12.textContent = at('webh2t-exam12').toLocaleString('vi-VN');
-        if (q) q.textContent = at('webh2t-qlnn').toLocaleString('vi-VN');
-        if (post) post.textContent = at('webh2t-knowledge').toLocaleString('vi-VN');
-        if (exam) exam.textContent = at('webh2t-totnghiep').toLocaleString('vi-VN');
+        var map = {
+          visitCount: total,
+          qlnnCount: at('webh2t-qlnn'),
+          exam11Count: at('webh2t-exam11'),
+          exam12Count: at('webh2t-exam12'),
+          tin10Count: tin10,
+          tin11Count: tin11,
+          tin12Count: tin12
+        };
+        Object.keys(map).forEach(function (id) {
+          var el = document.getElementById(id);
+          if (el) el.textContent = map[id].toLocaleString('vi-VN');
+        });
       });
     })();
   </script>
