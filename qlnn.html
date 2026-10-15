@@ -11752,9 +11752,190 @@ function renderNotebook() {
     try {
       html += renderSelfAssessmentForms(scope, window._nbSelMon || ctx.mon, window._nbSelHk || ctx.hk, weekNos, nW, gvcn, cls, school, year);
     } catch (e) {}
+    // Vinh danh Top 1/2/3 cuối trang
+    try {
+      html += renderHonorBoard({
+        scope: scope,
+        title: title,
+        dateNote: dateNote,
+        allScores: allScores,
+        classRank: classRank,
+        weekNos: weekNos,
+        nW: nW,
+        gvcn: gvcn,
+        cls: cls,
+        school: school,
+        year: year
+      });
+    } catch (e) { console.warn("[QLNN] honor board", e); }
   }
 
   box.innerHTML = html;
+}
+
+/**
+ * Khối VINH DANH TOP 1/2/3 — mẫu podium (TOP THI DUA.jpg)
+ * Thứ tự hiển thị: Hạng 2 | Hạng 1 (giữa, cao hơn) | Hạng 3
+ */
+function renderHonorBoard(opt) {
+  opt = opt || {};
+  var allScores = opt.allScores || [];
+  var weekNos = opt.weekNos || [];
+  var nW = opt.nW || 1;
+  var gvcn = opt.gvcn || (currentUser && currentUser.name) || "";
+  var cls = opt.cls || (currentUser && currentUser.className) || "11B9";
+  var school = (opt.school || (currentUser && currentUser.school) || "THPT Hà Huy Tập").toUpperCase();
+  var year = opt.year || "2026 - 2027";
+  var title = opt.title || "";
+  var dateNote = opt.dateNote || "";
+  var scope = opt.scope || "month";
+
+  // Nhãn kỳ: THÁNG 10 NĂM 2026 / HỌC KỲ 1 / CẢ NĂM
+  var periodLine = "";
+  if (scope === "month") {
+    var mon = window._nbSelMon || (opt.mon) || "";
+    if (!mon && /THÁNG\s*(\d+)/i.test(title)) mon = RegExp.$1;
+    var yPart = String(year).match(/20\d{2}/);
+    var yShow = yPart ? yPart[0] : "2026";
+    periodLine = "THÁNG " + (mon || "…") + " NĂM " + yShow;
+  } else {
+    var mode = window._nbSelHk || "hk1";
+    if (mode === "year") periodLine = "CẢ NĂM HỌC " + year;
+    else if (mode === "hk2") periodLine = "HỌC KỲ 2 · NĂM HỌC " + year;
+    else periodLine = "HỌC KỲ 1 · NĂM HỌC " + year;
+  }
+
+  var top = allScores.slice(0, 3);
+  while (top.length < 3) top.push({ id: "", name: "……………………", team: "", score: "—" });
+
+  function podiumInfo(x) {
+    var name = x && x.name ? x.name : "……………………";
+    var score = (x && x.score != null && x.score !== "") ? x.score : "—";
+    var team = x && x.team ? ("Tổ " + x.team) : "";
+    var rk = { label: "", stars: "" };
+    try {
+      if (x && x.id && typeof rankClassScaled === "function") rk = rankClassScaled(x.score, nW, x.id, weekNos) || rk;
+      else if (x && x.id && typeof rankClass === "function") rk = rankClass(x.score, x.id, weekNos) || rk;
+    } catch (e) {}
+    var thanhTich = score + " điểm" + (rk.label ? " · " + rk.label : "") + (rk.stars ? " " + rk.stars : "");
+    return { name: name, score: score, team: team, thanhTich: thanhTich };
+  }
+  var p1 = podiumInfo(top[0]);
+  var p2 = podiumInfo(top[1]);
+  var p3 = podiumInfo(top[2]);
+
+  var base = "https://webh2t.github.io/assets/";
+  var logoSrc = base + "LOGO_HHT.jpg";
+  var bgSrc = base + "lop11b9_vinhdanh.jpg";
+  var signSrc = base + "gvcn_chuky.png";
+
+  function plaque(rank, info, variant) {
+    // variant: gold | silver | bronze
+    var border = variant === "gold" ? "#d4a017" : (variant === "silver" ? "#64748b" : "#b45309");
+    var bg = variant === "gold"
+      ? "linear-gradient(180deg,#fffbeb 0%,#fef3c7 40%,#fde68a 100%)"
+      : (variant === "silver"
+        ? "linear-gradient(180deg,#f8fafc 0%,#e2e8f0 50%,#cbd5e1 100%)"
+        : "linear-gradient(180deg,#fff7ed 0%,#ffedd5 50%,#fed7aa 100%)");
+    var headerBg = variant === "gold" ? "#b45309" : (variant === "silver" ? "#1e3a5f" : "#9a3412");
+    var num = rank === 1 ? "01" : (rank === 2 ? "02" : "03");
+    var label = rank === 1 ? "HẠNG NHẤT" : (rank === 2 ? "HẠNG NHÌ" : "HẠNG BA");
+    var trophy = rank === 1 ? "🏆" : "🥈";
+    if (rank === 3) trophy = "🥉";
+    var minH = rank === 1 ? "220px" : "190px";
+    var s = "";
+    s += '<div style="flex:1;min-width:140px;max-width:240px;display:flex;flex-direction:column;align-items:center">';
+    s += '<div style="width:100%;min-height:' + minH + ';background:' + bg + ';border:3px solid ' + border + ';border-radius:12px 12px 8px 8px;box-shadow:0 8px 24px rgba(0,0,0,0.15);overflow:hidden;position:relative">';
+    s += '<div style="background:' + headerBg + ';color:#fff;text-align:center;padding:8px 6px 10px;position:relative">';
+    s += '<div style="font-size:22px;line-height:1">' + trophy + '</div>';
+    s += '<div style="font-size:28px;font-weight:900;letter-spacing:0.04em;line-height:1.1">' + num + '</div>';
+    s += '<div style="font-size:12px;font-weight:800;margin-top:2px">' + label + '</div>';
+    s += '</div>';
+    s += '<div style="padding:14px 10px 16px;text-align:center;flex:1">';
+    s += '<div style="font-size:11px;font-weight:700;color:#64748b;margin-bottom:4px">HỌC SINH:</div>';
+    s += '<div style="font-size:14px;font-weight:900;color:#0f172a;line-height:1.3;min-height:2.6em">' + info.name + '</div>';
+    if (info.team) s += '<div style="font-size:11px;color:#64748b;margin-top:2px">' + info.team + '</div>';
+    s += '<div style="font-size:11px;font-weight:700;color:#64748b;margin-top:10px">THÀNH TÍCH:</div>';
+    s += '<div style="font-size:13px;font-weight:800;color:#9f1239;margin-top:2px">' + info.thanhTich + '</div>';
+    s += '</div></div>';
+    // đế podium
+    s += '<div style="width:88%;height:14px;background:' + border + ';border-radius:0 0 6px 6px;opacity:0.85"></div>';
+    s += '</div>';
+    return s;
+  }
+
+  var h = "";
+  h += '<div class="week-board mb-6" id="nbHonorBoard" style="position:relative;overflow:hidden;border:4px solid #b45309;border-radius:8px;padding:0;max-width:960px;margin:16px auto;box-shadow:0 0 0 3px #fef3c7,0 12px 40px rgba(180,83,9,0.25)">';
+  // nền ảnh lớp + overlay
+  h += '<div style="position:absolute;inset:0;background:url(\'' + bgSrc + '\') center/cover no-repeat;opacity:0.28;pointer-events:none"></div>';
+  h += '<div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,251,235,0.88) 0%,rgba(255,255,255,0.82) 45%,rgba(254,243,199,0.9) 100%);pointer-events:none"></div>';
+  // khung trang trí góc
+  h += '<div style="position:absolute;top:8px;left:8px;right:8px;bottom:8px;border:1px solid rgba(180,83,9,0.35);border-radius:4px;pointer-events:none;z-index:0"></div>';
+
+  h += '<div style="position:relative;z-index:1;padding:18px 14px 12px">';
+  // Header
+  h += '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">';
+  h += '<img src="' + logoSrc + '" alt="Logo" style="width:64px;height:64px;object-fit:contain;border-radius:50%;background:#fff;border:2px solid #0c4a6e;flex-shrink:0" onerror="this.style.display=\'none\'"/>';
+  h += '<div style="flex:1;text-align:center;padding-top:2px">';
+  h += '<div style="font-size:22px;font-weight:900;color:#b45309;letter-spacing:0.06em;text-shadow:0 1px 0 #fff,0 2px 4px rgba(0,0,0,0.08)">VINH DANH HỌC SINH XUẤT SẮC</div>';
+  h += '<div style="font-size:15px;font-weight:800;color:#1e3a5f;margin-top:4px">' + periodLine + '</div>';
+  h += '<div style="font-size:20px;font-weight:900;color:#dc2626;margin-top:2px;letter-spacing:0.04em">LỚP ' + cls + '</div>';
+  if (dateNote) h += '<div style="font-size:11px;color:#64748b;margin-top:2px">' + dateNote + '</div>';
+  h += '</div>';
+  h += '<div style="width:64px;flex-shrink:0"></div>'; // cân logo
+  h += '</div>';
+
+  // Podium: 2 | 1 | 3
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:12px;padding:12px 4px 8px;max-width:860px;margin:0 auto">';
+  h += plaque(2, p2, "silver");
+  h += plaque(1, p1, "gold");
+  h += plaque(3, p3, "bronze");
+  h += '</div>';
+
+  // Lời chúc
+  h += '<div style="text-align:center;margin:12px 8px 16px;font-size:14px;font-weight:800;color:#9f1239;letter-spacing:0.03em">CHÚC MỪNG CÁC BẠN ĐÃ CÓ NỖ LỰC VƯỢT BẬC!</div>';
+
+  // Footer: trường | chữ ký
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px;padding:8px 12px 4px;border-top:3px solid #b91c1c;background:linear-gradient(90deg,#9f1239 0%,#dc2626 50%,#9f1239 100%);margin:0 -14px -12px;padding:12px 20px 14px">';
+  h += '<div style="color:#fff;text-align:left">';
+  h += '<div style="font-size:13px;font-weight:900;letter-spacing:0.04em">' + school + '</div>';
+  h += '<div style="font-size:11px;opacity:0.9;margin-top:2px">………………………………</div>';
+  h += '</div>';
+  h += '<div style="text-align:center;color:#fff;min-width:140px">';
+  h += '<div style="font-size:12px;font-weight:800;margin-bottom:2px">GIÁO VIÊN CHỦ NHIỆM</div>';
+  h += '<img src="' + signSrc + '" alt="Chữ ký" style="max-height:52px;max-width:140px;object-fit:contain;display:block;margin:4px auto;filter:brightness(1.15)" onerror="this.style.display=\'none\'"/>';
+  h += '<div style="font-size:13px;font-weight:900;margin-top:2px">' + (gvcn || "………………") + '</div>';
+  h += '</div>';
+  h += '</div>';
+
+  h += '</div>'; // content
+
+  h += '<div class="no-print mt-3 mb-2 flex flex-wrap gap-2 justify-center" style="position:relative;z-index:2">';
+  h += '<button type="button" class="px-3 py-1.5 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadHonorBoardJpg()">📷 Tải ảnh vinh danh .jpg</button>';
+  h += '</div>';
+
+  h += '</div>'; // board
+  return h;
+}
+
+function downloadHonorBoardJpg() {
+  var el = document.getElementById("nbHonorBoard");
+  if (!el) { alert("Chưa có bảng vinh danh"); return; }
+  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
+  var meta = window._nbExport || {};
+  // Ẩn nút tải khi chụp
+  var btns = el.querySelectorAll(".no-print");
+  btns.forEach(function(b) { b.style.display = "none"; });
+  html2canvas(el, { scale: 2.5, useCORS: true, allowTaint: true, backgroundColor: "#fffbeb" }).then(function(canvas) {
+    btns.forEach(function(b) { b.style.display = ""; });
+    var a = document.createElement("a");
+    a.href = canvas.toDataURL("image/jpeg", 0.93);
+    a.download = "VinhDanh_Top3_" + (meta.cls || "11B9") + "_" + (meta.scope || "month") + ".jpg";
+    a.click();
+  }).catch(function(e) {
+    btns.forEach(function(b) { b.style.display = ""; });
+    alert("Không tạo được ảnh: " + (e && e.message ? e.message : e));
+  });
 }
 
 function downloadNbTeamJpg(team) {
