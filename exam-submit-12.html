@@ -210,6 +210,31 @@
 .opt .content{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
 .tf-statement .stmt img.opt-img{margin-top:6px}
 
+
+.exam-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 8px}
+@media(max-width:560px){.exam-picker{grid-template-columns:1fr}}
+.exam-btn{
+  display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+  text-align:left;padding:16px 14px;border-radius:14px;cursor:pointer;
+  border:2px solid #E2E8F0;background:#fff;
+  font-family:inherit;transition:.15s;box-shadow:0 2px 8px rgba(15,23,42,.04);
+}
+.exam-btn:hover{border-color:#818CF8;background:#EEF2FF;transform:translateY(-1px)}
+.exam-btn.active{border-color:#4F46E5;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);box-shadow:0 4px 14px rgba(79,70,229,.15)}
+.exam-btn .eb-code{font-size:.72rem;font-weight:700;color:#6366F1;letter-spacing:.04em;text-transform:uppercase}
+.exam-btn .eb-title{font-size:1rem;font-weight:800;color:#1E293B;line-height:1.3}
+.exam-btn .eb-file{font-size:.75rem;color:#64748B}
+.exam-current{
+  display:none;align-items:center;justify-content:space-between;gap:10px;
+  margin:0 0 12px;padding:10px 12px;border-radius:10px;
+  background:#EEF2FF;border:1px solid #C7D2FE;font-size:.9rem;color:#3730A3;font-weight:600;
+}
+.exam-current.visible{display:flex}
+.exam-current button{
+  border:none;background:#4F46E5;color:#fff;border-radius:8px;padding:6px 12px;
+  font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;
+}
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -227,7 +252,7 @@
 <div id="screen-select">
   <div class="select-card" id="select-card">
     <h1 id="page-title">📝 Kiểm tra thường xuyên – Tin học 12</h1>
-    <p class="sub" id="page-sub">Bài 4: Giao thức mạng · Sách Kết nối tri thức</p>
+    <p class="sub" id="page-sub">Chọn một bài kiểm tra bên dưới để bắt đầu</p>
     <div class="top-nav">
       <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Trang chủ</a>
       <button type="button" class="btn-nav-top btn-teacher" id="btn-teacher-link">👨‍🏫 Giáo viên</button>
@@ -240,10 +265,16 @@
       Chỉ hiện lớp đang trong khung giờ giáo viên quy định. Sau khi <b>Bắt đầu thi</b>: đóng tab / quay lại / gian lận mà không nộp bài = <b>0 điểm</b> và khóa tên.
     </div>
 
-    <div id="student-ui">
+    <div id="exam-picker" class="exam-picker" aria-label="Chọn bài kiểm tra"></div>
+    <div id="exam-current" class="exam-current">
+      <span id="exam-current-label">—</span>
+      <button type="button" id="btn-change-exam">Đổi bài</button>
+    </div>
+
+    <div id="student-ui" style="display:none">
       <div class="field">
         <label>🏫 Chọn lớp:</label>
-        <select id="class-select" disabled><option value="">-- Đang tải dữ liệu --</option></select>
+        <select id="class-select" disabled><option value="">-- Chọn bài kiểm tra trước --</option></select>
       </div>
       <div class="field" id="student-field">
         <label>👤 Chọn học sinh:</label>
@@ -368,7 +399,7 @@
             <input type="password" id="gh-token" placeholder="ghp_...." style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
           </label>
           <label style="font-size:.8rem;display:block;margin:6px 0 4px">Đường dẫn file trong repo
-            <input type="text" id="gh-path" value="data/KTTX_TIN12.xlsx" style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
+            <input type="text" id="gh-path" value="data/B4GTMANG_TIN12.xlsx" style="width:100%;padding:6px 8px;border:1px solid #FDBA74;border-radius:6px;margin-top:2px;font-size:.85rem">
           </label>
           <p style="font-size:.75rem;color:#9A3412;margin:4px 0 8px">Repo cố định: <code>webh2t/webh2t.github.io</code>. Token chỉ lưu trên máy GV. Tạo tại GitHub → Settings → Developer settings → PAT (classic) quyền <b>repo</b>.</p>
           <button type="button" class="btn-t" id="btn-gh-save-lich" style="background:#F97316;color:#fff">☁ Lưu lịch lên GitHub</button>
@@ -483,7 +514,15 @@ const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
 try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzNrHCACwQD860jhclikR2o4BxVvnMirGM2bEqJsYTf4nJJXT5v5a0FUazzRxaT-A2SNA/exec"); } catch (e) {}
-const DEFAULT_DATA_URL = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/KTTX_TIN12.xlsx";
+const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
+const EXAMS = [
+  { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
+  { id: "b11", code: "B11", title: "Bài 11. Chèn tệp tin", file: "B11CHENTEP_TIN12.xlsx", sub: "Chèn tệp tin · Kết nối tri thức" },
+  { id: "b18", code: "B18", title: "Bài 18. Tổng hợp HTML", file: "B18HTML_TIN12.xlsx", sub: "Tổng hợp HTML · Kết nối tri thức" },
+  { id: "b25", code: "B25", title: "Bài 25. Blog cá nhân", file: "B25BLOG_TIN12.xlsx", sub: "Blog cá nhân · Kết nối tri thức" }
+];
+let currentExam = null;
+const DEFAULT_DATA_URL = DATA_BASE + "B4GTMANG_TIN12.xlsx";
 // cache-bust khi tải
 
 let studentsByClass = {};
@@ -1002,7 +1041,8 @@ function parseWorkbook(wb) {
     }
   } catch (e) { console.warn("LichThi parse", e); }
 
-  localStorage.setItem(DATA_KEY, JSON.stringify({ students: studentsByClass, bank: questionBank }));
+  const _dk = DATA_KEY + (currentExam ? ("_" + currentExam.id) : "");
+  localStorage.setItem(_dk, JSON.stringify({ students: studentsByClass, bank: questionBank, exam: currentExam ? currentExam.id : "" }));
 
   
   dataReady = true;
@@ -1079,7 +1119,7 @@ async function loadFromUrl(url) {
     loadBar.style.background = "#FEF3C7";
     loadBar.style.color = "#92400E";
     try {
-      const d = JSON.parse(localStorage.getItem(DATA_KEY) || "{}");
+      const d = JSON.parse(localStorage.getItem(DATA_KEY + (currentExam ? ("_" + currentExam.id) : "")) || "{}");
       if (d.students) studentsByClass = d.students;
       if (d.bank) questionBank = d.bank;
       dataReady = true;
@@ -1145,7 +1185,80 @@ function exitAdminHint() {
       console.log("Đã xóa cache lịch (?resetlich=1)");
     } catch (e) {}
   }
-  loadFromUrl(DEFAULT_DATA_URL);
+  // —— Multi-exam picker ——
+  function examUrl(ex) {
+    return DATA_BASE + encodeURIComponent(ex.file) + "?t=" + Date.now();
+  }
+  function renderExamPicker() {
+    const box = document.getElementById("exam-picker");
+    if (!box) return;
+    box.innerHTML = "";
+    box.style.display = currentExam ? "none" : "grid";
+    EXAMS.forEach(function (ex) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "exam-btn" + (currentExam && currentExam.id === ex.id ? " active" : "");
+      btn.innerHTML = '<span class="eb-code">' + ex.code + '</span><span class="eb-title">' + ex.title + '</span><span class="eb-file">' + ex.file + '</span>';
+      btn.addEventListener("click", function () { selectExam(ex); });
+      box.appendChild(btn);
+    });
+  }
+  function selectExam(ex) {
+    currentExam = ex;
+    try { sessionStorage.setItem("webh2t_current_exam", ex.id); } catch (e) {}
+    const title = document.getElementById("page-title");
+    const sub = document.getElementById("page-sub");
+    if (title) title.textContent = "📝 " + ex.title;
+    if (sub) sub.textContent = ex.sub + " · Tin học 12";
+    document.title = ex.title + " – Kiểm tra Tin học 12";
+    const cur = document.getElementById("exam-current");
+    const lab = document.getElementById("exam-current-label");
+    if (lab) lab.textContent = "Đang làm: " + ex.title;
+    if (cur) cur.classList.add("visible");
+    const picker = document.getElementById("exam-picker");
+    if (picker) picker.style.display = "none";
+    const sui = document.getElementById("student-ui");
+    if (sui) sui.style.display = "block";
+    // reset bank before load
+    studentsByClass = {};
+    questionBank = { part1: [], part2: [], part3: [] };
+    dataReady = false;
+    const cs = document.getElementById("class-select");
+    if (cs) { cs.innerHTML = '<option value="">-- Đang tải ' + ex.file + ' --</option>'; cs.disabled = true; }
+    loadFromUrl(examUrl(ex));
+    renderExamPicker();
+  }
+  function clearExamSelection() {
+    currentExam = null;
+    try { sessionStorage.removeItem("webh2t_current_exam"); } catch (e) {}
+    const cur = document.getElementById("exam-current");
+    if (cur) cur.classList.remove("visible");
+    const sui = document.getElementById("student-ui");
+    if (sui) sui.style.display = "none";
+    const title = document.getElementById("page-title");
+    const sub = document.getElementById("page-sub");
+    if (title) title.textContent = "📝 Kiểm tra thường xuyên – Tin học 12";
+    if (sub) sub.textContent = "Chọn một bài kiểm tra bên dưới để bắt đầu";
+    document.title = "Kiểm tra thường xuyên – Tin học 12";
+    renderExamPicker();
+  }
+  const btnChange = document.getElementById("btn-change-exam");
+  if (btnChange) btnChange.addEventListener("click", clearExamSelection);
+  renderExamPicker();
+  // URL ?exam=b4|b11|b18|b25 hoặc session
+  (function () {
+    let want = null;
+    try {
+      const q = new URLSearchParams(location.search).get("exam");
+      if (q) want = String(q).toLowerCase();
+      if (!want) want = sessionStorage.getItem("webh2t_current_exam");
+    } catch (e) {}
+    if (want) {
+      const found = EXAMS.find(function (x) { return x.id === want || x.code.toLowerCase() === want; });
+      if (found) selectExam(found);
+    }
+  })();
+
   // Cập nhật danh sách lớp theo khung giờ mỗi 30s
   setInterval(function () {
     if (!isAdmin && dataReady && typeof refreshClassDropdown === "function") refreshClassDropdown();
@@ -1652,7 +1765,7 @@ function isAnswered(q) {
 function mediaHtmlForQuestion(q) {
   let h = "";
   if (q.imgQ) {
-    h += '<div class="q-media"><img src="' + String(q.imgQ).replace(/"/g, "&quot;") + '" alt="Hình minh họa câu hỏi" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.onerror=null;this.style.display=\'none\';var t=this.nextElementSibling;if(t)t.style.display=\'block\';"><div class="q-media-fallback" style="display:none;font-size:.8rem;color:#64748B">Không tải được ảnh minh họa</div></div>';
+    h += '<div class="q-media"><img src="' + String(q.imgQ).replace(/"/g, "&quot;") + '" alt="Hình minh họa câu hỏi" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display=\'none\';var t=this.nextElementSibling;if(t)t.style.display=\'block\';"><div class="q-media-fallback" style="display:none;font-size:.8rem;color:#64748B">Không tải được ảnh minh họa</div></div>';
   }
   if (q.videoQ) {
     const v = String(q.videoQ).trim();
@@ -2401,12 +2514,12 @@ function loadGhForm() {
   const t = document.getElementById("gh-token");
   const p = document.getElementById("gh-path");
   if (t) t.value = localStorage.getItem(GH_TOKEN_KEY) || "";
-  if (p && !p.value) p.value = localStorage.getItem(GH_PATH_KEY) || "data/KTTX_TIN12.xlsx";
+  if (p && !p.value) p.value = localStorage.getItem(GH_PATH_KEY) || "data/B4GTMANG_TIN12.xlsx";
   if (p && localStorage.getItem(GH_PATH_KEY)) p.value = localStorage.getItem(GH_PATH_KEY);
 }
 async function saveScheduleToGitHub() {
   const token = (document.getElementById("gh-token")?.value || "").trim();
-  const filePath = (document.getElementById("gh-path")?.value || "data/KTTX_TIN12.xlsx").trim();
+  const filePath = (document.getElementById("gh-path")?.value || "data/B4GTMANG_TIN12.xlsx").trim();
   const status = document.getElementById("gh-save-status");
   if (!token) { alert("Nhập GitHub Personal Access Token (quyền repo)."); return; }
   localStorage.setItem(GH_TOKEN_KEY, token);
