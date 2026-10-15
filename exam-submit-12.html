@@ -202,6 +202,14 @@
   border-radius:12px!important;padding:10px 12px!important;font-size:.9rem!important;color:#475569!important;
 }
 
+
+.q-media{margin:12px 0 14px;text-align:center}
+.q-media img{max-width:100%;max-height:280px;border-radius:12px;border:1px solid #E2E8F0;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.q-media.q-video iframe,.q-media.q-video video{width:100%;max-width:560px;aspect-ratio:16/9;height:auto;border-radius:12px;border:1px solid #E2E8F0;background:#0f172a}
+.opt-img{display:block;max-width:min(100%,220px);max-height:120px;margin-top:8px;border-radius:8px;border:1px solid #E2E8F0}
+.opt .content{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+.tf-statement .stmt img.opt-img{margin-top:6px}
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -652,23 +660,68 @@ function parseWorkbook(wb) {
   window.examCodes = {}; // pool theo mã (nếu có) — buildExam xáo từ toàn bộ ngân hàng
   if (wb.Sheets["CauHoi"]) {
     const rawRows = XLSX.utils.sheet_to_json(wb.Sheets["CauHoi"], { header: 1, defval: "" });
-    // Header mới: QID | Phần | Loại | Nội dung | A | B | C | D | Đáp án | Điểm tối đa
-    // Header cũ: Phần | Loại | Nội dung | A | B | C | D | Đáp án | Mã đề
+    // Hỗ trợ 3 format header:
+    // media: QID|Phần|Loại|Nội dung|Ảnh CH|Video|A|ẢnhA|B|ẢnhB|C|ẢnhC|D|ẢnhD|Đáp án|Điểm
+    // new:   QID|Phần|Loại|Nội dung|A|B|C|D|Đáp án|Điểm
+    // old:   Phần|Loại|Nội dung|A|B|C|D|Đáp án
     let fmt = "old";
     if (rawRows.length) {
-      const h0 = String(rawRows[0][0] || "").trim().toLowerCase();
-      if (/^qid|mã câu|ma cau/i.test(h0) || (String(rawRows[0][1] || "").match(/phần|phan/i) && String(rawRows[0][2] || "").match(/loại|loai/i))) {
-        fmt = "new";
-      }
+      const hdr = rawRows[0].map(function (x) { return String(x || "").trim().toLowerCase(); });
+      const joined = hdr.join("|");
+      if (/ảnh|anh|hình|video|img|image/.test(joined) || hdr.length >= 16) fmt = "media";
+      else if (/^qid|mã câu|ma cau/.test(hdr[0] || "") || (/phần|phan/.test(hdr[1] || "") && /loại|loai/.test(hdr[2] || ""))) fmt = "new";
     }
     const letterMap = { A: 0, B: 1, C: 2, D: 3 };
     function isTrueTF(ch) {
       return /[đd1t]|đúng|dung|true/i.test(String(ch || "").trim());
     }
+    function isMediaUrl(u) {
+      u = String(u || "").trim();
+      if (!u) return "";
+      if (/^https?:\/\//i.test(u)) return u;
+      // relative path on same GitHub Pages site
+      if (/^\.?\.?\//.test(u) || /^data\//i.test(u) || /^images?\//i.test(u)) {
+        try {
+          const base = (typeof DEFAULT_DATA_URL !== "undefined" && DEFAULT_DATA_URL)
+            ? DEFAULT_DATA_URL.replace(/\/[^\/]*$/, "/")
+            : (location.origin + location.pathname.replace(/\/[^\/]*$/, "/"));
+          return base.replace(/\/?$/, "/") + u.replace(/^\.\//, "");
+        } catch (e) { return u; }
+      }
+      return u;
+    }
+    function ytEmbed(url) {
+      url = String(url || "").trim();
+      if (!url) return "";
+      let id = "";
+      const m1 = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
+      const m2 = url.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+      const m3 = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/);
+      if (m1) id = m1[1];
+      else if (m2) id = m2[1];
+      else if (m3) id = m3[1];
+      if (id) return "https://www.youtube.com/embed/" + id;
+      if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return url; // direct video
+      return url;
+    }
     rawRows.forEach(function (row, idx) {
       if (idx === 0 && /qid|phần|phan|loại|loai|nội dung/i.test(String(row[0] || "") + String(row[1] || ""))) return;
       let qid = "", part, type, text, opts, ansRaw, maxPts;
-      if (fmt === "new") {
+      let imgQ = "", videoQ = "", imgOpts = ["", "", "", ""];
+      if (fmt === "media") {
+        // 0 QID 1 Phần 2 Loại 3 Nội dung 4A 5B 6C 7D 8 Đáp án 9 Điểm
+        // 10 ẢnhCH 11 Video 12 ẢnhA 13 ẢnhB 14 ẢnhC 15 ẢnhD  (media ở CUỐI)
+        qid = String(row[0] || "").trim();
+        part = parseInt(row[1], 10);
+        type = String(row[2] || "").trim().toUpperCase();
+        text = String(row[3] || "").trim();
+        opts = [4, 5, 6, 7].map(function (i) { return String(row[i] || "").trim(); });
+        ansRaw = String(row[8] || "").trim();
+        maxPts = parseFloat(String(row[9] || "").replace(",", ".")) || null;
+        imgQ = isMediaUrl(row[10]);
+        videoQ = String(row[11] || "").trim();
+        imgOpts = [12, 13, 14, 15].map(function (i) { return isMediaUrl(row[i]); });
+      } else if (fmt === "new") {
         qid = String(row[0] || "").trim();
         part = parseInt(row[1], 10);
         type = String(row[2] || "").trim().toUpperCase();
@@ -687,38 +740,38 @@ function parseWorkbook(wb) {
       if (!text || [1, 2, 3].indexOf(part) < 0) return;
       if (!qid) {
         let h = 0;
-        for (let i = 0; i < text.length; i++) h = ((h << 5) - h + text.charCodeAt(i)) | 0;
+        for (let k = 0; k < text.length; k++) h = ((h << 5) - h + text.charCodeAt(k)) | 0;
         qid = "Q" + String(Math.abs(h) % 100000).padStart(5, "0");
       }
       if (type === "MC" && part === 1) {
-        const qmc = {
+        questionBank.part1.push({
           type: "mc", qid: qid, text: text, options: opts,
           correct: letterMap[ansRaw.charAt(0).toUpperCase()] != null ? letterMap[ansRaw.charAt(0).toUpperCase()] : 0,
-          maxPts: maxPts != null ? maxPts : 0.25
-        };
-        questionBank.part1.push(qmc);
+          maxPts: maxPts != null ? maxPts : 0.25,
+          imgQ: imgQ, videoQ: videoQ, imgOpts: imgOpts
+        });
       } else if (type === "TF" && part === 2) {
-        // Đáp án dạng ĐĐĐS hoặc Đ/S từng ý
         const ansClean = ansRaw.replace(/[\s\/|,;]/g, "");
-        const qtf = {
+        questionBank.part2.push({
           type: "tf", qid: qid, text: text,
           statements: [0, 1, 2, 3].map(function (i) {
             return {
               text: opts[i] || "",
-              correct: isTrueTF(ansClean.charAt(i) || ansRaw.charAt(i))
+              correct: isTrueTF(ansClean.charAt(i) || ansRaw.charAt(i)),
+              img: imgOpts[i] || ""
             };
           }),
-          maxPts: maxPts != null ? maxPts : 1
-        };
-        questionBank.part2.push(qtf);
+          maxPts: maxPts != null ? maxPts : 1,
+          imgQ: imgQ, videoQ: videoQ
+        });
       } else if (type === "SA" && part === 3) {
         const correct = ansRaw.split("|").map(function (s) { return s.trim(); }).filter(Boolean);
-        const qsa = {
+        questionBank.part3.push({
           type: "sa", qid: qid, text: text,
           correct: correct.length ? correct : [ansRaw],
-          maxPts: maxPts != null ? maxPts : 0.5
-        };
-        questionBank.part3.push(qsa);
+          maxPts: maxPts != null ? maxPts : 0.5,
+          imgQ: imgQ, videoQ: videoQ
+        });
       }
     });
     // Một pool duy nhất → buildExam xáo 24+3+2 mỗi lần
@@ -1335,13 +1388,14 @@ function shuffle(a) {
 }
 function shuffleMC(q) {
   const idxs = shuffle([0, 1, 2, 3]);
-  // optionOrder: vị trí gốc của A,B,C,D đang hiển thị (ảnh chụp đề)
+  const imgs = (q.imgOpts && q.imgOpts.length === 4) ? q.imgOpts : ["", "", "", ""];
   return {
     ...q,
     options: idxs.map(i => q.options[i]),
+    imgOpts: idxs.map(i => imgs[i] || ""),
     correct: idxs.indexOf(q.correct),
-    optionOrder: idxs.slice(), // idxs[0] = chỉ số gốc của đáp án A hiện tại
-    optionOrderLetters: idxs.map(i => String.fromCharCode(65 + i)).join("") // ví dụ BDAC
+    optionOrder: idxs.slice(),
+    optionOrderLetters: idxs.map(i => String.fromCharCode(65 + i)).join("")
   };
 }
 function buildExam() {
@@ -1572,6 +1626,28 @@ function isAnswered(q) {
   return answers[k] && String(answers[k]).trim() !== "";
 }
 
+function mediaHtmlForQuestion(q) {
+  let h = "";
+  if (q.imgQ) {
+    h += '<div class="q-media"><img src="' + q.imgQ.replace(/"/g, "&quot;") + '" alt="Hình minh họa" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display=\'none\'"></div>';
+  }
+  if (q.videoQ) {
+    const v = String(q.videoQ).trim();
+    let embed = "";
+    const m1 = v.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
+    const m2 = v.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
+    const m3 = v.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/);
+    if (m1) embed = "https://www.youtube.com/embed/" + m1[1];
+    else if (m2) embed = "https://www.youtube.com/embed/" + m2[1];
+    else if (m3) embed = "https://www.youtube.com/embed/" + m3[1];
+    if (embed) {
+      h += '<div class="q-media q-video"><iframe src="' + embed + '" title="Video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>';
+    } else if (/\.(mp4|webm|ogg)(\?|$)/i.test(v)) {
+      h += '<div class="q-media q-video"><video controls playsinline src="' + v.replace(/"/g, "&quot;") + '"></video></div>';
+    }
+  }
+  return h;
+}
 function renderQuestion(idx) {
   if (examCancelled) return;
   currentQ = idx;
@@ -1579,16 +1655,19 @@ function renderQuestion(idx) {
   const area = document.getElementById("question-area");
   const partName = q.part === 1 ? "Phần 1 – Trắc nghiệm" : q.part === 2 ? "Phần 2 – Đúng/Sai" : "Phần 3 – Trả lời ngắn";
   let html = '<div class="q-badge">' + partName + " · Câu " + q.displayId + '</div><div class="q-text">' + q.text + "</div>";
+  html += mediaHtmlForQuestion(q);
   if (q.type === "mc") {
     html += '<div class="options">';
     q.options.forEach((opt, i) => {
-      html += '<label class="opt ' + (answers[key] === i ? "selected" : "") + '" data-idx="' + i + '"><input type="radio"><span class="letter">' + String.fromCharCode(65 + i) + '</span><span class="content">' + opt + "</span></label>";
+      const img = (q.imgOpts && q.imgOpts[i]) ? '<img class="opt-img" src="' + String(q.imgOpts[i]).replace(/"/g, "&quot;") + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' : "";
+      html += '<label class="opt ' + (answers[key] === i ? "selected" : "") + '" data-idx="' + i + '"><input type="radio"><span class="letter">' + String.fromCharCode(65 + i) + '</span><span class="content">' + opt + img + "</span></label>";
     });
     html += "</div>";
   } else if (q.type === "tf") {
     const ans = answers[key] || [null, null, null, null];
     q.statements.forEach((s, i) => {
-      html += '<div class="tf-statement"><div class="stmt">' + s.text + '</div><div class="tf-btns">' +
+      const img = s.img ? '<img class="opt-img" src="' + String(s.img).replace(/"/g, "&quot;") + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\">' : "";
+      html += '<div class="tf-statement"><div class="stmt">' + s.text + img + '</div><div class="tf-btns">' +
         '<button class="tf-btn ' + (ans[i] === true ? "active-dung" : "") + '" data-stmt="' + i + '" data-val="true">Đúng</button>' +
         '<button class="tf-btn ' + (ans[i] === false ? "active-sai" : "") + '" data-stmt="' + i + '" data-val="false">Sai</button></div></div>';
     });
