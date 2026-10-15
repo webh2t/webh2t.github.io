@@ -664,22 +664,59 @@ function parseWorkbook(wb) {
     // media: QID|Phần|Loại|Nội dung|Ảnh CH|Video|A|ẢnhA|B|ẢnhB|C|ẢnhC|D|ẢnhD|Đáp án|Điểm
     // new:   QID|Phần|Loại|Nội dung|A|B|C|D|Đáp án|Điểm
     // old:   Phần|Loại|Nội dung|A|B|C|D|Đáp án
-    let fmt = "old";
-    if (rawRows.length) {
-      const hdr = rawRows[0].map(function (x) { return String(x || "").trim().toLowerCase(); });
-      const joined = hdr.join("|");
-      if (/ảnh|anh|hình|video|img|image/.test(joined) || hdr.length >= 16) fmt = "media";
-      else if (/^qid|mã câu|ma cau/.test(hdr[0] || "") || (/phần|phan/.test(hdr[1] || "") && /loại|loai/.test(hdr[2] || ""))) fmt = "new";
+    // Map cột theo tên header (ổn định khi thêm/bớt cột media)
+    function stripVN(s) {
+      return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
     }
+    const col = {};
+    if (rawRows.length) {
+      rawRows[0].forEach(function (h, i) {
+        const n = stripVN(h);
+        if (/^qid|ma cau/.test(n)) col.qid = i;
+        else if (/^phan$/.test(n)) col.phan = i;
+        else if (/^loai$/.test(n)) col.loai = i;
+        else if (/noi dung/.test(n)) col.noidung = i;
+        else if (n === "a") col.a = i;
+        else if (n === "b") col.b = i;
+        else if (n === "c") col.c = i;
+        else if (n === "d") col.d = i;
+        else if (/dap an/.test(n) && !/anh/.test(n)) col.dapan = i;
+        else if (/diem/.test(n)) col.diem = i;
+        else if (/anh cau|hinh cau|anh ch|anh nh/.test(n)) col.imgq = i;
+        else if (/video/.test(n)) col.video = i;
+        else if (n === "anh a" || n === "hinh a") col.imga = i;
+        else if (n === "anh b" || n === "hinh b") col.imgb = i;
+        else if (n === "anh c" || n === "hinh c") col.imgc = i;
+        else if (n === "anh d" || n === "hinh d") col.imgd = i;
+      });
+      // fallback vị trí cố định nếu thiếu tên
+      if (col.qid == null && /^qid/i.test(String(rawRows[0][0] || ""))) col.qid = 0;
+      if (col.phan == null) col.phan = 1;
+      if (col.loai == null) col.loai = 2;
+      if (col.noidung == null) col.noidung = 3;
+      if (col.a == null) col.a = 4;
+      if (col.b == null) col.b = 5;
+      if (col.c == null) col.c = 6;
+      if (col.d == null) col.d = 7;
+      if (col.dapan == null) col.dapan = 8;
+      if (col.diem == null) col.diem = 9;
+      if (col.imgq == null && rawRows[0].length >= 16) col.imgq = 10;
+      if (col.video == null && rawRows[0].length >= 16) col.video = 11;
+      if (col.imga == null && rawRows[0].length >= 16) col.imga = 12;
+      if (col.imgb == null && rawRows[0].length >= 16) col.imgb = 13;
+      if (col.imgc == null && rawRows[0].length >= 16) col.imgc = 14;
+      if (col.imgd == null && rawRows[0].length >= 16) col.imgd = 15;
+    }
+    console.log("CauHoi col map", col);
+
     const letterMap = { A: 0, B: 1, C: 2, D: 3 };
     function isTrueTF(ch) {
       return /[đd1t]|đúng|dung|true/i.test(String(ch || "").trim());
     }
     function isMediaUrl(u) {
-      u = String(u || "").trim();
-      if (!u) return "";
+      u = String(u == null ? "" : u).trim();
+      if (!u || u === "None" || u === "null") return "";
       if (/^https?:\/\//i.test(u)) return u;
-      // relative path on same GitHub Pages site
       if (/^\.?\.?\//.test(u) || /^data\//i.test(u) || /^images?\//i.test(u)) {
         try {
           const base = (typeof DEFAULT_DATA_URL !== "undefined" && DEFAULT_DATA_URL)
@@ -690,62 +727,45 @@ function parseWorkbook(wb) {
       }
       return u;
     }
-    function ytEmbed(url) {
-      url = String(url || "").trim();
-      if (!url) return "";
-      let id = "";
-      const m1 = url.match(/[?&]v=([a-zA-Z0-9_-]{6,})/);
-      const m2 = url.match(/youtu\.be\/([a-zA-Z0-9_-]{6,})/);
-      const m3 = url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{6,})/);
-      if (m1) id = m1[1];
-      else if (m2) id = m2[1];
-      else if (m3) id = m3[1];
-      if (id) return "https://www.youtube.com/embed/" + id;
-      if (/\.(mp4|webm|ogg)(\?|$)/i.test(url)) return url; // direct video
-      return url;
+    function cell(row, key) {
+      const i = col[key];
+      if (i == null || i >= row.length) return "";
+      return row[i];
     }
     rawRows.forEach(function (row, idx) {
-      if (idx === 0 && /qid|phần|phan|loại|loai|nội dung/i.test(String(row[0] || "") + String(row[1] || ""))) return;
-      let qid = "", part, type, text, opts, ansRaw, maxPts;
-      let imgQ = "", videoQ = "", imgOpts = ["", "", "", ""];
-      if (fmt === "media") {
-        // 0 QID 1 Phần 2 Loại 3 Nội dung 4A 5B 6C 7D 8 Đáp án 9 Điểm
-        // 10 ẢnhCH 11 Video 12 ẢnhA 13 ẢnhB 14 ẢnhC 15 ẢnhD  (media ở CUỐI)
-        qid = String(row[0] || "").trim();
-        part = parseInt(row[1], 10);
-        type = String(row[2] || "").trim().toUpperCase();
-        text = String(row[3] || "").trim();
-        opts = [4, 5, 6, 7].map(function (i) { return String(row[i] || "").trim(); });
-        ansRaw = String(row[8] || "").trim();
-        maxPts = parseFloat(String(row[9] || "").replace(",", ".")) || null;
-        imgQ = isMediaUrl(row[10]);
-        videoQ = String(row[11] || "").trim();
-        imgOpts = [12, 13, 14, 15].map(function (i) { return isMediaUrl(row[i]); });
-      } else if (fmt === "new") {
-        qid = String(row[0] || "").trim();
-        part = parseInt(row[1], 10);
-        type = String(row[2] || "").trim().toUpperCase();
-        text = String(row[3] || "").trim();
-        opts = [4, 5, 6, 7].map(function (i) { return String(row[i] || "").trim(); });
-        ansRaw = String(row[8] || "").trim();
-        maxPts = parseFloat(String(row[9] || "").replace(",", ".")) || null;
-      } else {
-        part = parseInt(row[0], 10);
-        type = String(row[1] || "").trim().toUpperCase();
-        text = String(row[2] || "").trim();
-        opts = [3, 4, 5, 6].map(function (i) { return String(row[i] || "").trim(); });
-        ansRaw = String(row[7] || "").trim();
-        maxPts = null;
-      }
+      if (idx === 0) return;
+      // pad row
+      while (row.length < 16) row.push("");
+      const qid = String(cell(row, "qid") || "").trim();
+      const part = parseInt(cell(row, "phan"), 10);
+      const type = String(cell(row, "loai") || "").trim().toUpperCase();
+      const text = String(cell(row, "noidung") || "").trim();
       if (!text || [1, 2, 3].indexOf(part) < 0) return;
-      if (!qid) {
+      const opts = [
+        String(cell(row, "a") || "").trim(),
+        String(cell(row, "b") || "").trim(),
+        String(cell(row, "c") || "").trim(),
+        String(cell(row, "d") || "").trim()
+      ];
+      const ansRaw = String(cell(row, "dapan") || "").trim();
+      const maxPts = parseFloat(String(cell(row, "diem") || "").replace(",", ".")) || null;
+      const imgQ = isMediaUrl(cell(row, "imgq"));
+      const videoQ = String(cell(row, "video") || "").trim();
+      const imgOpts = [
+        isMediaUrl(cell(row, "imga")),
+        isMediaUrl(cell(row, "imgb")),
+        isMediaUrl(cell(row, "imgc")),
+        isMediaUrl(cell(row, "imgd"))
+      ];
+      let finalQid = qid;
+      if (!finalQid) {
         let h = 0;
         for (let k = 0; k < text.length; k++) h = ((h << 5) - h + text.charCodeAt(k)) | 0;
-        qid = "Q" + String(Math.abs(h) % 100000).padStart(5, "0");
+        finalQid = "Q" + String(Math.abs(h) % 100000).padStart(5, "0");
       }
       if (type === "MC" && part === 1) {
         questionBank.part1.push({
-          type: "mc", qid: qid, text: text, options: opts,
+          type: "mc", qid: finalQid, text: text, options: opts,
           correct: letterMap[ansRaw.charAt(0).toUpperCase()] != null ? letterMap[ansRaw.charAt(0).toUpperCase()] : 0,
           maxPts: maxPts != null ? maxPts : 0.25,
           imgQ: imgQ, videoQ: videoQ, imgOpts: imgOpts
@@ -753,7 +773,7 @@ function parseWorkbook(wb) {
       } else if (type === "TF" && part === 2) {
         const ansClean = ansRaw.replace(/[\s\/|,;]/g, "");
         questionBank.part2.push({
-          type: "tf", qid: qid, text: text,
+          type: "tf", qid: finalQid, text: text,
           statements: [0, 1, 2, 3].map(function (i) {
             return {
               text: opts[i] || "",
@@ -767,13 +787,16 @@ function parseWorkbook(wb) {
       } else if (type === "SA" && part === 3) {
         const correct = ansRaw.split("|").map(function (s) { return s.trim(); }).filter(Boolean);
         questionBank.part3.push({
-          type: "sa", qid: qid, text: text,
+          type: "sa", qid: finalQid, text: text,
           correct: correct.length ? correct : [ansRaw],
           maxPts: maxPts != null ? maxPts : 0.5,
           imgQ: imgQ, videoQ: videoQ
         });
       }
     });
+    const withImg = (questionBank.part1 || []).filter(function (q) { return q.imgQ || q.videoQ || (q.imgOpts || []).some(Boolean); }).length;
+    console.log("CauHoi loaded MC", (questionBank.part1 || []).length, "có media", withImg);
+
     // Một pool duy nhất → buildExam xáo 24+3+2 mỗi lần
     window.examCodes["BANK"] = {
       part1: questionBank.part1.slice(),
@@ -1629,7 +1652,7 @@ function isAnswered(q) {
 function mediaHtmlForQuestion(q) {
   let h = "";
   if (q.imgQ) {
-    h += '<div class="q-media"><img src="' + q.imgQ.replace(/"/g, "&quot;") + '" alt="Hình minh họa" loading="lazy" referrerpolicy="no-referrer" onerror="this.parentNode.style.display=\'none\'"></div>';
+    h += '<div class="q-media"><img src="' + String(q.imgQ).replace(/"/g, "&quot;") + '" alt="Hình minh họa câu hỏi" loading="lazy" referrerpolicy="no-referrer" crossorigin="anonymous" onerror="this.onerror=null;this.style.display=\'none\';var t=this.nextElementSibling;if(t)t.style.display=\'block\';"><div class="q-media-fallback" style="display:none;font-size:.8rem;color:#64748B">Không tải được ảnh minh họa</div></div>';
   }
   if (q.videoQ) {
     const v = String(q.videoQ).trim();
@@ -1750,9 +1773,11 @@ function onKey(e) {
   }
   if (
     e.key === "F12" || e.key === "PrintScreen" ||
-    (e.ctrlKey && e.shiftKey && ["I", "J", "C"].includes(e.key)) ||
+    (e.ctrlKey && e.shiftKey && ["I", "J", "C", "S", "s"].includes(e.key)) ||
+    (e.metaKey && e.shiftKey && ["S", "s", "3", "4", "5"].includes(e.key)) ||
     (e.ctrlKey && ["c", "C", "v", "V", "x", "X", "a", "A", "u", "U", "s", "S", "p", "P"].includes(e.key)) ||
-    (e.metaKey && ["c", "C", "v", "V", "x", "X", "a", "A"].includes(e.key))
+    (e.metaKey && ["c", "C", "v", "V", "x", "X", "a", "A", "s", "S", "p", "P"].includes(e.key)) ||
+    (e.key === "PrintScreen")
   ) {
     e.preventDefault();
     if (!examCancelled) cancelExam("Bạn đã nhấn phím tắt trái phép (sao chép / devtools).");
