@@ -575,7 +575,7 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1225,7 +1225,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2307,7 +2307,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2324,7 +2324,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2403,7 +2403,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
