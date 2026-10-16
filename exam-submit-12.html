@@ -235,6 +235,22 @@
   font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;
 }
 
+
+.stats-bar{
+  margin:14px 0 4px;padding:12px 14px;border-radius:12px;
+  background:linear-gradient(135deg,#F8FAFC,#EEF2FF);border:1px solid #E2E8F0;
+  font-size:.85rem;color:#334155;
+}
+.stats-bar .st-title{font-weight:800;color:#1E3A8A;margin-bottom:8px;font-size:.9rem}
+.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+@media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
+.stat-chip{
+  background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:8px 10px;text-align:center;
+}
+.stat-chip .n{display:block;font-size:1.15rem;font-weight:900;color:#4F46E5}
+.stat-chip .l{font-size:.72rem;color:#64748B;font-weight:600}
+.stat-chip.total .n{color:#0F766E}
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -266,6 +282,16 @@
     </div>
 
     <div id="exam-picker" class="exam-picker" aria-label="Chọn bài kiểm tra"></div>
+    <div class="stats-bar" id="stats-bar">
+      <div class="st-title">📊 Lượt xem trang thi</div>
+      <div class="stats-grid">
+        <div class="stat-chip total"><span class="n" id="stat-total">…</span><span class="l">Toàn trang</span></div>
+        <div class="stat-chip"><span class="n" id="stat-b4">…</span><span class="l">Bài 4</span></div>
+        <div class="stat-chip"><span class="n" id="stat-b11">…</span><span class="l">Bài 11</span></div>
+        <div class="stat-chip"><span class="n" id="stat-b18">…</span><span class="l">Bài 18</span></div>
+        <div class="stat-chip"><span class="n" id="stat-b25">…</span><span class="l">Bài 25</span></div>
+      </div>
+    </div>
     <div id="exam-current" class="exam-current">
       <span id="exam-current-label">—</span>
       <button type="button" id="btn-change-exam">Đổi bài</button>
@@ -1227,6 +1253,7 @@ function exitAdminHint() {
     if (cs) { cs.innerHTML = '<option value="">-- Đang tải ' + ex.file + ' --</option>'; cs.disabled = true; }
     loadFromUrl(examUrl(ex));
     renderExamPicker();
+    try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
   }
   function clearExamSelection() {
     currentExam = null;
@@ -2287,6 +2314,11 @@ function pushScoreToCloud(record) {
   q.set("p2", String(ps.p2 != null ? ps.p2 : ""));
   q.set("p3", String(ps.p3 != null ? ps.p3 : ""));
   q.set("baiLam", baiLam.slice(0, 1600));
+  try {
+    var baiCode = (currentExam && currentExam.code) ? currentExam.code : (currentExam && currentExam.id ? String(currentExam.id).toUpperCase() : "B4");
+    q.set("bai", baiCode);
+    q.set("module", baiCode);
+  } catch (eBai) { q.set("bai", "B4"); }
   const getUrl = WH + "?" + q.toString();
   console.log("[Cloud] once", record.name, record.score, getUrl.length);
 
@@ -3114,16 +3146,46 @@ if (_cancelExam) {
 }
 
 </script>
-<!-- CountAPI – key chung với trang chủ: webh2t-exam12 -->
+<!-- CountAPI – total + per exam -->
 <script>
-  fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-exam12')
-    .then(function (r) { return r.json(); })
-    .then(function (d) {
-      console.log('Thi Tin 12 views:', d.value);
-    })
-    .catch(function (e) {
-      console.warn('CountAPI Thi Tin 12 lỗi:', e);
-    });
+(function () {
+  var BASE = "https://countapi.mileshilliard.com/api/v1/";
+  function hit(key, elId) {
+    fetch(BASE + "hit/" + key)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = document.getElementById(elId);
+        if (el && d && d.value != null) el.textContent = d.value;
+        console.log("Count", key, d && d.value);
+      })
+      .catch(function () {
+        var el = document.getElementById(elId);
+        if (el) el.textContent = "—";
+      });
+  }
+  function get(key, elId) {
+    fetch(BASE + "get/" + key)
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var el = document.getElementById(elId);
+        if (el && d && d.value != null) el.textContent = d.value;
+      })
+      .catch(function () {});
+  }
+  // Toàn trang: hit 1 lần mỗi lần mở trang
+  hit("webh2t-exam12", "stat-total");
+  // 4 bài: chỉ GET để hiển thị (hit khi chọn bài)
+  get("webh2t-exam12-b4", "stat-b4");
+  get("webh2t-exam12-b11", "stat-b11");
+  get("webh2t-exam12-b18", "stat-b18");
+  get("webh2t-exam12-b25", "stat-b25");
+  window.hitExamView = function (examId) {
+    var map = { b4: "webh2t-exam12-b4", b11: "webh2t-exam12-b11", b18: "webh2t-exam12-b18", b25: "webh2t-exam12-b25" };
+    var elMap = { b4: "stat-b4", b11: "stat-b11", b18: "stat-b18", b25: "stat-b25" };
+    var k = map[examId];
+    if (k) hit(k, elMap[examId]);
+  };
+})();
 </script>
 </body>
 </html>
