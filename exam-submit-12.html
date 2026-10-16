@@ -3712,49 +3712,99 @@ function buildBlogBullets_(text, c) {
   var pros = [];
   var cons = [];
 
-  // Từ điểm tiêu chí
   var specs = [
-    { k: "bc", name: "Bố cục", max: 2, v: num_(c.bc) },
-    { k: "nd", name: "Nội dung", max: 2.5, v: num_(c.nd) },
+    { k: "bc", name: "Bố cục & điều hướng", max: 2, v: num_(c.bc) },
+    { k: "nd", name: "Nội dung chủ đề", max: 2.5, v: num_(c.nd) },
     { k: "dp", name: "Đa phương tiện", max: 2, v: num_(c.dp) },
-    { k: "lh", name: "Liên hệ", max: 2, v: num_(c.lh) },
-    { k: "tm", name: "Thẩm mỹ", max: 1.5, v: num_(c.tm) }
+    { k: "lh", name: "Liên hệ & kỹ thuật", max: 2, v: num_(c.lh) },
+    { k: "tm", name: "Thẩm mỹ & sáng tạo", max: 1.5, v: num_(c.tm) }
   ];
+
+  // Nhược điểm từ điểm thiếu (giải thích vì sao chưa 10)
   specs.forEach(function (s) {
     if (s.v == null) return;
-    if (s.v >= s.max * 0.85) pros.push("Ưu " + s.name + " (" + s.v + "/" + s.max + ")");
-    else if (s.v <= s.max * 0.45) cons.push("Nhược " + s.name + " còn yếu (" + s.v + "/" + s.max + ")");
-    else if (s.v < s.max * 0.75) cons.push("Nhược " + s.name + " chưa đủ (" + s.v + "/" + s.max + ")");
+    var miss = Math.round((s.max - s.v) * 100) / 100;
+    if (miss <= 0.01) return;
+    if (s.v <= s.max * 0.5) {
+      cons.push("Nhược " + s.name + ": còn yếu, mất " + miss + " điểm (" + s.v + "/" + s.max + ")");
+    } else if (miss >= 0.25) {
+      cons.push("Nhược " + s.name + ": chưa đạt tối đa, còn thiếu " + miss + " điểm (" + s.v + "/" + s.max + ")");
+    }
   });
 
-  // Tách Ưu:/Nhược: trong text AI
-  var u = text.match(/Ưu\s*[:：]\s*([^\.]+)/i);
-  var n = text.match(/Nhược\s*[:：]\s*([^\.]+)/i);
-  if (u) pros.unshift("Ưu: " + u[1].trim());
-  if (n) cons.unshift("Nhược: " + n[1].trim());
-
-  // Nếu chưa có từ text, lấy 1-2 câu ngắn
-  if (!u && !n && text) {
-    var sentences = text.split(/(?<=[\.\!\?])\s+/).filter(function (x) { return x && x.length > 12; });
-    if (sentences[0]) pros.push(sentences[0].replace(/^Ưu\s*[:：]\s*/i, "Ưu: ").slice(0, 110));
-    if (sentences[1]) cons.push(sentences[1].replace(/^Nhược\s*[:：]\s*/i, "Nhược: ").slice(0, 110));
+  // Tách Ưu / Nhược từ văn AI
+  var uBlock = text.match(/Ưu\s*[:：]\s*(.+?)(?=Nhược\s*[:：]|$)/i);
+  var nBlock = text.match(/Nhược\s*[:：]\s*(.+)$/i);
+  if (uBlock) {
+    splitIdeas_(uBlock[1]).forEach(function (x) {
+      if (x) pros.push(clipSentence_("Ưu: " + x, 130));
+    });
+  }
+  if (nBlock) {
+    splitIdeas_(nBlock[1]).forEach(function (x) {
+      if (x) cons.push(clipSentence_("Nhược: " + x, 130));
+    });
   }
 
-  // Gộp, bỏ trùng, tối đa 5
+  // Không có Ưu:/Nhược: → lấy câu mô tả làm ưu; tránh câu đã là nhược điểm số
+  if (!pros.length && text) {
+    var sentences = text.split(/(?<=[\.\!\?])\s+/).filter(function (x) {
+      return x && x.length > 20 && !/^nhược/i.test(x);
+    });
+    if (sentences[0]) pros.push(clipSentence_("Ưu: " + sentences[0], 130));
+    if (sentences[1] && pros.length < 2) pros.push(clipSentence_("Ưu: " + sentences[1], 130));
+  }
+
+  // Bỏ ưu chỉ lặp lại điểm số (Ưu Bố cục (1.75/2)…)
+  pros = pros.filter(function (p) {
+    return !/^\s*Ưu\s+.+\([\d.,]+\s*\/\s*[\d.,]+\)\s*$/i.test(p);
+  });
+
+  // Thứ tự: 1–2 ưu, rồi 2–3 nhược; tổng ≤ 5
   var out = [];
   var seen = {};
   function add(x) {
     x = String(x || "").replace(/\s+/g, " ").trim();
-    if (!x) return;
-    if (x.length > 120) x = x.slice(0, 117) + "…";
-    var k = x.toLowerCase().slice(0, 40);
+    x = clipSentence_(x, 140);
+    if (!x || x.length < 8) return;
+    // bỏ mảnh cụt kiểu "đ", "v"
+    if (/^[a-zA-Zà-ỹ]{1,2}$/i.test(x)) return;
+    var k = x.toLowerCase().replace(/[^a-z0-9à-ỹ]/gi, "").slice(0, 36);
     if (seen[k]) return;
     seen[k] = 1;
     out.push(x);
   }
-  pros.forEach(add);
-  cons.forEach(add);
+  pros.slice(0, 2).forEach(add);
+  cons.slice(0, 3).forEach(add);
+  // Nếu chưa đủ nhược mà còn slot, bổ sung
+  if (out.length < 3) {
+    cons.slice(3).forEach(function (x) {
+      if (out.length >= 5) return;
+      add(x);
+    });
+  }
   return out.slice(0, 5);
+}
+
+function splitIdeas_(s) {
+  s = String(s || "").replace(/\s+/g, " ").trim();
+  if (!s) return [];
+  return s.split(/\s*;\s*|\s*[-–]\s+|\s*\/\s*|\s+và\s+(?=[A-ZÀ-Ỹ])/).map(function (x) {
+    return x.replace(/^[\s,;:]+|[\s,;:]+$/g, "").trim();
+  }).filter(function (x) { return x.length > 6; });
+}
+
+/** Cắt tại ranh giới từ, không để lại chữ cụt "đ", "v" */
+function clipSentence_(s, max) {
+  s = String(s || "").replace(/\s+/g, " ").trim();
+  if (s.length <= max) return s;
+  var cut = s.slice(0, max);
+  var sp = cut.lastIndexOf(" ");
+  if (sp > max * 0.55) cut = cut.slice(0, sp);
+  cut = cut.replace(/[\s,;:.\-–]+$/g, "");
+  // không kết bằng 1–2 ký tự vô nghĩa
+  cut = cut.replace(/\s+[a-zA-Zà-ỹ]{1,2}$/i, "");
+  return cut + "…";
 }
 
 function tidyBlogComment_(s) {
