@@ -566,7 +566,7 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzLkq5ZCEIOIDqKRUenrv-zsGg5dsJ7kpqgiQwYe9NTBYKzUr0fR8-1afn-ix_9xRJVRg/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1216,7 +1216,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzLkq5ZCEIOIDqKRUenrv-zsGg5dsJ7kpqgiQwYe9NTBYKzUr0fR8-1afn-ix_9xRJVRg/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2298,7 +2298,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzLkq5ZCEIOIDqKRUenrv-zsGg5dsJ7kpqgiQwYe9NTBYKzUr0fR8-1afn-ix_9xRJVRg/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2315,7 +2315,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbzLkq5ZCEIOIDqKRUenrv-zsGg5dsJ7kpqgiQwYe9NTBYKzUr0fR8-1afn-ix_9xRJVRg/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2343,12 +2343,12 @@ function pushScoreToCloud(record) {
   const q = new URLSearchParams();
   q.set("action", "append");
   q.set("class", String(record.class || "").slice(0, 20));
-  q.set("name", String(record.name || "").slice(0, 80));
+  q.set("name", String(record.name || "").slice(0, 500));
   q.set("score", String(record.score ?? ""));
   q.set("correct", String(record.correct ?? "0"));
   q.set("wrong", String(record.wrong ?? "0"));
   q.set("skip", String(record.skip ?? "0"));
-  q.set("pattern", String(record.pattern || "").slice(0, 400));
+  q.set("pattern", String(record.pattern || "").slice(0, 800));
   q.set("time", String(record.time || "").slice(0, 40));
   q.set("maDe", String(record.maDe || "").slice(0, 40));
   q.set("examId", String(record.examId || "").slice(0, 40));
@@ -2394,7 +2394,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzLkq5ZCEIOIDqKRUenrv-zsGg5dsJ7kpqgiQwYe9NTBYKzUr0fR8-1afn-ix_9xRJVRg/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxH48KSk5PKDAstBJqkPeWHlh_aZSxcByIJor5e-SlChSRvc1frXmaVdDVu22uxtYFQsQ/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3354,34 +3354,33 @@ function initBlogUI() {
         members: members,
         link: link,
         score: "",
-        note: "Chờ chấm"
+        note: "Chờ GV/AI chấm"
       };
       window.blogSubmissions.unshift(rec);
       try {
-        const key = "webh2t_blog25_" + lop;
         const all = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]");
-        // upsert by class+group
         const filtered = all.filter(function (x) { return !(x.class === lop && String(x.group) === String(g)); });
         filtered.unshift(rec);
         localStorage.setItem("webh2t_blog25", JSON.stringify(filtered.slice(0, 500)));
       } catch (e) {}
-      // Gửi cloud (bai=B25)
+      // Gửi cloud: Họ tên = đủ thành viên; pattern = BLOG|link|members
       try {
         if (typeof pushScoreToCloud === "function") {
+          var fullName = "Nhóm " + g + ": " + members;
           pushScoreToCloud({
             class: lop,
-            name: "Nhóm " + g + ": " + members.slice(0, 60),
+            name: fullName,
             score: 0,
             correct: 0, wrong: 0, skip: 0,
-            pattern: "BLOG|" + link.slice(0, 200),
+            pattern: "BLOG|" + link + "|" + members,
             time: timeStr,
-            maDe: "B25-GROUP-" + g,
+            maDe: "B25-G" + g,
             examId: "B25-" + lop + "-G" + g,
             partScores: {},
             review: []
           });
         }
-      } catch (e2) {}
+      } catch (e2) { console.warn(e2); }
       alert("Đã nộp bài nhóm " + g + " – lớp " + lop);
       document.getElementById("blog-link").value = "";
       renderBlogTable();
@@ -3414,6 +3413,65 @@ function initBlogUI() {
     window.blogSubmissions = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]");
   } catch (e) { window.blogSubmissions = []; }
   renderBlogTable();
+  try { refreshBlogScoresFromCloud(); } catch (eR) {}
+}
+
+
+function refreshBlogScoresFromCloud() {
+  var WH = "";
+  try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
+  if (!WH) return;
+  fetch(WH + "?action=list&bai=B25&t=" + Date.now())
+    .then(function (r) { return r.json(); })
+    .then(function (arr) {
+      if (!Array.isArray(arr)) return;
+      var all = [];
+      try { all = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]"); } catch (e) {}
+      arr.forEach(function (row) {
+        var pat = String(row.pattern || row.baiLam || "");
+        var link = "", members = String(row.name || "");
+        if (pat.indexOf("BLOG|") === 0) {
+          var parts = pat.split("|");
+          link = parts[1] || "";
+          if (parts[2]) members = parts[2];
+        }
+        // parse group from examId or name
+        var g = "";
+        var m = String(row.examId || row.maDe || "").match(/G(\d+)/i);
+        if (m) g = m[1];
+        var nm = String(row.name || "");
+        var mg = nm.match(/Nhóm\s*(\d+)/i);
+        if (mg) g = mg[1];
+        if (members.indexOf("Nhóm ") === 0) {
+          var ix = members.indexOf(":");
+          if (ix > 0) members = members.slice(ix + 1).trim();
+        }
+        var note = "";
+        var bl = String(row.baiLam || row.pattern || "");
+        var aiIdx = bl.indexOf("| AI:");
+        if (aiIdx >= 0) note = bl.slice(aiIdx + 5).trim();
+        else if (parseFloat(String(row.score).replace(",", ".")) > 0) note = "Đã chấm";
+        else note = "Chờ chấm";
+        var rec = {
+          time: row.time || "",
+          class: row.class || "",
+          group: g,
+          members: members,
+          link: link,
+          score: row.score != null && row.score !== "" ? row.score : "",
+          note: note
+        };
+        // upsert
+        all = all.filter(function (x) {
+          return !(x.class === rec.class && String(x.group) === String(rec.group));
+        });
+        all.push(rec);
+      });
+      localStorage.setItem("webh2t_blog25", JSON.stringify(all));
+      window.blogSubmissions = all;
+      if (typeof renderBlogTable === "function") renderBlogTable();
+    })
+    .catch(function () {});
 }
 
 function renderBlogTable() {
