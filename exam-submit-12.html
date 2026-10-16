@@ -251,6 +251,33 @@
 .stat-chip .l{font-size:.72rem;color:#64748B;font-weight:600}
 .stat-chip.total .n{color:#0F766E}
 
+
+#screen-blog{display:none;max-width:820px;margin:24px auto;padding:0 16px 40px}
+.blog-card{background:#fff;border-radius:18px;padding:28px 26px 24px;box-shadow:0 10px 40px rgba(15,23,42,.08);border:1px solid #E2E8F0}
+.blog-card h2{text-align:center;color:#1E3A8A;font-size:1.45rem;margin:0 0 8px;font-weight:900}
+.blog-deadline{text-align:center;color:#B91C1C;font-weight:700;margin:0 0 18px;font-size:.95rem}
+.blog-grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.blog-grid2{grid-template-columns:1fr}}
+.blog-card label{display:block;font-weight:700;color:#334155;margin-bottom:6px;font-size:.9rem}
+.blog-card select,.blog-card input[type=text],.blog-card input[type=url]{
+  width:100%;padding:11px 12px;border:1px solid #CBD5E1;border-radius:10px;font-size:.95rem;font-family:inherit;box-sizing:border-box
+}
+.blog-members{background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;min-height:48px;color:#1E293B;font-size:.92rem;line-height:1.5}
+.blog-hint{font-size:.78rem;color:#64748B;margin-top:4px}
+.btn-blog-submit{
+  display:block;margin:20px auto 8px;padding:12px 36px;border:none;border-radius:10px;
+  background:#1E3A8A;color:#fff;font-weight:800;font-size:1rem;cursor:pointer;font-family:inherit
+}
+.btn-blog-submit:hover{background:#1D4ED8}
+.btn-blog-submit:disabled{opacity:.5;cursor:not-allowed}
+.blog-table-wrap{margin-top:28px;background:#fff;border-radius:16px;padding:16px;border:1px solid #E2E8F0;overflow:auto}
+.blog-table-wrap h3{margin:0 0 12px;color:#1E3A8A;font-size:1.05rem}
+.blog-table{width:100%;border-collapse:collapse;font-size:.88rem}
+.blog-table th{background:#E0E7FF;color:#1E3A8A;padding:10px 8px;text-align:left}
+.blog-table td{border-bottom:1px solid #E2E8F0;padding:9px 8px;vertical-align:top}
+.blog-table a{color:#2563EB;font-weight:600}
+#blog-filter{margin-bottom:10px;padding:8px 10px;border-radius:8px;border:1px solid #CBD5E1;max-width:220px}
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -718,7 +745,8 @@ function parseWorkbook(wb) {
       const diem = row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "" ? String(row[2]).trim() : "";
       if (!ten || !lop) return;
       if (!studentsByClass[lop]) studentsByClass[lop] = [];
-      studentsByClass[lop].push({ name: ten, score: diem });
+      const nhom = row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "" ? String(row[2]).trim() : "";
+      studentsByClass[lop].push({ name: ten, score: diem, group: nhom });
     });
   }
   questionBank = { part1: [], part2: [], part3: [] };
@@ -1251,7 +1279,21 @@ function exitAdminHint() {
     dataReady = false;
     const cs = document.getElementById("class-select");
     if (cs) { cs.innerHTML = '<option value="">-- Đang tải ' + ex.file + ' --</option>'; cs.disabled = true; }
-    loadFromUrl(examUrl(ex));
+    if (ex.id === "b25") {
+      // Bài 25: form blog nhóm, không vào thi TN
+      const sui = document.getElementById("student-ui");
+      if (sui) sui.style.display = "none";
+      document.getElementById("screen-select").style.display = "none";
+      document.getElementById("screen-blog").style.display = "block";
+      loadFromUrl(examUrl(ex)).then(function () {
+        if (typeof initBlogUI === "function") initBlogUI();
+      }).catch(function () { if (typeof initBlogUI === "function") initBlogUI(); });
+    } else {
+      const blog = document.getElementById("screen-blog");
+      if (blog) blog.style.display = "none";
+      document.getElementById("screen-select").style.display = "block";
+      loadFromUrl(examUrl(ex));
+    }
     renderExamPicker();
     try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
   }
@@ -3187,5 +3229,217 @@ if (_cancelExam) {
   };
 })();
 </script>
+
+<div id="screen-blog">
+  <div class="blog-card">
+    <h2>NỘP SẢN PHẨM WEBSITE – TIN HỌC 12</h2>
+    <p class="blog-deadline" id="blog-deadline">Bài 25 · Blog cá nhân (bài tập nhóm – điểm chung nhóm)</p>
+    <div class="blog-grid2">
+      <div>
+        <label>Lớp</label>
+        <select id="blog-class"><option value="">-- Chọn lớp --</option></select>
+      </div>
+      <div>
+        <label>Nhóm</label>
+        <select id="blog-group" disabled><option value="">-- Chọn nhóm --</option></select>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label>Thành viên</label>
+      <div class="blog-members" id="blog-members">Chọn lớp và nhóm để hiện 4 học sinh</div>
+      <div class="blog-hint">Mỗi nhóm tối đa 4 HS (theo Mã nhóm trong Excel)</div>
+    </div>
+    <div style="margin-top:14px">
+      <label>Link Website</label>
+      <input type="url" id="blog-link" placeholder="https://sites.google.com/view/...">
+    </div>
+    <button type="button" class="btn-blog-submit" id="btn-blog-submit">NỘP BÀI</button>
+    <p style="text-align:center;margin:8px 0 0"><button type="button" class="btn-nav-top btn-home" id="btn-blog-back" style="border:none;cursor:pointer">← Đổi bài / Về chọn bài</button></p>
+  </div>
+  <div class="blog-table-wrap">
+    <h3>Bảng sản phẩm đã nộp</h3>
+    <label style="font-size:.85rem;font-weight:600;color:#475569">Lọc theo lớp</label><br>
+    <select id="blog-filter"><option value="">Tất cả</option></select>
+    <table class="blog-table" id="blog-result-table">
+      <thead><tr><th>Thời gian</th><th>Lớp</th><th>Thành viên</th><th>Website</th><th>Tổng</th><th>Nhận xét</th></tr></thead>
+      <tbody id="blog-result-body"><tr><td colspan="6" style="text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+
+<script>
+/* ===== Bài 25 – Blog nhóm ===== */
+window.blogSubmissions = window.blogSubmissions || [];
+
+function initBlogUI() {
+  const classSel = document.getElementById("blog-class");
+  const groupSel = document.getElementById("blog-group");
+  const memBox = document.getElementById("blog-members");
+  if (!classSel) return;
+
+  // classes from studentsByClass
+  const classes = Object.keys(studentsByClass || {}).sort();
+  classSel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  classes.forEach(function (lop) {
+    // only open classes if schedule exists
+    if (typeof isClassOpenNow === "function" && !isClassOpenNow(lop)) return;
+    const o = document.createElement("option");
+    o.value = lop; o.textContent = lop;
+    classSel.appendChild(o);
+  });
+  if (classSel.options.length === 1) {
+    // fallback: show all if none open
+    classes.forEach(function (lop) {
+      const o = document.createElement("option");
+      o.value = lop; o.textContent = lop;
+      classSel.appendChild(o);
+    });
+  }
+
+  groupSel.innerHTML = '<option value="">-- Chọn nhóm --</option>';
+  groupSel.disabled = true;
+  memBox.textContent = "Chọn lớp và nhóm để hiện 4 học sinh";
+
+  classSel.onchange = function () {
+    const lop = classSel.value;
+    groupSel.innerHTML = '<option value="">-- Chọn nhóm --</option>';
+    memBox.textContent = "Chọn nhóm";
+    if (!lop) { groupSel.disabled = true; return; }
+    const list = studentsByClass[lop] || [];
+    const groups = {};
+    list.forEach(function (s) {
+      const g = String(s.group || "").trim() || "?";
+      if (!groups[g]) groups[g] = [];
+      groups[g].push(s.name);
+    });
+    Object.keys(groups).sort(function (a, b) { return (parseInt(a, 10) || 0) - (parseInt(b, 10) || 0); }).forEach(function (g) {
+      const o = document.createElement("option");
+      o.value = g;
+      o.textContent = "Nhóm " + g + " (" + groups[g].length + " HS)";
+      groupSel.appendChild(o);
+    });
+    groupSel.disabled = false;
+    groupSel.dataset.lop = lop;
+  };
+
+  groupSel.onchange = function () {
+    const lop = classSel.value;
+    const g = groupSel.value;
+    const list = (studentsByClass[lop] || []).filter(function (s) { return String(s.group || "") === g; });
+    if (!list.length) {
+      memBox.textContent = "Không có HS trong nhóm này";
+      return;
+    }
+    memBox.innerHTML = list.map(function (s, i) { return (i + 1) + ". " + s.name; }).join("<br>");
+    memBox.dataset.members = list.map(function (s) { return s.name; }).join("; ");
+  };
+
+  const btn = document.getElementById("btn-blog-submit");
+  if (btn) {
+    btn.onclick = function () {
+      const lop = classSel.value;
+      const g = groupSel.value;
+      const link = (document.getElementById("blog-link").value || "").trim();
+      const members = memBox.dataset.members || "";
+      if (!lop || !g) { alert("Chọn lớp và nhóm"); return; }
+      if (!members) { alert("Nhóm chưa có thành viên"); return; }
+      if (!/^https?:\/\//i.test(link)) { alert("Link website phải bắt đầu bằng http:// hoặc https://"); return; }
+      const now = new Date();
+      const timeStr = now.toLocaleString("vi-VN");
+      const rec = {
+        time: timeStr,
+        class: lop,
+        group: g,
+        members: members,
+        link: link,
+        score: "",
+        note: "Chờ chấm"
+      };
+      window.blogSubmissions.unshift(rec);
+      try {
+        const key = "webh2t_blog25_" + lop;
+        const all = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]");
+        // upsert by class+group
+        const filtered = all.filter(function (x) { return !(x.class === lop && String(x.group) === String(g)); });
+        filtered.unshift(rec);
+        localStorage.setItem("webh2t_blog25", JSON.stringify(filtered.slice(0, 500)));
+      } catch (e) {}
+      // Gửi cloud (bai=B25)
+      try {
+        if (typeof pushScoreToCloud === "function") {
+          pushScoreToCloud({
+            class: lop,
+            name: "Nhóm " + g + ": " + members.slice(0, 60),
+            score: 0,
+            correct: 0, wrong: 0, skip: 0,
+            pattern: "BLOG|" + link.slice(0, 200),
+            time: timeStr,
+            maDe: "B25-GROUP-" + g,
+            examId: "B25-" + lop + "-G" + g,
+            partScores: {},
+            review: []
+          });
+        }
+      } catch (e2) {}
+      alert("Đã nộp bài nhóm " + g + " – lớp " + lop);
+      document.getElementById("blog-link").value = "";
+      renderBlogTable();
+    };
+  }
+
+  const back = document.getElementById("btn-blog-back");
+  if (back) {
+    back.onclick = function () {
+      document.getElementById("screen-blog").style.display = "none";
+      document.getElementById("screen-select").style.display = "block";
+      if (typeof clearExamSelection === "function") clearExamSelection();
+    };
+  }
+
+  const filt = document.getElementById("blog-filter");
+  if (filt) {
+    const classes2 = Object.keys(studentsByClass || {}).sort();
+    filt.innerHTML = '<option value="">Tất cả</option>';
+    classes2.forEach(function (lop) {
+      const o = document.createElement("option");
+      o.value = lop; o.textContent = lop;
+      filt.appendChild(o);
+    });
+    filt.onchange = renderBlogTable;
+  }
+
+  // load local submissions
+  try {
+    window.blogSubmissions = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]");
+  } catch (e) { window.blogSubmissions = []; }
+  renderBlogTable();
+}
+
+function renderBlogTable() {
+  const body = document.getElementById("blog-result-body");
+  const filt = document.getElementById("blog-filter");
+  if (!body) return;
+  const f = filt ? filt.value : "";
+  let rows = window.blogSubmissions || [];
+  try {
+    const all = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]");
+    if (all.length) rows = all;
+  } catch (e) {}
+  if (f) rows = rows.filter(function (r) { return r.class === f; });
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(function (r) {
+    const link = r.link ? '<a href="' + String(r.link).replace(/"/g, "&quot;") + '" target="_blank" rel="noopener">Xem</a>' : "";
+    return "<tr><td>" + (r.time || "") + "</td><td>" + (r.class || "") + "</td><td>" +
+      String(r.members || "").replace(/</g, "&lt;") + "</td><td>" + link + "</td><td>" +
+      (r.score !== "" && r.score != null ? r.score : "—") + "</td><td>" +
+      String(r.note || "").replace(/</g, "&lt;") + "</td></tr>";
+  }).join("");
+}
+</script>
+
 </body>
 </html>
