@@ -301,6 +301,20 @@
 </script>
 </head>
 <body>
+<div id="webh2t-boot-error" style="display:none;position:fixed;left:12px;right:12px;top:12px;z-index:99999;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;padding:12px 14px;border-radius:10px;font:600 14px/1.4 system-ui">Lỗi tải trang. Bấm Ctrl+Shift+R hoặc xóa dữ liệu site.</div>
+<script>
+window.addEventListener("error", function (ev) {
+  try {
+    var el = document.getElementById("webh2t-boot-error");
+    if (el) { el.style.display = "block"; el.textContent = "Lỗi JS: " + (ev.message || "unknown"); }
+    var sel = document.getElementById("screen-select");
+    if (sel) sel.style.display = "flex";
+    var blog = document.getElementById("screen-blog");
+    if (blog) blog.style.display = "none";
+  } catch (e) {}
+});
+</script>
+
 <div id="screen-select">
   <div class="select-card" id="select-card">
     <h1 id="page-title">📝 Kiểm tra thường xuyên – Tin học 12</h1>
@@ -1332,23 +1346,29 @@ function exitAdminHint() {
     if (cur) cur.classList.remove("visible");
     const sui = document.getElementById("student-ui");
     if (sui) sui.style.display = "none";
+    const blog = document.getElementById("screen-blog");
+    if (blog) blog.style.display = "none";
+    const sel = document.getElementById("screen-select");
+    if (sel) sel.style.display = "flex";
     const title = document.getElementById("page-title");
     const sub = document.getElementById("page-sub");
     if (title) title.textContent = "📝 Kiểm tra thường xuyên – Tin học 12";
     if (sub) sub.textContent = "Chọn một bài kiểm tra bên dưới để bắt đầu";
     document.title = "Kiểm tra thường xuyên – Tin học 12";
+    const picker = document.getElementById("exam-picker");
+    if (picker) picker.style.display = "grid";
     renderExamPicker();
   }
   const btnChange = document.getElementById("btn-change-exam");
   if (btnChange) btnChange.addEventListener("click", clearExamSelection);
   renderExamPicker();
-  // URL ?exam=b4|b11|b18|b25 hoặc session
+  // URL ?exam=... ; không tự khôi phục session (tránh trang trắng khi F5)
   (function () {
+    try { sessionStorage.removeItem("webh2t_current_exam"); } catch (e) {}
     let want = null;
     try {
       const q = new URLSearchParams(location.search).get("exam");
       if (q) want = String(q).toLowerCase();
-      if (!want) want = sessionStorage.getItem("webh2t_current_exam");
     } catch (e) {}
     if (want) {
       try {
@@ -1356,8 +1376,19 @@ function exitAdminHint() {
         if (found) selectExam(found);
       } catch (eSel) {
         console.warn("auto selectExam", eSel);
-        try { sessionStorage.removeItem("webh2t_current_exam"); } catch (e0) {}
+        clearExamSelection();
       }
+    } else {
+      // Bảo đảm màn hình chọn bài luôn hiện khi F5
+      try {
+        const sel = document.getElementById("screen-select");
+        const blog = document.getElementById("screen-blog");
+        if (blog) blog.style.display = "none";
+        if (sel) sel.style.display = "flex";
+        const picker = document.getElementById("exam-picker");
+        if (picker) picker.style.display = "grid";
+        renderExamPicker();
+      } catch (e2) {}
     }
   })();
 
@@ -3367,6 +3398,26 @@ function initBlogUI() {
     }
     memBox.innerHTML = list.map(function (s, i) { return (i + 1) + ". " + s.name; }).join("<br>");
     memBox.dataset.members = list.map(function (s) { return s.name; }).join("; ");
+    try {
+      var allG = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]");
+      var ex = allG.find(function (x) { return x.class === lop && String(x.group) === String(g) && x.link; });
+      var hint = document.getElementById("blog-submit-hint");
+      if (!hint) {
+        hint = document.createElement("p");
+        hint.id = "blog-submit-hint";
+        hint.style.cssText = "text-align:center;color:#B91C1C;font-weight:700;margin:8px 0 0;font-size:.9rem";
+        var btnEl = document.getElementById("btn-blog-submit");
+        if (btnEl && btnEl.parentNode) btnEl.parentNode.insertBefore(hint, btnEl);
+      }
+      if (ex) {
+        hint.textContent = "Nhóm này đã nộp bài (" + (ex.score !== "" && ex.score != null ? "điểm " + ex.score : "chờ chấm") + "). Không nộp lại.";
+        document.getElementById("btn-blog-submit").disabled = true;
+        if (ex.link) document.getElementById("blog-link").value = ex.link;
+      } else {
+        hint.textContent = "";
+        document.getElementById("btn-blog-submit").disabled = false;
+      }
+    } catch (eH) {}
   };
 
   const btn = document.getElementById("btn-blog-submit");
@@ -3379,6 +3430,19 @@ function initBlogUI() {
       if (!lop || !g) { alert("Chọn lớp và nhóm"); return; }
       if (!members) { alert("Nhóm chưa có thành viên"); return; }
       if (!/^https?:\/\//i.test(link)) { alert("Link website phải bắt đầu bằng http:// hoặc https://"); return; }
+      // Chỉ cho nộp 1 lần / nhóm (local + đã sync cloud)
+      try {
+        var all0 = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]");
+        var existed = all0.find(function (x) {
+          return x.class === lop && String(x.group) === String(g) && x.link;
+        });
+        if (existed && existed.link) {
+          alert("Nhóm " + g + " lớp " + lop + " đã nộp bài rồi. Không thể nộp lại.\nLink đã nộp: " + existed.link);
+          return;
+        }
+      } catch (eDup) {}
+      btn.disabled = true;
+      btn.textContent = "Đang kiểm tra...";
       const now = new Date();
       const timeStr = now.toLocaleString("vi-VN");
       const rec = {
@@ -3419,7 +3483,10 @@ function initBlogUI() {
       } catch (e2) { console.warn(e2); }
       alert("Đã nộp bài nhóm " + g + " – lớp " + lop);
       document.getElementById("blog-link").value = "";
+      btn.disabled = false;
+      btn.textContent = "NỘP BÀI";
       renderBlogTable();
+      try { refreshBlogScoresFromCloud(); } catch (eR2) {}
     };
   }
 
@@ -3456,13 +3523,15 @@ function initBlogUI() {
 function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
-  if (!WH) return;
+  if (!WH) {
+    WH = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
+  }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
     .then(function (arr) {
       if (!Array.isArray(arr)) return;
+      // Google Sheet là nguồn đúng — xóa trên Sheet thì bảng HS cũng mất
       var all = [];
-      try { all = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]"); } catch (e) {}
       arr.forEach(function (row) {
         var pat = String(row.pattern || "");
         var bl = String(row.baiLam || "");
@@ -3478,7 +3547,6 @@ function refreshBlogScoresFromCloud() {
         } else if (/^https?:\/\//i.test(pat)) {
           link = pat;
         }
-        // parse group from examId or name
         var g = "";
         var m = String(row.examId || row.maDe || "").match(/G(\d+)/i);
         if (m) g = m[1];
@@ -3490,12 +3558,11 @@ function refreshBlogScoresFromCloud() {
           if (ix > 0) members = members.slice(ix + 1).trim();
         }
         var note = "";
-        var bl = String(row.baiLam || row.pattern || "");
         var aiIdx = bl.indexOf("| AI:");
         if (aiIdx >= 0) note = bl.slice(aiIdx + 5).trim();
         else if (parseFloat(String(row.score).replace(",", ".")) > 0) note = "Đã chấm";
         else note = "Chờ chấm";
-        var rec = {
+        all.push({
           time: row.time || "",
           class: row.class || "",
           group: g,
@@ -3503,14 +3570,9 @@ function refreshBlogScoresFromCloud() {
           link: link,
           score: row.score != null && row.score !== "" ? row.score : "",
           note: note
-        };
-        // upsert
-        all = all.filter(function (x) {
-          return !(x.class === rec.class && String(x.group) === String(rec.group));
         });
-        all.push(rec);
       });
-      localStorage.setItem("webh2t_blog25", JSON.stringify(all));
+      try { localStorage.setItem("webh2t_blog25", JSON.stringify(all)); } catch (eS) {}
       window.blogSubmissions = all;
       if (typeof renderBlogTable === "function") renderBlogTable();
     })
