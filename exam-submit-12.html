@@ -1171,25 +1171,31 @@ function refreshClassDropdown() {
 }
 
 async function loadFromUrl(url) {
-  if (!url) return;
+  if (!url) return false;
   if (loadBar) { loadBar.style.display = "none"; }
   try {
     const resp = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     parseWorkbook(XLSX.read(new Uint8Array(await resp.arrayBuffer()), { type: "array" }));
+    return true;
   } catch (err) {
-    loadBar.textContent = "⚠️ Không tải được từ GitHub. Dùng cache / upload local.";
-    loadBar.style.background = "#FEF3C7";
-    loadBar.style.color = "#92400E";
+    console.warn("loadFromUrl", err);
+    if (loadBar) {
+      loadBar.style.display = "block";
+      loadBar.textContent = "⚠️ Không tải được từ GitHub. Dùng cache / upload local.";
+      loadBar.style.background = "#FEF3C7";
+      loadBar.style.color = "#92400E";
+    }
     try {
       const d = JSON.parse(localStorage.getItem(DATA_KEY + (currentExam ? ("_" + currentExam.id) : "")) || "{}");
       if (d.students) studentsByClass = d.students;
       if (d.bank) questionBank = d.bank;
       dataReady = true;
-      refreshClassDropdown();
-      loadBar.style.display = "none";
-      if (isAdmin) renderScoreTable();
+      if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+      if (loadBar) loadBar.style.display = "none";
+      if (isAdmin && typeof renderScoreTable === "function") renderScoreTable();
     } catch (e) {}
+    return false;
   }
 }
 
@@ -1289,19 +1295,32 @@ function exitAdminHint() {
     const cs = document.getElementById("class-select");
     if (cs) { cs.innerHTML = '<option value="">-- Đang tải ' + ex.file + ' --</option>'; cs.disabled = true; }
     if (ex.id === "b25") {
-      // Bài 25: form blog nhóm, không vào thi TN
-      const sui = document.getElementById("student-ui");
-      if (sui) sui.style.display = "none";
-      document.getElementById("screen-select").style.display = "none";
-      document.getElementById("screen-blog").style.display = "block";
-      loadFromUrl(examUrl(ex)).then(function () {
-        if (typeof initBlogUI === "function") initBlogUI();
-      }).catch(function () { if (typeof initBlogUI === "function") initBlogUI(); });
+      try {
+        const sui = document.getElementById("student-ui");
+        if (sui) sui.style.display = "none";
+        const blogEl = document.getElementById("screen-blog");
+        const selEl = document.getElementById("screen-select");
+        if (blogEl) blogEl.style.display = "block";
+        if (selEl) selEl.style.display = "none";
+        Promise.resolve(loadFromUrl(examUrl(ex)))
+          .then(function () {
+            try { if (typeof initBlogUI === "function") initBlogUI(); } catch (e1) { console.warn(e1); }
+          })
+          .catch(function (e2) {
+            console.warn(e2);
+            try { if (typeof initBlogUI === "function") initBlogUI(); } catch (e3) { console.warn(e3); }
+          });
+      } catch (eB) {
+        console.warn("B25 UI", eB);
+        const selEl = document.getElementById("screen-select");
+        if (selEl) selEl.style.display = "block";
+      }
     } else {
       const blog = document.getElementById("screen-blog");
       if (blog) blog.style.display = "none";
-      document.getElementById("screen-select").style.display = "block";
-      loadFromUrl(examUrl(ex));
+      const selEl = document.getElementById("screen-select");
+      if (selEl) selEl.style.display = "block";
+      try { loadFromUrl(examUrl(ex)); } catch (eL) { console.warn(eL); }
     }
     renderExamPicker();
     try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
@@ -1332,8 +1351,13 @@ function exitAdminHint() {
       if (!want) want = sessionStorage.getItem("webh2t_current_exam");
     } catch (e) {}
     if (want) {
-      const found = EXAMS.find(function (x) { return x.id === want || x.code.toLowerCase() === want; });
-      if (found) selectExam(found);
+      try {
+        const found = EXAMS.find(function (x) { return x.id === want || x.code.toLowerCase() === want; });
+        if (found) selectExam(found);
+      } catch (eSel) {
+        console.warn("auto selectExam", eSel);
+        try { sessionStorage.removeItem("webh2t_current_exam"); } catch (e0) {}
+      }
     }
   })();
 
@@ -2364,6 +2388,7 @@ function pushScoreToCloud(record) {
   q.set("p1", String(ps.p1 != null ? ps.p1 : ""));
   q.set("p2", String(ps.p2 != null ? ps.p2 : ""));
   q.set("p3", String(ps.p3 != null ? ps.p3 : ""));
+  if ((!baiLam || !baiLam.length) && record.baiLam) baiLam = String(record.baiLam);
   q.set("baiLam", baiLam.slice(0, 1600));
   try {
     var baiCode = (currentExam && currentExam.code) ? currentExam.code : (currentExam && currentExam.id ? String(currentExam.id).toUpperCase() : "B4");
@@ -3376,17 +3401,19 @@ function initBlogUI() {
       try {
         if (typeof pushScoreToCloud === "function") {
           var fullName = "Nhóm " + g + ": " + members;
+          // Cột "Bài làm" trên Sheet chỉ lưu URL để GV bấm mở
           pushScoreToCloud({
             class: lop,
             name: fullName,
             score: 0,
             correct: 0, wrong: 0, skip: 0,
-            pattern: "BLOG|" + link + "|" + members,
+            pattern: link,
             time: timeStr,
             maDe: "B25-G" + g,
             examId: "B25-" + lop + "-G" + g,
             partScores: {},
-            review: []
+            review: [],
+            baiLam: "BLOG|" + link + "|" + members
           });
         }
       } catch (e2) { console.warn(e2); }
@@ -3437,12 +3464,19 @@ function refreshBlogScoresFromCloud() {
       var all = [];
       try { all = JSON.parse(localStorage.getItem("webh2t_blog25") || "[]"); } catch (e) {}
       arr.forEach(function (row) {
-        var pat = String(row.pattern || row.baiLam || "");
+        var pat = String(row.pattern || "");
+        var bl = String(row.baiLam || "");
         var link = "", members = String(row.name || "");
-        if (pat.indexOf("BLOG|") === 0) {
-          var parts = pat.split("|");
+        if (bl.indexOf("BLOG|") === 0) {
+          var parts = bl.split("|");
           link = parts[1] || "";
           if (parts[2]) members = parts[2];
+        } else if (pat.indexOf("BLOG|") === 0) {
+          var parts2 = pat.split("|");
+          link = parts2[1] || "";
+          if (parts2[2]) members = parts2[2];
+        } else if (/^https?:\/\//i.test(pat)) {
+          link = pat;
         }
         // parse group from examId or name
         var g = "";
