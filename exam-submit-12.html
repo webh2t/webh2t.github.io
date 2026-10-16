@@ -252,14 +252,18 @@
 .stat-chip.total .n{color:#0F766E}
 
 
-#screen-blog{display:none;max-width:1100px;margin:24px auto;padding:0 16px 40px}
+#screen-blog{display:none;max-width:1280px;margin:24px auto;padding:0 12px 40px}
 #screen-blog .blog-table{table-layout:fixed;width:100%}
-#screen-blog .blog-table th:nth-child(1),#screen-blog .blog-table td:nth-child(1){width:12%}
-#screen-blog .blog-table th:nth-child(2),#screen-blog .blog-table td:nth-child(2){width:7%}
-#screen-blog .blog-table th:nth-child(3),#screen-blog .blog-table td:nth-child(3){width:22%}
-#screen-blog .blog-table th:nth-child(4),#screen-blog .blog-table td:nth-child(4){width:8%}
-#screen-blog .blog-table th:nth-child(5),#screen-blog .blog-table td:nth-child(5){width:7%}
-#screen-blog .blog-table th:nth-child(6),#screen-blog .blog-table td:nth-child(6){width:44%}
+#screen-blog .blog-table th:nth-child(1),#screen-blog .blog-table td:nth-child(1){width:10%}
+#screen-blog .blog-table th:nth-child(2),#screen-blog .blog-table td:nth-child(2){width:6%}
+#screen-blog .blog-table th:nth-child(3),#screen-blog .blog-table td:nth-child(3){width:18%}
+#screen-blog .blog-table th:nth-child(4),#screen-blog .blog-table td:nth-child(4){width:6%}
+#screen-blog .blog-table th:nth-child(5),#screen-blog .blog-table td:nth-child(5){width:6%}
+#screen-blog .blog-table th:nth-child(6),#screen-blog .blog-table td:nth-child(6){width:54%}
+.blog-note-score{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.blog-note-list{margin:2px 0 0;padding:0;list-style:none}
+.blog-note-list li{margin:0;padding:1px 0;color:#9A3412;font-weight:500;font-size:.84rem;line-height:1.35}
+.blog-note-list li::before{content:"+ ";color:#B45309;font-weight:800}
 #screen-blog .blog-table td{word-break:break-word;line-height:1.45}
 #screen-blog .blog-card{max-width:100%}
 .blog-card{background:#fff;border-radius:18px;padding:28px 26px 24px;box-shadow:0 10px 40px rgba(15,23,42,.08);border:1px solid #E2E8F0}
@@ -594,7 +598,7 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbwGIk3CpK8968c1RPTS8imG78W9NdmwQr1xuuTQnyRiTvsVo1m04bp0SmKiddD4pLDqnw/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1250,7 +1254,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwGIk3CpK8968c1RPTS8imG78W9NdmwQr1xuuTQnyRiTvsVo1m04bp0SmKiddD4pLDqnw/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2367,7 +2371,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwGIk3CpK8968c1RPTS8imG78W9NdmwQr1xuuTQnyRiTvsVo1m04bp0SmKiddD4pLDqnw/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2384,7 +2388,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbwGIk3CpK8968c1RPTS8imG78W9NdmwQr1xuuTQnyRiTvsVo1m04bp0SmKiddD4pLDqnw/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2464,7 +2468,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwGIk3CpK8968c1RPTS8imG78W9NdmwQr1xuuTQnyRiTvsVo1m04bp0SmKiddD4pLDqnw/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3529,7 +3533,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbytenCVMs7wAyTpdiEKCzA7-TSp9m8v9bRD7Qp4cPyTGM--N5I6_UGe3IJtn9VOO3xGQA/exec";
+    WH = "https://script.google.com/macros/s/AKfycbwGIk3CpK8968c1RPTS8imG78W9NdmwQr1xuuTQnyRiTvsVo1m04bp0SmKiddD4pLDqnw/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -3625,19 +3629,28 @@ function escapeHtmlBlog_(s) {
 function parseBlogTime_(t) {
   if (!t) return 0;
   t = String(t).trim();
-  // dd/mm/yyyy HH:mm:ss hoặc d/m/yyyy H:mm:ss
-  var m = t.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
-  if (m) {
-    return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[6] || 0)).getTime();
+  // HH:mm:ss dd/mm/yyyy  (thường gặp trên bảng)
+  var m1 = t.match(/(\d{1,2}):(\d{2})(?::(\d{2}))?\s+(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m1) {
+    return new Date(+m1[6], +m1[5] - 1, +m1[4], +m1[1], +m1[2], +(m1[3] || 0)).getTime();
+  }
+  // dd/mm/yyyy HH:mm:ss
+  var m2 = t.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (m2) {
+    return new Date(+m2[3], +m2[2] - 1, +m2[1], +m2[4], +m2[5], +(m2[6] || 0)).getTime();
+  }
+  // yyyy-mm-dd ...
+  var m3 = t.match(/(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?/);
+  if (m3) {
+    return new Date(+m3[1], +m3[2] - 1, +m3[3], +m3[4], +m3[5], +(m3[6] || 0)).getTime();
   }
   var d = Date.parse(t);
   return isNaN(d) ? 0 : d;
 }
 
 /**
- * Tách nhận xét:
- * Hàng 1 (xanh): điểm từng tiêu chí BC/ND/ĐP/LH/TM
- * Hàng 2 (nâu đỏ): ưu/nhược — rút gọn, bỏ lặp
+ * Hàng 1 (xanh, 1 dòng): điểm tiêu chí
+ * Hàng 2 (nâu): tối đa ~5 dòng dạng + Ưu / + Nhược
  */
 function formatBlogNote_(note, score) {
   note = String(note || "").trim();
@@ -3646,46 +3659,107 @@ function formatBlogNote_(note, score) {
   }
   var scoreLine = "";
   var textLine = note;
+  var c = { bc: null, nd: null, dp: null, lh: null, tm: null };
 
-  // BC:x ND:x ĐP:x LH:x TM:x | phần chữ
   var m = note.match(/^\s*BC\s*:\s*([\d.,]+)\s*ND\s*:\s*([\d.,]+)\s*ĐP\s*:\s*([\d.,]+)\s*LH\s*:\s*([\d.,]+)\s*TM\s*:\s*([\d.,]+)\s*\|\s*([\s\S]*)/i);
-  if (!m) {
-    m = note.match(/^\s*BC\s*:\s*([\d.,]+)\s*ND\s*:\s*([\d.,]+)\s*(?:ĐP|DA_PT|DP)\s*:\s*([\d.,]+)\s*LH\s*:\s*([\d.,]+)\s*TM\s*:\s*([\d.,]+)\s*\|\s*([\s\S]*)/i);
-  }
   if (m) {
-    scoreLine = "Bố cục " + m[1] + "/2 · Nội dung " + m[2] + "/2.5 · Đa PT " + m[3] + "/2 · Liên hệ " + m[4] + "/2 · Thẩm mỹ " + m[5] + "/1.5";
+    c.bc = m[1]; c.nd = m[2]; c.dp = m[3]; c.lh = m[4]; c.tm = m[5];
     textLine = (m[6] || "").trim();
   } else {
-    // Thử parse dòng BO_CUC từ raw
     var c1 = note.match(/BO_CUC\s*:\s*([\d.,]+)/i);
     var c2 = note.match(/NOI_DUNG\s*:\s*([\d.,]+)/i);
     var c3 = note.match(/DA_PT\s*:\s*([\d.,]+)/i);
     var c4 = note.match(/LIEN_HE\s*:\s*([\d.,]+)/i);
     var c5 = note.match(/THAM_MY\s*:\s*([\d.,]+)/i);
-    if (c1 && c2 && c3 && c4 && c5) {
-      scoreLine = "Bố cục " + c1[1] + "/2 · Nội dung " + c2[1] + "/2.5 · Đa PT " + c3[1] + "/2 · Liên hệ " + c4[1] + "/2 · Thẩm mỹ " + c5[1] + "/1.5";
-      var nx = note.match(/NHAN_XET\s*:\s*([\s\S]+)/i);
-      textLine = nx ? nx[1].trim() : note;
-    }
+    if (c1) c.bc = c1[1];
+    if (c2) c.nd = c2[1];
+    if (c3) c.dp = c3[1];
+    if (c4) c.lh = c4[1];
+    if (c5) c.tm = c5[1];
+    var nx = note.match(/NHAN_XET\s*:\s*([\s\S]+)/i);
+    if (nx) textLine = nx[1].trim();
+  }
+  if (c.bc != null) {
+    scoreLine = "Bố cục " + c.bc + "/2 · Nội dung " + c.nd + "/2.5 · Đa PT " + c.dp + "/2 · Liên hệ " + c.lh + "/2 · Thẩm mỹ " + c.tm + "/1.5";
   }
 
-  textLine = tidyBlogComment_(textLine);
-
+  var bullets = buildBlogBullets_(textLine, c);
   var htmlOut = "";
   if (scoreLine) {
-    htmlOut += '<p class="blog-note-score">' + escapeHtmlBlog_(scoreLine) + "</p>";
+    htmlOut += '<p class="blog-note-score" title="' + escapeHtmlBlog_(scoreLine) + '">' + escapeHtmlBlog_(scoreLine) + "</p>";
   } else if (score !== "" && score != null && parseFloat(String(score).replace(",", ".")) > 0) {
     htmlOut += '<p class="blog-note-score">Tổng: ' + escapeHtmlBlog_(String(score)) + "/10</p>";
   }
-  htmlOut += '<p class="blog-note-text">' + escapeHtmlBlog_(textLine || "—") + "</p>";
+  if (bullets.length) {
+    htmlOut += '<ul class="blog-note-list">' + bullets.map(function (b) {
+      return "<li>" + escapeHtmlBlog_(b) + "</li>";
+    }).join("") + "</ul>";
+  } else {
+    htmlOut += '<p class="blog-note-text">' + escapeHtmlBlog_(tidyBlogComment_(textLine) || "—") + "</p>";
+  }
   return htmlOut;
 }
 
-/** Rút gọn nhận xét, bỏ câu lặp / sáo rỗng */
+function num_(v) {
+  if (v == null || v === "") return null;
+  var n = parseFloat(String(v).replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+/** Tạo tối đa 5 dòng + Ưu / + Nhược gọn, không lặp */
+function buildBlogBullets_(text, c) {
+  text = tidyBlogComment_(text);
+  var pros = [];
+  var cons = [];
+
+  // Từ điểm tiêu chí
+  var specs = [
+    { k: "bc", name: "Bố cục", max: 2, v: num_(c.bc) },
+    { k: "nd", name: "Nội dung", max: 2.5, v: num_(c.nd) },
+    { k: "dp", name: "Đa phương tiện", max: 2, v: num_(c.dp) },
+    { k: "lh", name: "Liên hệ", max: 2, v: num_(c.lh) },
+    { k: "tm", name: "Thẩm mỹ", max: 1.5, v: num_(c.tm) }
+  ];
+  specs.forEach(function (s) {
+    if (s.v == null) return;
+    if (s.v >= s.max * 0.85) pros.push("Ưu " + s.name + " (" + s.v + "/" + s.max + ")");
+    else if (s.v <= s.max * 0.45) cons.push("Nhược " + s.name + " còn yếu (" + s.v + "/" + s.max + ")");
+    else if (s.v < s.max * 0.75) cons.push("Nhược " + s.name + " chưa đủ (" + s.v + "/" + s.max + ")");
+  });
+
+  // Tách Ưu:/Nhược: trong text AI
+  var u = text.match(/Ưu\s*[:：]\s*([^\.]+)/i);
+  var n = text.match(/Nhược\s*[:：]\s*([^\.]+)/i);
+  if (u) pros.unshift("Ưu: " + u[1].trim());
+  if (n) cons.unshift("Nhược: " + n[1].trim());
+
+  // Nếu chưa có từ text, lấy 1-2 câu ngắn
+  if (!u && !n && text) {
+    var sentences = text.split(/(?<=[\.\!\?])\s+/).filter(function (x) { return x && x.length > 12; });
+    if (sentences[0]) pros.push(sentences[0].replace(/^Ưu\s*[:：]\s*/i, "Ưu: ").slice(0, 110));
+    if (sentences[1]) cons.push(sentences[1].replace(/^Nhược\s*[:：]\s*/i, "Nhược: ").slice(0, 110));
+  }
+
+  // Gộp, bỏ trùng, tối đa 5
+  var out = [];
+  var seen = {};
+  function add(x) {
+    x = String(x || "").replace(/\s+/g, " ").trim();
+    if (!x) return;
+    if (x.length > 120) x = x.slice(0, 117) + "…";
+    var k = x.toLowerCase().slice(0, 40);
+    if (seen[k]) return;
+    seen[k] = 1;
+    out.push(x);
+  }
+  pros.forEach(add);
+  cons.forEach(add);
+  return out.slice(0, 5);
+}
+
 function tidyBlogComment_(s) {
   s = String(s || "").replace(/\s+/g, " ").trim();
   if (!s) return s;
-  // Bỏ các cụm lặp thường gặp
   var junk = [
     /Vì giáo viên không thể trực tiếp truy cập[^.]*\./gi,
     /Do không thể trực tiếp truy cập[^.]*\./gi,
@@ -3696,7 +3770,6 @@ function tidyBlogComment_(s) {
   ];
   junk.forEach(function (re) { s = s.replace(re, " "); });
   s = s.replace(/\s+/g, " ").trim();
-  // Tách câu, bỏ trùng
   var parts = s.split(/(?<=[\.\!\?])\s+/).filter(Boolean);
   var seen = {};
   var out = [];
@@ -3706,10 +3779,7 @@ function tidyBlogComment_(s) {
     seen[k] = 1;
     out.push(p);
   });
-  s = out.join(" ").trim();
-  // Giới hạn độ dài hiển thị
-  if (s.length > 320) s = s.slice(0, 317) + "…";
-  return s;
+  return out.join(" ").trim();
 }
 </script>
 
