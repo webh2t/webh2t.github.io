@@ -287,6 +287,11 @@
 .blog-table a{color:#2563EB;font-weight:600}
 #blog-filter{margin-bottom:10px;padding:8px 10px;border-radius:8px;border:1px solid #CBD5E1;max-width:220px}
 
+
+.blog-note-score{color:#1D4ED8;font-weight:700;font-size:.84rem;line-height:1.35;margin:0 0 4px}
+.blog-note-text{color:#9A3412;font-weight:500;font-size:.84rem;line-height:1.4;margin:0}
+.blog-table td.col-note{min-width:220px}
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -3590,17 +3595,121 @@ function renderBlogTable() {
     if (all.length) rows = all;
   } catch (e) {}
   if (f) rows = rows.filter(function (r) { return r.class === f; });
+
+  // Mới nhất lên đầu
+  rows = rows.slice().sort(function (a, b) {
+    var ta = parseBlogTime_(a.time);
+    var tb = parseBlogTime_(b.time);
+    return tb - ta;
+  });
+
   if (!rows.length) {
     body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>';
     return;
   }
   body.innerHTML = rows.map(function (r) {
     const link = r.link ? '<a href="' + String(r.link).replace(/"/g, "&quot;") + '" target="_blank" rel="noopener">Xem</a>' : "";
-    return "<tr><td>" + (r.time || "") + "</td><td>" + (r.class || "") + "</td><td>" +
-      String(r.members || "").replace(/</g, "&lt;") + "</td><td>" + link + "</td><td>" +
-      (r.score !== "" && r.score != null ? r.score : "—") + "</td><td>" +
-      String(r.note || "").replace(/</g, "&lt;") + "</td></tr>";
+    const noteHtml = formatBlogNote_(r.note, r.score);
+    return "<tr><td>" + escapeHtmlBlog_(r.time || "") + "</td><td>" + escapeHtmlBlog_(r.class || "") + "</td><td>" +
+      escapeHtmlBlog_(r.members || "") + "</td><td>" + link + "</td><td><b>" +
+      (r.score !== "" && r.score != null ? r.score : "—") + "</b></td><td class=\"col-note\">" +
+      noteHtml + "</td></tr>";
   }).join("");
+}
+
+function escapeHtmlBlog_(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+/** Parse thời gian vi-VN / ISO → timestamp */
+function parseBlogTime_(t) {
+  if (!t) return 0;
+  t = String(t).trim();
+  // dd/mm/yyyy HH:mm:ss hoặc d/m/yyyy H:mm:ss
+  var m = t.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})[,\s]+(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+  if (m) {
+    return new Date(+m[3], +m[2] - 1, +m[1], +m[4], +m[5], +(m[6] || 0)).getTime();
+  }
+  var d = Date.parse(t);
+  return isNaN(d) ? 0 : d;
+}
+
+/**
+ * Tách nhận xét:
+ * Hàng 1 (xanh): điểm từng tiêu chí BC/ND/ĐP/LH/TM
+ * Hàng 2 (nâu đỏ): ưu/nhược — rút gọn, bỏ lặp
+ */
+function formatBlogNote_(note, score) {
+  note = String(note || "").trim();
+  if (!note) {
+    return '<p class="blog-note-text">Chưa có nhận xét</p>';
+  }
+  var scoreLine = "";
+  var textLine = note;
+
+  // BC:x ND:x ĐP:x LH:x TM:x | phần chữ
+  var m = note.match(/^\s*BC\s*:\s*([\d.,]+)\s*ND\s*:\s*([\d.,]+)\s*ĐP\s*:\s*([\d.,]+)\s*LH\s*:\s*([\d.,]+)\s*TM\s*:\s*([\d.,]+)\s*\|\s*([\s\S]*)/i);
+  if (!m) {
+    m = note.match(/^\s*BC\s*:\s*([\d.,]+)\s*ND\s*:\s*([\d.,]+)\s*(?:ĐP|DA_PT|DP)\s*:\s*([\d.,]+)\s*LH\s*:\s*([\d.,]+)\s*TM\s*:\s*([\d.,]+)\s*\|\s*([\s\S]*)/i);
+  }
+  if (m) {
+    scoreLine = "Bố cục " + m[1] + "/2 · Nội dung " + m[2] + "/2.5 · Đa PT " + m[3] + "/2 · Liên hệ " + m[4] + "/2 · Thẩm mỹ " + m[5] + "/1.5";
+    textLine = (m[6] || "").trim();
+  } else {
+    // Thử parse dòng BO_CUC từ raw
+    var c1 = note.match(/BO_CUC\s*:\s*([\d.,]+)/i);
+    var c2 = note.match(/NOI_DUNG\s*:\s*([\d.,]+)/i);
+    var c3 = note.match(/DA_PT\s*:\s*([\d.,]+)/i);
+    var c4 = note.match(/LIEN_HE\s*:\s*([\d.,]+)/i);
+    var c5 = note.match(/THAM_MY\s*:\s*([\d.,]+)/i);
+    if (c1 && c2 && c3 && c4 && c5) {
+      scoreLine = "Bố cục " + c1[1] + "/2 · Nội dung " + c2[1] + "/2.5 · Đa PT " + c3[1] + "/2 · Liên hệ " + c4[1] + "/2 · Thẩm mỹ " + c5[1] + "/1.5";
+      var nx = note.match(/NHAN_XET\s*:\s*([\s\S]+)/i);
+      textLine = nx ? nx[1].trim() : note;
+    }
+  }
+
+  textLine = tidyBlogComment_(textLine);
+
+  var htmlOut = "";
+  if (scoreLine) {
+    htmlOut += '<p class="blog-note-score">' + escapeHtmlBlog_(scoreLine) + "</p>";
+  } else if (score !== "" && score != null && parseFloat(String(score).replace(",", ".")) > 0) {
+    htmlOut += '<p class="blog-note-score">Tổng: ' + escapeHtmlBlog_(String(score)) + "/10</p>";
+  }
+  htmlOut += '<p class="blog-note-text">' + escapeHtmlBlog_(textLine || "—") + "</p>";
+  return htmlOut;
+}
+
+/** Rút gọn nhận xét, bỏ câu lặp / sáo rỗng */
+function tidyBlogComment_(s) {
+  s = String(s || "").replace(/\s+/g, " ").trim();
+  if (!s) return s;
+  // Bỏ các cụm lặp thường gặp
+  var junk = [
+    /Vì giáo viên không thể trực tiếp truy cập[^.]*\./gi,
+    /Do không thể trực tiếp truy cập[^.]*\./gi,
+    /nhóm chỉ nhận điểm trung bình dựa trên[^.]*\./gi,
+    /Các em cần đảm bảo link hoạt động tốt[^.]*\./gi,
+    /Chờ chấm\.?/gi,
+    /Đã chấm\.?/gi
+  ];
+  junk.forEach(function (re) { s = s.replace(re, " "); });
+  s = s.replace(/\s+/g, " ").trim();
+  // Tách câu, bỏ trùng
+  var parts = s.split(/(?<=[\.\!\?])\s+/).filter(Boolean);
+  var seen = {};
+  var out = [];
+  parts.forEach(function (p) {
+    var k = p.toLowerCase().slice(0, 48);
+    if (seen[k]) return;
+    seen[k] = 1;
+    out.push(p);
+  });
+  s = out.join(" ").trim();
+  // Giới hạn độ dài hiển thị
+  if (s.length > 320) s = s.slice(0, 317) + "…";
+  return s;
 }
 </script>
 
