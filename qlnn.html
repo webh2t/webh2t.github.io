@@ -10992,8 +10992,7 @@ function renderDutyRoster() {
   html += 'Kéo thả tên HS vào bất kỳ ô nào để chỉnh tay.';
   html += '</div>';
 
-  // 5 cột VP tuần nguồn (mới):
-  // ① Vắng không phép | ② Vắng CP + Đi trễ | ③ v49/v07/v35 | ④ v26/v13/v14 | ⑤ VP khác + HS >2 lần
+  // Danh sách VP tuần nguồn — 10 nhóm cùng 1 khung (không chia 5 cột)
   var weekViolsDuty = (entries || []).filter(function(e) {
     if (e.type !== "violation") return false;
     if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return false;
@@ -11002,86 +11001,74 @@ function renderDutyRoster() {
     if (swSrc && e.date && String(e.date).slice(0,10) >= swSrc.from && String(e.date).slice(0,10) <= swSrc.to) return true;
     return false;
   });
-  function dutyViolGroupKey(e) {
+  function dutyViolCat(e) {
     var code = (typeof normalizeViolCode === "function" ? normalizeViolCode(e) : String(e.contentCode || "")).toLowerCase().replace(/\s/g, "");
     var tx = String(e.contentText || e.contentCode || "").toLowerCase();
-    // ① Vắng không phép
-    if (code === "v02" || tx.indexOf("vắng không phép") >= 0 || tx.indexOf("vang khong phep") >= 0) return "col1";
-    // ② Vắng có phép + Đi học trễ
-    if (code === "v01" || code === "v06" ||
-        tx.indexOf("vắng có phép") >= 0 || tx.indexOf("vang co phep") >= 0) return "col2";
-    if (code === "v03" ||
-        tx.indexOf("đi học trễ") >= 0 || tx.indexOf("di hoc tre") >= 0 ||
-        tx.indexOf("đi trễ") >= 0 || tx.indexOf("di tre") >= 0) return "col2";
-    // ③ v49, v07, v35
-    if (code === "v49" || code === "v07" || code === "v35") return "col3";
-    // ④ Điện thoại v26 + v13 + v14
-    if (code === "v26" || code === "v13" || code === "v14" ||
-        tx.indexOf("điện thoại") >= 0 || tx.indexOf("dien thoai") >= 0) return "col4";
-    // ⑤ Vi phạm khác
-    return "col5";
+    if (code === "v02" || /vắng\s*không\s*phép|vang\s*khong\s*phep/.test(tx)) return 1;
+    if (code === "v01" || /vắng\s*có\s*phép|vang\s*co\s*phep/.test(tx)) return 2;
+    if (code === "v03" || /đi\s*học\s*trễ|di\s*hoc\s*tre|đi\s*trễ|di\s*tre/.test(tx)) return 3;
+    if (code === "v24" || /không\s*mặc\s*áo\s*đoàn|khong\s*mac\s*ao\s*doan|áo\s*đoàn/.test(tx)) return 4;
+    if (/không\s*tham\s*gia\s*sinh\s*hoạt|khong\s*tham\s*gia\s*sinh\s*hoat|sinh\s*hoạt\s*nhóm|sinh\s*hoat\s*nhom/.test(tx)) return 5;
+    if (/không\s*học\s*bài|khong\s*hoc\s*bai|không\s*chuẩn\s*bị\s*bài|khong\s*chuan\s*bi\s*bai|thiếu\s*bài\s*tập/.test(tx)) return 6;
+    if (/nói\s*chuyện|noi\s*chuyen/.test(tx)) return 7;
+    if (code === "v72" || /vệ\s*sinh|ve\s*sinh|trực\s*nhật|truc\s*nhat/.test(tx)) return 8;
+    if (code === "v26" || /điện\s*thoại|dien\s*thoai/.test(tx)) return 9;
+    return 0; // khác — chỉ dùng cho nhóm 10 theo tổng lần
   }
   function dutyViolAgg(list) {
     var map = {};
     list.forEach(function(e) {
       var sid = String(e.studentId);
       var st = (students || []).find(function(s) { return String(s.id) === sid; });
-      var name = (st && st.name) || e.studentName || sid;
-      var code = (typeof normalizeViolCode === "function" ? normalizeViolCode(e) : "") || (e.contentCode || "");
-      var key = sid + "|" + code;
-      if (!map[key]) map[key] = { name: shortDutyName(name), code: code, times: 0, sid: sid };
-      map[key].times += Number(e.times) || 1;
+      var name = shortDutyName((st && st.name) || e.studentName || sid);
+      if (!map[sid]) map[sid] = { name: name, times: 0, sid: sid };
+      map[sid].times += Number(e.times) || 1;
     });
     return Object.keys(map).map(function(k) { return map[k]; })
       .sort(function(a, b) { return a.name.localeCompare(b.name, "vi"); });
   }
-  var g1 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col1"; }));
-  var g2 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col2"; }));
-  var g3 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col3"; }));
-  var g4 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col4"; }));
-  var g5 = dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolGroupKey(e) === "col5"; }));
-  // Cột 5: thêm HS vi phạm nhiều nhất (> 2 lần) trong tuần nguồn
+  var cats = [
+    { n: 1, title: "Vắng không phép", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 1; })) },
+    { n: 2, title: "Vắng có phép", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 2; })) },
+    { n: 3, title: "Đi học trễ", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 3; })) },
+    { n: 4, title: "Không mặc áo đoàn", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 4; })) },
+    { n: 5, title: "Không tham gia sinh hoạt nhóm", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 5; })) },
+    { n: 6, title: "Không học bài", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 6; })) },
+    { n: 7, title: "Nói chuyện", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 7; })) },
+    { n: 8, title: "Vệ sinh lớp", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 8; })) },
+    { n: 9, title: "Điện thoại", rows: dutyViolAgg(weekViolsDuty.filter(function(e) { return dutyViolCat(e) === 9; })) }
+  ];
   var totalBySid = {};
   weekViolsDuty.forEach(function(e) {
     var sid = String(e.studentId);
     totalBySid[sid] = (totalBySid[sid] || 0) + (Number(e.times) || 1);
   });
+  var g10 = [];
   Object.keys(totalBySid).forEach(function(sid) {
     if (totalBySid[sid] > 2) {
       var st = (students || []).find(function(s) { return String(s.id) === sid; });
-      var name = shortDutyName((st && st.name) || sid);
-      var exists = g5.some(function(r) { return String(r.sid) === sid; });
-      if (!exists) {
-        g5.push({ name: name, code: ">2 lần", times: totalBySid[sid], sid: sid });
-      } else {
-        g5.forEach(function(r) {
-          if (String(r.sid) === sid && totalBySid[sid] > r.times) r.times = totalBySid[sid];
-        });
-      }
+      g10.push({ name: shortDutyName((st && st.name) || sid), times: totalBySid[sid], sid: sid });
     }
   });
-  g5.sort(function(a, b) { return a.name.localeCompare(b.name, "vi"); });
-  function dutyViolColHtml(title, rows, color) {
-    var h = '<div class="rounded-lg border p-2" style="border-color:' + color + ';background:#fff;min-height:4rem">';
-    h += '<div class="font-bold text-xs mb-1" style="color:' + color + '">' + title + '</div>';
-    if (!rows.length) h += '<div class="text-xs" style="color:#94a3b8">—</div>';
+  g10.sort(function(a, b) { return b.times - a.times || a.name.localeCompare(b.name, "vi"); });
+  cats.push({ n: 10, title: "HS có lượt vi phạm > 2", rows: g10 });
+
+  html += '<div class="rounded-xl border-2 p-3 mb-3" style="border-color:#b45309;background:#fff;color:#0f172a">';
+  html += '<div class="font-bold text-sm mb-2" style="color:#9f1239">📋 Danh sách vi phạm tuần nguồn ' + srcWeek + '</div>';
+  html += '<div class="space-y-1.5 text-sm" style="text-align:left">';
+  cats.forEach(function(c) {
+    var line = '<div style="padding:4px 0;border-bottom:1px dashed #fde68a">';
+    line += '<b style="color:#9f1239">' + c.n + '. ' + c.title + ':</b> ';
+    if (!c.rows.length) line += '<span style="color:#94a3b8">—</span>';
     else {
-      h += '<ul class="text-xs space-y-0.5" style="color:#0f172a;text-align:left;padding-left:0;list-style:none">';
-      rows.forEach(function(r) {
-        h += '<li><b>' + r.name + '</b>' + (r.code ? ' <span style="color:#64748b">(' + r.code + ')</span>' : '') + ' · <b style="color:#b91c1c">' + r.times + '</b> lần</li>';
-      });
-      h += '</ul>';
+      line += c.rows.map(function(r) {
+        return '<b>' + r.name + '</b>/<span style="color:#b91c1c;font-weight:700">' + r.times + '</span>';
+      }).join(" · ");
     }
-    h += '</div>';
-    return h;
-  }
-  html += '<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 mb-3">';
-  html += dutyViolColHtml("① Vắng không phép", g1, "#b91c1c");
-  html += dutyViolColHtml("② Vắng có phép · Đi học trễ", g2, "#c2410c");
-  html += dutyViolColHtml("③ v49 · v07 · v35", g3, "#a16207");
-  html += dutyViolColHtml("④ Điện thoại (v26) · v13 · v14", g4, "#7c3aed");
-  html += dutyViolColHtml("⑤ VP khác · HS >2 lần", g5, "#0f766e");
-  html += '</div>';
+    line += '</div>';
+    html += line;
+  });
+  html += '</div></div>';
 
   // Pool HS + số buổi
   if (plan.pool && plan.pool.length) {
@@ -11454,9 +11441,12 @@ function renderNotebook() {
     soKetTitle = "BÁO CÁO SƠ KẾT " + title.replace(/^BÁO CÁO\s*/i, "") + " · (" + dateNote + ") · Lớp " + cls;
   }
   var udColLabel = scope === "week" ? "Số ƯĐ tuần" : (scope === "month" ? "Số ƯĐ tháng" : "Số ƯĐ kỳ");
-  var tblStyle = "table-layout:fixed;border-collapse:collapse;width:100%;border:2px solid #dc2626;color:#1d4ed8;text-align:left";
-  var thStyle = "border:1px solid #dc2626;padding:6px 4px;background:#eff6ff;color:#1d4ed8;font-weight:700;text-align:left;font-size:12px";
-  var tdStyle = "border:1px solid #dc2626;padding:5px 4px;color:#1d4ed8;text-align:left;font-size:12px;vertical-align:top";
+  // Viền nâu: khung ngoài đậm · ô chi tiết nâu thường · cột gộp căn giữa
+  var tblStyle = "table-layout:fixed;border-collapse:collapse;width:100%;border:3px solid #78350f;color:#1d4ed8";
+  var thStyle = "border:2px solid #78350f;padding:6px 4px;background:#fef3c7;color:#78350f;font-weight:700;text-align:center;font-size:12px";
+  var tdStyle = "border:1px solid #a16207;padding:5px 4px;color:#1d4ed8;text-align:left;font-size:12px;vertical-align:middle";
+  var tdMerge = "border:2px solid #78350f;padding:5px 4px;color:#1d4ed8;text-align:center;font-size:12px;vertical-align:middle;background:#fffbeb";
+  var tdMergeName = "border:2px solid #78350f;padding:5px 6px;color:#0f172a;text-align:center;font-size:12px;font-weight:700;vertical-align:middle;background:#fffbeb;white-space:nowrap";
 
   html += '<div class="week-board mb-6" id="nbClassSoKet">';
   html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
@@ -11506,15 +11496,15 @@ function renderNotebook() {
     var vpN = periodViolCount(s.id);
     if (!ents.length) {
       html += '<tr>';
-      html += '<td style="' + tdStyle + '">' + tt + '</td>';
-      html += '<td style="' + tdStyle + ';font-weight:600;white-space:nowrap">' + s.name + '</td>';
-      html += '<td style="' + tdStyle + '">—</td><td style="' + tdStyle + '">—</td><td style="' + tdStyle + '">—</td>';
+      html += '<td style="' + tdMerge + '">' + tt + '</td>';
+      html += '<td style="' + tdMergeName + '">' + s.name + '</td>';
+      html += '<td style="' + tdStyle + ';text-align:center">—</td><td style="' + tdStyle + ';text-align:center">—</td><td style="' + tdStyle + ';text-align:center">—</td>';
       html += '<td style="' + tdStyle + ';font-style:italic;color:#64748b">HS ngồi im lặng</td>';
-      html += '<td style="' + tdStyle + ';color:#15803d">' + udN + '</td>';
-      html += '<td style="' + tdStyle + ';color:#b91c1c">' + vpN + '</td>';
-      html += '<td style="' + tdStyle + ';font-weight:700">' + sc + '</td>';
-      html += '<td style="' + tdStyle + '">' + pos + '</td>';
-      html += '<td style="' + tdStyle + ';font-weight:700">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+      html += '<td style="' + tdMerge + ';color:#15803d">' + udN + '</td>';
+      html += '<td style="' + tdMerge + ';color:#b91c1c">' + vpN + '</td>';
+      html += '<td style="' + tdMerge + ';font-weight:800">' + sc + '</td>';
+      html += '<td style="' + tdMerge + '">' + pos + '</td>';
+      html += '<td style="' + tdMerge + ';font-weight:800">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
       html += '</tr>';
       return;
     }
@@ -11522,20 +11512,20 @@ function renderNotebook() {
     ents.forEach(function(e, li) {
       html += '<tr>';
       if (li === 0) {
-        html += '<td style="' + tdStyle + '" rowspan="' + nRows + '">' + tt + '</td>';
-        html += '<td style="' + tdStyle + ';font-weight:600;white-space:nowrap" rowspan="' + nRows + '">' + s.name + '</td>';
+        html += '<td style="' + tdMerge + '" rowspan="' + nRows + '">' + tt + '</td>';
+        html += '<td style="' + tdMergeName + '" rowspan="' + nRows + '">' + s.name + '</td>';
       }
-      html += '<td style="' + tdStyle + ';white-space:nowrap">' + (e.date ? formatDate(String(e.date).slice(0, 10)) : "—") + '</td>';
-      html += '<td style="' + tdStyle + '">' + (e.subject || "—") + '</td>';
-      html += '<td style="' + tdStyle + '">' + (e.times || 1) + '</td>';
+      html += '<td style="' + tdStyle + ';text-align:center;white-space:nowrap">' + (e.date ? formatDate(String(e.date).slice(0, 10)) : "—") + '</td>';
+      html += '<td style="' + tdStyle + ';text-align:center">' + (e.subject || "—") + '</td>';
+      html += '<td style="' + tdStyle + ';text-align:center">' + (e.times || 1) + '</td>';
       var colC = e.type === "bonus" ? "#15803d" : (e.type === "violation" ? "#b91c1c" : "#1d4ed8");
       html += '<td style="' + tdStyle + ';color:' + colC + '">' + contentLine(e) + '</td>';
       if (li === 0) {
-        html += '<td style="' + tdStyle + ';color:#15803d" rowspan="' + nRows + '">' + udN + '</td>';
-        html += '<td style="' + tdStyle + ';color:#b91c1c" rowspan="' + nRows + '">' + vpN + '</td>';
-        html += '<td style="' + tdStyle + ';font-weight:700" rowspan="' + nRows + '">' + sc + '</td>';
-        html += '<td style="' + tdStyle + '" rowspan="' + nRows + '">' + pos + '</td>';
-        html += '<td style="' + tdStyle + ';font-weight:700" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+        html += '<td style="' + tdMerge + ';color:#15803d" rowspan="' + nRows + '">' + udN + '</td>';
+        html += '<td style="' + tdMerge + ';color:#b91c1c" rowspan="' + nRows + '">' + vpN + '</td>';
+        html += '<td style="' + tdMerge + ';font-weight:800" rowspan="' + nRows + '">' + sc + '</td>';
+        html += '<td style="' + tdMerge + '" rowspan="' + nRows + '">' + pos + '</td>';
+        html += '<td style="' + tdMerge + ';font-weight:800" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
       }
       html += '</tr>';
     });
@@ -11574,20 +11564,20 @@ function renderNotebook() {
     html += '<button type="button" class="px-3 py-1 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadNbTeamJpg(' + team + ')">📷 Tải .jpg</button>';
     html += '</div></div>';
 
-    // 11-col table
-    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse;border:1px solid #94a3b8;text-align:left">';
-    html += '<thead><tr style="background:#e0f2fe;color:#0c4a6e">';
-    html += '<th class="py-1.5 text-center" style="width:4%">TT</th>';
-    html += '<th class="py-1.5 text-left" style="width:18%">Họ tên HS</th>';
-    html += '<th class="py-1.5 text-center" style="width:8%">Ngày</th>';
-    html += '<th class="py-1.5 text-center" style="width:8%">Môn</th>';
-    html += '<th class="py-1.5 text-center" style="width:5%">Số lần</th>';
-    html += '<th class="py-1.5 text-left" style="width:24%">Nội dung (ƯĐ/ VP)</th>';
-    html += '<th class="py-1.5 text-center" style="width:7%">' + (scope === "week" ? "Số ƯĐ tuần" : (scope === "month" ? "Số ƯĐ tháng" : "Số ƯĐ kỳ")) + '</th>';
-    html += '<th class="py-1.5 text-center" style="width:7%">' + vpColLabel + '</th>';
-    html += '<th class="py-1.5 text-center" style="width:8%">' + scoreLabel + '</th>';
-    html += '<th class="py-1.5 text-center" style="width:7%">Vị thứ lớp</th>';
-    html += '<th class="py-1.5 text-center" style="width:10%">Xếp loại</th>';
+    // 11-col table — viền nâu · cột gộp căn giữa
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse;border:3px solid #78350f">';
+    html += '<thead><tr style="background:#fef3c7;color:#78350f">';
+    html += '<th class="py-1.5 text-center" style="width:4%;border:2px solid #78350f">TT</th>';
+    html += '<th class="py-1.5 text-center" style="width:18%;border:2px solid #78350f">Họ tên HS</th>';
+    html += '<th class="py-1.5 text-center" style="width:8%;border:2px solid #78350f">Ngày</th>';
+    html += '<th class="py-1.5 text-center" style="width:8%;border:2px solid #78350f">Môn</th>';
+    html += '<th class="py-1.5 text-center" style="width:5%;border:2px solid #78350f">Số lần</th>';
+    html += '<th class="py-1.5 text-left" style="width:24%;border:2px solid #78350f">Nội dung (ƯĐ/ VP)</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%;border:2px solid #78350f">' + (scope === "week" ? "Số ƯĐ tuần" : (scope === "month" ? "Số ƯĐ tháng" : "Số ƯĐ kỳ")) + '</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%;border:2px solid #78350f">' + vpColLabel + '</th>';
+    html += '<th class="py-1.5 text-center" style="width:8%;border:2px solid #78350f">' + scoreLabel + '</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%;border:2px solid #78350f">Vị thứ lớp</th>';
+    html += '<th class="py-1.5 text-center" style="width:10%;border:2px solid #78350f">Xếp loại</th>';
     html += '</tr></thead><tbody>';
 
     // Sắp xếp tăng dần theo Vị thứ lớp
@@ -11612,37 +11602,37 @@ function renderNotebook() {
       var vpN = periodViolCount(s.id);
 
       if (!ents.length) {
-        html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
-        html += '<td class="py-1 text-center">' + tt + '</td>';
-        html += '<td class="py-1 px-1 font-medium" style="text-align:left;white-space:nowrap">' + s.name + '</td>';
-        html += '<td class="py-1 text-center">—</td><td class="py-1 text-center">—</td><td class="py-1 text-center">—</td>';
-        html += '<td class="py-1 px-1" style="text-align:left;color:#64748b;font-style:italic">HS ngồi im lặng</td>';
-        html += '<td class="py-1 text-center" style="color:#15803d">' + udN + '</td>';
-        html += '<td class="py-1 text-center" style="color:#b91c1c">' + vpN + '</td>';
-        html += '<td class="py-1 text-center font-bold">' + sc + '</td>';
-        html += '<td class="py-1 text-center">' + pos + '</td>';
-        html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+        html += '<tr style="color:#1d4ed8">';
+        html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb">' + tt + '</td>';
+        html += '<td class="py-1 px-1 font-bold text-center" style="border:2px solid #78350f;background:#fffbeb;white-space:nowrap;color:#0f172a">' + s.name + '</td>';
+        html += '<td class="py-1 text-center" style="border:1px solid #a16207">—</td><td class="py-1 text-center" style="border:1px solid #a16207">—</td><td class="py-1 text-center" style="border:1px solid #a16207">—</td>';
+        html += '<td class="py-1 px-1" style="border:1px solid #a16207;text-align:left;color:#64748b;font-style:italic">HS ngồi im lặng</td>';
+        html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb;color:#15803d">' + udN + '</td>';
+        html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb;color:#b91c1c">' + vpN + '</td>';
+        html += '<td class="py-1 text-center font-bold" style="border:2px solid #78350f;background:#fffbeb">' + sc + '</td>';
+        html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb">' + pos + '</td>';
+        html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" style="border:2px solid #78350f;background:#fffbeb">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
         html += '</tr>';
         return;
       }
       var nRows = ents.length;
       ents.forEach(function(e, li) {
-        html += '<tr style="border-bottom:1px solid #e2e8f0;color:#0f172a">';
+        html += '<tr style="color:#1d4ed8">';
         if (li === 0) {
-          html += '<td class="py-1 text-center" rowspan="' + nRows + '">' + tt + '</td>';
-          html += '<td class="py-1 px-1 font-medium" style="text-align:left;white-space:nowrap" rowspan="' + nRows + '">' + s.name + '</td>';
+          html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + tt + '</td>';
+          html += '<td class="py-1 px-1 font-bold text-center" style="border:2px solid #78350f;background:#fffbeb;white-space:nowrap;color:#0f172a" rowspan="' + nRows + '">' + s.name + '</td>';
         }
-        html += '<td class="py-1 text-center text-xs">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
-        html += '<td class="py-1 text-center text-xs">' + (e.subject || "—") + '</td>';
-        html += '<td class="py-1 text-center">' + (e.times || 1) + '</td>';
+        html += '<td class="py-1 text-center text-xs" style="border:1px solid #a16207">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
+        html += '<td class="py-1 text-center text-xs" style="border:1px solid #a16207">' + (e.subject || "—") + '</td>';
+        html += '<td class="py-1 text-center" style="border:1px solid #a16207">' + (e.times || 1) + '</td>';
         var col = e.type === "bonus" ? "#15803d" : (e.type === "violation" ? "#b91c1c" : "#0f172a");
-        html += '<td class="py-1 px-1" style="text-align:left;color:' + col + '">' + contentLine(e) + '</td>';
+        html += '<td class="py-1 px-1" style="border:1px solid #a16207;text-align:left;color:' + col + '">' + contentLine(e) + '</td>';
         if (li === 0) {
-          html += '<td class="py-1 text-center" style="color:#15803d" rowspan="' + nRows + '">' + udN + '</td>';
-          html += '<td class="py-1 text-center" style="color:#b91c1c" rowspan="' + nRows + '">' + vpN + '</td>';
-          html += '<td class="py-1 text-center font-bold" rowspan="' + nRows + '">' + sc + '</td>';
-          html += '<td class="py-1 text-center" rowspan="' + nRows + '">' + pos + '</td>';
-          html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+          html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb;color:#15803d" rowspan="' + nRows + '">' + udN + '</td>';
+          html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb;color:#b91c1c" rowspan="' + nRows + '">' + vpN + '</td>';
+          html += '<td class="py-1 text-center font-bold" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + sc + '</td>';
+          html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + pos + '</td>';
+          html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
         }
         html += '</tr>';
       });
@@ -11650,11 +11640,11 @@ function renderNotebook() {
 
     html += '</tbody></table></div>';
 
-    // Stats
-    html += '<div class="mt-2 text-xs" style="color:#0f172a">';
-    html += '<b style="color:#0c4a6e">THỐNG KÊ XẾP LOẠI TỔ:</b> ';
+    // Stats — chữ xanh dương
+    html += '<div class="mt-2 text-xs p-2 rounded border" style="border-color:#93c5fd;background:#eff6ff;color:#1d4ed8">';
+    html += '<b style="color:#1d4ed8">THỐNG KÊ XẾP LOẠI TỔ:</b> ';
     html += Object.keys(counts).map(function(k) { return k + " <b>(" + counts[k] + ")</b>"; }).join(" · ");
-    html += '<br/><b style="color:#15803d">TOP HS DẪN ĐẦU TỔ:</b><br/>';
+    html += '<br/><b style="color:#1d4ed8">TOP HS DẪN ĐẦU TỔ:</b><br/>';
     if (top3.length) {
       html += top3.map(function(x, i) {
         return (i + 1) + ". " + x.s.name + ": " + x.score + "đ · " + x.rk.label;
@@ -11687,48 +11677,54 @@ function renderNotebook() {
       if (!byStu[sid]) byStu[sid] = [];
       byStu[sid].push(e);
     });
+    // Mỗi HS: sắp hàng theo Ngày tăng dần; danh sách HS theo ngày VP sớm nhất
     var gList = Object.keys(byStu).map(function(sid) {
       var st = (students || []).find(function(s) { return String(s.id) === sid; });
+      var rows = byStu[sid].slice().sort(function(a, b) {
+        var da = String(a.date || "").slice(0, 10);
+        var db = String(b.date || "").slice(0, 10);
+        if (da !== db) return da.localeCompare(db);
+        return String(a.createdAt || "").localeCompare(String(b.createdAt || ""));
+      });
       return {
         sid: sid,
-        name: (st && st.name) || (byStu[sid][0].studentName) || sid,
+        name: (st && st.name) || (rows[0] && rows[0].studentName) || sid,
         team: (st && st.team) || "",
-        rows: byStu[sid]
+        rows: rows,
+        firstDate: String((rows[0] && rows[0].date) || "").slice(0, 10)
       };
     }).sort(function(a, b) {
-      var ra = Number(classRank[String(a.sid)]) || 9999;
-      var rb = Number(classRank[String(b.sid)]) || 9999;
-      if (ra !== rb) return ra - rb;
-      return String(a.sid).localeCompare(String(b.sid), "vi", { numeric: true });
+      if (a.firstDate !== b.firstDate) return a.firstDate.localeCompare(b.firstDate);
+      return String(a.name).localeCompare(String(b.name), "vi");
     });
 
-    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse;border:2px solid #dc2626;text-align:left">';
-    html += '<thead><tr style="background:#fef2f2;color:#9f1239">';
-    html += '<th class="py-1.5" style="width:5%;text-align:left;border:1px solid #dc2626">TT</th>';
-    html += '<th class="py-1.5" style="width:5%;text-align:left;border:1px solid #dc2626">Tổ</th>';
-    html += '<th class="py-1.5" style="width:18%;text-align:left;border:1px solid #dc2626">Họ tên HS</th>';
-    html += '<th class="py-1.5" style="width:10%;text-align:left;border:1px solid #dc2626">Ngày</th>';
-    html += '<th class="py-1.5" style="width:10%;text-align:left;border:1px solid #dc2626">Môn</th>';
-    html += '<th class="py-1.5" style="width:7%;text-align:left;border:1px solid #dc2626">Số lần</th>';
-    html += '<th class="py-1.5" style="width:30%;text-align:left;border:1px solid #dc2626">Nội dung vi phạm</th>';
-    html += '<th class="py-1.5" style="width:15%;text-align:left;border:1px solid #dc2626">' + vpColLabel + '</th>';
+    html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse;border:3px solid #78350f">';
+    html += '<thead><tr style="background:#fef3c7;color:#78350f">';
+    html += '<th class="py-1.5 text-center" style="width:5%;border:2px solid #78350f">TT</th>';
+    html += '<th class="py-1.5 text-center" style="width:5%;border:2px solid #78350f">Tổ</th>';
+    html += '<th class="py-1.5 text-center" style="width:18%;border:2px solid #78350f">Họ tên HS</th>';
+    html += '<th class="py-1.5 text-center" style="width:10%;border:2px solid #78350f">Ngày</th>';
+    html += '<th class="py-1.5 text-center" style="width:10%;border:2px solid #78350f">Môn</th>';
+    html += '<th class="py-1.5 text-center" style="width:7%;border:2px solid #78350f">Số lần</th>';
+    html += '<th class="py-1.5 text-left" style="width:30%;border:2px solid #78350f">Nội dung vi phạm</th>';
+    html += '<th class="py-1.5 text-center" style="width:15%;border:2px solid #78350f">' + vpColLabel + '</th>';
     html += '</tr></thead><tbody>';
     gList.forEach(function(g, gi) {
       var nRows = g.rows.length;
       var prior = periodViolCount(g.sid);
       g.rows.forEach(function(e, li) {
-        html += '<tr style="color:#1d4ed8;border-bottom:1px solid #fecaca">';
+        html += '<tr style="color:#1d4ed8">';
         if (li === 0) {
-          html += '<td class="py-1 px-1" style="text-align:left;border:1px solid #dc2626" rowspan="' + nRows + '">' + (gi + 1) + '</td>';
-          html += '<td class="py-1 px-1 font-bold" style="text-align:left;border:1px solid #dc2626" rowspan="' + nRows + '">' + (g.team || "—") + '</td>';
-          html += '<td class="py-1 px-1 font-bold" style="text-align:left;white-space:nowrap;border:1px solid #dc2626" rowspan="' + nRows + '">' + g.name + '</td>';
+          html += '<td class="py-1 px-1 text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + (gi + 1) + '</td>';
+          html += '<td class="py-1 px-1 font-bold text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + (g.team || "—") + '</td>';
+          html += '<td class="py-1 px-1 font-bold text-center" style="white-space:nowrap;border:2px solid #78350f;background:#fffbeb;color:#0f172a" rowspan="' + nRows + '">' + g.name + '</td>';
         }
-        html += '<td class="py-1 px-1 text-xs" style="text-align:left;border:1px solid #dc2626">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
-        html += '<td class="py-1 px-1 text-xs" style="text-align:left;border:1px solid #dc2626">' + (e.subject || "—") + '</td>';
-        html += '<td class="py-1 px-1" style="text-align:left;border:1px solid #dc2626">' + (e.times || 1) + '</td>';
-        html += '<td class="py-1 px-1" style="text-align:left;border:1px solid #dc2626;color:#b91c1c">' + contentLine(e) + '</td>';
+        html += '<td class="py-1 px-1 text-xs text-center" style="border:1px solid #a16207">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
+        html += '<td class="py-1 px-1 text-xs text-center" style="border:1px solid #a16207">' + (e.subject || "—") + '</td>';
+        html += '<td class="py-1 px-1 text-center" style="border:1px solid #a16207">' + (e.times || 1) + '</td>';
+        html += '<td class="py-1 px-1" style="text-align:left;border:1px solid #a16207;color:#b91c1c">' + contentLine(e) + '</td>';
         if (li === 0) {
-          html += '<td class="py-1 px-1 font-bold" style="text-align:left;border:1px solid #dc2626" rowspan="' + nRows + '">' + prior + '</td>';
+          html += '<td class="py-1 px-1 font-bold text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + prior + '</td>';
         }
         html += '</tr>';
       });
