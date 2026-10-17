@@ -158,11 +158,11 @@ button.btn-primary,button.btn-secondary,button.btn-ocean{color:#fff!important}
   }
   .legend-box table { font-size: 6.5pt !important; }
   .week-board h2, .week-board div[style*="font-size:1"] { font-size: 11pt !important; }
-  .rank-xs { color: #b45309 !important; }
-  .rank-tot { color: #15803d !important; }
-  .rank-htt { color: #0369a1 !important; }
-  .rank-ccg { color: #c2410c !important; }
-  .rank-ht { color: #b91c1c !important; }
+  .rank-xs { color: #166534 !important; }
+  .rank-tot { color: #1d4ed8 !important; }
+  .rank-htt { color: #6b21a8 !important; }
+  .rank-ccg { color: #dc2626 !important; }
+  .rank-ht { color: #6b7280 !important; }
   /* Ẩn phần chú thích dài nếu quá chỗ — ưu tiên bảng */
   .week-board .grid.grid-cols-1.md\:grid-cols-2 { gap: 2mm !important; }
 }
@@ -206,22 +206,22 @@ button[onclick="showAuth('login')"] {
 
 
 
-.rank-xs, .rank-xs * { color: #ca8a04 !important; font-weight: 900 !important; text-shadow: 0 0 8px rgba(250,204,21,0.55); }
-.rank-tot, .rank-tot * { color: #16a34a !important; font-weight: 900 !important; text-shadow: 0 0 8px rgba(34,197,94,0.45); }
-.rank-htt { color: #0284c7 !important; font-weight: 800 !important; }
-.rank-ccg { color: #ea580c !important; font-weight: 700 !important; }
-.rank-ht { color: #dc2626 !important; font-weight: 700 !important; }
+.rank-xs, .rank-xs * { color: #166534 !important; font-weight: 900 !important; }
+.rank-tot, .rank-tot * { color: #1d4ed8 !important; font-weight: 900 !important; }
+.rank-htt, .rank-htt * { color: #6b21a8 !important; font-weight: 800 !important; }
+.rank-ccg, .rank-ccg * { color: #dc2626 !important; font-weight: 800 !important; }
+.rank-ht, .rank-ht * { color: #6b7280 !important; font-weight: 700 !important; }
 
-.rank-xs{color:#fbbf24;font-weight:800}
-.rank-tot{color:#22c55e;font-weight:700}
-.rank-htt{color:#38bdf8;font-weight:700}
-.rank-ccg{color:#f59e0b;font-weight:700}
-.rank-ht{color:#ef4444;font-weight:700}
+.rank-xs{color:#166534;font-weight:900}
+.rank-tot{color:#1d4ed8;font-weight:900}
+.rank-htt{color:#6b21a8;font-weight:800}
+.rank-ccg{color:#dc2626;font-weight:800}
+.rank-ht{color:#6b7280;font-weight:700}
 .rank-kha,.rank-dat,.rank-chua{font-weight:600}
-.week-board{background:linear-gradient(180deg,#fefce8 0%,#fff 40%,#f0f9ff 100%);color:#1e293b;border-radius:1rem;padding:1.25rem;border:3px solid #38bdf8}
+.week-board{background:linear-gradient(180deg,#fefce8 0%,#fff 40%,#f0f9ff 100%);color:#1e293b;border-radius:1rem;padding:1.25rem;border:3px solid #78350f}
 .week-board h2{color:#0369a1;font-weight:800}
-.week-board table{width:100%;border-collapse:collapse;font-size:0.8rem}
-.week-board th,.week-board td{border:1px solid #94a3b8;padding:0.35rem 0.4rem;text-align:center}
+.week-board table{width:100%;border-collapse:collapse;font-size:0.8rem;border:2px solid #78350f}
+.week-board th,.week-board td{border:1.5px solid #a16207;padding:0.35rem 0.4rem;text-align:center}
 .week-board th{background:#e0f2fe;color:#0c4a6e;font-weight:700}
 .week-board .name-col{text-align:left;font-weight:600}
 .week-board .score-plus{color:#16a34a;font-weight:700}
@@ -457,11 +457,11 @@ body.theme-light .legend-box {
 }
 
 /* Rank colors still vivid on white */
-body.theme-light .rank-xs { color: #a16207 !important; font-weight: 900 !important; }
-body.theme-light .rank-tot { color: #15803d !important; font-weight: 900 !important; }
-body.theme-light .rank-htt { color: #0369a1 !important; font-weight: 800 !important; }
-body.theme-light .rank-ccg { color: #c2410c !important; font-weight: 700 !important; }
-body.theme-light .rank-ht { color: #b91c1c !important; font-weight: 700 !important; }
+body.theme-light .rank-xs { color: #166534 !important; font-weight: 900 !important; }
+body.theme-light .rank-tot { color: #1d4ed8 !important; font-weight: 900 !important; }
+body.theme-light .rank-htt { color: #6b21a8 !important; font-weight: 800 !important; }
+body.theme-light .rank-ccg { color: #dc2626 !important; font-weight: 800 !important; }
+body.theme-light .rank-ht { color: #6b7280 !important; font-weight: 700 !important; }
 
 /* Notebook finance forms on light */
 body.theme-light #tab-notebook .input-field,
@@ -4626,12 +4626,13 @@ function weeksForMonth(m) {
 /** Thứ tự xếp loại (cao → thấp) — CHƯA ĐẠT = KHÔNG ĐẠT */
 var RANK_ORDER = { "XUẤT SẮC": 5, "TỐT": 4, "KHÁ": 3, "ĐẠT": 2, "CHƯA ĐẠT": 1, "KHÔNG ĐẠT": 1 };
 function rankObj(label) {
-  if (label === "XUẤT SẮC") return { label: "XUẤT SẮC", cls: "rank-xs", stars: "★★★★★" };
-  if (label === "TỐT") return { label: "TỐT", cls: "rank-tot", stars: "★★★" };
-  if (label === "KHÁ") return { label: "KHÁ", cls: "rank-htt", stars: "★★" };
-  if (label === "ĐẠT") return { label: "ĐẠT", cls: "rank-ccg", stars: "★" };
-  if (label === "KHÔNG ĐẠT") return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "" };
-  return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "" };
+  // XUẤT SẮC xanh lá đậm · TỐT xanh dương đậm · KHÁ tím đậm · ĐẠT đỏ tươi · CHƯA ĐẠT xám
+  if (label === "XUẤT SẮC") return { label: "XUẤT SẮC", cls: "rank-xs", stars: "★★★★★", color: "#166534" };
+  if (label === "TỐT") return { label: "TỐT", cls: "rank-tot", stars: "★★★", color: "#1d4ed8" };
+  if (label === "KHÁ") return { label: "KHÁ", cls: "rank-htt", stars: "★★", color: "#6b21a8" };
+  if (label === "ĐẠT") return { label: "ĐẠT", cls: "rank-ccg", stars: "★", color: "#dc2626" };
+  if (label === "KHÔNG ĐẠT") return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "", color: "#6b7280" };
+  return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "", color: "#6b7280" };
 }
 /** Xếp loại theo điểm tuần (thống nhất) */
 function rankClassByScore(s) {
@@ -4887,6 +4888,54 @@ function formatDate(iso) {
   if (!iso) return "";
   const [y, m, d] = iso.split("-");
   return d + "/" + m + "/" + y;
+}
+/** Tra cứu nội dung đầy đủ từ mã u/v/p trong danh mục (bonuses/violations/penalties) */
+function resolveEntryContentText(e) {
+  if (!e) return "";
+  if (e.type === "silent") return "HS ngồi im lặng";
+  var raw = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "").trim();
+  var code = String(e.contentCode || "").toLowerCase().replace(/\s/g, "");
+  if (!code) {
+    var m = raw.match(/^([uvp]\d{1,3})\b/i);
+    if (m) code = m[1].toLowerCase();
+  }
+  // Đã có text mô tả (không chỉ mã)
+  var onlyCode = code && raw && raw.toLowerCase().replace(/[^a-z0-9]/g, "") === code.replace(/[^a-z0-9]/g, "");
+  if (raw && !onlyCode && raw.length > 3) return raw;
+  if (!code) return raw;
+  var pools = [];
+  try {
+    if (e.type === "bonus" || code.charAt(0) === "u") pools = (typeof bonuses !== "undefined" && bonuses) || [];
+    else if (e.type === "penalty" || code.charAt(0) === "p") pools = (typeof penalties !== "undefined" && penalties) || [];
+    else pools = (typeof violations !== "undefined" && violations) || [];
+  } catch (err) { pools = []; }
+  if (!pools.length) {
+    try {
+      pools = [].concat(
+        (typeof bonuses !== "undefined" && bonuses) || [],
+        (typeof violations !== "undefined" && violations) || [],
+        (typeof penalties !== "undefined" && penalties) || []
+      );
+    } catch (err2) {}
+  }
+  var found = null;
+  for (var i = 0; i < pools.length; i++) {
+    var it = pools[i];
+    if (!it) continue;
+    var c = String(it.code || it.id || "").toLowerCase().replace(/\s/g, "");
+    if (c === code || c === code.replace(/^0+/, "") || ("v" + c) === code) { found = it; break; }
+  }
+  if (found) {
+    var t = String(found.text || found.name || found.label || "").trim();
+    var pts = found.points != null ? found.points : found.score;
+    if (t) {
+      if (pts != null && pts !== "" && !/[\+\-]\d+/.test(t)) {
+        return code + ". " + t + " (" + (Number(pts) > 0 ? "+" : "") + pts + ")";
+      }
+      return code + ". " + t;
+    }
+  }
+  return raw || code;
 }
 function autoWeekday() {
   const v = document.getElementById("fDate").value;
@@ -6965,7 +7014,9 @@ function _renderRecentImpl() {
     const dateDisp = e.date ? (typeof formatDate === "function" ? formatDate(String(e.date).slice(0,10)) : String(e.date).slice(0,10)) : "—";
     const monDisp = (e.subject && e.subject !== "IM LẶNG") ? e.subject : "";
     const timesDisp = (e.times != null ? e.times : 1);
-    const contentDisp = (e.type === "silent") ? "HS ngồi im lặng" : (e.contentText || "");
+    const contentDisp = (typeof resolveEntryContentText === "function")
+      ? resolveEntryContentText(e)
+      : ((e.type === "silent") ? "HS ngồi im lặng" : (e.contentText || e.contentCode || ""));
     var teamDisp = e.team || "";
     if (!teamDisp && e.studentId) {
       var stR = (students || []).find(function(s) { return String(s.id) === String(e.studentId); });
@@ -11358,10 +11409,10 @@ function renderNotebook() {
 
   function contentLine(e) {
     if (e.type === "silent") return "HS ngồi im lặng";
-    var text = String(e.contentText || e.contentCode || "").replace(/^Đã chọn:\s*/i, "");
-    text = text.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "").trim() || text;
-    text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+/g, "").trim();
-    // Bỏ cụm «môn Nề nếp» nếu bị dính trong text
+    var resolved = (typeof resolveEntryContentText === "function") ? resolveEntryContentText(e) : String(e.contentText || e.contentCode || "");
+    var text = String(resolved || "").replace(/^Đã chọn:\s*/i, "");
+    // Giữ mã + nội dung; bỏ điểm (±) nếu có
+    text = text.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "").replace(/\s*[+\-]\d+\s*$/g, "").trim();
     text = text.replace(/\s*[–\-]\s*môn\s*N[eề]?\s*n[eế]p\.?/gi, "").replace(/\s*môn\s*N[eề]?\s*n[eế]p\.?/gi, "").trim();
     var day = "";
     try {
@@ -11372,7 +11423,6 @@ function renderNotebook() {
       }
     } catch (err) {}
     var subjRaw = String(e.subject || "").trim();
-    // Môn «Nề nếp» không ghi vào cột Nội dung (đã có cột Môn riêng)
     var isNeNep = !subjRaw || subjRaw === "—" || /^n[eềêé]?\s*n[eếêé]p$/i.test(subjRaw.replace(/\s+/g, " ")) || /nề\s*nếp/i.test(subjRaw);
     var subj = (!isNeNep && subjRaw) ? (" – môn " + subjRaw) : "";
     return day + text + subj;
@@ -11504,7 +11554,7 @@ function renderNotebook() {
       html += '<td style="' + tdMerge + ';color:#b91c1c">' + vpN + '</td>';
       html += '<td style="' + tdMerge + ';font-weight:800">' + sc + '</td>';
       html += '<td style="' + tdMerge + '">' + pos + '</td>';
-      html += '<td style="' + tdMerge + ';font-weight:800">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+      html += '<td style="' + tdMerge + ';font-weight:900;color:' + (rk.color || "#166534") + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
       html += '</tr>';
       return;
     }
@@ -11525,7 +11575,7 @@ function renderNotebook() {
         html += '<td style="' + tdMerge + ';color:#b91c1c" rowspan="' + nRows + '">' + vpN + '</td>';
         html += '<td style="' + tdMerge + ';font-weight:800" rowspan="' + nRows + '">' + sc + '</td>';
         html += '<td style="' + tdMerge + '" rowspan="' + nRows + '">' + pos + '</td>';
-        html += '<td style="' + tdMerge + ';font-weight:800" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+        html += '<td style="' + tdMerge + ';font-weight:900;color:' + (rk.color || "#166534") + '" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
       }
       html += '</tr>';
     });
@@ -11611,7 +11661,7 @@ function renderNotebook() {
         html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb;color:#b91c1c">' + vpN + '</td>';
         html += '<td class="py-1 text-center font-bold" style="border:2px solid #78350f;background:#fffbeb">' + sc + '</td>';
         html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb">' + pos + '</td>';
-        html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" style="border:2px solid #78350f;background:#fffbeb">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+        html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" style="border:2px solid #78350f;background:#fffbeb;color:' + (rk.color || "#166534") + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
         html += '</tr>';
         return;
       }
@@ -11622,17 +11672,17 @@ function renderNotebook() {
           html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + tt + '</td>';
           html += '<td class="py-1 px-1 font-bold text-center" style="border:2px solid #78350f;background:#fffbeb;white-space:nowrap;color:#0f172a" rowspan="' + nRows + '">' + s.name + '</td>';
         }
-        html += '<td class="py-1 text-center text-xs" style="border:1px solid #a16207">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
-        html += '<td class="py-1 text-center text-xs" style="border:1px solid #a16207">' + (e.subject || "—") + '</td>';
-        html += '<td class="py-1 text-center" style="border:1px solid #a16207">' + (e.times || 1) + '</td>';
+        html += '<td class="py-1 text-center text-xs" style="border:1.5px solid #a16207">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
+        html += '<td class="py-1 text-center text-xs" style="border:1.5px solid #a16207">' + (e.subject || "—") + '</td>';
+        html += '<td class="py-1 text-center" style="border:1.5px solid #a16207">' + (e.times || 1) + '</td>';
         var col = e.type === "bonus" ? "#15803d" : (e.type === "violation" ? "#b91c1c" : "#0f172a");
-        html += '<td class="py-1 px-1" style="border:1px solid #a16207;text-align:left;color:' + col + '">' + contentLine(e) + '</td>';
+        html += '<td class="py-1 px-1" style="border:1.5px solid #a16207;text-align:left;color:' + col + '">' + contentLine(e) + '</td>';
         if (li === 0) {
           html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb;color:#15803d" rowspan="' + nRows + '">' + udN + '</td>';
           html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb;color:#b91c1c" rowspan="' + nRows + '">' + vpN + '</td>';
           html += '<td class="py-1 text-center font-bold" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + sc + '</td>';
           html += '<td class="py-1 text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + pos + '</td>';
-          html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
+          html += '<td class="py-1 text-center font-bold ' + (rk.cls || "") + '" style="border:2px solid #78350f;background:#fffbeb;color:' + (rk.color || "#166534") + '" rowspan="' + nRows + '">' + rk.label + (rk.stars ? " " + rk.stars : "") + '</td>';
         }
         html += '</tr>';
       });
