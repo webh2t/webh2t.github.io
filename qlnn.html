@@ -4712,29 +4712,36 @@ function countViolStatsForRank(sid, weekNos) {
   return st;
 }
 /**
- * Trần xếp loại tháng do vi phạm (MIN với xếp loại theo điểm)
- * v26×1→ĐẠT · v26≥2→CHƯA ĐẠT
- * v04×1→TỐT · v04≥2→KHÁ
- * v01+v03 <3→TỐT · ≥3→KHÁ
- * Tổng VP: 0–1 không trần · 2–3 TỐT · 4–5 KHÁ · 6–7 ĐẠT · ≥8 CHƯA ĐẠT
+ * Trần xếp loại TUẦN theo tổng số lần VP tuần:
+ * - XUẤT SẮC chỉ khi Số VP tuần = 0
+ * - Số VP tuần > 0 → tối đa TỐT
+ * - Số VP tuần > 2 → tối đa KHÁ
+ */
+function weekViolationCaps(st) {
+  var caps = [];
+  var tv = (st && st.totalVp) || 0;
+  if (tv > 2) caps.push("KHÁ");
+  else if (tv > 0) caps.push("TỐT");
+  return caps;
+}
+/**
+ * Trần xếp loại THÁNG theo tổng số lần VP tháng:
+ * - XUẤT SẮC chỉ khi Số VP tháng = 0
+ * - Số VP tháng > 1 → tối đa TỐT
+ * - Số VP tháng > 3 → tối đa KHÁ
+ * Giữ trần nghiêm: v26×1→ĐẠT · v26≥2→CHƯA ĐẠT
  */
 function monthViolationCaps(st) {
   var caps = [];
-  if (st.v26 >= 2) caps.push("CHƯA ĐẠT");
-  else if (st.v26 >= 1) caps.push("ĐẠT");
-  if (st.v04 >= 2) caps.push("KHÁ");
-  else if (st.v04 >= 1) caps.push("TỐT");
-  var v01v03 = (st.v01 || 0) + (st.v03 || 0);
-  if (v01v03 >= 3) caps.push("KHÁ");
-  else if (v01v03 > 0 && v01v03 < 3) caps.push("TỐT");
-  var tv = st.totalVp || 0;
-  if (tv >= 8) caps.push("CHƯA ĐẠT");
-  else if (tv >= 6) caps.push("ĐẠT");
-  else if (tv >= 4) caps.push("KHÁ");
-  else if (tv >= 2) caps.push("TỐT");
+  var tv = (st && st.totalVp) || 0;
+  if (tv > 3) caps.push("KHÁ");
+  else if (tv > 1) caps.push("TỐT");
+  else if (tv > 0) caps.push("TỐT"); // có VP → không còn XUẤT SẮC
+  if (st && st.v26 >= 2) caps.push("CHƯA ĐẠT");
+  else if (st && st.v26 >= 1) caps.push("ĐẠT");
   return caps;
 }
-/** Xếp loại tháng = MIN(điểm TB tuần, các trần VP) */
+/** Xếp loại tháng = MIN(điểm TB tuần, các trần VP tháng) */
 function rankMonthFinal(avgScore, sid, weekNos) {
   var base = rankClassByScore(avgScore);
   if (sid == null || sid === "") return base;
@@ -4742,11 +4749,11 @@ function rankMonthFinal(avgScore, sid, weekNos) {
   var caps = monthViolationCaps(st);
   return minRankLabels([base.label].concat(caps));
 }
-/** Tuần: điểm + trần VP tháng áp dụng nhẹ (cùng bộ mã) */
+/** Tuần: điểm + trần VP tuần (XUẤT SẮC yêu cầu 0 VP) */
 function applyViolationRankRules(baseRk, sid, weekNos) {
   if (sid == null || sid === "") return baseRk;
   var st = countViolStatsForRank(sid, weekNos);
-  var caps = monthViolationCaps(st);
+  var caps = weekViolationCaps(st);
   return minRankLabels([(baseRk && baseRk.label) || "ĐẠT"].concat(caps));
 }
 function rankClass(s, sid, weekNos) {
@@ -11690,8 +11697,16 @@ function renderNotebook() {
 
     html += '</tbody></table></div>';
 
-    // Stats — chữ xanh dương
-    html += '<div class="mt-2 text-xs p-2 rounded border" style="border-color:#93c5fd;background:#eff6ff;color:#1d4ed8">';
+    // Stats — lề trái 1.5px · cột phải: HS vi phạm + số lần
+    var teamViolList = members.map(function(s) {
+      var n = periodViolCount(s.id);
+      return n > 0 ? { name: s.name, times: n } : null;
+    }).filter(Boolean).sort(function(a, b) {
+      return b.times - a.times || String(a.name).localeCompare(String(b.name), "vi");
+    });
+    html += '<div class="mt-2 text-xs p-2 rounded border" style="border-color:#93c5fd;background:#eff6ff;color:#1d4ed8;margin-left:1.5px;text-align:left">';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-start">';
+    html += '<div style="flex:1;min-width:200px;text-align:left">';
     html += '<b style="color:#1d4ed8">THỐNG KÊ XẾP LOẠI TỔ:</b> ';
     html += Object.keys(counts).map(function(k) { return k + " <b>(" + counts[k] + ")</b>"; }).join(" · ");
     html += '<br/><b style="color:#1d4ed8">TOP HS DẪN ĐẦU TỔ:</b><br/>';
@@ -11700,7 +11715,17 @@ function renderNotebook() {
         return (i + 1) + ". " + x.s.name + ": " + x.score + "đ · " + x.rk.label;
       }).join("<br/>");
     } else html += "—";
-    html += '</div></div>';
+    html += '</div>';
+    html += '<div style="flex:1;min-width:180px;text-align:left;border-left:1px dashed #93c5fd;padding-left:10px">';
+    html += '<b style="color:#b91c1c">HS vi phạm (tổ ' + team + '):</b><br/>';
+    if (teamViolList.length) {
+      html += teamViolList.map(function(v) {
+        return '<span style="color:#0f172a">' + v.name + '</span> · <b style="color:#b91c1c">' + v.times + '</b> lần';
+      }).join("<br/>");
+    } else {
+      html += '<span style="color:#64748b">Không có HS vi phạm</span>';
+    }
+    html += '</div></div></div></div>';
   }
 
   // --- Bảng VP tổng hợp cả lớp ---
@@ -11752,7 +11777,7 @@ function renderNotebook() {
     html += '<thead><tr style="background:#fef3c7;color:#78350f">';
     html += '<th class="py-1.5 text-center" style="width:5%;border:2px solid #78350f">TT</th>';
     html += '<th class="py-1.5 text-center" style="width:5%;border:2px solid #78350f">Tổ</th>';
-    html += '<th class="py-1.5 text-center" style="width:18%;border:2px solid #78350f">Họ tên HS</th>';
+    html += '<th class="py-1.5 text-left" style="width:18%;border:2px solid #78350f;padding-left:6px">Họ tên HS</th>';
     html += '<th class="py-1.5 text-center" style="width:10%;border:2px solid #78350f">Ngày</th>';
     html += '<th class="py-1.5 text-center" style="width:10%;border:2px solid #78350f">Môn</th>';
     html += '<th class="py-1.5 text-center" style="width:7%;border:2px solid #78350f">Số lần</th>';
@@ -11767,7 +11792,7 @@ function renderNotebook() {
         if (li === 0) {
           html += '<td class="py-1 px-1 text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + (gi + 1) + '</td>';
           html += '<td class="py-1 px-1 font-bold text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + (g.team || "—") + '</td>';
-          html += '<td class="py-1 px-1 font-bold text-center" style="white-space:nowrap;border:2px solid #78350f;background:#fffbeb;color:#0f172a" rowspan="' + nRows + '">' + g.name + '</td>';
+          html += '<td class="py-1 px-1 font-bold" style="text-align:left;padding-left:6px;white-space:nowrap;border:2px solid #78350f;background:#fffbeb;color:#0f172a" rowspan="' + nRows + '">' + g.name + '</td>';
         }
         html += '<td class="py-1 px-1 text-xs text-center" style="border:1px solid #a16207">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
         html += '<td class="py-1 px-1 text-xs text-center" style="border:1px solid #a16207">' + (e.subject || "—") + '</td>';
