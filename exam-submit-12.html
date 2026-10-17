@@ -296,6 +296,21 @@
 .blog-note-text{color:#9A3412;font-weight:500;font-size:.84rem;line-height:1.4;margin:0}
 .blog-table td.col-note{min-width:220px}
 
+
+/* Căn giữa màn hình chọn bài – tránh lệch trái */
+#screen-select{
+  min-height:100vh;display:flex;align-items:flex-start;justify-content:center;
+  padding:24px 16px 48px;box-sizing:border-box;
+}
+.select-card{
+  width:100%;max-width:560px;margin-left:auto;margin-right:auto;box-sizing:border-box;
+}
+.select-card.admin-wide{max-width:1100px}
+#student-ui,#exam-current,.stats-bar{
+  width:100%;max-width:560px;margin-left:auto;margin-right:auto;box-sizing:border-box;
+}
+#screen-blog{max-width:1280px;margin-left:auto;margin-right:auto;box-sizing:border-box}
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -598,7 +613,7 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxTeFK-xj15FJB6QYYli6McDPOLiQeN7C8ORMV_9y5VMP9bE08EzxHG2v5-pX1aCtVt/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1254,7 +1269,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxTeFK-xj15FJB6QYYli6McDPOLiQeN7C8ORMV_9y5VMP9bE08EzxHG2v5-pX1aCtVt/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2371,7 +2386,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxTeFK-xj15FJB6QYYli6McDPOLiQeN7C8ORMV_9y5VMP9bE08EzxHG2v5-pX1aCtVt/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2388,7 +2403,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbxTeFK-xj15FJB6QYYli6McDPOLiQeN7C8ORMV_9y5VMP9bE08EzxHG2v5-pX1aCtVt/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2468,7 +2483,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxTeFK-xj15FJB6QYYli6McDPOLiQeN7C8ORMV_9y5VMP9bE08EzxHG2v5-pX1aCtVt/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3533,7 +3548,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbxTeFK-xj15FJB6QYYli6McDPOLiQeN7C8ORMV_9y5VMP9bE08EzxHG2v5-pX1aCtVt/exec";
+    WH = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -3713,52 +3728,51 @@ function num_(v) {
 
 /** Tạo tối đa 5 dòng + Ưu / + Nhược gọn, không lặp */
 function buildBlogBullets_(text, c) {
-  text = tidyBlogComment_(text);
+  text = cleanAiArtifacts_(tidyBlogComment_(text));
   var pros = [];
   var cons = [];
 
-  // Ưu / Nhược từ AI (ưu tiên) — không tự sinh nhược chỉ vì thiếu 0.25 điểm
   var uBlock = text.match(/Ưu\s*[:：]\s*(.+?)(?=Nhược\s*[:：]|$)/i);
   var nBlock = text.match(/Nhược\s*[:：]\s*(.+)$/i);
   if (uBlock) {
     splitIdeas_(uBlock[1]).forEach(function (x) {
-      if (x) pros.push(clipSentence_("Ưu: " + x, 140));
+      x = cleanAiArtifacts_(x);
+      if (x && x.length > 12) pros.push(clipSentence_("Ưu: " + x, 160));
     });
   }
   if (nBlock) {
     splitIdeas_(nBlock[1]).forEach(function (x) {
-      if (x) cons.push(clipSentence_("Nhược: " + x, 140));
+      x = cleanAiArtifacts_(x);
+      if (x && x.length > 12) cons.push(clipSentence_("Nhược: " + x, 160));
     });
   }
 
-  // Không có nhãn Ưu/Nhược: lấy tối đa 2 câu mô tả làm ưu
   if (!pros.length && text) {
     var sentences = text.split(/(?<=[\.\!\?])\s+/).filter(function (x) {
-      return x && x.length > 18 && !/^nhược/i.test(x) && !/còn thiếu \d/i.test(x);
+      return x && x.length > 20 && !/^nhược/i.test(x) && !/còn thiếu \d/i.test(x);
     });
     sentences.slice(0, 2).forEach(function (s0) {
-      pros.push(clipSentence_("Ưu: " + s0, 140));
+      pros.push(clipSentence_("Ưu: " + cleanAiArtifacts_(s0), 160));
     });
   }
 
-  // Lọc dòng chỉ lặp điểm số / sáo rỗng
   function isJunkLine(p) {
     if (/^\s*Ưu\s+.+\([\d.,]+\s*\/\s*[\d.,]+\)\s*$/i.test(p)) return true;
     if (/chưa đạt tối đa,\s*còn thiếu/i.test(p) && /\([\d.,]+\/[\d.,]+\)/.test(p)) return true;
-    if (/còn yếu,\s*mất \d/i.test(p) && /\([\d.,]+\/[\d.,]+\)/.test(p)) return true;
+    if (/còn yếu,\s*mất \d/i.test(p)) return true;
+    if (/^Nhược:\s*$/i.test(p)) return true;
     return false;
   }
   pros = pros.filter(function (p) { return !isJunkLine(p); });
   cons = cons.filter(function (p) { return !isJunkLine(p); });
 
-  // 1–2 ưu, 2–3 nhược; tổng ≤ 5
   var out = [];
   var seen = {};
   function add(x) {
-    x = String(x || "").replace(/\s+/g, " ").trim();
-    x = clipSentence_(x, 150);
-    if (!x || x.length < 10) return;
-    if (/^[a-zA-Zà-ỹ]{1,2}$/i.test(x)) return;
+    x = cleanAiArtifacts_(String(x || "").replace(/\s+/g, " ").trim());
+    x = clipSentence_(x, 170);
+    if (!x || x.length < 12) return;
+    if (/^[a-zA-Zà-ỹ0-9]{1,3}$/i.test(x)) return;
     var k = x.toLowerCase().replace(/[^a-z0-9à-ỹ]/gi, "").slice(0, 40);
     if (seen[k]) return;
     seen[k] = 1;
@@ -3780,14 +3794,32 @@ function splitIdeas_(s) {
 /** Cắt tại ranh giới từ, không để lại chữ cụt "đ", "v" */
 function clipSentence_(s, max) {
   s = String(s || "").replace(/\s+/g, " ").trim();
+  // Ghép số/email bị AI ngắt: "2 9" -> giữ; "mai @gmail" -> mai@gmail
+  s = s.replace(/(\d)\s+(\d)/g, "$1$2");
+  s = s.replace(/(\w)\s+@/g, "$1@");
+  s = s.replace(/@\s+(\w)/g, "@$1");
   if (s.length <= max) return s;
   var cut = s.slice(0, max);
-  var sp = cut.lastIndexOf(" ");
-  if (sp > max * 0.55) cut = cut.slice(0, sp);
+  var sp = Math.max(cut.lastIndexOf(". "), cut.lastIndexOf("; "), cut.lastIndexOf(", "), cut.lastIndexOf(" "));
+  if (sp > max * 0.5) cut = cut.slice(0, sp);
   cut = cut.replace(/[\s,;:.\-–]+$/g, "");
-  // không kết bằng 1–2 ký tự vô nghĩa
   cut = cut.replace(/\s+[a-zA-Zà-ỹ]{1,2}$/i, "");
-  return cut + "…";
+  return cut + (s.length > cut.length ? "…" : "");
+}
+
+function cleanAiArtifacts_(s) {
+  s = String(s || "");
+  s = s.replace(/\bDA XAC MINH LOI\b/gi, "Đã xác minh");
+  s = s.replace(/\bCHUA THE DANH GIA\b/gi, "Chưa thể đánh giá đủ");
+  s = s.replace(/\bCHUA TIM THAY\b/gi, "Chưa tìm thấy");
+  s = s.replace(/\bBO_CUC\b/gi, "Bố cục");
+  s = s.replace(/\bNOI_DUNG\b/gi, "Nội dung");
+  s = s.replace(/\bDA_PT\b/gi, "Đa phương tiện");
+  s = s.replace(/\bLIEN_HE\b/gi, "Liên hệ");
+  s = s.replace(/\bTHAM_MY\b/gi, "Thẩm mỹ");
+  s = s.replace(/\(\s*"/g, "(").replace(/"\s*\)/g, ")");
+  s = s.replace(/\s{2,}/g, " ").trim();
+  return s;
 }
 
 function tidyBlogComment_(s) {
