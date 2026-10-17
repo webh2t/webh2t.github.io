@@ -612,7 +612,7 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_tin11_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi_tin11";
-try { localStorage.setItem("webh2t_webhook_url_tin11", "https://script.google.com/macros/s/AKfycbzozY3MgVmZBu3z9oKvcCJYGpXLRuCoVRnwAQxHP74SIkKBACDjV06G2rzPZ3LqqT4r/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url_tin11", "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
 const EXAMS = [
   { id: "b5", code: "B5", title: "Bài 5. Kết nối máy tính", file: "B5KETNOIMT_TIN11.xlsx", sub: "Kết nối máy tính · Kết nối tri thức – Tin học ứng dụng" },
@@ -1268,7 +1268,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzozY3MgVmZBu3z9oKvcCJYGpXLRuCoVRnwAQxHP74SIkKBACDjV06G2rzPZ3LqqT4r/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url_tin11")) localStorage.setItem("webh2t_webhook_url_tin11", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2385,7 +2385,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url_tin11";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzozY3MgVmZBu3z9oKvcCJYGpXLRuCoVRnwAQxHP74SIkKBACDjV06G2rzPZ3LqqT4r/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2402,7 +2402,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbzozY3MgVmZBu3z9oKvcCJYGpXLRuCoVRnwAQxHP74SIkKBACDjV06G2rzPZ3LqqT4r/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
   try { localStorage.setItem("webh2t_webhook_url_tin11", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2482,7 +2482,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzozY3MgVmZBu3z9oKvcCJYGpXLRuCoVRnwAQxHP74SIkKBACDjV06G2rzPZ3LqqT4r/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url_tin11") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3547,7 +3547,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url_tin11") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbzozY3MgVmZBu3z9oKvcCJYGpXLRuCoVRnwAQxHP74SIkKBACDjV06G2rzPZ3LqqT4r/exec";
+    WH = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
