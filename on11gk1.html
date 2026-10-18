@@ -1060,7 +1060,7 @@ a { text-decoration: none; color: inherit; }
     <!-- Cột trái: lưới 100 câu (hẹp) -->
     <aside class="exam-sidebar">
       <div class="jump-label">Đi nhanh đến câu</div>
-      <div class="point-hint">📌 Mỗi câu = <b>0.1 điểm</b><br>Thang điểm 10 · 100 câu</div>
+      <div class="point-hint">📌 MCQ/Short = <b>0.1</b>/câu<br>TF = <b>0.025</b>/ý (tối đa 0.1)<br>Thang 10 · 100 câu</div>
       <div class="q-grid" id="q-grid"></div>
       <div class="sidebar-actions">
         <button class="btn-exit" id="btn-exit">Thoát bài làm</button>
@@ -1139,11 +1139,13 @@ a { text-decoration: none; color: inherit; }
   const STORAGE_KEY = "webh2t_on11gk1_history";
   const STORAGE_DATE_KEY = "webh2t_on11gk1_history_date";
   const MAX_QUESTIONS = 100;
-  const COUNT_MCQ = 65;
-  const COUNT_TF = 25;
-  const COUNT_SHORT = 10;
+  // Ngân hàng: 50 MCQ + 30 TF + 20 Short
+  const COUNT_MCQ = 50;
+  const COUNT_TF = 30;
+  const COUNT_SHORT = 20;
   const TIME_LIMIT_SEC = 5 * 60; // 5 phút
-  const POINT_PER_Q = 0.1;
+  const POINT_PER_Q = 0.1;       // MCQ / Short đúng = 0.1
+  const POINT_TF_STMT = 0.025;   // TF: mỗi ý đúng = 0.025 (4 ý = 0.1)
 
   /* ========== STATE ========== */
   let studentsByClass = {};   // { "12A1": [{id, ten}, ...] }
@@ -1769,7 +1771,7 @@ a { text-decoration: none; color: inherit; }
   }
 
   function startExam() {
-    // Lấy ngẫu nhiên: 65 MCQ + 25 TF + 10 Short
+    // Lấy ngẫu nhiên trong từng loại, không trùng ID: 50 MCQ + 30 TF + 20 Short
     const mcqPool = shuffle(allQuestions.filter(q => q.type === "mcq"));
     const tfPool = shuffle(allQuestions.filter(q => q.type === "tf"));
     const shortPool = shuffle(allQuestions.filter(q => q.type === "short"));
@@ -1778,33 +1780,45 @@ a { text-decoration: none; color: inherit; }
     let tf = tfPool.slice(0, Math.min(COUNT_TF, tfPool.length));
     let sh = shortPool.slice(0, Math.min(COUNT_SHORT, shortPool.length));
 
-    // Bù nếu ngân hàng thiếu
+    // Bù nếu ngân hàng thiếu (đúng loại, không trùng id)
     const usedIds = new Set([...mcq, ...tf, ...sh].map(q => q.id));
     const rest = shuffle(allQuestions.filter(q => !usedIds.has(q.id)));
     for (const q of rest) {
-      if (mcq.length < COUNT_MCQ) { mcq.push(q); continue; }
-      if (tf.length < COUNT_TF) { tf.push(q); continue; }
-      if (sh.length < COUNT_SHORT) { sh.push(q); continue; }
-      break;
+      if (mcq.length < COUNT_MCQ && q.type === "mcq") { mcq.push(q); usedIds.add(q.id); continue; }
+      if (tf.length < COUNT_TF && q.type === "tf") { tf.push(q); usedIds.add(q.id); continue; }
+      if (sh.length < COUNT_SHORT && q.type === "short") { sh.push(q); usedIds.add(q.id); continue; }
+      if (mcq.length >= COUNT_MCQ && tf.length >= COUNT_TF && sh.length >= COUNT_SHORT) break;
     }
 
-    // Thứ tự khối cố định:
-    // 25 mcq > 10 tf > 5 short > 25 mcq > 10 tf > 3 short > 15 mcq > 5 tf > 2 short
+    // Thứ tự khối cố định (xáo trong từng loại, không trùng câu):
+    // 1–20: 20 MCQ | 21–30: 10 TF | 31–40: 10 Short | 41–50: 10 TF
+    // 51–70: 20 MCQ | 71–80: 10 Short | 81–90: 10 TF | 91–100: 10 MCQ
     const pattern = [
-      ["mcq", 25], ["tf", 10], ["short", 5],
-      ["mcq", 25], ["tf", 10], ["short", 3],
-      ["mcq", 15], ["tf", 5],  ["short", 2]
+      ["mcq", 20], ["tf", 10], ["short", 10], ["tf", 10],
+      ["mcq", 20], ["short", 10], ["tf", 10], ["mcq", 10]
     ];
     const buckets = { mcq: mcq.slice(), tf: tf.slice(), short: sh.slice() };
     const ordered = [];
+    const seen = new Set();
     pattern.forEach(function (pair) {
       var type = pair[0], n = pair[1];
       for (var i = 0; i < n; i++) {
-        if (buckets[type].length) ordered.push(buckets[type].shift());
+        while (buckets[type].length) {
+          var q = buckets[type].shift();
+          if (seen.has(q.id)) continue;
+          seen.add(q.id);
+          ordered.push(q);
+          break;
+        }
       }
     });
     ["mcq", "tf", "short"].forEach(function (t) {
-      while (buckets[t].length) ordered.push(buckets[t].shift());
+      while (buckets[t].length) {
+        var q = buckets[t].shift();
+        if (seen.has(q.id)) continue;
+        seen.add(q.id);
+        ordered.push(q);
+      }
     });
 
     examQuestions = ordered.map(prepareQuestion);
@@ -2097,22 +2111,41 @@ a { text-decoration: none; color: inherit; }
   }
 
   /* ========== SCORING ========== */
-  function gradeAnswer(q, ans) {
-    if (ans === undefined || ans === null || ans === "") return false;
+  /** Điểm từng câu (thang 10, mỗi câu tối đa 0.1). TF: 0.025 / ý đúng. */
+  function scoreAnswer(q, ans) {
+    if (ans === undefined || ans === null || ans === "") return 0;
+    if (Array.isArray(ans) && ans.every(function (a) { return a === undefined; })) return 0;
+
     if (q.type === "mcq") {
-      return String(ans).toUpperCase() === String(q.correct).toUpperCase();
+      return String(ans).toUpperCase() === String(q.correct).toUpperCase() ? POINT_PER_Q : 0;
     }
     if (q.type === "tf") {
       const stmts = q.statements || [];
-      if (!Array.isArray(ans) || ans.length < stmts.length) return false;
-      return stmts.every((s, i) => ans[i] === s.correct);
+      if (!stmts.length) return 0;
+      if (!Array.isArray(ans)) return 0;
+      const per = stmts.length >= 4 ? POINT_TF_STMT : (POINT_PER_Q / stmts.length);
+      let pts = 0;
+      for (let i = 0; i < stmts.length; i++) {
+        if (ans[i] === stmts[i].correct) pts += per;
+      }
+      return Math.round(pts * 1000) / 1000;
     }
-    // short — normalize compare
     const user = String(ans).trim().toLowerCase().replace(/\s+/g, " ");
-    return (q.correct || []).some(c => {
+    const ok = (q.correct || []).some(function (c) {
       const key = String(c).trim().toLowerCase().replace(/\s+/g, " ");
       return key === user;
     });
+    return ok ? POINT_PER_Q : 0;
+  }
+
+  function gradeAnswer(q, ans) {
+    const pts = scoreAnswer(q, ans);
+    if (q.type === "tf") {
+      const stmts = q.statements || [];
+      const maxPts = stmts.length >= 4 ? POINT_TF_STMT * stmts.length : POINT_PER_Q;
+      return pts >= maxPts - 0.0001 && pts > 0;
+    }
+    return pts >= POINT_PER_Q - 0.0001 && pts > 0;
   }
 
   function formatSubmitTime(d) {
@@ -2144,9 +2177,14 @@ a { text-decoration: none; color: inherit; }
   async function finishExam(auto) {
     clearInterval(timerId);
     let correct = 0, wrong = 0, skip = 0;
+    let totalPts = 0;
     examQuestions.forEach((q, i) => {
       const ans = answers[i];
-      if (ans === undefined || ans === null || ans === "" || (Array.isArray(ans) && ans.every(a => a === undefined))) {
+      const empty = ans === undefined || ans === null || ans === "" ||
+        (Array.isArray(ans) && ans.every(function (a) { return a === undefined; }));
+      const pts = empty ? 0 : scoreAnswer(q, ans);
+      totalPts += pts;
+      if (empty) {
         skip++;
       } else if (gradeAnswer(q, ans)) {
         correct++;
@@ -2154,7 +2192,7 @@ a { text-decoration: none; color: inherit; }
         wrong++;
       }
     });
-    const score = Math.round(correct * POINT_PER_Q * 10) / 10; // 1 decimal
+    const score = Math.round(totalPts * 10) / 10;
 
     const now = new Date();
     const timeStr = formatSubmitTime(now);
@@ -2280,15 +2318,20 @@ a { text-decoration: none; color: inherit; }
     let html = "";
     examQuestions.forEach(function (q, i) {
       const ans = answers[i];
+      const empty = ans === undefined || ans === null || ans === "" ||
+        (Array.isArray(ans) && ans.every(function (a) { return a === undefined; }));
+      const pts = empty ? 0 : scoreAnswer(q, ans);
       let status = "skip";
       let statusText = "Bỏ qua";
-      if (ans === undefined || ans === null || ans === "" ||
-          (Array.isArray(ans) && ans.every(function (a) { return a === undefined; }))) {
+      if (empty) {
         status = "skip";
         statusText = "Bỏ qua";
       } else if (gradeAnswer(q, ans)) {
         status = "ok";
-        statusText = "Đúng";
+        statusText = "Đúng (+" + pts + ")";
+      } else if (pts > 0) {
+        status = "bad";
+        statusText = "Đúng một phần (+" + pts + ")";
       } else {
         status = "bad";
         statusText = "Sai";
@@ -2305,6 +2348,9 @@ a { text-decoration: none; color: inherit; }
       }
       html += '<div class="ak-ans"><span class="lbl">Đáp án đúng: </span>' + escapeHtml(formatCorrectAnswer(q)) + '</div>';
       html += '<div class="ak-user"><span class="lbl">Bạn chọn: </span>' + escapeHtml(formatUserAnswer(q, ans)) + '</div>';
+      if (q.type === "tf") {
+        html += '<div class="ak-user"><span class="lbl">Điểm ý: </span>mỗi ý đúng 0.025 · tối đa 0.1/câu</div>';
+      }
       html += '</div>';
     });
     list.innerHTML = html;
