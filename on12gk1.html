@@ -1146,7 +1146,7 @@ a { text-decoration: none; color: inherit; }
   const POINT_PER_Q = 0.1;
 
   /* ========== STATE ========== */
-  let studentsByClass = {};   // { "12A1": ["NGUYỄN A", ...] }
+  let studentsByClass = {};   // { "12A1": [{id, ten}, ...] }
   let allQuestions = [];      // full bank
   let examQuestions = [];     // 100 shuffled
   let answers = {};           // { idx: value }
@@ -1307,15 +1307,75 @@ a { text-decoration: none; color: inherit; }
             iLop = 0; iTen = 1;
           }
         }
+        let iId = h.findIndex(function (x) {
+          return /^(id|mã hs|ma hs|stt)$/i.test(String(x).trim()) || String(x).trim() === "id";
+        });
+        const rawList = [];
         for (let r = start; r < rows.length; r++) {
           const ten = String(rows[r][iTen] || "").trim();
           const lop = String(rows[r][iLop] || "").trim();
           if (!ten || !lop) continue;
-          if (!studentsByClass[lop]) studentsByClass[lop] = [];
-          if (!studentsByClass[lop].includes(ten)) studentsByClass[lop].push(ten);
+          const sid = iId >= 0 ? parseInt(rows[r][iId], 10) : NaN;
+          rawList.push({ id: sid, ten: ten, lop: lop });
         }
-        // sort names
-        Object.keys(studentsByClass).forEach(k => studentsByClass[k].sort((a, b) => a.localeCompare(b, "vi")));
+        function viNameKey(name) {
+          const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+          if (!parts.length) return ["", "", "", ""];
+          const ten = parts[parts.length - 1];
+          const ho = parts.length > 1 ? parts[0] : "";
+          const dem = parts.length > 2 ? parts.slice(1, -1).join(" ") : "";
+          return [ten, dem, ho, name].map(function (x) { return String(x).toLocaleLowerCase("vi"); });
+        }
+        function cmpViName(a, b) {
+          const ka = viNameKey(a), kb = viNameKey(b);
+          for (let i = 0; i < ka.length; i++) {
+            const c = ka[i].localeCompare(kb[i], "vi");
+            if (c) return c;
+          }
+          return 0;
+        }
+        function classSortKeyLocal(c) {
+          const s = String(c || "").trim();
+          const m = s.match(/^(\d+)([A-Za-zÀ-ỹ]*)(\d*)(.*)$/i);
+          if (m) return [parseInt(m[1], 10) || 0, (m[2] || "").toLowerCase(), parseInt(m[3], 10) || 0, (m[4] || "").toLowerCase()];
+          return [999, s.toLowerCase(), 0, ""];
+        }
+        function cmpClassLocal(a, b) {
+          const ka = classSortKeyLocal(a), kb = classSortKeyLocal(b);
+          for (let i = 0; i < ka.length; i++) {
+            if (typeof ka[i] === "number") { if (ka[i] !== kb[i]) return ka[i] - kb[i]; }
+            else { const c = String(ka[i]).localeCompare(String(kb[i]), "vi"); if (c) return c; }
+          }
+          return 0;
+        }
+        const byLop = {};
+        rawList.forEach(function (item) {
+          if (!byLop[item.lop]) byLop[item.lop] = [];
+          if (!byLop[item.lop].some(function (x) { return x.ten === item.ten; })) {
+            byLop[item.lop].push(item);
+          }
+        });
+        const sortedLops = Object.keys(byLop).sort(cmpClassLocal);
+        const hasAllIds = rawList.length > 0 && rawList.every(function (x) {
+          return Number.isFinite(x.id) && x.id > 0;
+        });
+        // ID toàn cục 1..n theo thứ tự lớp + tên; nếu Excel có ID đủ thì giữ ID Excel
+        if (hasAllIds) {
+          sortedLops.forEach(function (lop) {
+            byLop[lop].sort(function (a, b) { return cmpViName(a.ten, b.ten); });
+            studentsByClass[lop] = byLop[lop].map(function (item) {
+              return { id: item.id, ten: item.ten };
+            });
+          });
+        } else {
+          let n = 1;
+          sortedLops.forEach(function (lop) {
+            byLop[lop].sort(function (a, b) { return cmpViName(a.ten, b.ten); });
+            studentsByClass[lop] = byLop[lop].map(function (item) {
+              return { id: n++, ten: item.ten };
+            });
+          });
+        }
       }
     }
 
@@ -1470,8 +1530,29 @@ a { text-decoration: none; color: inherit; }
   }
 
   /* ========== UI: SELECT ========== */
+  function classSortKey(c) {
+    const s = String(c || "").trim();
+    const m = s.match(/^(\d+)([A-Za-zÀ-ỹ]*)(\d*)(.*)$/i);
+    if (m) {
+      return [parseInt(m[1], 10) || 0, (m[2] || "").toLowerCase(), parseInt(m[3], 10) || 0, (m[4] || "").toLowerCase(), s.toLowerCase()];
+    }
+    return [999, s.toLowerCase(), 0, "", s.toLowerCase()];
+  }
+  function cmpClass(a, b) {
+    const ka = classSortKey(a), kb = classSortKey(b);
+    for (let i = 0; i < ka.length; i++) {
+      if (typeof ka[i] === "number") {
+        if (ka[i] !== kb[i]) return ka[i] - kb[i];
+      } else {
+        const c = String(ka[i]).localeCompare(String(kb[i]), "vi");
+        if (c) return c;
+      }
+    }
+    return 0;
+  }
+
   function populateClassSelect() {
-    const classes = Object.keys(studentsByClass).sort((a, b) => a.localeCompare(b, "vi"));
+    const classes = Object.keys(studentsByClass).sort(cmpClass);
     selClass.innerHTML = '<option value="">-- Chọn lớp --</option>';
     classes.forEach(c => {
       const opt = document.createElement("option");
@@ -1492,10 +1573,13 @@ a { text-decoration: none; color: inherit; }
       btnStart.disabled = true;
       return;
     }
-    studentsByClass[lop].forEach(name => {
+    // Hiện ID toàn cục (cột ID trong Excel) + Họ tên
+    studentsByClass[lop].forEach(function (item) {
       const opt = document.createElement("option");
+      const name = typeof item === "string" ? item : item.ten;
+      const id = typeof item === "string" ? "" : item.id;
       opt.value = name;
-      opt.textContent = name;
+      opt.textContent = (id ? (String(id).padStart(2, "0") + ". ") : "") + name;
       selStudent.appendChild(opt);
     });
     selStudent.disabled = false;
