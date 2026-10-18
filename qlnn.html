@@ -3651,20 +3651,39 @@ function loadCachedCatalogs(cid) {
 function resolveEntryConflict(local, remote) {
   if (!local) return remote;
   if (!remote) return local;
-  var tl = local.syncedAt || local.updatedAt || local.createdAt || "";
-  var tr = remote.syncedAt || remote.updatedAt || remote.createdAt || "";
+  var tl = String(local.syncedAt || local.updatedAt || local.createdAt || "");
+  var tr = String(remote.syncedAt || remote.updatedAt || remote.createdAt || "");
+  var tLocal = Number(local.times) || 1;
+  var tRemote = Number(remote.times) || 1;
   if (tr > tl) {
-    // Remote thắng nhưng giữ deviceId local nếu remote thiếu
     var won = Object.assign({}, local, remote);
+    // Cloud mới hơn nhưng số lần thấp hơn rõ rệt → giữ số lần cao hơn (Leader đã sửa)
+    if (tLocal > tRemote && tLocal > 1 && (!remote.updatedAt || String(local.updatedAt || "") >= String(remote.updatedAt || ""))) {
+      won.times = tLocal;
+      won.total = (Number(won.points) || 0) * tLocal;
+    }
     won._conflictResolved = "remote";
     return won;
   }
   if (tl > tr) {
     var wonL = Object.assign({}, remote, local);
+    if (tRemote > tLocal && tRemote > 1 && (!local.updatedAt || String(remote.updatedAt || "") >= String(local.updatedAt || ""))) {
+      wonL.times = tRemote;
+      wonL.total = (Number(wonL.points) || 0) * tRemote;
+    }
     wonL._conflictResolved = "local";
     return wonL;
   }
-  // Bằng thời gian: ưu tiên cloud nếu đã synced
+  // Bằng thời gian: ưu tiên số lần cao hơn (tránh mất điểm Leader)
+  if (tLocal !== tRemote) {
+    var prefer = tLocal >= tRemote ? local : remote;
+    var other = tLocal >= tRemote ? remote : local;
+    var w = Object.assign({}, other, prefer);
+    w.times = Math.max(tLocal, tRemote);
+    w.total = (Number(w.points) || Number(prefer.points) || 0) * w.times;
+    w._conflictResolved = "higher-times";
+    return w;
+  }
   if (remote.syncStatus === "synced" && local.syncStatus !== "synced") return Object.assign({}, local, remote, { _conflictResolved: "remote-synced" });
   return Object.assign({}, remote, local, { _conflictResolved: "local-tie" });
 }
@@ -6435,14 +6454,28 @@ function entryDedupeKey(e) {
 }
 
 function mergeEntryTimes(into, from) {
-  // Gộp trùng (cùng khóa gồm môn) → 1 bản ghi · Số lần = 1 · Tổng điểm = điểm × 1
+  // Gộp trùng (cùng HS+ngày+nội dung+môn) → Số lần = TỔNG số lần · Tổng điểm = điểm × số lần
   if (!into || !from) return into;
   var pts = into.points != null ? Number(into.points) : (from.points != null ? Number(from.points) : 0);
+  if (isNaN(pts)) pts = from.points != null ? Number(from.points) : 0;
   into.points = pts;
-  into.times = 1;
-  into.total = pts * 1;
-  // Giữ môn của bản ghi đang lưu (into)
+  var t1 = Number(into.times);
+  var t2 = Number(from.times);
+  if (!t1 || t1 < 1) t1 = 1;
+  if (!t2 || t2 < 1) t2 = 1;
+  into.times = t1 + t2;
+  into.total = pts * into.times;
   if (!into.subject && from.subject) into.subject = from.subject;
+  // Giữ bản ghi mới hơn
+  try {
+    var ta = String(into.updatedAt || into.createdAt || "");
+    var tb = String(from.updatedAt || from.createdAt || "");
+    if (tb > ta) {
+      if (from.inputBy) into.inputBy = from.inputBy;
+      if (from.inputByName) into.inputByName = from.inputByName;
+      into.updatedAt = from.updatedAt || into.updatedAt;
+    }
+  } catch (e) {}
   return into;
 }
 
@@ -7803,7 +7836,8 @@ function editEntry(eid) {
       e.times = nt;
       e.total = pts * nt;
       e.updatedAt = new Date().toISOString();
-      // Cập nhật thứ nếu có
+      e.syncStatus = "pending";
+      e.version = (Number(e.version) || 0) + 1;
       try {
         if (nd) {
           var dt = new Date(nd + "T12:00:00");
@@ -7812,14 +7846,39 @@ function editEntry(eid) {
         }
       } catch (err) {}
 
-      try { saveClassData(); } catch (err) { console.warn(err); }
+      // Local ngay
       try {
         if (typeof ensureUserClassId === "function") ensureUserClassId(currentUser);
-        var cid = currentUser.classId;
-        if (cid && firebaseReady && db) {
-          db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(e.id)).set(e, { merge: true }).catch(function(err) { console.warn(err); });
+        var cidL = currentUser.classId || "";
+        if (cidL) localStorage.setItem("qlnn_entries_" + cidL, JSON.stringify(entries));
+        if (currentUser && currentUser.id) {
+          localStorage.setItem("qlnn_entries_user_" + String(currentUser.id).toLowerCase(), JSON.stringify(entries));
+        }
+        if (typeof saveLocalEntry === "function") saveLocalEntry(e);
+      } catch (err) { console.warn(err); }
+
+      // Cloud qua Outbox + ghi trực tiếp entries/{id}
+      try {
+        if (typeof SyncManager !== "undefined" && SyncManager.enqueueUpdate) {
+          SyncManager.enqueueUpdate(e);
         }
       } catch (err) { console.warn(err); }
+      try {
+        var cid = currentUser.classId;
+        if (cid && firebaseReady && db) {
+          db.collection("qlnn_classes").doc(cid).collection("entries").doc(String(e.id)).set(
+            Object.assign({}, e, { updatedAt: e.updatedAt, times: nt, total: e.total, syncStatus: "synced" }),
+            { merge: true }
+          ).then(function() {
+            e.syncStatus = "synced";
+            if (typeof setSyncStatus === "function") setSyncStatus("✓ Đã sửa & đồng bộ cloud", true);
+          }).catch(function(err) {
+            console.warn(err);
+            if (typeof setSyncStatus === "function") setSyncStatus("Đã sửa máy · Cloud chưa OK", false);
+          });
+        }
+      } catch (err) { console.warn(err); }
+      try { if (typeof saveClassData === "function") saveClassData(); } catch (err) { console.warn(err); }
 
       panel.remove();
       try {
@@ -7830,7 +7889,7 @@ function editEntry(eid) {
       } catch (err) {}
       var msg = document.getElementById("formMsg");
       if (msg) {
-        msg.textContent = "Đã cập nhật: " + (e.studentName || "") + " · Ngày " + nd + " · " + (ns || "—") + " · ×" + nt;
+        msg.textContent = "Đã cập nhật: " + (e.studentName || "") + " · Ngày " + nd + " · " + (ns || "—") + " · ×" + nt + " · đang đồng bộ cloud";
         msg.className = "mt-3 text-sm font-semibold text-green-700";
         msg.classList.remove("hidden");
       }
