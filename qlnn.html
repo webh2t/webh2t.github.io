@@ -12133,21 +12133,33 @@ function renderNotebook() {
     html += '<div style="flex:1;min-width:200px;text-align:left;border-left:1px dashed #93c5fd;padding-left:10px">';
     html += '<b style="color:#b91c1c">HS vi phạm (tổ ' + team + '):</b><br/>';
     if (teamViolDetail.length) {
-      // Gộp theo Họ tên HS
+      function stripViolLabel(txt) {
+        var s = String(txt || "");
+        s = s.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "");
+        s = s.replace(/\b[uvp]\d{1,3}\b[\.\:\-\s)]*/gi, "");
+        s = s.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "");
+        s = s.replace(/\s*[-–—]\s*môn\s+.+$/i, "");
+        s = s.replace(/^(Thứ\s*\d+|Chủ\s*nhật)[\.\,\:\s]+/i, "");
+        return s.replace(/\s+/g, " ").trim();
+      }
+      // Gộp: Họ tên → loại VP → tổng lần + danh sách ngày
       var byName = {};
       teamViolDetail.forEach(function(v) {
         var nm = String(v.name || "—").trim();
-        if (!byName[nm]) byName[nm] = [];
-        byName[nm].push(v);
+        var label = stripViolLabel(v.content) || String(v.content || "Vi phạm").trim();
+        var key = label.toLowerCase();
+        if (!byName[nm]) byName[nm] = {};
+        if (!byName[nm][key]) byName[nm][key] = { label: label, times: 0, dates: [] };
+        byName[nm][key].times += Number(v.times) || 1;
+        if (v.date && v.date !== "—") byName[nm][key].dates.push(v.date);
       });
       html += Object.keys(byName).sort(function(a, b) { return a.localeCompare(b, "vi"); }).map(function(nm) {
-        var items = byName[nm];
-        var lines = items.map(function(v) {
-          return '<span style="color:#b91c1c">' + v.content + '</span>' +
-            (v.date ? ' <span style="color:#64748b">(' + v.date + ')</span>' : '') +
-            ' <b style="color:#b91c1c">×' + (v.times || 1) + '</b>';
+        var parts = Object.keys(byName[nm]).map(function(k) {
+          var o = byName[nm][k];
+          var dateStr = o.dates.length ? " (" + o.dates.join(", ") + ")" : "";
+          return o.times + " lần " + o.label + dateStr;
         }).join("; ");
-        return '<div style="margin-bottom:4px"><b style="color:#0f172a">' + nm + '</b>: ' + lines + '</div>';
+        return '<div style="margin-bottom:4px"><b style="color:#0f172a">' + nm + '</b>: <span style="color:#b91c1c">' + parts + '</span></div>';
       }).join("");
     } else {
       html += '<span style="color:#64748b">Không có HS vi phạm</span>';
@@ -12214,24 +12226,12 @@ function renderNotebook() {
     gList.forEach(function(g, gi) {
       var nRows = g.rows.length;
       var prior = periodViolCount(g.sid);
-      // Tóm tắt nội dung + số lần theo loại VP (gộp)
-      var contentSum = {};
-      g.rows.forEach(function(e) {
-        var ct = contentLine(e);
-        var t = Number(e.times) || 1;
-        if (!contentSum[ct]) contentSum[ct] = 0;
-        contentSum[ct] += t;
-      });
-      var sumText = Object.keys(contentSum).map(function(k) {
-        return k + " (×" + contentSum[k] + ")";
-      }).join("; ");
       g.rows.forEach(function(e, li) {
         html += '<tr style="color:#1d4ed8">';
         if (li === 0) {
           html += '<td class="py-1 px-1 text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + (gi + 1) + '</td>';
           html += '<td class="py-1 px-1 font-bold text-center" style="border:2px solid #78350f;background:#fffbeb" rowspan="' + nRows + '">' + (g.team || "—") + '</td>';
-          html += '<td class="py-1 px-1 font-bold" style="text-align:left;padding-left:6px;white-space:nowrap;border:2px solid #78350f;background:#fffbeb;color:#0f172a" rowspan="' + nRows + '">' + g.name +
-            '<div style="font-size:10px;font-weight:600;color:#b91c1c;margin-top:2px;white-space:normal">' + sumText + '</div></td>';
+          html += '<td class="py-1 px-1 font-bold" style="text-align:left;padding-left:6px;white-space:nowrap;border:2px solid #78350f;background:#fffbeb;color:#0f172a" rowspan="' + nRows + '">' + g.name + '</td>';
         }
         html += '<td class="py-1 px-1 text-xs text-center" style="border:1px solid #a16207">' + (e.date ? formatDate(String(e.date).slice(0,10)) : "—") + '</td>';
         html += '<td class="py-1 px-1 text-xs text-center" style="border:1px solid #a16207">' + (e.subject || "—") + '</td>';
@@ -12244,6 +12244,45 @@ function renderNotebook() {
       });
     });
     html += '</tbody></table></div>';
+
+    // Thống kê từng nội dung VP cả lớp (cuối khung)
+    function stripViolLabelCls(txt) {
+      var s = String(txt || "");
+      s = s.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "");
+      s = s.replace(/\b[uvp]\d{1,3}\b[\.\:\-\s)]*/gi, "");
+      s = s.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "");
+      s = s.replace(/\s*[-–—]\s*môn\s+.+$/i, "");
+      s = s.replace(/^(Thứ\s*\d+|Chủ\s*nhật)[\.\,\:\s]+/i, "");
+      return s.replace(/\s+/g, " ").trim();
+    }
+    var byType = {};
+    viols.forEach(function(e) {
+      var raw = (typeof resolveEntryContentText === "function") ? resolveEntryContentText(e) : (e.contentText || e.contentCode || contentLine(e));
+      var label = stripViolLabelCls(raw) || "Vi phạm khác";
+      var key = label.toLowerCase();
+      if (!byType[key]) byType[key] = { label: label, times: 0, names: {} };
+      byType[key].times += Number(e.times) || 1;
+      var nm = "";
+      try {
+        var st = (students || []).find(function(s) { return String(s.id) === String(e.studentId); });
+        nm = (st && st.name) || e.studentName || String(e.studentId || "");
+      } catch (errN) { nm = e.studentName || ""; }
+      if (nm) byType[key].names[nm] = true;
+    });
+    var typeKeys = Object.keys(byType).sort(function(a, b) {
+      return byType[b].times - byType[a].times || a.localeCompare(b, "vi");
+    });
+    if (typeKeys.length) {
+      html += '<div class="mt-3 p-3 rounded-lg border text-sm" style="border-color:#fca5a5;background:#fef2f2;color:#7f1d1d;text-align:left">';
+      html += '<b style="color:#b91c1c">THỐNG KÊ NỘI DUNG VI PHẠM CẢ LỚP</b><br/>';
+      typeKeys.forEach(function(k, idx) {
+        var o = byType[k];
+        var nameList = Object.keys(o.names).sort(function(a, b) { return a.localeCompare(b, "vi"); }).join(", ");
+        html += '<div style="margin-top:4px">' + (idx + 1) + ". <b>" + o.label + "</b>: " + o.times + " lượt" +
+          (nameList ? ' gồm <span style="color:#0f172a">' + nameList + "</span>" : "") + "</div>";
+      });
+      html += "</div>";
+    }
   }
   html += '</div>';
 
