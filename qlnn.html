@@ -4882,9 +4882,18 @@ function rankObj(label) {
   if (label === "KHÔNG ĐẠT") return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "", color: "#6b7280" };
   return { label: "CHƯA ĐẠT", cls: "rank-ht", stars: "", color: "#6b7280" };
 }
-/** Xếp loại theo điểm tuần (thống nhất) */
+/**
+ * Xếp loại theo điểm (tuần / TB tháng / TB học kỳ)
+ * - XUẤT SẮC: điểm > 180 (và trần VP: Số VP = 0)
+ * - TỐT: 110 – 180
+ * - KHÁ: 100 – 109
+ * - ĐẠT: 90 – 99
+ * - CHƯA ĐẠT: < 90
+ * Ví dụ tuần: 168đ + 0 VP → TỐT (không đủ >180)
+ */
 function rankClassByScore(s) {
-  if (s >= 120) return rankObj("XUẤT SẮC");
+  s = Number(s) || 0;
+  if (s > 180) return rankObj("XUẤT SẮC");
   if (s >= 110) return rankObj("TỐT");
   if (s >= 100) return rankObj("KHÁ");
   if (s >= 90) return rankObj("ĐẠT");
@@ -10174,7 +10183,7 @@ function renderWeekMonthBoards(list, agg) {
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredM);
     html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
-    html += '<div class="legend-box mt-1 text-xs"><b>Thang điểm tháng (TB tuần):</b> ≥120 XS · 110–119 Tốt · 100–109 Khá · 90–99 Đạt · &lt;90 Chưa đạt · <b>+ trần VP</b> (v26/v04/v01+v03/tổng lần)</div></div>';
+    html += '<div class="legend-box mt-1 text-xs"><b>Thang điểm (tuần / TB tháng):</b> &gt;180 XS · 110–180 Tốt · 100–109 Khá · 90–99 Đạt · &lt;90 Chưa đạt · <b>+ trần VP</b> (XS cần 0 VP)</div></div>';
     box.innerHTML = html;
     box.classList.remove("hidden");
   } else if (period === "hk1" || period === "hk2") {
