@@ -1425,12 +1425,27 @@ Hướng dẫn nhập nhanh
 </div>
 <div id="deadlineAlert" class="mt-3 hidden text-sm p-3 rounded-lg border"></div>
 </div>
-<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-<div class="lg:col-span-2 bg-slate-800 rounded-xl p-5 border border-slate-700">
-<h3 class="font-semibold text-sky-400 mb-3">Phân loại xếp hạng</h3>
-<canvas id="rankChart" height="150"></canvas>
+<!-- THỐNG KÊ NỘI DUNG VI PHẠM — đầu trang báo cáo -->
+<div id="reportViolContentBlock" class="bg-white rounded-xl p-4 border mb-4" style="border-color:#fca5a5;box-shadow:0 1px 3px rgba(185,28,28,0.08)">
+<div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+<h3 class="font-bold text-base" style="color:#b91c1c">📉 THỐNG KÊ NỘI DUNG VI PHẠM CẢ LỚP</h3>
+<span id="reportViolContentSummary" class="text-xs font-semibold px-2 py-1 rounded-full" style="background:#fef2f2;color:#991b1b"></span>
 </div>
-<div class="bg-slate-800 rounded-xl p-5 border border-slate-700" id="reportHighlights"></div>
+<div class="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+<div class="lg:col-span-2 flex justify-center" style="min-height:200px">
+<canvas id="violContentChart" height="200"></canvas>
+</div>
+<div class="lg:col-span-3 overflow-x-auto" id="reportViolContentTable"></div>
+</div>
+</div>
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4" id="reportRankGrid">
+<div class="lg:col-span-2 bg-white rounded-xl p-5 border" style="border-color:#bfdbfe">
+<h3 class="font-semibold mb-3" style="color:#1d4ed8">📊 Phân loại xếp hạng</h3>
+<div class="flex justify-center" style="max-height:260px">
+<canvas id="rankChart" height="220"></canvas>
+</div>
+</div>
+<div class="bg-white rounded-xl p-5 border" style="border-color:#bbf7d0" id="reportHighlights"></div>
 </div>
 <div id="reportSoKet" class="mb-4"></div>
 <div id="reportWeekBoard" class="mb-4 hidden"></div>
@@ -2180,6 +2195,7 @@ let financeRows = []; // {id,type:'in'|'out',date,content,amount,qty,month,class
 let pendingRegs = [];
 let deadlineCfg = { day: 0, hour: 10, penaltyText: "" };
 let rankChart = null;
+let violContentChart = null;
 let guestMode = false;
 
 function storageKey(base) {
@@ -13596,32 +13612,161 @@ function renderReport() {
     if (!top || s.score > top.score) top = s;
     if (!most || s.violationCount > most.violationCount) most = s;
   });
-  document.getElementById("reportHighlights").innerHTML = '<h3 class="font-semibold text-sky-400 mb-3">Điểm nhấn</h3>' +
-    '<div class="text-sm space-y-2"><div class="p-2 bg-green-500/10 rounded border border-green-500/30"><div class="text-xs text-slate-400">Điểm cao nhất</div><div class="font-semibold text-green-400">' +
-    (top ? top.name + " · " + top.score : "—") + '</div></div>' +
-    '<div class="p-2 bg-red-500/10 rounded border border-red-500/30"><div class="text-xs text-slate-400">Vi phạm nhiều</div><div class="font-semibold text-red-400">' +
-    (most && most.violationCount ? most.name + " · " + most.violationCount + " lần" : "—") + '</div></div></div>';
+  // --- Điểm nhấn ---
+  var hl = document.getElementById("reportHighlights");
+  if (hl) {
+    hl.innerHTML =
+      '<h3 class="font-semibold mb-3" style="color:#15803d">⭐ Điểm nhấn</h3>' +
+      '<div class="text-sm space-y-3">' +
+      '<div class="p-3 rounded-xl border" style="background:#ecfdf5;border-color:#86efac">' +
+      '<div class="text-xs font-medium" style="color:#64748b">Điểm cao nhất</div>' +
+      '<div class="font-bold text-base mt-1" style="color:#15803d">' + (top ? top.name + " · " + top.score + "đ" : "—") + '</div></div>' +
+      '<div class="p-3 rounded-xl border" style="background:#fef2f2;border-color:#fca5a5">' +
+      '<div class="text-xs font-medium" style="color:#64748b">Vi phạm nhiều nhất</div>' +
+      '<div class="font-bold text-base mt-1" style="color:#b91c1c">' +
+      (most && most.violationCount ? most.name + " · " + most.violationCount + " lần" : "—") + '</div></div>' +
+      '<div class="p-3 rounded-xl border" style="background:#eff6ff;border-color:#93c5fd">' +
+      '<div class="text-xs font-medium" style="color:#64748b">Số HS có dữ liệu</div>' +
+      '<div class="font-bold text-base mt-1" style="color:#1d4ed8">' + (agg.length || 0) + " / " + ((students && students.length) || 0) + '</div></div>' +
+      '</div>';
+  }
 
+  // --- Biểu đồ tròn xếp hạng ---
   const counts = { "XUẤT SẮC": 0, "TỐT": 0, "KHÁ": 0, "ĐẠT": 0, "CHƯA ĐẠT": 0 };
   agg.forEach(s => { if (counts[s.rank.label] != null) counts[s.rank.label]++; });
   const ctx = document.getElementById("rankChart");
-  if (rankChart) rankChart.destroy();
-  rankChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: ["TỐT", "KHÁ", "ĐẠT", "CHƯA ĐẠT"],
-      datasets: [{ data: [counts.TỐT, counts.KHÁ, counts.ĐẠT, counts["CHƯA ĐẠT"]],
-        backgroundColor: ["#fbbf24","#22c55e","#38bdf8","#f59e0b","#ef4444"],
-        borderColor: ["#22c55e", "#3b82f6", "#f97316", "#ef4444"], borderWidth: 1 }]
-    },
-    options: {
-      responsive: true, plugins: { legend: { display: false } },
-      scales: {
-        y: { beginAtZero: true, ticks: { color: "#94a3b8", stepSize: 1 }, grid: { color: "#334155" } },
-        x: { ticks: { color: "#94a3b8" }, grid: { display: false } }
+  if (ctx && typeof Chart !== "undefined") {
+    if (rankChart) try { rankChart.destroy(); } catch (e) {}
+    rankChart = new Chart(ctx, {
+      type: "doughnut",
+      data: {
+        labels: ["XUẤT SẮC", "TỐT", "KHÁ", "ĐẠT", "CHƯA ĐẠT"],
+        datasets: [{
+          data: [counts["XUẤT SẮC"], counts.TỐT, counts.KHÁ, counts.ĐẠT, counts["CHƯA ĐẠT"]],
+          backgroundColor: ["#166534", "#fbbf24", "#22c55e", "#38bdf8", "#f59e0b"],
+          borderWidth: 2,
+          borderColor: "#fff"
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        plugins: {
+          legend: {
+            position: "bottom",
+            labels: { color: "#334155", boxWidth: 12, font: { size: 11, weight: "600" } }
+          }
+        },
+        cutout: "55%"
+      }
+    });
+  }
+
+  // --- THỐNG KÊ NỘI DUNG VI PHẠM CẢ LỚP (đầu trang) ---
+  try {
+    function stripViolLbl(txt) {
+      var s = String(txt || "");
+      s = s.replace(/^[uvp]\d{1,3}[\.\:\-\s)]+/i, "");
+      s = s.replace(/\b[uvp]\d{1,3}\b[\.\:\-\s)]*/gi, "");
+      s = s.replace(/\s*[\(\[]\s*[+\-]?\d+\s*[\)\]]/g, "");
+      s = s.replace(/\s*[-–—]\s*môn\s+.+$/i, "");
+      s = s.replace(/^(Thứ\s*\d+|Chủ\s*nhật)[\.\,\:\s]+/i, "");
+      return s.replace(/\s+/g, " ").trim() || "Vi phạm khác";
+    }
+    var violByType = {};
+    var totalViolHits = 0;
+    (list || []).forEach(function(e) {
+      if (!e || e.type !== "violation") return;
+      if (typeof isEntryDeleted === "function" && isEntryDeleted(e)) return;
+      if (currentUser && currentUser.role === "leader" && currentUser.team) {
+        var st0 = (students || []).find(function(s) { return String(s.id) === String(e.studentId); });
+        if (st0 && String(st0.team) !== String(currentUser.team)) return;
+      }
+      var raw = (typeof resolveEntryContentText === "function") ? resolveEntryContentText(e) : (e.contentText || e.contentCode || "");
+      var label = stripViolLbl(raw);
+      var key = label.toLowerCase();
+      if (!violByType[key]) violByType[key] = { label: label, times: 0, names: {} };
+      var t = Number(e.times) || 1;
+      violByType[key].times += t;
+      totalViolHits += t;
+      var nm = "";
+      try {
+        var st = (students || []).find(function(s) { return String(s.id) === String(e.studentId); });
+        nm = (st && st.name) || e.studentName || "";
+      } catch (eN) { nm = e.studentName || ""; }
+      if (nm) violByType[key].names[nm] = true;
+    });
+    var vKeys = Object.keys(violByType).sort(function(a, b) {
+      return violByType[b].times - violByType[a].times || a.localeCompare(b, "vi");
+    });
+    var sumEl = document.getElementById("reportViolContentSummary");
+    if (sumEl) sumEl.textContent = totalViolHits ? (totalViolHits + " lượt · " + vKeys.length + " loại") : "Không có vi phạm";
+    var tblEl = document.getElementById("reportViolContentTable");
+    if (tblEl) {
+      if (!vKeys.length) {
+        tblEl.innerHTML = '<p class="text-sm" style="color:#64748b">Không có vi phạm trong phạm vi lọc hiện tại.</p>';
+      } else {
+        var rows = vKeys.map(function(k, idx) {
+          var o = violByType[k];
+          var names = Object.keys(o.names).sort(function(a, b) { return a.localeCompare(b, "vi"); }).join(", ");
+          return '<tr style="border-bottom:1px solid #fecaca">' +
+            '<td class="py-1.5 px-2 text-center font-bold" style="color:#b91c1c;width:36px">' + (idx + 1) + '</td>' +
+            '<td class="py-1.5 px-2 font-semibold" style="color:#7f1d1d;text-align:left">' + o.label + '</td>' +
+            '<td class="py-1.5 px-2 text-center font-bold" style="color:#dc2626;width:70px">' + o.times + '</td>' +
+            '<td class="py-1.5 px-2 text-xs" style="color:#334155;text-align:left">' + names + '</td></tr>';
+        }).join("");
+        tblEl.innerHTML =
+          '<table class="w-full text-sm" style="border-collapse:collapse">' +
+          '<thead><tr style="background:#fef2f2;color:#991b1b">' +
+          '<th class="py-1.5 px-2 text-center">#</th>' +
+          '<th class="py-1.5 px-2 text-left">Nội dung vi phạm</th>' +
+          '<th class="py-1.5 px-2 text-center">Lượt</th>' +
+          '<th class="py-1.5 px-2 text-left">Học sinh</th></tr></thead><tbody>' + rows + '</tbody></table>';
       }
     }
-  });
+    var vCtx = document.getElementById("violContentChart");
+    if (vCtx && typeof Chart !== "undefined") {
+      if (violContentChart) try { violContentChart.destroy(); } catch (e) {}
+      var pieLabels = vKeys.slice(0, 8).map(function(k) { return violByType[k].label; });
+      var pieData = vKeys.slice(0, 8).map(function(k) { return violByType[k].times; });
+      if (vKeys.length > 8) {
+        var rest = 0;
+        vKeys.slice(8).forEach(function(k) { rest += violByType[k].times; });
+        if (rest > 0) { pieLabels.push("Khác"); pieData.push(rest); }
+      }
+      var palette = ["#ef4444","#f97316","#eab308","#84cc16","#06b6d4","#8b5cf6","#ec4899","#64748b","#a1a1aa"];
+      if (!pieData.length) {
+        pieLabels = ["Không có VP"];
+        pieData = [1];
+        palette = ["#e2e8f0"];
+      }
+      violContentChart = new Chart(vCtx, {
+        type: "doughnut",
+        data: {
+          labels: pieLabels,
+          datasets: [{
+            data: pieData,
+            backgroundColor: palette.slice(0, pieLabels.length),
+            borderWidth: 2,
+            borderColor: "#fff"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: {
+              position: "right",
+              labels: { color: "#334155", boxWidth: 10, font: { size: 10, weight: "600" }, padding: 8 }
+            }
+          },
+          cutout: "50%"
+        }
+      });
+    }
+    var violBlock = document.getElementById("reportViolContentBlock");
+    if (violBlock) violBlock.style.display = "";
+  } catch (errViol) { console.warn("[QLNN] viol content stats", errViol); }
 
   const body = document.getElementById("reportBody");
   const summary = document.getElementById("reportSummary");
