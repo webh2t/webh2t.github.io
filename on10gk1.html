@@ -1100,7 +1100,7 @@ a { text-decoration: none; color: inherit; }
       </div>
       <div class="stats-class-block">
         <h3><span>🏫</span> Báo cáo theo lớp — <span id="stat-month-label">tháng này</span></h3>
-        <p class="stats-class-sub">Tổng lượt nộp bài từng lớp trong tháng hiện tại (trên thiết bị này).</p>
+        <p class="stats-class-sub">Lượt nộp theo lớp trong tháng hiện tại: <b>thiết bị này</b> và <b>toàn hệ thống</b> (mọi máy, qua CountAPI).</p>
         <div id="class-month-stats">
           <p class="class-stats-empty">Chưa có dữ liệu nộp bài trong tháng.</p>
         </div>
@@ -1761,6 +1761,20 @@ a { text-decoration: none; color: inherit; }
     d = d || new Date();
     return "Tháng " + String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
   }
+  function sanitizeClassKey(lop) {
+    return String(lop || "").trim().replace(/[^A-Za-z0-9À-ỹ_-]/g, "").replace(/\s+/g, "") || "unknown";
+  }
+  /** Key CountAPI theo tháng + lớp (toàn hệ thống) */
+  function classMonthCounterKey(lop) {
+    const mk = monthKey().replace(/-/g, "");
+    return "webh2t-on10gk1-m" + mk + "-" + sanitizeClassKey(lop);
+  }
+  function counterGetUrl(key) {
+    return "https://countapi.mileshilliard.com/api/v1/get/" + encodeURIComponent(key);
+  }
+  function counterHitUrl(key) {
+    return "https://countapi.mileshilliard.com/api/v1/hit/" + encodeURIComponent(key);
+  }
   function getMonthClassStats() {
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE_MONTH_KEY) || "{}");
@@ -1790,6 +1804,11 @@ a { text-decoration: none; color: inherit; }
     data.classes = data.classes || {};
     data.classes[lop] = (data.classes[lop] || 0) + 1;
     localStorage.setItem(STORAGE_MONTH_KEY, JSON.stringify(data));
+    // Toàn hệ thống: tăng bộ đếm CountAPI theo tháng+lớp
+    try {
+      fetch(counterHitUrl(classMonthCounterKey(lop)), { cache: "no-store", mode: "cors" })
+        .catch(function () {});
+    } catch (e) {}
     return data;
   }
   function classSortKeyStat(c) {
@@ -1798,14 +1817,30 @@ a { text-decoration: none; color: inherit; }
     if (m) return [parseInt(m[1], 10) || 0, (m[2] || "").toLowerCase(), parseInt(m[3], 10) || 0, (m[4] || "").toLowerCase()];
     return [999, s.toLowerCase(), 0, ""];
   }
-  function renderClassMonthStats() {
+  async function fetchClassSystemCount(lop) {
+    try {
+      const r = await fetch(counterGetUrl(classMonthCounterKey(lop)), { cache: "no-store", mode: "cors" });
+      if (!r.ok) return 0;
+      const data = await r.json();
+      const val = parseCounterValue(data);
+      return typeof val === "number" ? val : 0;
+    } catch (e) {
+      return 0;
+    }
+  }
+  async function renderClassMonthStats() {
     const box = $("class-month-stats");
     const label = $("stat-month-label");
     if (label) label.textContent = monthLabelVi();
     if (!box) return;
-    const data = getMonthClassStats();
-    const classes = data.classes || {};
-    const keys = Object.keys(classes).sort(function (a, b) {
+
+    const localData = getMonthClassStats();
+    const localMap = localData.classes || {};
+    // Gộp lớp từ Excel + lớp đã có trên thiết bị
+    const keySet = {};
+    Object.keys(studentsByClass || {}).forEach(function (k) { keySet[k] = true; });
+    Object.keys(localMap).forEach(function (k) { keySet[k] = true; });
+    const keys = Object.keys(keySet).sort(function (a, b) {
       const ka = classSortKeyStat(a), kb = classSortKeyStat(b);
       for (let i = 0; i < ka.length; i++) {
         if (typeof ka[i] === "number") { if (ka[i] !== kb[i]) return ka[i] - kb[i]; }
@@ -1813,19 +1848,41 @@ a { text-decoration: none; color: inherit; }
       }
       return 0;
     });
+
     if (!keys.length) {
       box.innerHTML = '<p class="class-stats-empty">Chưa có dữ liệu nộp bài trong tháng.</p>';
       return;
     }
-    let total = 0;
-    let html = '<table class="class-stats-table"><thead><tr><th>Lớp</th><th style="text-align:right">Lượt nộp</th></tr></thead><tbody>';
+
+    box.innerHTML = '<p class="class-stats-empty">Đang tải số liệu toàn hệ thống…</p>';
+
+    // Lấy song song số liệu toàn hệ thống từng lớp
+    const sysCounts = {};
+    await Promise.all(keys.map(async function (lop) {
+      sysCounts[lop] = await fetchClassSystemCount(lop);
+    }));
+
+    let totalLocal = 0, totalSys = 0;
+    let html = '<table class="class-stats-table"><thead><tr>' +
+      '<th>Lớp</th>' +
+      '<th style="text-align:right">Thiết bị này</th>' +
+      '<th style="text-align:right">Toàn hệ thống</th>' +
+      '</tr></thead><tbody>';
     keys.forEach(function (lop) {
-      const n = classes[lop] || 0;
-      total += n;
-      html += '<tr><td>' + escapeHtml(lop) + '</td><td class="col-count">' + n + '</td></tr>';
+      const loc = localMap[lop] || 0;
+      const sys = sysCounts[lop] || 0;
+      totalLocal += loc;
+      totalSys += sys;
+      // Ẩn dòng nếu cả hai đều 0 và muốn gọn — vẫn hiện tất cả lớp từ Excel để GV theo dõi
+      html += '<tr><td>' + escapeHtml(lop) + '</td>' +
+        '<td class="col-count">' + loc + '</td>' +
+        '<td class="col-count">' + sys + '</td></tr>';
     });
-    html += '<tr class="class-stats-total"><td>Tổng tháng</td><td class="col-count">' + total + '</td></tr>';
+    html += '<tr class="class-stats-total"><td>Tổng tháng</td>' +
+      '<td class="col-count">' + totalLocal + '</td>' +
+      '<td class="col-count">' + totalSys + '</td></tr>';
     html += '</tbody></table>';
+    html += '<p class="stats-class-sub" style="margin-top:8px;margin-bottom:0">“Toàn hệ thống” đồng bộ mọi thiết bị qua CountAPI · tự tách theo tháng.</p>';
     box.innerHTML = html;
   }
 
