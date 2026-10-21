@@ -1100,7 +1100,6 @@ a { text-decoration: none; color: inherit; }
       </div>
       <div class="stats-class-block">
         <h3><span>🏫</span> Báo cáo theo lớp — <span id="stat-month-label">tháng này</span></h3>
-        <p class="stats-class-sub">Lượt nộp theo lớp trong tháng hiện tại: <b>thiết bị này</b> và <b>toàn hệ thống</b> (mọi máy, qua CountAPI).</p>
         <div id="class-month-stats">
           <p class="class-stats-empty">Chưa có dữ liệu nộp bài trong tháng.</p>
         </div>
@@ -1326,6 +1325,7 @@ a { text-decoration: none; color: inherit; }
         populateClassSelect();
         purgeHistoryIfNewDay();
         renderHistory();
+        renderClassMonthStats();
         showLoading(false);
         return;
       } catch (e) {
@@ -1850,7 +1850,7 @@ a { text-decoration: none; color: inherit; }
     });
 
     if (!keys.length) {
-      box.innerHTML = '<p class="class-stats-empty">Chưa có dữ liệu nộp bài trong tháng.</p>';
+      box.innerHTML = '<p class="class-stats-empty">Đang chờ danh sách lớp từ file Excel…</p>';
       return;
     }
 
@@ -1882,7 +1882,6 @@ a { text-decoration: none; color: inherit; }
       '<td class="col-count">' + totalLocal + '</td>' +
       '<td class="col-count">' + totalSys + '</td></tr>';
     html += '</tbody></table>';
-    html += '<p class="stats-class-sub" style="margin-top:8px;margin-bottom:0">“Toàn hệ thống” đồng bộ mọi thiết bị qua CountAPI · tự tách theo tháng.</p>';
     box.innerHTML = html;
   }
 
