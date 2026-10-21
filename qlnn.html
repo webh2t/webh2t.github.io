@@ -13728,7 +13728,7 @@ function renderReport() {
         var raw = (typeof resolveEntryContentText === "function") ? resolveEntryContentText(e) : (e.contentText || e.contentCode || "");
         var label = stripContentLbl(raw);
         var key = label.toLowerCase();
-        if (!byType[key]) byType[key] = { label: label, times: 0, names: {}, dates: {} };
+        if (!byType[key]) byType[key] = { label: label, times: 0, byStudent: {} };
         var t = Number(e.times) || 1;
         byType[key].times += t;
         total += t;
@@ -13737,14 +13737,32 @@ function renderReport() {
           var st = (students || []).find(function(s) { return String(s.id) === String(e.studentId); });
           nm = (st && st.name) || e.studentName || "";
         } catch (eN) { nm = e.studentName || ""; }
-        if (nm) byType[key].names[nm] = true;
+        if (!nm) nm = "—";
+        if (!byType[key].byStudent[nm]) byType[key].byStudent[nm] = { dates: {}, times: 0 };
+        byType[key].byStudent[nm].times += t;
         var d = fmtD(e.date);
-        if (d) byType[key].dates[d] = true;
+        if (d) byType[key].byStudent[nm].dates[d] = true;
       });
       var keys = Object.keys(byType).sort(function(a, b) {
         return byType[b].times - byType[a].times || a.localeCompare(b, "vi");
       });
       return { byType: byType, keys: keys, total: total };
+    }
+    function formatStudentDates(byStudent) {
+      return Object.keys(byStudent || {}).sort(function(a, b) { return a.localeCompare(b, "vi"); }).map(function(nm) {
+        var o = byStudent[nm];
+        var ds = Object.keys(o.dates || {}).sort();
+        // Sắp ngày theo năm-tháng-ngày thật (dd/mm/yyyy → so sánh ngược)
+        ds.sort(function(a, b) {
+          var pa = a.split("/"), pb = b.split("/");
+          if (pa.length === 3 && pb.length === 3) {
+            return (pa[2] + pa[1] + pa[0]).localeCompare(pb[2] + pb[1] + pb[0]);
+          }
+          return a.localeCompare(b);
+        });
+        var dateStr = ds.length ? " <span style=\"color:#64748b\">(" + ds.join(", ") + ")</span>" : "";
+        return '<div style="margin-bottom:3px;line-height:1.35"><b style="color:#0f172a">' + nm + "</b>" + dateStr + "</div>";
+      }).join("");
     }
 
     // ƯU ĐIỂM
@@ -13758,22 +13776,19 @@ function renderReport() {
       } else {
         var bRows = bonusAgg.keys.map(function(k, idx) {
           var o = bonusAgg.byType[k];
-          var names = Object.keys(o.names).sort(function(a, b) { return a.localeCompare(b, "vi"); }).join(", ");
-          var dates = Object.keys(o.dates).sort().join(", ");
           return '<tr style="border-bottom:1px solid #bbf7d0">' +
-            '<td class="py-1.5 px-2 text-center font-bold" style="color:#15803d;width:32px">' + (idx + 1) + '</td>' +
-            '<td class="py-1.5 px-2 font-semibold" style="color:#14532d;text-align:left">' + o.label + '</td>' +
-            '<td class="py-1.5 px-2 text-center font-bold" style="color:#16a34a;width:56px">' + o.times + '</td>' +
-            '<td class="py-1.5 px-2 text-xs" style="color:#334155;text-align:left">' + names +
-            (dates ? '<div style="color:#64748b;margin-top:2px">' + dates + '</div>' : '') + '</td></tr>';
+            '<td class="py-1.5 px-1 text-center font-bold" style="color:#15803d;width:4%">' + (idx + 1) + '</td>' +
+            '<td class="py-1.5 px-2 font-semibold" style="color:#14532d;text-align:left;width:28%">' + o.label + '</td>' +
+            '<td class="py-1.5 px-1 text-center font-bold" style="color:#16a34a;width:8%">' + o.times + '</td>' +
+            '<td class="py-1.5 px-2 text-xs" style="color:#334155;text-align:left;width:60%">' + formatStudentDates(o.byStudent) + '</td></tr>';
         }).join("");
         bTbl.innerHTML =
-          '<table class="w-full text-sm" style="border-collapse:collapse">' +
+          '<table class="w-full text-sm" style="border-collapse:collapse;table-layout:fixed">' +
           '<thead><tr style="background:#ecfdf5;color:#166534">' +
-          '<th class="py-1.5 px-2 text-center">#</th>' +
-          '<th class="py-1.5 px-2 text-left">Nội dung ưu điểm</th>' +
-          '<th class="py-1.5 px-2 text-center">Số lần</th>' +
-          '<th class="py-1.5 px-2 text-left">Học sinh · Ngày</th></tr></thead><tbody>' + bRows + '</tbody></table>';
+          '<th class="py-1.5 px-1 text-center" style="width:4%">#</th>' +
+          '<th class="py-1.5 px-2 text-left" style="width:28%">Nội dung ưu điểm</th>' +
+          '<th class="py-1.5 px-1 text-center" style="width:8%">Số lần</th>' +
+          '<th class="py-1.5 px-2 text-left" style="width:60%">Học sinh · Ngày</th></tr></thead><tbody>' + bRows + '</tbody></table>';
       }
     }
     var bCtx = document.getElementById("bonusContentChart");
@@ -13810,22 +13825,19 @@ function renderReport() {
       } else {
         var rows = violAgg.keys.map(function(k, idx) {
           var o = violAgg.byType[k];
-          var names = Object.keys(o.names).sort(function(a, b) { return a.localeCompare(b, "vi"); }).join(", ");
-          var dates = Object.keys(o.dates).sort().join(", ");
           return '<tr style="border-bottom:1px solid #fecaca">' +
-            '<td class="py-1.5 px-2 text-center font-bold" style="color:#b91c1c;width:32px">' + (idx + 1) + '</td>' +
-            '<td class="py-1.5 px-2 font-semibold" style="color:#7f1d1d;text-align:left">' + o.label + '</td>' +
-            '<td class="py-1.5 px-2 text-center font-bold" style="color:#dc2626;width:56px">' + o.times + '</td>' +
-            '<td class="py-1.5 px-2 text-xs" style="color:#334155;text-align:left">' + names +
-            (dates ? '<div style="color:#64748b;margin-top:2px">' + dates + '</div>' : '') + '</td></tr>';
+            '<td class="py-1.5 px-1 text-center font-bold" style="color:#b91c1c;width:4%">' + (idx + 1) + '</td>' +
+            '<td class="py-1.5 px-2 font-semibold" style="color:#7f1d1d;text-align:left;width:28%">' + o.label + '</td>' +
+            '<td class="py-1.5 px-1 text-center font-bold" style="color:#dc2626;width:8%">' + o.times + '</td>' +
+            '<td class="py-1.5 px-2 text-xs" style="color:#334155;text-align:left;width:60%">' + formatStudentDates(o.byStudent) + '</td></tr>';
         }).join("");
         tblEl.innerHTML =
-          '<table class="w-full text-sm" style="border-collapse:collapse">' +
+          '<table class="w-full text-sm" style="border-collapse:collapse;table-layout:fixed">' +
           '<thead><tr style="background:#fef2f2;color:#991b1b">' +
-          '<th class="py-1.5 px-2 text-center">#</th>' +
-          '<th class="py-1.5 px-2 text-left">Nội dung vi phạm</th>' +
-          '<th class="py-1.5 px-2 text-center">Lượt</th>' +
-          '<th class="py-1.5 px-2 text-left">Học sinh · Ngày (dd/mm/yyyy)</th></tr></thead><tbody>' + rows + '</tbody></table>';
+          '<th class="py-1.5 px-1 text-center" style="width:4%">#</th>' +
+          '<th class="py-1.5 px-2 text-left" style="width:28%">Nội dung vi phạm</th>' +
+          '<th class="py-1.5 px-1 text-center" style="width:8%">Lượt</th>' +
+          '<th class="py-1.5 px-2 text-left" style="width:60%">Học sinh · Ngày (dd/mm/yyyy)</th></tr></thead><tbody>' + rows + '</tbody></table>';
       }
     }
     var vCtx = document.getElementById("violContentChart");
