@@ -1932,68 +1932,60 @@ function qlnnWriteLocalStats(s) {
     localStorage.setItem("qlnn_pv_report", String(s.reportN || 0));
   } catch (e) {}
 }
+/** Mỗi F5 / tải trang = +1 lượt (GA4 G-JG88ZZBKGC + CountAPI webh2t-qlnn + local/tháng) */
 function qlnnTrackPageView() {
   var mk = qlnnMonthKey();
-  var countedKey = "qlnn_pv_counted_" + mk;
-  var already = false;
-  try { already = sessionStorage.getItem(countedKey) === "1"; } catch (e) {}
 
   function finish(total, monthN, reportN) {
     qlnnRenderPageStats(total, monthN, reportN);
   }
 
-  if (!firebaseReady || !db) {
-    var loc = qlnnReadLocalStats();
-    if (!already) {
-      loc.total += 1;
-      if (loc.month !== mk) { loc.month = mk; loc.monthN = 0; }
-      loc.monthN += 1;
-      try { sessionStorage.setItem(countedKey, "1"); } catch (e) {}
-      qlnnWriteLocalStats(loc);
-    }
-    finish(loc.total, loc.monthN, loc.reportN);
-    return;
+  // Local / tháng: luôn +1 mỗi lần tải trang
+  var loc = qlnnReadLocalStats();
+  loc.total += 1;
+  if (loc.month !== mk) { loc.month = mk; loc.monthN = 0; }
+  loc.monthN += 1;
+  qlnnWriteLocalStats(loc);
+
+  // Cloud (Firestore) — best effort, không chặn UI
+  if (firebaseReady && db) {
+    try {
+      var ref = db.collection("qlnn_stats").doc("pageviews");
+      ref.get().then(function(snap) {
+        var data = snap.exists ? (snap.data() || {}) : {};
+        var total = Number(data.total) || 0;
+        var month = data.month || mk;
+        var monthN = Number(data.monthN) || 0;
+        var reportN = Number(data.reportN) || 0;
+        if (month !== mk) { month = mk; monthN = 0; }
+        total += 1;
+        monthN += 1;
+        ref.set({
+          total: total,
+          month: month,
+          monthN: monthN,
+          reportN: reportN,
+          updatedAt: new Date().toISOString()
+        }, { merge: true }).catch(function(err) {
+          console.warn("[QLNN] stats cloud", err);
+        });
+      }).catch(function(err) {
+        console.warn("[QLNN] stats read", err);
+      });
+    } catch (eCloud) {}
   }
 
-  var ref = db.collection("qlnn_stats").doc("pageviews");
-  ref.get().then(function(snap) {
-    var data = snap.exists ? (snap.data() || {}) : {};
-    var total = Number(data.total) || 0;
-    var month = data.month || mk;
-    var monthN = Number(data.monthN) || 0;
-    var reportN = Number(data.reportN) || 0;
-    if (month !== mk) { month = mk; monthN = 0; }
-    if (!already) {
-      total += 1;
-      monthN += 1;
-      try { sessionStorage.setItem(countedKey, "1"); } catch (e) {}
-      ref.set({
-        total: total,
-        month: month,
-        monthN: monthN,
-        reportN: reportN,
-        updatedAt: new Date().toISOString()
-      }, { merge: true }).catch(function(err) {
-        console.warn("[QLNN] stats cloud", err);
-      });
-      qlnnWriteLocalStats({ total: total, month: month, monthN: monthN, reportN: reportN });
-    }
-    finish(total, monthN, reportN);
-  }).catch(function(err) {
-    console.warn("[QLNN] stats read", err);
-    var loc = qlnnReadLocalStats();
-    if (!already) {
-      loc.total += 1;
-      if (loc.month !== mk) { loc.month = mk; loc.monthN = 0; }
-      loc.monthN += 1;
-      try { sessionStorage.setItem(countedKey, "1"); } catch (e) {}
-      qlnnWriteLocalStats(loc);
-    }
-    finish(loc.total, loc.monthN, loc.reportN);
-  });
+  // Hiển thị: ưu tiên CountAPI (script cuối trang), tạm hiện local
+  finish(loc.total, loc.monthN, loc.reportN);
 
+  // GA4
   try {
     if (typeof gtag === "function") {
+      gtag("event", "page_view", {
+        page_title: document.title,
+        page_location: window.location.href,
+        send_to: "G-JG88ZZBKGC"
+      });
       gtag("event", "qlnn_page_view", {
         page_title: document.title,
         page_location: window.location.href
@@ -9889,54 +9881,66 @@ function reportExportHeaderLines(subtitle) {
   ];
 }
 
-/** Tải JPG: chèn tiêu đề căn giữa phía trên bảng — không viền xanh/khung trang trí */
+/**
+ * Tải JPG: 1 tiêu đề duy nhất (trường / GVCN / lớp / báo cáo)
+ * — không viền xanh, không lặp tiêu đề trong nội dung
+ */
 function downloadReportBoardJpg(elId, namePrefix, subtitle) {
   var el = document.getElementById(elId);
   if (!el) { alert("Chưa có bảng để tải"); return; }
   if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
   var lines = reportExportHeaderLines(subtitle || namePrefix || "");
   var wrap = document.createElement("div");
-  wrap.style.cssText = "background:#fff;padding:16px 20px;font-family:system-ui,sans-serif;color:#0f172a;border:none;outline:none;box-shadow:none;";
+  wrap.style.cssText = "background:#fff;padding:14px 18px;font-family:system-ui,sans-serif;color:#0f172a;border:none;outline:none;box-shadow:none;margin:0;";
   var head = document.createElement("div");
-  head.style.cssText = "text-align:center;margin-bottom:12px;border:none;border-bottom:1px solid #cbd5e1;padding-bottom:10px;box-shadow:none;";
+  head.style.cssText = "text-align:center;margin:0 0 10px 0;padding:0 0 8px 0;border:none;border-bottom:1px solid #e2e8f0;box-shadow:none;outline:none;background:transparent;";
   head.innerHTML =
-    '<div style="font-size:18px;font-weight:900;color:#7f1d1d;letter-spacing:0.04em">' + lines[0] + "</div>" +
-    '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-top:4px">' + lines[1] + "</div>" +
-    (lines[2] ? '<div style="font-size:14px;font-weight:800;color:#0369a1;margin-top:6px">' + lines[2] + "</div>" : "");
+    '<div style="font-size:17px;font-weight:900;color:#7f1d1d;letter-spacing:0.03em">' + (lines[0] || "") + "</div>" +
+    '<div style="font-size:12px;font-weight:700;color:#0c4a6e;margin-top:3px">' + (lines[1] || "") + "</div>" +
+    (lines[2] ? '<div style="font-size:13px;font-weight:800;color:#0369a1;margin-top:4px">' + lines[2] + "</div>" : "");
   wrap.appendChild(head);
+
   var clone = el.cloneNode(true);
-  clone.querySelectorAll(".no-print").forEach(function(n) { n.remove(); });
-  // Xóa khung viền xanh lá / xanh dương của week-board khi xuất ảnh
-  clone.style.border = "none";
-  clone.style.boxShadow = "none";
-  clone.style.outline = "none";
-  clone.style.background = "#ffffff";
-  clone.style.borderRadius = "0";
-  clone.style.padding = "0";
-  clone.classList.remove("week-board");
-  clone.querySelectorAll(".week-board, [class*='border'], [style*='border']").forEach(function(n) {
+  // Nút / điều khiển
+  clone.querySelectorAll(".no-print, button, .btn, [onclick]").forEach(function(n) {
+    try { n.remove(); } catch (e) {}
+  });
+  // Tiêu đề nội bộ trùng (nb-board-head) — bỏ để chỉ còn header xuất
+  clone.querySelectorAll(".nb-board-head, .nb-board-title").forEach(function(n) {
+    try { n.remove(); } catch (e) {}
+  });
+  // Gỡ khung week-board xanh lá / xanh dương
+  clone.className = (clone.className || "").replace(/\bweek-board\b/g, "").trim();
+  clone.removeAttribute("class");
+  clone.style.cssText = "background:#fff;border:none;outline:none;box-shadow:none;border-radius:0;padding:0;margin:0;";
+  Array.prototype.forEach.call(clone.querySelectorAll("*"), function(n) {
     if (n.tagName === "TABLE" || n.tagName === "TH" || n.tagName === "TD" || n.closest("table")) return;
     n.style.border = "none";
     n.style.boxShadow = "none";
     n.style.outline = "none";
   });
-  // Giữ viền nâu của bảng dữ liệu
+  // Giữ viền nâu bảng
   clone.querySelectorAll("table").forEach(function(tb) {
-    if (!tb.style.border || tb.style.border.indexOf("78350f") < 0) {
-      tb.style.border = "3px solid #78350f";
-    }
+    tb.style.border = "3px solid #78350f";
+    tb.style.borderCollapse = "collapse";
+    tb.style.width = "100%";
   });
   wrap.appendChild(clone);
   wrap.style.position = "fixed";
-  wrap.style.left = "-9999px";
+  wrap.style.left = "-12000px";
   wrap.style.top = "0";
-  wrap.style.width = Math.max(el.scrollWidth, 900) + "px";
+  wrap.style.width = Math.max(el.scrollWidth || 0, 960) + "px";
   document.body.appendChild(wrap);
-  html2canvas(wrap, { scale: 2, backgroundColor: "#ffffff" }).then(function(canvas) {
-    document.body.removeChild(wrap);
+  html2canvas(wrap, {
+    scale: 2,
+    backgroundColor: "#ffffff",
+    useCORS: true,
+    logging: false
+  }).then(function(canvas) {
+    try { document.body.removeChild(wrap); } catch (e) {}
     var a = document.createElement("a");
     a.download = (namePrefix || "BaoCao") + ".jpg";
-    a.href = canvas.toDataURL("image/jpeg", 0.92);
+    a.href = canvas.toDataURL("image/jpeg", 0.93);
     a.click();
   }).catch(function(e) {
     try { document.body.removeChild(wrap); } catch (err) {}
@@ -12062,8 +12066,8 @@ function renderNotebook() {
     var top3 = teamScores.slice(0, 3);
 
     html += '<div class="week-board mb-6" id="nbTeam' + team + '">';
-    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2">';
-    html += '<div class="text-center flex-1">';
+    html += '<div class="flex flex-wrap items-center justify-between gap-2 mb-2 nb-board-head">';
+    html += '<div class="text-center flex-1 nb-board-title">';
     html += '<div style="font-size:1.05rem;font-weight:800;color:#0c4a6e">' + title + ' · TỔ ' + team + '</div>';
     html += '<div style="font-size:0.85rem;color:#9f1239;font-weight:700">' + dateNote + ' · Lớp ' + cls + '</div>';
     html += '</div>';
@@ -15128,38 +15132,27 @@ updateClock(); setInterval(updateClock, 1000);;
 const fd = document.getElementById("fDate");
 if (fd) { fd.valueAsDate = new Date(); autoWeekday(); }
 </script>
-<!-- CountAPI – key webh2t-qlnn (đồng bộ lượt xem) -->
+<!-- CountAPI – key webh2t-qlnn · mỗi F5 = +1 (hit) · GA4 G-JG88ZZBKGC -->
 <script>
-  fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-qlnn')
+(function () {
+  function setTotal(n) {
+    if (n == null || n === "") return;
+    var el = document.getElementById("totalViews")
+      || document.querySelector("[data-total-views]")
+      || document.getElementById("statTotalViews");
+    if (!el) return;
+    el.textContent = (typeof n === "number") ? n.toLocaleString("vi-VN") : String(n);
+    try { el.setAttribute("data-countapi", "1"); } catch (e) {}
+  }
+  // hit = tăng 1 mỗi lần tải trang
+  fetch("https://countapi.mileshilliard.com/api/v1/hit/webh2t-qlnn")
     .then(function (r) { return r.json(); })
     .then(function (d) {
-      var n = d && d.value;
-      console.log('QLNN views (CountAPI):', n);
-      var candidates = [
-        document.getElementById('totalViews'),
-        document.querySelector('[data-total-views]'),
-        document.querySelector('.stat-total .num'),
-        document.querySelector('.analytics-total'),
-        document.getElementById('statTotalViews')
-      ];
-      document.querySelectorAll('div, span, p, strong, h3, h4').forEach(function (el) {
-        if (el.children.length === 0 && /tổng\s*lượt\s*xem/i.test(el.textContent || '')) {
-          var box = el.parentElement;
-          if (box) {
-            var num = box.querySelector('.qlnn-stat-value, div, span, strong, b, p');
-            if (num && num !== el) candidates.unshift(num);
-          }
-        }
-      });
-      for (var i = 0; i < candidates.length; i++) {
-        if (candidates[i]) {
-          candidates[i].textContent = (typeof n === 'number' ? n.toLocaleString('vi-VN') : n);
-          try { candidates[i].setAttribute('data-countapi', '1'); } catch (e) {}
-          break;
-        }
-      }
+      console.log("QLNN views (CountAPI webh2t-qlnn):", d && d.value);
+      setTotal(d && d.value);
     })
-    .catch(function () {});
+    .catch(function (e) { console.warn("CountAPI:", e); });
+})();
 </script>
 </body>
 </html>
