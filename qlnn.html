@@ -9864,8 +9864,10 @@ function getReportMeta() {
       }
     });
   } catch (e) {}
+  var sch = (schoolName || "THPT HÀ HUY TẬP").toUpperCase().replace(/^TRƯỜNG\s+/i, "").trim();
   return {
-    school: (schoolName || "THPT HÀ HUY TẬP").toUpperCase(),
+    school: "TRƯỜNG " + sch,
+    schoolShort: sch,
     gvcn: (gvcnLabel || "—").toUpperCase(),
     lop: (clsName || "—").toUpperCase(),
     year: yearLabel || "2026-2027"
@@ -9881,23 +9883,43 @@ function reportExportHeaderLines(subtitle) {
   ];
 }
 
+/** Tiêu đề JPG tổ: TRƯỜNG … / BÁO CÁO SƠ KẾT … / TỔ n từ … – … */
+function reportTeamExportHeaderLines(team, scope, title, dateNote) {
+  var m = getReportMeta();
+  var line2 = String(title || "").trim();
+  if (!line2) {
+    if (scope === "month") line2 = "BÁO CÁO SƠ KẾT THÁNG";
+    else if (scope === "hk" || scope === "hk1" || scope === "hk2") line2 = "BÁO CÁO SƠ KẾT HỌC KỲ";
+    else if (scope === "year") line2 = "BÁO CÁO SƠ KẾT CẢ NĂM";
+    else line2 = "BÁO CÁO SƠ KẾT TUẦN";
+  }
+  // Chuẩn hóa: bỏ phần · TỔ / Lớp thừa nếu subtitle cũ lọt vào
+  line2 = line2.replace(/\s*·\s*TỔ\s*\d+.*/i, "").replace(/\s*·\s*Lớp\s+.*/i, "").trim();
+  var dates = String(dateNote || "").replace(/^\(|\)$/g, "").trim();
+  // dateNote dạng "19/10/2026 – 24/10/2026" hoặc "(19/10… – 24/10…)"
+  var line3 = "TỔ " + team + (dates ? " từ " + dates : "");
+  return [m.school, line2, line3];
+}
+
 /**
  * Tải JPG: 1 tiêu đề duy nhất (trường / GVCN / lớp / báo cáo)
  * — không viền xanh, không lặp tiêu đề trong nội dung
  */
-function downloadReportBoardJpg(elId, namePrefix, subtitle) {
+function downloadReportBoardJpg(elId, namePrefix, subtitle, headerLinesOpt) {
   var el = document.getElementById(elId);
   if (!el) { alert("Chưa có bảng để tải"); return; }
   if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
-  var lines = reportExportHeaderLines(subtitle || namePrefix || "");
+  var lines = (headerLinesOpt && headerLinesOpt.length) ? headerLinesOpt : reportExportHeaderLines(subtitle || namePrefix || "");
+  // Đảm bảo dòng 1 có "TRƯỜNG"
+  if (lines[0] && !/^TRƯỜNG\s+/i.test(lines[0])) lines[0] = "TRƯỜNG " + String(lines[0]).replace(/^TRƯỜNG\s+/i, "");
   var wrap = document.createElement("div");
   wrap.style.cssText = "background:#fff;padding:14px 18px;font-family:system-ui,sans-serif;color:#0f172a;border:none;outline:none;box-shadow:none;margin:0;";
   var head = document.createElement("div");
   head.style.cssText = "text-align:center;margin:0 0 10px 0;padding:0 0 8px 0;border:none;border-bottom:1px solid #e2e8f0;box-shadow:none;outline:none;background:transparent;";
   head.innerHTML =
-    '<div style="font-size:17px;font-weight:900;color:#7f1d1d;letter-spacing:0.03em">' + (lines[0] || "") + "</div>" +
-    '<div style="font-size:12px;font-weight:700;color:#0c4a6e;margin-top:3px">' + (lines[1] || "") + "</div>" +
-    (lines[2] ? '<div style="font-size:13px;font-weight:800;color:#0369a1;margin-top:4px">' + lines[2] + "</div>" : "");
+    '<div style="font-size:18px;font-weight:900;color:#7f1d1d;letter-spacing:0.04em">' + (lines[0] || "") + "</div>" +
+    '<div style="font-size:14px;font-weight:800;color:#0369a1;margin-top:5px">' + (lines[1] || "") + "</div>" +
+    (lines[2] ? '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-top:4px">' + lines[2] + "</div>" : "");
   wrap.appendChild(head);
 
   var clone = el.cloneNode(true);
@@ -12408,14 +12430,28 @@ function renderHonorBoard(opt) {
     else periodLine = "HỌC KỲ 1 · NĂM HỌC " + year;
   }
 
-  var top = allScores.slice(0, 3);
+  // Vinh danh: điểm cao nhất trong top 5 đủ điều kiện
+  // — 0 lần vi phạm (cho phép tối đa 1 lần vắng có phép v01)
+  function honorEligible(sid) {
+    if (!sid) return false;
+    var st = (typeof countViolStatsForRank === "function")
+      ? countViolStatsForRank(sid, weekNos)
+      : { totalVp: 0, absent_perm: 0, v01: 0 };
+    var perm = Number(st.absent_perm || st.v01 || 0);
+    var other = Number(st.totalVp || 0) - perm;
+    if (other < 0) other = 0;
+    return other === 0 && perm <= 1;
+  }
+  var eligible = (allScores || []).filter(function(x) {
+    return honorEligible(x && x.id);
+  }).slice(0, 5);
+  var top = eligible.slice(0, 3);
   while (top.length < 3) top.push({ id: "", name: "……………………", team: "", score: "—" });
 
   function podiumInfo(x) {
     var name = x && x.name ? x.name : "……………………";
     var score = (x && x.score != null && x.score !== "") ? x.score : "—";
     var team = x && x.team ? ("Tổ " + x.team) : "";
-    // Chỉ điểm — không xếp loại / sao
     var thanhTich = (score !== "—" ? score + " điểm" : "—");
     return { name: name, score: score, team: team, thanhTich: thanhTich };
   }
@@ -12498,15 +12534,15 @@ function renderHonorBoard(opt) {
 
   h += '<div style="position:relative;z-index:1;padding:24px 20px 0">';
 
-  // HEADER
+  // HEADER — TRƯỜNG trên cùng
   h += '<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:4px">';
   h += '<img src="' + logoSrc + '" alt="Logo" style="width:82px;height:82px;object-fit:contain;border-radius:50%;background:#fff;border:3px solid #0c4a6e;box-shadow:0 4px 14px rgba(12,74,110,0.28);flex-shrink:0" onerror="this.style.display=\'none\'"/>';
   h += '<div style="text-align:center">';
+  h += '<div style="font-size:20px;font-weight:900;color:#7f1d1d;letter-spacing:0.06em;line-height:1.2;margin-bottom:4px">' + school + '</div>';
   h += '<div style="font-size:12px;font-weight:700;color:#92400e;letter-spacing:0.28em;margin-bottom:4px">★ ★ ★</div>';
-  h += '<div style="font-size:26px;font-weight:900;color:#b45309;letter-spacing:0.07em;line-height:1.15;text-shadow:0 1px 0 #fff,0 3px 10px rgba(180,83,9,0.28)">VINH DANH HỌC SINH XUẤT SẮC</div>';
-  // Tháng / Học kỳ — to, màu xanh dương
-  h += '<div style="font-size:22px;font-weight:900;color:#1d4ed8;margin-top:10px;letter-spacing:0.06em;text-shadow:0 1px 0 #dbeafe">' + periodLine + '</div>';
-  h += '<div style="font-size:24px;font-weight:900;color:#dc2626;margin-top:6px;letter-spacing:0.08em">LỚP ' + cls + '</div>';
+  h += '<div style="font-size:24px;font-weight:900;color:#b45309;letter-spacing:0.07em;line-height:1.15;text-shadow:0 1px 0 #fff,0 3px 10px rgba(180,83,9,0.28)">VINH DANH HỌC SINH XUẤT SẮC</div>';
+  h += '<div style="font-size:20px;font-weight:900;color:#1d4ed8;margin-top:10px;letter-spacing:0.06em;text-shadow:0 1px 0 #dbeafe">' + periodLine + '</div>';
+  h += '<div style="font-size:22px;font-weight:900;color:#dc2626;margin-top:6px;letter-spacing:0.08em">LỚP ' + cls + '</div>';
   if (dateNote) h += '<div style="font-size:12px;font-weight:600;color:#64748b;margin-top:4px">' + dateNote + '</div>';
   h += '</div>';
   h += '<div style="width:82px;flex-shrink:0"></div>';
@@ -12523,16 +12559,15 @@ function renderHonorBoard(opt) {
 
   h += '<div style="text-align:center;margin:16px 10px 20px;padding:10px 18px;font-size:15px;font-weight:800;color:#9f1239;letter-spacing:0.07em;background:linear-gradient(90deg,transparent,rgba(254,243,199,0.9),transparent);border-radius:8px">✦ CHÚC MỪNG CÁC BẠN ĐÃ CÓ NỖ LỰC VƯỢT BẬC! ✦</div>';
 
-  // FOOTER nền trắng (không đỏ)
+  // FOOTER nền trắng — chữ ký GVCN (không ghi họ tên chữ)
   h += '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin:0 -20px;padding:18px 32px 22px;background:#ffffff;border-top:3px solid #d4a017;box-shadow:inset 0 1px 0 #fef3c7">';
   h += '<div style="text-align:left">';
-  h += '<div style="font-size:15px;font-weight:900;color:#0c4a6e;letter-spacing:0.06em">' + school + '</div>';
+  h += '<div style="font-size:14px;font-weight:800;color:#0c4a6e;letter-spacing:0.05em">LỚP ' + cls + ' · NH ' + year + '</div>';
   h += '<div style="width:160px;height:2px;background:linear-gradient(90deg,#d4a017,#fef3c7);margin-top:12px"></div>';
   h += '</div>';
   h += '<div style="text-align:center;min-width:160px">';
   h += '<div style="font-size:12px;font-weight:800;color:#0c4a6e;letter-spacing:0.1em">GIÁO VIÊN CHỦ NHIỆM</div>';
-  h += '<img src="' + signSrc + '" alt="Chữ ký" style="max-height:58px;max-width:160px;object-fit:contain;display:block;margin:6px auto 2px" onerror="this.style.display=\'none\'"/>';
-  h += '<div style="font-size:14px;font-weight:900;color:#0f172a;margin-top:2px">' + (gvcn || "………………") + '</div>';
+  h += '<img src="' + signSrc + '" alt="Chữ ký" style="max-height:64px;max-width:170px;object-fit:contain;display:block;margin:8px auto 4px" onerror="this.style.display=\'none\'"/>';
   h += '</div>';
   h += '</div>';
 
@@ -12567,9 +12602,24 @@ function downloadHonorBoardJpg() {
 
 function downloadNbTeamJpg(team) {
   var meta = window._nbExport || {};
-  var sub = (meta.title || "") + " · TỔ " + team + (meta.dateNote ? " · " + meta.dateNote : "");
+  var scope = meta.scope || "week";
+  var title = meta.title || meta.soKetTitle || "";
+  // Chuẩn hóa tiêu đề: "BÁO CÁO SƠ KẾT TUẦN 7" / THÁNG / HỌC KỲ / CẢ NĂM
+  if (!title) {
+    if (scope === "month") title = "BÁO CÁO SƠ KẾT THÁNG";
+    else if (scope === "hk") title = "BÁO CÁO SƠ KẾT HỌC KỲ";
+    else if (scope === "year") title = "BÁO CÁO SƠ KẾT CẢ NĂM";
+    else title = "BÁO CÁO SƠ KẾT TUẦN";
+  }
+  title = String(title).replace(/\s*·\s*TỔ\s*\d+.*/i, "").trim();
+  var dateNote = meta.dateNote || "";
+  // Bỏ ngoặc nếu có
+  dateNote = String(dateNote).replace(/^\(|\)$/g, "").replace(/^từ\s+/i, "").trim();
+  var lines = typeof reportTeamExportHeaderLines === "function"
+    ? reportTeamExportHeaderLines(team, scope, title, dateNote)
+    : [("TRƯỜNG " + ((meta.school || "THPT HÀ HUY TẬP").replace(/^TRƯỜNG\s+/i, ""))).toUpperCase(), title, "TỔ " + team + (dateNote ? " từ " + dateNote : "")];
   if (typeof downloadReportBoardJpg === "function") {
-    downloadReportBoardJpg("nbTeam" + team, "NB_To" + team + "_" + (meta.scope || "week"), sub);
+    downloadReportBoardJpg("nbTeam" + team, "NB_To" + team + "_" + scope, title, lines);
   }
 }
 
