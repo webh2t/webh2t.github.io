@@ -4911,16 +4911,16 @@ function rankObj(label) {
 }
 /**
  * Xếp loại theo điểm (tuần / TB tháng / TB học kỳ)
- * - XUẤT SẮC: điểm > 180 (và trần VP: Số VP = 0)
- * - TỐT: 110 – 180
+ * - XUẤT SẮC: điểm ≥ 120 (và trần VP tuần: Số VP = 0)
+ * - Có từ 1 VP trở lên → tối đa TỐT (weekViolationCaps)
+ * - TỐT: 110 – 119
  * - KHÁ: 100 – 109
  * - ĐẠT: 90 – 99
  * - CHƯA ĐẠT: < 90
- * Ví dụ tuần: 168đ + 0 VP → TỐT (không đủ >180)
  */
 function rankClassByScore(s) {
   s = Number(s) || 0;
-  if (s > 180) return rankObj("XUẤT SẮC");
+  if (s >= 120) return rankObj("XUẤT SẮC");
   if (s >= 110) return rankObj("TỐT");
   if (s >= 100) return rankObj("KHÁ");
   if (s >= 90) return rankObj("ĐẠT");
@@ -9889,16 +9889,16 @@ function reportExportHeaderLines(subtitle) {
   ];
 }
 
-/** Tải JPG: chèn tiêu đề căn giữa phía trên bảng */
+/** Tải JPG: chèn tiêu đề căn giữa phía trên bảng — không viền xanh/khung trang trí */
 function downloadReportBoardJpg(elId, namePrefix, subtitle) {
   var el = document.getElementById(elId);
   if (!el) { alert("Chưa có bảng để tải"); return; }
   if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
   var lines = reportExportHeaderLines(subtitle || namePrefix || "");
   var wrap = document.createElement("div");
-  wrap.style.cssText = "background:#fff;padding:16px 20px;font-family:system-ui,sans-serif;color:#0f172a;";
+  wrap.style.cssText = "background:#fff;padding:16px 20px;font-family:system-ui,sans-serif;color:#0f172a;border:none;outline:none;box-shadow:none;";
   var head = document.createElement("div");
-  head.style.cssText = "text-align:center;margin-bottom:12px;border-bottom:2px solid #0c4a6e;padding-bottom:10px;";
+  head.style.cssText = "text-align:center;margin-bottom:12px;border:none;border-bottom:1px solid #cbd5e1;padding-bottom:10px;box-shadow:none;";
   head.innerHTML =
     '<div style="font-size:18px;font-weight:900;color:#7f1d1d;letter-spacing:0.04em">' + lines[0] + "</div>" +
     '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-top:4px">' + lines[1] + "</div>" +
@@ -9906,6 +9906,26 @@ function downloadReportBoardJpg(elId, namePrefix, subtitle) {
   wrap.appendChild(head);
   var clone = el.cloneNode(true);
   clone.querySelectorAll(".no-print").forEach(function(n) { n.remove(); });
+  // Xóa khung viền xanh lá / xanh dương của week-board khi xuất ảnh
+  clone.style.border = "none";
+  clone.style.boxShadow = "none";
+  clone.style.outline = "none";
+  clone.style.background = "#ffffff";
+  clone.style.borderRadius = "0";
+  clone.style.padding = "0";
+  clone.classList.remove("week-board");
+  clone.querySelectorAll(".week-board, [class*='border'], [style*='border']").forEach(function(n) {
+    if (n.tagName === "TABLE" || n.tagName === "TH" || n.tagName === "TD" || n.closest("table")) return;
+    n.style.border = "none";
+    n.style.boxShadow = "none";
+    n.style.outline = "none";
+  });
+  // Giữ viền nâu của bảng dữ liệu
+  clone.querySelectorAll("table").forEach(function(tb) {
+    if (!tb.style.border || tb.style.border.indexOf("78350f") < 0) {
+      tb.style.border = "3px solid #78350f";
+    }
+  });
   wrap.appendChild(clone);
   wrap.style.position = "fixed";
   wrap.style.left = "-9999px";
@@ -10210,7 +10230,7 @@ function renderWeekMonthBoards(list, agg) {
     html += '</tbody></table></div>';
     html += rankStatsHtml(scoredM);
     html += (_skipViolBoard ? "" : violStatsHtml(list, new Set(pool.map(s => String(s.id)))));
-    html += '<div class="legend-box mt-1 text-xs"><b>Thang điểm (tuần / TB tháng):</b> &gt;180 XS · 110–180 Tốt · 100–109 Khá · 90–99 Đạt · &lt;90 Chưa đạt · <b>+ trần VP</b> (XS cần 0 VP)</div></div>';
+    html += '<div class="legend-box mt-1 text-xs"><b>Thang điểm (tuần / TB tháng):</b> ≥120 XS · 110–119 Tốt · 100–109 Khá · 90–99 Đạt · &lt;90 Chưa đạt · <b>+ trần VP</b> (có ≥1 VP → tối đa TỐT)</div></div>';
     box.innerHTML = html;
     box.classList.remove("hidden");
   } else if (period === "hk1" || period === "hk2") {
