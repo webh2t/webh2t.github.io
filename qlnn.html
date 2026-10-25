@@ -12486,13 +12486,20 @@ function renderHonorBoard(opt) {
   });
   while (top.length < 3) top.push({ id: "", name: "……………………", team: "", score: "—" });
 
+  /** Tách tên ≥3 từ → 2 hàng (dùng div, ổn định khi xuất JPG):
+   *  3 chữ: DIỆP / MINH HUY
+   *  4 chữ: NGUYỄN NHẬT / YẾN MY
+   */
   function splitNameHtml(name) {
-    var parts = String(name || "").trim().split(/\s+/).filter(Boolean);
-    if (parts.length >= 4) {
-      var mid = (parts.length === 4) ? 2 : Math.ceil(parts.length / 2);
-      return parts.slice(0, mid).join(" ") + "<br>" + parts.slice(mid).join(" ");
+    var parts = String(name || "").trim().replace(/\s+/g, " ").split(" ").filter(Boolean);
+    if (parts.length >= 3) {
+      var mid = (parts.length === 3) ? 1 : (parts.length === 4 ? 2 : Math.ceil(parts.length / 2));
+      var line1 = parts.slice(0, mid).join(" ");
+      var line2 = parts.slice(mid).join(" ");
+      return '<div style="display:block;line-height:1.22">' + line1 + '</div>'
+        + '<div style="display:block;line-height:1.22">' + line2 + '</div>';
     }
-    return parts.join(" ") || "……………………";
+    return '<div style="display:block">' + (parts.join(" ") || "……………………") + '</div>';
   }
   function infoOf(x) {
     return {
@@ -12539,7 +12546,7 @@ function renderHonorBoard(opt) {
     s += '<div style="display:block;margin:0 auto;width:fit-content;background:' + hangBg + ';color:#fff;font-size:12px;font-weight:900;letter-spacing:0.1em;padding:5px 16px;border-radius:999px;text-align:center">' + hang + '</div>';
     s += '</div>';
     s += '<div style="padding:6px 12px 18px;text-align:center">';
-    s += '<div style="font-size:17px;font-weight:900;color:#0f172a;line-height:1.35;min-height:2.7em;text-align:center">' + info.nameHtml + '</div>';
+    s += '<div style="font-size:17px;font-weight:900;color:#0f172a;line-height:1.25;min-height:2.6em;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center">' + info.nameHtml + '</div>';
     if (info.team) s += '<div style="margin:8px auto 0;display:block;width:fit-content;background:#fff;border:1px solid ' + cardBd + ';color:#334155;font-size:12px;font-weight:700;padding:2px 14px;border-radius:999px;text-align:center">' + info.team + '</div>';
     s += '<div style="height:1px;background:linear-gradient(90deg,transparent,' + cardBd + ',transparent);margin:12px 8px"></div>';
     s += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.1em;text-align:center">THÀNH TÍCH</div>';
@@ -12590,7 +12597,7 @@ function renderHonorBoard(opt) {
   h += '<div style="text-align:right">';
   h += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.08em">GIÁO VIÊN CHỦ NHIỆM</div>';
   // Chữ ký gốc mực xanh đậm (bút lông) — không filter làm nhạt
-  h += '<img src="' + signSrc + '" alt="CK" crossorigin="anonymous" style="max-height:56px;max-width:150px;object-fit:contain;display:block;margin:6px 0 0 auto;filter:none;-webkit-filter:none" onerror="this.style.display=\'none\'"/>';
+  h += '<img src="' + signSrc + '" alt="CK" crossorigin="anonymous" style="max-height:58px;max-width:160px;object-fit:contain;display:block;margin:6px 0 0 auto;filter:contrast(1.35) brightness(0.72) saturate(1.4);-webkit-filter:contrast(1.35) brightness(0.72) saturate(1.4)" onerror="this.style.display=\'none\'"/>';
   h += '</div></div>';
 
   h += '</div>';
