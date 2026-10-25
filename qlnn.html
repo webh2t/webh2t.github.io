@@ -999,10 +999,29 @@ button[onclick="doParentReportLogin()"] {
   text-align: center !important;
   vertical-align: middle !important;
   border: none !important;
+  background: transparent !important;
 }
-#nbHonorBoard img.honor-sign {
-  filter: contrast(1.55) brightness(0.78) !important;
-  -webkit-filter: contrast(1.55) brightness(0.78) !important;
+#nbHonorBoard table.honor-pill,
+#nbHonorBoard table.honor-pill td {
+  width: auto !important;
+  max-width: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+}
+#nbHonorBoard .honor-pill-wrap {
+  text-align: center !important;
+  width: 100% !important;
+}
+#nbHonorBoard .honor-pill-badge {
+  display: inline-block !important;
+  width: auto !important;
+  max-width: 90% !important;
+  margin: 0 auto !important;
+  white-space: nowrap !important;
+  text-align: center !important;
+  box-sizing: border-box !important;
 }
 </style>
 </head>
@@ -12573,15 +12592,15 @@ function renderHonorBoard(opt) {
     s += '<table class="honor-medal" style="width:70px;height:70px;margin:0 auto -22px;border-collapse:collapse;border-radius:50%;overflow:hidden;background:' + medalBg + ';border:4px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,0.18);position:relative;z-index:2">';
     s += '<tr><td style="width:70px;height:70px;text-align:center;vertical-align:middle;font-size:32px;font-weight:900;color:#fff;line-height:1;padding:0;border:none;background:transparent;text-shadow:0 2px 4px rgba(0,0,0,0.3)">' + rank + '</td></tr></table>';
     s += '<div style="width:100%;border-radius:20px;overflow:hidden;border:3px solid ' + cardBd + ';background:' + cardBg + ';box-shadow:0 12px 28px rgba(0,0,0,0.12);text-align:center">';
-    s += '<div style="padding:28px 12px 6px;text-align:center">';
-    // Hạng: căn giữa khung
-    s += '<table style="margin:0 auto;border-collapse:collapse"><tr><td style="background:' + hangBg + ';color:#fff;font-size:12px;font-weight:900;letter-spacing:0.1em;padding:5px 16px;border-radius:999px;text-align:center;border:none">' + hang + '</td></tr></table>';
+    s += '<div class="honor-pill-wrap" style="padding:28px 12px 6px;text-align:center">';
+    s += '<span class="honor-pill-badge" style="background:' + hangBg + ';color:#fff;font-size:12px;font-weight:900;letter-spacing:0.1em;padding:5px 18px;border-radius:999px">' + hang + '</span>';
     s += '</div>';
     s += '<div style="padding:6px 12px 18px;text-align:center">';
     s += '<div style="font-size:17px;font-weight:900;color:#0f172a;min-height:2.8em;text-align:center;padding:0 4px">' + info.nameHtml + '</div>';
-    // Tổ: căn giữa khung
     if (info.team) {
-      s += '<table style="margin:8px auto 0;border-collapse:collapse"><tr><td style="background:#fff;border:1px solid ' + cardBd + ';color:#334155;font-size:12px;font-weight:700;padding:2px 14px;border-radius:999px;text-align:center">' + info.team + '</td></tr></table>';
+      s += '<div class="honor-pill-wrap" style="margin-top:8px;text-align:center">';
+      s += '<span class="honor-pill-badge" style="background:#fff;border:1.5px solid ' + cardBd + ';color:#334155;font-size:12px;font-weight:700;padding:3px 16px;border-radius:999px">' + info.team + '</span>';
+      s += '</div>';
     }
     s += '<div style="height:1px;background:linear-gradient(90deg,transparent,' + cardBd + ',transparent);margin:12px 8px"></div>';
     s += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.1em;text-align:center">THÀNH TÍCH</div>';
@@ -12631,8 +12650,9 @@ function renderHonorBoard(opt) {
   h += '<div style="color:#ca8a04;font-size:16px">📖 ★ ★</div>';
   h += '<div style="text-align:right">';
   h += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.08em">GIÁO VIÊN CHỦ NHIỆM</div>';
-  // Chữ ký gốc mực xanh đậm (bút lông) — không filter làm nhạt
-  h += '<img class="honor-sign" src="' + signSrc + '" alt="CK" crossorigin="anonymous" style="max-height:64px;max-width:170px;object-fit:contain;display:block;margin:6px 0 0 auto;filter:contrast(1.55) brightness(0.78);-webkit-filter:contrast(1.55) brightness(0.78)" onerror="this.style.display=\'none\'"/>';  h += '</div></div>';
+  // Chữ ký: không dùng CSS filter (html2canvas bỏ qua) — làm đậm pixel khi tải JPG
+  h += '<img class="honor-sign" src="' + signSrc + '" alt="CK" crossorigin="anonymous" style="max-height:64px;max-width:170px;object-fit:contain;display:block;margin:6px 0 0 auto" onerror="this.style.display=\'none\'"/>';
+  h += '</div></div>';
 
   h += '</div>';
 
@@ -12644,6 +12664,37 @@ function renderHonorBoard(opt) {
   return h;
 }
 
+/** Làm đậm mực xanh chữ ký (pixel) — html2canvas không áp CSS filter */
+function darkenHonorSignToDataUrl(img) {
+  try {
+    if (!img || !img.naturalWidth) return null;
+    var c = document.createElement("canvas");
+    c.width = img.naturalWidth;
+    c.height = img.naturalHeight;
+    var ctx = c.getContext("2d");
+    ctx.drawImage(img, 0, 0);
+    var id = ctx.getImageData(0, 0, c.width, c.height);
+    var p = id.data;
+    for (var i = 0; i < p.length; i += 4) {
+      if (p[i + 3] < 8) continue;
+      var r = p[i], g = p[i + 1], b = p[i + 2], a = p[i + 3];
+      var avg = (r + g + b) / 3;
+      if (avg > 245 && a < 40) continue;
+      // contrast + tối + lệch xanh mực bút
+      r = (r - 128) * 1.55 + 128;
+      g = (g - 128) * 1.55 + 128;
+      b = (b - 128) * 1.55 + 128;
+      r = Math.max(0, Math.min(255, r * 0.55));
+      g = Math.max(0, Math.min(255, g * 0.5));
+      b = Math.max(0, Math.min(255, b * 0.75 + 28));
+      a = Math.min(255, a * 1.45);
+      p[i] = r; p[i + 1] = g; p[i + 2] = b; p[i + 3] = a;
+    }
+    ctx.putImageData(id, 0, 0);
+    return c.toDataURL("image/png");
+  } catch (e) { return null; }
+}
+
 function downloadHonorBoardJpg() {
   var el = document.getElementById("nbHonorBoard");
   if (!el) { alert("Chưa có bảng vinh danh"); return; }
@@ -12651,7 +12702,17 @@ function downloadHonorBoardJpg() {
   var meta = window._nbExport || {};
   var btns = el.querySelectorAll(".no-print");
   btns.forEach(function(b) { b.style.display = "none"; });
-  // Chụp đúng DOM đang hiển thị trên web (không clone / không đổi style)
+  var sign = el.querySelector("img.honor-sign");
+  var origSrc = sign ? sign.getAttribute("src") : null;
+  if (sign && sign.complete && sign.naturalWidth) {
+    var dark = darkenHonorSignToDataUrl(sign);
+    if (dark) sign.src = dark;
+  }
+  function finish(err) {
+    if (sign && origSrc) sign.src = origSrc;
+    btns.forEach(function(b) { b.style.display = ""; });
+    if (err) alert("Không tạo được ảnh: " + (err && err.message ? err.message : err));
+  }
   html2canvas(el, {
     scale: 3,
     useCORS: true,
@@ -12660,14 +12721,13 @@ function downloadHonorBoardJpg() {
     logging: false,
     imageTimeout: 8000
   }).then(function(canvas) {
-    btns.forEach(function(b) { b.style.display = ""; });
+    finish();
     var a = document.createElement("a");
     a.href = canvas.toDataURL("image/jpeg", 0.95);
     a.download = "VinhDanh_Top3_" + (meta.cls || "11B9") + "_" + (meta.scope || "month") + ".jpg";
     a.click();
   }).catch(function(e) {
-    btns.forEach(function(b) { b.style.display = ""; });
-    alert("Không tạo được ảnh: " + (e && e.message ? e.message : e));
+    finish(e);
   });
 }
 
