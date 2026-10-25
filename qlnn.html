@@ -12458,32 +12458,31 @@ function renderHonorBoard(opt) {
     return { total: total, perm: perm, other: other };
   }
 
-  // Top theo điểm. Hạng 1: 0 VP. Hạng 2/3: 0 VP khác & ≤1 vắng phép, hoặc tổng ≤1 VP (điểm cao nhất có 1 VP → hạng 2)
-  var zeroVp = [];
-  var softVp = [];
-  (allScores || []).forEach(function(x) {
-    var v = violOf(x && x.id);
-    if (v.total === 0) zeroVp.push(x);
-    else if (v.other === 0 && v.perm <= 1) softVp.push(x);
-    else if (v.total <= 1) softVp.push(x);
-  });
+  /**
+   * Xếp Vinh danh (vd tháng 10):
+   * - Hạng 1: điểm cao nhất trong nhóm 0 VP → YẾN MY 724
+   * - Hạng 2: nếu HS điểm cao nhất cả lớp có ≤1 VP → HUY 818 (1 VP); không thì 0 VP tiếp theo
+   * - Hạng 3: 0 VP tiếp theo → THANH THƯ 582
+   * (HS ≥2 VP không vào top)
+   */
+  var list = allScores || [];
+  var zeroVp = list.filter(function(x) { return violOf(x && x.id).total === 0; });
   var top = [];
-  if (zeroVp.length) top.push(zeroVp[0]);
   var used = {};
-  top.forEach(function(x) { if (x && x.id) used[String(x.id)] = 1; });
-  // ghép zeroVp còn lại + softVp (điểm cao có 1 VP vào hạng 2+)
-  zeroVp.concat(softVp).forEach(function(x) {
-    if (top.length >= 3) return;
-    if (!x || !x.id || used[String(x.id)]) return;
+  function take(x) {
+    if (!x || !x.id || used[String(x.id)] || top.length >= 3) return;
     used[String(x.id)] = 1;
     top.push(x);
-  });
-  // fallback: top điểm nếu thiếu
-  (allScores || []).forEach(function(x) {
+  }
+  // Hạng 1: 0 VP điểm cao nhất
+  if (zeroVp[0]) take(zeroVp[0]);
+  // Hạng 2: điểm cao nhất toàn lớp nếu ≤1 VP (vd HUY), ưu tiên trước các 0 VP còn lại
+  if (list[0] && violOf(list[0].id).total <= 1) take(list[0]);
+  // Hạng 3 (+ đủ slot): lần lượt 0 VP rồi ≤1 VP theo thứ tự điểm
+  list.forEach(function(x) {
     if (top.length >= 3) return;
-    if (!x || !x.id || used[String(x.id)]) return;
-    used[String(x.id)] = 1;
-    top.push(x);
+    var v = violOf(x && x.id);
+    if (v.total === 0 || v.total <= 1) take(x);
   });
   while (top.length < 3) top.push({ id: "", name: "……………………", team: "", score: "—" });
 
@@ -12611,7 +12610,15 @@ function downloadHonorBoardJpg() {
   var meta = window._nbExport || {};
   var btns = el.querySelectorAll(".no-print");
   btns.forEach(function(b) { b.style.display = "none"; });
-  html2canvas(el, { scale: 3, useCORS: true, allowTaint: true, backgroundColor: "#fffef7" }).then(function(canvas) {
+  // Chụp đúng DOM đang hiển thị trên web (không clone / không đổi style)
+  html2canvas(el, {
+    scale: 3,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: "#ffffff",
+    logging: false,
+    imageTimeout: 8000
+  }).then(function(canvas) {
     btns.forEach(function(b) { b.style.display = ""; });
     var a = document.createElement("a");
     a.href = canvas.toDataURL("image/jpeg", 0.95);
