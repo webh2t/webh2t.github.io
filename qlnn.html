@@ -9884,6 +9884,12 @@ function reportExportHeaderLines(subtitle) {
 }
 
 /** Tiêu đề JPG tổ: TRƯỜNG … / BÁO CÁO SƠ KẾT … / TỔ n từ … – … */
+/**
+ * Tiêu đề JPG tổ (3 dòng):
+ * TRƯỜNG THPT HÀ HUY TẬP
+ * BÁO CÁO SƠ KẾT TUẦN 7 từ 19/10/2026 – 24/10/2026
+ * TỔ 1 - Lớp 11B9 – NH 2026 – 2027
+ */
 function reportTeamExportHeaderLines(team, scope, title, dateNote) {
   var m = getReportMeta();
   var line2 = String(title || "").trim();
@@ -9893,11 +9899,19 @@ function reportTeamExportHeaderLines(team, scope, title, dateNote) {
     else if (scope === "year") line2 = "BÁO CÁO SƠ KẾT CẢ NĂM";
     else line2 = "BÁO CÁO SƠ KẾT TUẦN";
   }
-  // Chuẩn hóa: bỏ phần · TỔ / Lớp thừa nếu subtitle cũ lọt vào
-  line2 = line2.replace(/\s*·\s*TỔ\s*\d+.*/i, "").replace(/\s*·\s*Lớp\s+.*/i, "").trim();
-  var dates = String(dateNote || "").replace(/^\(|\)$/g, "").trim();
-  // dateNote dạng "19/10/2026 – 24/10/2026" hoặc "(19/10… – 24/10…)"
-  var line3 = "TỔ " + team + (dates ? " từ " + dates : "");
+  line2 = line2
+    .replace(/\s*·\s*TỔ\s*\d+.*/i, "")
+    .replace(/\s*·\s*Lớp\s+.*/i, "")
+    .replace(/^BÁO CÁO TUẦN/i, "BÁO CÁO SƠ KẾT TUẦN")
+    .replace(/^BÁO CÁO THÁNG/i, "BÁO CÁO SƠ KẾT THÁNG")
+    .trim();
+  if (!/^BÁO CÁO SƠ KẾT/i.test(line2)) {
+    if (/tuần/i.test(line2)) line2 = "BÁO CÁO SƠ KẾT " + line2.replace(/^BÁO CÁO\s*/i, "");
+  }
+  var dates = String(dateNote || "").replace(/^\(|\)$/g, "").replace(/^từ\s+/i, "").trim();
+  if (dates && !/từ\s+\d/i.test(line2)) line2 = line2 + " từ " + dates;
+  var yearNice = String(m.year || "2026-2027").replace(/-/g, " – ");
+  var line3 = "TỔ " + team + " - Lớp " + (m.lop || "11B9") + " – NH " + yearNice;
   return [m.school, line2, line3];
 }
 
@@ -12418,20 +12432,21 @@ function renderHonorBoard(opt) {
   var scope = opt.scope || "month";
 
   var periodLine = "";
+  var periodShort = "";
   if (scope === "month") {
     var mon = window._nbSelMon || opt.mon || "";
     if (!mon && /THÁNG\s*(\d+)/i.test(title)) mon = RegExp.$1;
     var yPart = String(year).match(/20\d{2}/);
     periodLine = "THÁNG " + (mon || "…") + " NĂM " + (yPart ? yPart[0] : "2026");
+    periodShort = "THÁNG " + (mon || "…");
   } else {
     var mode = window._nbSelHk || "hk1";
-    if (mode === "year") periodLine = "CẢ NĂM HỌC " + year;
-    else if (mode === "hk2") periodLine = "HỌC KỲ 2 · NĂM HỌC " + year;
-    else periodLine = "HỌC KỲ 1 · NĂM HỌC " + year;
+    if (mode === "year") { periodLine = "CẢ NĂM HỌC " + year; periodShort = "CẢ NĂM"; }
+    else if (mode === "hk2") { periodLine = "HỌC KỲ 2 · NĂM HỌC " + year; periodShort = "HỌC KỲ 2"; }
+    else { periodLine = "HỌC KỲ 1 · NĂM HỌC " + year; periodShort = "HỌC KỲ 1"; }
   }
 
-  // Vinh danh: điểm cao nhất trong top 5 đủ điều kiện
-  // — 0 lần vi phạm (cho phép tối đa 1 lần vắng có phép v01)
+  // Vinh danh: điểm cao nhất trong top 5 đủ điều kiện (0 VP khác; tối đa 1 lần vắng phép v01)
   function honorEligible(sid) {
     if (!sid) return false;
     var st = (typeof countViolStatsForRank === "function")
@@ -12442,9 +12457,7 @@ function renderHonorBoard(opt) {
     if (other < 0) other = 0;
     return other === 0 && perm <= 1;
   }
-  var eligible = (allScores || []).filter(function(x) {
-    return honorEligible(x && x.id);
-  }).slice(0, 5);
+  var eligible = (allScores || []).filter(function(x) { return honorEligible(x && x.id); }).slice(0, 5);
   var top = eligible.slice(0, 3);
   while (top.length < 3) top.push({ id: "", name: "……………………", team: "", score: "—" });
 
@@ -12452,126 +12465,113 @@ function renderHonorBoard(opt) {
     var name = x && x.name ? x.name : "……………………";
     var score = (x && x.score != null && x.score !== "") ? x.score : "—";
     var team = x && x.team ? ("Tổ " + x.team) : "";
-    var thanhTich = (score !== "—" ? score + " điểm" : "—");
-    return { name: name, score: score, team: team, thanhTich: thanhTich };
+    return { name: name, score: score, team: team, thanhTich: (score !== "—" ? score + " điểm" : "—") };
   }
   var p1 = podiumInfo(top[0]);
   var p2 = podiumInfo(top[1]);
   var p3 = podiumInfo(top[2]);
 
   var base = "https://webh2t.github.io/assets/";
-  var logoSrc = base + "LOGO_HHT.jpg";
+  var logoSrc = base + "11b9_tx.png";
+  var logoFallback = base + "LOGO_HHT.jpg";
   var bgSrc = base + "lop11b9_vinhdanh.jpg";
   var signSrc = base + "gvcn_chuky.png";
 
   function plaque(rank, info) {
     var is1 = rank === 1, is2 = rank === 2;
-    var num = is1 ? "01" : (is2 ? "02" : "03");
+    var num = is1 ? "1" : (is2 ? "2" : "3");
     var hang = is1 ? "HẠNG NHẤT" : (is2 ? "HẠNG NHÌ" : "HẠNG BA");
-    // Nền sáng ngọc · hoa văn hiện đại · điểm: H1 xanh lá · H2 xanh ngọc · H3 tím
-    var headBg, bodyBg, bodyBd, baseBg, glow, scoreColor, pattern;
+    var headBg, bodyBg, bodyBd, scoreColor, ribbon, medalBg, glow, podiumColor;
     if (is1) {
-      headBg = "linear-gradient(145deg,#34d399 0%,#10b981 40%,#059669 100%)";
-      bodyBg = "linear-gradient(180deg,#ecfdf5 0%,#d1fae5 45%,#a7f3d0 100%)";
-      bodyBd = "#059669"; baseBg = "linear-gradient(180deg,#34d399,#047857)";
-      glow = "0 14px 36px rgba(5,150,105,0.35)";
-      scoreColor = "#166534";
-      pattern = "radial-gradient(circle at 20% 20%,rgba(255,255,255,0.5) 0 2px,transparent 3px),radial-gradient(circle at 80% 60%,rgba(16,185,129,0.15) 0 40%,transparent 50%)";
+      headBg = "linear-gradient(180deg,#fef9c3 0%,#fde047 35%,#eab308 100%)";
+      bodyBg = "linear-gradient(180deg,#fffbeb 0%,#fef3c7 100%)";
+      bodyBd = "#ca8a04"; scoreColor = "#a16207";
+      ribbon = "linear-gradient(90deg,#ef4444,#dc2626)"; medalBg = "linear-gradient(145deg,#fde047,#f59e0b)";
+      glow = "0 16px 40px rgba(234,179,8,0.45)"; podiumColor = "linear-gradient(180deg,#fbbf24,#b45309)";
     } else if (is2) {
-      headBg = "linear-gradient(145deg,#67e8f9 0%,#22d3ee 40%,#0891b2 100%)";
-      bodyBg = "linear-gradient(180deg,#ecfeff 0%,#cffafe 45%,#a5f3fc 100%)";
-      bodyBd = "#0891b2"; baseBg = "linear-gradient(180deg,#22d3ee,#0e7490)";
-      glow = "0 12px 30px rgba(8,145,178,0.32)";
-      scoreColor = "#0e7490";
-      pattern = "radial-gradient(circle at 15% 30%,rgba(255,255,255,0.55) 0 2px,transparent 3px),radial-gradient(circle at 70% 70%,rgba(34,211,238,0.18) 0 35%,transparent 50%)";
+      headBg = "linear-gradient(180deg,#e0f2fe 0%,#7dd3fc 40%,#0ea5e9 100%)";
+      bodyBg = "linear-gradient(180deg,#f0f9ff 0%,#e0f2fe 100%)";
+      bodyBd = "#0284c7"; scoreColor = "#0369a1";
+      ribbon = "linear-gradient(90deg,#38bdf8,#0284c7)"; medalBg = "linear-gradient(145deg,#e2e8f0,#94a3b8)";
+      glow = "0 12px 28px rgba(14,165,233,0.35)"; podiumColor = "linear-gradient(180deg,#38bdf8,#0369a1)";
     } else {
-      headBg = "linear-gradient(145deg,#c4b5fd 0%,#a78bfa 40%,#7c3aed 100%)";
-      bodyBg = "linear-gradient(180deg,#f5f3ff 0%,#ede9fe 45%,#ddd6fe 100%)";
-      bodyBd = "#7c3aed"; baseBg = "linear-gradient(180deg,#a78bfa,#5b21b6)";
-      glow = "0 12px 30px rgba(124,58,237,0.32)";
-      scoreColor = "#6b21a8";
-      pattern = "radial-gradient(circle at 25% 25%,rgba(255,255,255,0.5) 0 2px,transparent 3px),radial-gradient(circle at 75% 65%,rgba(167,139,250,0.2) 0 40%,transparent 50%)";
+      headBg = "linear-gradient(180deg,#ffedd5 0%,#fdba74 40%,#ea580c 100%)";
+      bodyBg = "linear-gradient(180deg,#fff7ed 0%,#ffedd5 100%)";
+      bodyBd = "#c2410c"; scoreColor = "#9a3412";
+      ribbon = "linear-gradient(90deg,#fb923c,#c2410c)"; medalBg = "linear-gradient(145deg,#fdba74,#c2410c)";
+      glow = "0 12px 28px rgba(234,88,12,0.35)"; podiumColor = "linear-gradient(180deg,#fb923c,#9a3412)";
     }
-    var w = is1 ? "248px" : "216px";
-    var lift = is1 ? "0" : "36px";
-    var icon = is1 ? "🏆" : (is2 ? "🥈" : "🥉");
+    var w = is1 ? "250px" : "210px";
+    var lift = is1 ? "0" : "42px";
     var s = "";
-    s += '<div style="width:' + w + ';max-width:32%;min-width:160px;margin-top:' + lift + ';display:flex;flex-direction:column;align-items:center;filter:drop-shadow(' + glow + ')">';
-    s += '<div style="width:100%;border-radius:20px 20px 16px 16px;overflow:hidden;border:2.5px solid ' + bodyBd + ';background:' + bodyBg + ';position:relative">';
-    s += '<div style="position:absolute;inset:0;background-image:' + pattern + ';background-size:18px 18px,100% 100%;pointer-events:none;opacity:0.9"></div>';
-    s += '<div style="position:relative;background:' + headBg + ';padding:14px 8px 16px;text-align:center;box-shadow:inset 0 -3px 0 rgba(0,0,0,0.12)">';
-    s += '<div style="font-size:28px;line-height:1;margin-bottom:2px">' + icon + '</div>';
-    s += '<div style="font-size:40px;font-weight:900;color:#fff;line-height:1;letter-spacing:0.08em;text-shadow:0 2px 8px rgba(0,0,0,0.25)">' + num + '</div>';
-    s += '<div style="font-size:13px;font-weight:800;color:#fff;letter-spacing:0.14em;margin-top:5px;text-shadow:0 1px 3px rgba(0,0,0,0.3)">' + hang + '</div>';
+    s += '<div style="width:' + w + ';max-width:32%;min-width:150px;margin-top:' + lift + ';display:flex;flex-direction:column;align-items:center;filter:drop-shadow(' + glow + ')">';
+    // Medal circle
+    s += '<div style="width:72px;height:72px;border-radius:50%;background:' + medalBg + ';border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;z-index:2;margin-bottom:-18px;position:relative">';
+    s += '<span style="font-size:32px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.35)">' + num + '</span></div>';
+    // Card
+    s += '<div style="width:100%;border-radius:18px;overflow:hidden;border:2.5px solid ' + bodyBd + ';background:' + bodyBg + ';position:relative">';
+    s += '<div style="background:' + headBg + ';padding:22px 8px 10px;text-align:center">';
+    s += '<div style="display:inline-block;background:' + ribbon + ';color:#fff;font-size:12px;font-weight:900;letter-spacing:0.12em;padding:4px 14px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,0.2)">' + hang + '</div>';
     s += '</div>';
-    s += '<div style="position:relative;padding:18px 12px 20px;text-align:center;min-height:140px">';
-    s += '<div style="font-size:10px;font-weight:700;color:#475569;letter-spacing:0.12em;margin-bottom:8px">HỌC SINH</div>';
-    s += '<div style="font-size:19px;font-weight:900;color:#1e3a8a;line-height:1.3;min-height:2.6em;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">' + info.name + '</div>';
-    if (info.team) s += '<div style="font-size:13px;font-weight:600;color:#334155;margin-top:6px">' + info.team + '</div>';
-    s += '<div style="height:1px;background:linear-gradient(90deg,transparent,' + bodyBd + ',transparent);margin:12px 8px"></div>';
-    s += '<div style="font-size:10px;font-weight:700;color:#475569;letter-spacing:0.1em">THÀNH TÍCH</div>';
-    s += '<div style="font-size:20px;font-weight:900;color:' + scoreColor + ';margin-top:6px;line-height:1.3">' + info.thanhTich + '</div>';
+    s += '<div style="padding:12px 10px 16px;text-align:center;min-height:130px">';
+    s += '<div style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:0.14em;margin-bottom:4px">HỌC SINH</div>';
+    s += '<div style="font-size:17px;font-weight:900;color:#0f172a;line-height:1.25;min-height:2.5em">' + info.name + '</div>';
+    if (info.team) s += '<div style="font-size:12px;font-weight:700;color:#475569;margin-top:4px;background:rgba(255,255,255,0.7);display:inline-block;padding:2px 10px;border-radius:999px">' + info.team + '</div>';
+    s += '<div style="height:1px;background:linear-gradient(90deg,transparent,' + bodyBd + ',transparent);margin:10px 6px"></div>';
+    s += '<div style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:0.1em">THÀNH TÍCH</div>';
+    s += '<div style="font-size:22px;font-weight:900;color:' + scoreColor + ';margin-top:4px">' + info.thanhTich + '</div>';
     s += '</div></div>';
-    s += '<div style="width:94%;height:11px;background:' + baseBg + ';border-radius:0 0 5px 5px"></div>';
-    s += '<div style="width:80%;height:9px;background:' + baseBg + ';opacity:0.8;border-radius:0 0 4px 4px"></div>';
-    s += '<div style="width:66%;height:7px;background:' + baseBg + ';opacity:0.6;border-radius:0 0 3px 3px"></div>';
+    // Podium base
+    s += '<div style="width:88%;height:14px;margin-top:2px;background:' + podiumColor + ';border-radius:0 0 8px 8px;box-shadow:inset 0 2px 0 rgba(255,255,255,0.25)"></div>';
+    s += '<div style="width:72%;height:10px;background:' + podiumColor + ';opacity:0.85;border-radius:0 0 6px 6px"></div>';
     s += '</div>';
     return s;
   }
 
   var h = "";
+  // Outer frame — xanh dương / vàng như mẫu
   h += '<div class="week-board mb-6" id="nbHonorBoard" style="position:relative;overflow:hidden;max-width:980px;margin:20px auto;padding:0;';
-  h += 'border:5px solid #b45309;border-radius:6px;background:#fffef7;';
-  h += 'box-shadow:0 0 0 4px #fef3c7,0 0 0 8px #d4a017,0 18px 50px rgba(120,53,15,0.3)">';
+  h += 'border:6px solid #1d4ed8;border-radius:12px;background:linear-gradient(180deg,#eff6ff 0%,#ffffff 40%,#fefce8 100%);';
+  h += 'box-shadow:0 0 0 3px #fbbf24,0 0 0 8px #1e40af,0 20px 50px rgba(30,64,175,0.25)">';
 
-  h += '<div style="position:absolute;inset:0;background:url(\'' + bgSrc + '\') center 28%/cover no-repeat;opacity:0.22;pointer-events:none"></div>';
-  h += '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(254,243,199,0.55) 0%,transparent 50%),linear-gradient(180deg,rgba(255,251,235,0.85) 0%,rgba(255,255,255,0.92) 45%,rgba(255,255,255,0.97) 100%);pointer-events:none"></div>';
+  // Soft background
+  h += '<div style="position:absolute;inset:0;background:url(\'' + bgSrc + '\') center 20%/cover no-repeat;opacity:0.12;pointer-events:none"></div>';
+  h += '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(253,224,71,0.25) 0%,transparent 55%),linear-gradient(180deg,rgba(239,246,255,0.9) 0%,rgba(255,255,255,0.95) 50%);pointer-events:none"></div>';
 
-  h += '<div style="position:absolute;top:12px;left:12px;width:52px;height:52px;border-top:3px solid #d4a017;border-left:3px solid #d4a017;opacity:0.75;pointer-events:none;z-index:2"></div>';
-  h += '<div style="position:absolute;top:12px;right:12px;width:52px;height:52px;border-top:3px solid #d4a017;border-right:3px solid #d4a017;opacity:0.75;pointer-events:none;z-index:2"></div>';
-  h += '<div style="position:absolute;bottom:88px;left:12px;width:52px;height:52px;border-bottom:3px solid #d4a017;border-left:3px solid #d4a017;opacity:0.45;pointer-events:none;z-index:2"></div>';
-  h += '<div style="position:absolute;bottom:88px;right:12px;width:52px;height:52px;border-bottom:3px solid #d4a017;border-right:3px solid #d4a017;opacity:0.45;pointer-events:none;z-index:2"></div>';
+  h += '<div style="position:relative;z-index:1;padding:18px 16px 0">';
 
-  h += '<div style="position:relative;z-index:1;padding:24px 20px 0">';
-
-  // HEADER — TRƯỜNG trên cùng
-  h += '<div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:4px">';
-  h += '<img src="' + logoSrc + '" alt="Logo" style="width:82px;height:82px;object-fit:contain;border-radius:50%;background:#fff;border:3px solid #0c4a6e;box-shadow:0 4px 14px rgba(12,74,110,0.28);flex-shrink:0" onerror="this.style.display=\'none\'"/>';
-  h += '<div style="text-align:center">';
-  h += '<div style="font-size:20px;font-weight:900;color:#7f1d1d;letter-spacing:0.06em;line-height:1.2;margin-bottom:4px">' + school + '</div>';
-  h += '<div style="font-size:12px;font-weight:700;color:#92400e;letter-spacing:0.28em;margin-bottom:4px">★ ★ ★</div>';
-  h += '<div style="font-size:24px;font-weight:900;color:#b45309;letter-spacing:0.07em;line-height:1.15;text-shadow:0 1px 0 #fff,0 3px 10px rgba(180,83,9,0.28)">VINH DANH HỌC SINH XUẤT SẮC</div>';
-  h += '<div style="font-size:20px;font-weight:900;color:#1d4ed8;margin-top:10px;letter-spacing:0.06em;text-shadow:0 1px 0 #dbeafe">' + periodLine + '</div>';
-  h += '<div style="font-size:22px;font-weight:900;color:#dc2626;margin-top:6px;letter-spacing:0.08em">LỚP ' + cls + '</div>';
-  if (dateNote) h += '<div style="font-size:12px;font-weight:600;color:#64748b;margin-top:4px">' + dateNote + '</div>';
+  // HEADER row: logo | titles
+  h += '<div style="display:flex;align-items:flex-start;justify-content:center;gap:12px;margin-bottom:2px">';
+  h += '<img src="' + logoSrc + '" alt="11B9" style="width:96px;height:96px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 4px 12px rgba(37,99,235,0.35))" onerror="this.onerror=null;this.src=\'' + logoFallback + '\'"/>';
+  h += '<div style="text-align:center;flex:1;padding-top:4px">';
+  h += '<div style="font-size:13px;font-weight:800;color:#1e3a8a;letter-spacing:0.12em">GVCN LỚP ' + cls + '</div>';
+  h += '<div style="font-size:15px;font-weight:900;color:#7f1d1d;letter-spacing:0.06em;margin-top:2px">' + school + '</div>';
+  h += '<div style="font-size:36px;font-weight:900;line-height:1.05;margin-top:6px;background:linear-gradient(180deg,#fde047 0%,#eab308 40%,#b45309 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;filter:drop-shadow(0 2px 0 #78350f)">VINH DANH</div>';
+  h += '<div style="display:inline-block;margin-top:6px;background:linear-gradient(90deg,#1d4ed8,#2563eb);color:#fff;font-size:14px;font-weight:900;letter-spacing:0.14em;padding:5px 22px;border-radius:6px;box-shadow:0 3px 10px rgba(37,99,235,0.4)">HỌC SINH XUẤT SẮC</div>';
+  h += '<div style="margin-top:10px;display:inline-block;background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#78350f;font-size:15px;font-weight:900;padding:4px 18px;border-radius:999px;border:2px solid #fde047;letter-spacing:0.04em">' + periodLine + '</div>';
   h += '</div>';
-  h += '<div style="width:82px;flex-shrink:0"></div>';
+  h += '<div style="width:96px;flex-shrink:0"></div>';
   h += '</div>';
 
-  h += '<div style="height:2px;max-width:460px;margin:12px auto 6px;background:linear-gradient(90deg,transparent,#d4a017 15%,#b45309 50%,#d4a017 85%,transparent)"></div>';
-
-  // PODIUM
-  h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:22px;padding:20px 8px 14px;max-width:920px;margin:0 auto">';
+  // PODIUM 2 | 1 | 3
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:18px;padding:18px 6px 10px;max-width:920px;margin:0 auto">';
   h += plaque(2, p2);
   h += plaque(1, p1);
   h += plaque(3, p3);
   h += '</div>';
 
-  h += '<div style="text-align:center;margin:16px 10px 20px;padding:10px 18px;font-size:15px;font-weight:800;color:#9f1239;letter-spacing:0.07em;background:linear-gradient(90deg,transparent,rgba(254,243,199,0.9),transparent);border-radius:8px">✦ CHÚC MỪNG CÁC BẠN ĐÃ CÓ NỖ LỰC VƯỢT BẬC! ✦</div>';
+  h += '<div style="text-align:center;margin:8px 10px 14px;font-size:13px;font-weight:800;color:#1e40af;letter-spacing:0.06em">✦ CHÚC MỪNG CÁC BẠN ĐÃ CÓ NỖ LỰC VƯỢT BẬC! ✦</div>';
 
-  // FOOTER nền trắng — chữ ký GVCN (không ghi họ tên chữ)
-  h += '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:24px;margin:0 -20px;padding:18px 32px 22px;background:#ffffff;border-top:3px solid #d4a017;box-shadow:inset 0 1px 0 #fef3c7">';
-  h += '<div style="text-align:left">';
-  h += '<div style="font-size:14px;font-weight:800;color:#0c4a6e;letter-spacing:0.05em">LỚP ' + cls + ' · NH ' + year + '</div>';
-  h += '<div style="width:160px;height:2px;background:linear-gradient(90deg,#d4a017,#fef3c7);margin-top:12px"></div>';
-  h += '</div>';
-  h += '<div style="text-align:center;min-width:160px">';
-  h += '<div style="font-size:12px;font-weight:800;color:#0c4a6e;letter-spacing:0.1em">GIÁO VIÊN CHỦ NHIỆM</div>';
-  h += '<img src="' + signSrc + '" alt="Chữ ký" style="max-height:64px;max-width:170px;object-fit:contain;display:block;margin:8px auto 4px" onerror="this.style.display=\'none\'"/>';
-  h += '</div>';
-  h += '</div>';
+  // FOOTER dark blue bar
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin:0 -16px;padding:14px 28px 16px;background:linear-gradient(90deg,#1e3a8a,#1d4ed8 50%,#1e3a8a);border-top:3px solid #fbbf24">';
+  h += '<div style="font-size:13px;font-weight:800;color:#fef9c3;letter-spacing:0.06em">🎓 LỚP ' + cls + ' – ' + periodShort + '</div>';
+  h += '<div style="text-align:center;color:#fde047;font-size:18px">📖 ★ ★</div>';
+  h += '<div style="text-align:right;min-width:120px">';
+  h += '<div style="font-size:11px;font-weight:700;color:#bfdbfe;letter-spacing:0.08em">GIÁO VIÊN CHỦ NHIỆM</div>';
+  h += '<img src="' + signSrc + '" alt="Chữ ký" style="max-height:48px;max-width:140px;object-fit:contain;display:block;margin:4px 0 0 auto;filter:brightness(1.15)" onerror="this.style.display=\'none\'"/>';
+  h += '</div></div>';
 
-  h += '</div>';
+  h += '</div>'; // relative padding
 
   h += '<div class="no-print mt-3 mb-2 flex flex-wrap gap-2 justify-center" style="position:relative;z-index:2">';
   h += '<button type="button" class="px-3 py-1.5 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadHonorBoardJpg()">📷 Tải ảnh vinh danh .jpg</button>';
@@ -12604,20 +12604,18 @@ function downloadNbTeamJpg(team) {
   var meta = window._nbExport || {};
   var scope = meta.scope || "week";
   var title = meta.title || meta.soKetTitle || "";
-  // Chuẩn hóa tiêu đề: "BÁO CÁO SƠ KẾT TUẦN 7" / THÁNG / HỌC KỲ / CẢ NĂM
   if (!title) {
     if (scope === "month") title = "BÁO CÁO SƠ KẾT THÁNG";
     else if (scope === "hk") title = "BÁO CÁO SƠ KẾT HỌC KỲ";
     else if (scope === "year") title = "BÁO CÁO SƠ KẾT CẢ NĂM";
     else title = "BÁO CÁO SƠ KẾT TUẦN";
   }
-  title = String(title).replace(/\s*·\s*TỔ\s*\d+.*/i, "").trim();
-  var dateNote = meta.dateNote || "";
-  // Bỏ ngoặc nếu có
-  dateNote = String(dateNote).replace(/^\(|\)$/g, "").replace(/^từ\s+/i, "").trim();
-  var lines = typeof reportTeamExportHeaderLines === "function"
-    ? reportTeamExportHeaderLines(team, scope, title, dateNote)
-    : [("TRƯỜNG " + ((meta.school || "THPT HÀ HUY TẬP").replace(/^TRƯỜNG\s+/i, ""))).toUpperCase(), title, "TỔ " + team + (dateNote ? " từ " + dateNote : "")];
+  title = String(title)
+    .replace(/\s*·\s*TỔ\s*\d+.*/i, "")
+    .replace(/^BÁO CÁO TUẦN/i, "BÁO CÁO SƠ KẾT TUẦN")
+    .trim();
+  var dateNote = String(meta.dateNote || "").replace(/^\(|\)$/g, "").replace(/^từ\s+/i, "").trim();
+  var lines = reportTeamExportHeaderLines(team, scope, title, dateNote);
   if (typeof downloadReportBoardJpg === "function") {
     downloadReportBoardJpg("nbTeam" + team, "NB_To" + team + "_" + scope, title, lines);
   }
