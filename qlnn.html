@@ -9926,14 +9926,19 @@ function downloadReportBoardJpg(elId, namePrefix, subtitle, headerLinesOpt) {
   var lines = (headerLinesOpt && headerLinesOpt.length) ? headerLinesOpt : reportExportHeaderLines(subtitle || namePrefix || "");
   // Đảm bảo dòng 1 có "TRƯỜNG"
   if (lines[0] && !/^TRƯỜNG\s+/i.test(lines[0])) lines[0] = "TRƯỜNG " + String(lines[0]).replace(/^TRƯỜNG\s+/i, "");
+  var logoUrl = "https://webh2t.github.io/assets/11b9%20tx.png";
   var wrap = document.createElement("div");
   wrap.style.cssText = "background:#fff;padding:14px 18px;font-family:system-ui,sans-serif;color:#0f172a;border:none;outline:none;box-shadow:none;margin:0;";
   var head = document.createElement("div");
-  head.style.cssText = "text-align:center;margin:0 0 10px 0;padding:0 0 8px 0;border:none;border-bottom:1px solid #e2e8f0;box-shadow:none;outline:none;background:transparent;";
+  head.style.cssText = "display:flex;align-items:center;gap:14px;margin:0 0 10px 0;padding:0 0 10px 0;border:none;border-bottom:2px solid #e2e8f0;box-shadow:none;outline:none;background:transparent;";
   head.innerHTML =
+    '<img src="' + logoUrl + '" alt="11B9" crossorigin="anonymous" style="width:64px;height:64px;object-fit:contain;flex-shrink:0" onerror="this.style.display=\'none\'"/>' +
+    '<div style="flex:1;text-align:center">' +
     '<div style="font-size:18px;font-weight:900;color:#7f1d1d;letter-spacing:0.04em">' + (lines[0] || "") + "</div>" +
     '<div style="font-size:14px;font-weight:800;color:#0369a1;margin-top:5px">' + (lines[1] || "") + "</div>" +
-    (lines[2] ? '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-top:4px">' + lines[2] + "</div>" : "");
+    (lines[2] ? '<div style="font-size:13px;font-weight:700;color:#0c4a6e;margin-top:4px">' + lines[2] + "</div>" : "") +
+    "</div>" +
+    '<div style="width:64px;flex-shrink:0"></div>';
   wrap.appendChild(head);
 
   var clone = el.cloneNode(true);
@@ -12421,14 +12426,11 @@ function renderHonorBoard(opt) {
   opt = opt || {};
   var allScores = opt.allScores || [];
   var weekNos = opt.weekNos || [];
-  var nW = opt.nW || 1;
-  var gvcn = opt.gvcn || (currentUser && currentUser.name) || "";
   var cls = opt.cls || (currentUser && currentUser.className) || "11B9";
   var schoolRaw = (opt.school || (currentUser && currentUser.school) || "THPT Hà Huy Tập").toUpperCase().replace(/^TRƯỜNG\s+/i, "");
   var school = "TRƯỜNG " + schoolRaw;
   var year = opt.year || "2026 - 2027";
   var title = opt.title || "";
-  var dateNote = opt.dateNote || "";
   var scope = opt.scope || "month";
 
   var periodLine = "";
@@ -12446,7 +12448,6 @@ function renderHonorBoard(opt) {
     else { periodLine = "HỌC KỲ 1 · NĂM HỌC " + year; periodShort = "HỌC KỲ 1"; }
   }
 
-  // Vinh danh: điểm cao nhất trong top 5 đủ điều kiện (0 VP khác; tối đa 1 lần vắng phép v01)
   function honorEligible(sid) {
     if (!sid) return false;
     var st = (typeof countViolStatsForRank === "function")
@@ -12461,117 +12462,105 @@ function renderHonorBoard(opt) {
   var top = eligible.slice(0, 3);
   while (top.length < 3) top.push({ id: "", name: "……………………", team: "", score: "—" });
 
-  function podiumInfo(x) {
-    var name = x && x.name ? x.name : "……………………";
-    var score = (x && x.score != null && x.score !== "") ? x.score : "—";
-    var team = x && x.team ? ("Tổ " + x.team) : "";
-    return { name: name, score: score, team: team, thanhTich: (score !== "—" ? score + " điểm" : "—") };
+  function infoOf(x) {
+    return {
+      name: (x && x.name) || "……………………",
+      score: (x && x.score != null && x.score !== "") ? x.score : "—",
+      team: (x && x.team) ? ("Tổ " + x.team) : ""
+    };
   }
-  var p1 = podiumInfo(top[0]);
-  var p2 = podiumInfo(top[1]);
-  var p3 = podiumInfo(top[2]);
+  var p1 = infoOf(top[0]), p2 = infoOf(top[1]), p3 = infoOf(top[2]);
 
-  var base = "https://webh2t.github.io/assets/";
-  var logoSrc = base + "11b9_tx.png";
-  var logoFallback = base + "LOGO_HHT.jpg";
-  var bgSrc = base + "lop11b9_vinhdanh.jpg";
-  var signSrc = base + "gvcn_chuky.png";
+  // Logo lớp (file trên GitHub: assets/11b9 tx.png)
+  var logoSrc = "https://webh2t.github.io/assets/11b9%20tx.png";
+  var signSrc = "https://webh2t.github.io/assets/gvcn_chuky.png";
 
-  function plaque(rank, info) {
+  function card(rank, info) {
     var is1 = rank === 1, is2 = rank === 2;
-    var num = is1 ? "1" : (is2 ? "2" : "3");
     var hang = is1 ? "HẠNG NHẤT" : (is2 ? "HẠNG NHÌ" : "HẠNG BA");
-    var headBg, bodyBg, bodyBd, scoreColor, ribbon, medalBg, glow, podiumColor;
+    var medalBg, cardBg, cardBd, hangBg, hangColor, scoreColor, podiumBg, lift, w;
     if (is1) {
-      headBg = "linear-gradient(180deg,#fef9c3 0%,#fde047 35%,#eab308 100%)";
-      bodyBg = "linear-gradient(180deg,#fffbeb 0%,#fef3c7 100%)";
-      bodyBd = "#ca8a04"; scoreColor = "#a16207";
-      ribbon = "linear-gradient(90deg,#ef4444,#dc2626)"; medalBg = "linear-gradient(145deg,#fde047,#f59e0b)";
-      glow = "0 16px 40px rgba(234,179,8,0.45)"; podiumColor = "linear-gradient(180deg,#fbbf24,#b45309)";
+      medalBg = "linear-gradient(145deg,#fde047,#eab308)";
+      cardBg = "linear-gradient(180deg,#fffbeb,#fef3c7)";
+      cardBd = "#eab308"; hangBg = "#dc2626"; hangColor = "#fff";
+      scoreColor = "#a16207"; podiumBg = "linear-gradient(180deg,#fbbf24,#b45309)";
+      lift = "0"; w = "250px";
     } else if (is2) {
-      headBg = "linear-gradient(180deg,#e0f2fe 0%,#7dd3fc 40%,#0ea5e9 100%)";
-      bodyBg = "linear-gradient(180deg,#f0f9ff 0%,#e0f2fe 100%)";
-      bodyBd = "#0284c7"; scoreColor = "#0369a1";
-      ribbon = "linear-gradient(90deg,#38bdf8,#0284c7)"; medalBg = "linear-gradient(145deg,#e2e8f0,#94a3b8)";
-      glow = "0 12px 28px rgba(14,165,233,0.35)"; podiumColor = "linear-gradient(180deg,#38bdf8,#0369a1)";
+      medalBg = "linear-gradient(145deg,#e2e8f0,#94a3b8)";
+      cardBg = "linear-gradient(180deg,#f0f9ff,#dbeafe)";
+      cardBd = "#38bdf8"; hangBg = "#0284c7"; hangColor = "#fff";
+      scoreColor = "#0369a1"; podiumBg = "linear-gradient(180deg,#7dd3fc,#0369a1)";
+      lift = "36px"; w = "220px";
     } else {
-      headBg = "linear-gradient(180deg,#ffedd5 0%,#fdba74 40%,#ea580c 100%)";
-      bodyBg = "linear-gradient(180deg,#fff7ed 0%,#ffedd5 100%)";
-      bodyBd = "#c2410c"; scoreColor = "#9a3412";
-      ribbon = "linear-gradient(90deg,#fb923c,#c2410c)"; medalBg = "linear-gradient(145deg,#fdba74,#c2410c)";
-      glow = "0 12px 28px rgba(234,88,12,0.35)"; podiumColor = "linear-gradient(180deg,#fb923c,#9a3412)";
+      medalBg = "linear-gradient(145deg,#fdba74,#c2410c)";
+      cardBg = "linear-gradient(180deg,#fff7ed,#ffedd5)";
+      cardBd = "#fb923c"; hangBg = "#c2410c"; hangColor = "#fff";
+      scoreColor = "#9a3412"; podiumBg = "linear-gradient(180deg,#fdba74,#9a3412)";
+      lift = "36px"; w = "220px";
     }
-    var w = is1 ? "250px" : "210px";
-    var lift = is1 ? "0" : "42px";
     var s = "";
-    s += '<div style="width:' + w + ';max-width:32%;min-width:150px;margin-top:' + lift + ';display:flex;flex-direction:column;align-items:center;filter:drop-shadow(' + glow + ')">';
-    // Medal circle
-    s += '<div style="width:72px;height:72px;border-radius:50%;background:' + medalBg + ';border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,0.2);display:flex;align-items:center;justify-content:center;z-index:2;margin-bottom:-18px;position:relative">';
-    s += '<span style="font-size:32px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.35)">' + num + '</span></div>';
-    // Card
-    s += '<div style="width:100%;border-radius:18px;overflow:hidden;border:2.5px solid ' + bodyBd + ';background:' + bodyBg + ';position:relative">';
-    s += '<div style="background:' + headBg + ';padding:22px 8px 10px;text-align:center">';
-    s += '<div style="display:inline-block;background:' + ribbon + ';color:#fff;font-size:12px;font-weight:900;letter-spacing:0.12em;padding:4px 14px;border-radius:999px;box-shadow:0 2px 6px rgba(0,0,0,0.2)">' + hang + '</div>';
+    s += '<div style="width:' + w + ';max-width:31%;min-width:160px;margin-top:' + lift + ';display:flex;flex-direction:column;align-items:center">';
+    s += '<div style="width:70px;height:70px;border-radius:50%;background:' + medalBg + ';border:4px solid #fff;box-shadow:0 6px 18px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;z-index:2;margin-bottom:-22px;position:relative">';
+    s += '<span style="font-size:30px;font-weight:900;color:#fff;text-shadow:0 2px 4px rgba(0,0,0,0.3)">' + rank + '</span></div>';
+    s += '<div style="width:100%;border-radius:20px;overflow:hidden;border:3px solid ' + cardBd + ';background:' + cardBg + ';box-shadow:0 12px 28px rgba(0,0,0,0.12)">';
+    s += '<div style="padding:28px 12px 8px;text-align:center">';
+    s += '<div style="display:inline-block;background:' + hangBg + ';color:' + hangColor + ';font-size:12px;font-weight:900;letter-spacing:0.1em;padding:5px 16px;border-radius:999px">' + hang + '</div>';
     s += '</div>';
-    s += '<div style="padding:12px 10px 16px;text-align:center;min-height:130px">';
-    s += '<div style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:0.14em;margin-bottom:4px">HỌC SINH</div>';
-    s += '<div style="font-size:17px;font-weight:900;color:#0f172a;line-height:1.25;min-height:2.5em">' + info.name + '</div>';
-    if (info.team) s += '<div style="font-size:12px;font-weight:700;color:#475569;margin-top:4px;background:rgba(255,255,255,0.7);display:inline-block;padding:2px 10px;border-radius:999px">' + info.team + '</div>';
-    s += '<div style="height:1px;background:linear-gradient(90deg,transparent,' + bodyBd + ',transparent);margin:10px 6px"></div>';
-    s += '<div style="font-size:10px;font-weight:700;color:#64748b;letter-spacing:0.1em">THÀNH TÍCH</div>';
-    s += '<div style="font-size:22px;font-weight:900;color:' + scoreColor + ';margin-top:4px">' + info.thanhTich + '</div>';
+    s += '<div style="padding:8px 12px 18px;text-align:center">';
+    s += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.12em;margin-bottom:4px">HỌC SINH</div>';
+    s += '<div style="font-size:17px;font-weight:900;color:#0f172a;line-height:1.3;min-height:2.6em">' + info.name + '</div>';
+    if (info.team) s += '<div style="margin-top:6px;display:inline-block;background:#fff;border:1px solid ' + cardBd + ';color:#334155;font-size:12px;font-weight:700;padding:2px 12px;border-radius:999px">' + info.team + '</div>';
+    s += '<div style="height:1px;background:linear-gradient(90deg,transparent,' + cardBd + ',transparent);margin:12px 8px"></div>';
+    s += '<div style="font-size:11px;font-weight:700;color:#64748b;letter-spacing:0.1em">THÀNH TÍCH</div>';
+    s += '<div style="font-size:24px;font-weight:900;color:' + scoreColor + ';margin-top:4px">' + (info.score !== "—" ? info.score + " điểm" : "—") + '</div>';
     s += '</div></div>';
-    // Podium base
-    s += '<div style="width:88%;height:14px;margin-top:2px;background:' + podiumColor + ';border-radius:0 0 8px 8px;box-shadow:inset 0 2px 0 rgba(255,255,255,0.25)"></div>';
-    s += '<div style="width:72%;height:10px;background:' + podiumColor + ';opacity:0.85;border-radius:0 0 6px 6px"></div>';
+    s += '<div style="width:90%;height:12px;margin-top:3px;background:' + podiumBg + ';border-radius:0 0 8px 8px"></div>';
+    s += '<div style="width:75%;height:8px;background:' + podiumBg + ';opacity:0.75;border-radius:0 0 6px 6px"></div>';
     s += '</div>';
     return s;
   }
 
   var h = "";
-  // Outer frame — xanh dương / vàng như mẫu
-  h += '<div class="week-board mb-6" id="nbHonorBoard" style="position:relative;overflow:hidden;max-width:980px;margin:20px auto;padding:0;';
-  h += 'border:6px solid #1d4ed8;border-radius:12px;background:linear-gradient(180deg,#eff6ff 0%,#ffffff 40%,#fefce8 100%);';
-  h += 'box-shadow:0 0 0 3px #fbbf24,0 0 0 8px #1e40af,0 20px 50px rgba(30,64,175,0.25)">';
+  h += '<div class="week-board mb-6" id="nbHonorBoard" style="position:relative;overflow:hidden;max-width:960px;margin:20px auto;padding:0;';
+  h += 'border-radius:16px;background:linear-gradient(180deg,#dbeafe 0%,#f0f9ff 25%,#ffffff 55%,#fefce8 100%);';
+  h += 'box-shadow:0 0 0 4px #fbbf24,0 0 0 10px #1d4ed8,0 20px 48px rgba(30,64,175,0.22)">';
 
-  // Soft background
-  h += '<div style="position:absolute;inset:0;background:url(\'' + bgSrc + '\') center 20%/cover no-repeat;opacity:0.12;pointer-events:none"></div>';
-  h += '<div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(253,224,71,0.25) 0%,transparent 55%),linear-gradient(180deg,rgba(239,246,255,0.9) 0%,rgba(255,255,255,0.95) 50%);pointer-events:none"></div>';
+  h += '<div style="position:relative;z-index:1;padding:20px 18px 0">';
 
-  h += '<div style="position:relative;z-index:1;padding:18px 16px 0">';
-
-  // HEADER row: logo | titles
-  h += '<div style="display:flex;align-items:flex-start;justify-content:center;gap:12px;margin-bottom:2px">';
-  h += '<img src="' + logoSrc + '" alt="11B9" style="width:96px;height:96px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 4px 12px rgba(37,99,235,0.35))" onerror="this.onerror=null;this.src=\'' + logoFallback + '\'"/>';
-  h += '<div style="text-align:center;flex:1;padding-top:4px">';
-  h += '<div style="font-size:13px;font-weight:800;color:#1e3a8a;letter-spacing:0.12em">GVCN LỚP ' + cls + '</div>';
-  h += '<div style="font-size:15px;font-weight:900;color:#7f1d1d;letter-spacing:0.06em;margin-top:2px">' + school + '</div>';
-  h += '<div style="font-size:36px;font-weight:900;line-height:1.05;margin-top:6px;background:linear-gradient(180deg,#fde047 0%,#eab308 40%,#b45309 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-shadow:none;filter:drop-shadow(0 2px 0 #78350f)">VINH DANH</div>';
-  h += '<div style="display:inline-block;margin-top:6px;background:linear-gradient(90deg,#1d4ed8,#2563eb);color:#fff;font-size:14px;font-weight:900;letter-spacing:0.14em;padding:5px 22px;border-radius:6px;box-shadow:0 3px 10px rgba(37,99,235,0.4)">HỌC SINH XUẤT SẮC</div>';
-  h += '<div style="margin-top:10px;display:inline-block;background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#78350f;font-size:15px;font-weight:900;padding:4px 18px;border-radius:999px;border:2px solid #fde047;letter-spacing:0.04em">' + periodLine + '</div>';
-  h += '</div>';
-  h += '<div style="width:96px;flex-shrink:0"></div>';
+  // Header: logo + titles
+  h += '<div style="display:flex;align-items:center;justify-content:center;gap:14px">';
+  h += '<img src="' + logoSrc + '" alt="11B9" crossorigin="anonymous" style="width:100px;height:100px;object-fit:contain;flex-shrink:0;filter:drop-shadow(0 6px 14px rgba(37,99,235,0.3))" onerror="this.style.opacity=0.3"/>';
+  h += '<div style="text-align:center;flex:1">';
+  h += '<div style="font-size:14px;font-weight:800;color:#1e3a8a;letter-spacing:0.14em">GVCN LỚP ' + cls + '</div>';
+  h += '<div style="font-size:16px;font-weight:900;color:#7f1d1d;letter-spacing:0.05em;margin-top:2px">' + school + '</div>';
+  h += '<div style="height:10px;max-width:420px;margin:10px auto 6px;border-radius:6px;background:linear-gradient(90deg,#fbbf24,#f59e0b,#fbbf24)"></div>';
+  h += '<div style="font-size:42px;font-weight:900;color:#0f172a;letter-spacing:0.04em;line-height:1;text-shadow:0 2px 0 #fbbf24,0 4px 12px rgba(180,83,9,0.25)">VINH DANH</div>';
+  h += '<div style="margin-top:10px;display:flex;flex-wrap:wrap;justify-content:center;gap:8px">';
+  h += '<span style="background:linear-gradient(90deg,#1d4ed8,#2563eb);color:#fff;font-size:13px;font-weight:900;letter-spacing:0.12em;padding:6px 18px;border-radius:999px;box-shadow:0 3px 10px rgba(37,99,235,0.35)">HỌC SINH XUẤT SẮC</span>';
+  h += '<span style="background:linear-gradient(90deg,#fbbf24,#f59e0b);color:#78350f;font-size:13px;font-weight:900;padding:6px 16px;border-radius:999px;border:2px solid #fde047">' + periodLine + '</span>';
+  h += '</div></div>';
+  h += '<div style="width:100px;flex-shrink:0"></div>';
   h += '</div>';
 
-  // PODIUM 2 | 1 | 3
-  h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:18px;padding:18px 6px 10px;max-width:920px;margin:0 auto">';
-  h += plaque(2, p2);
-  h += plaque(1, p1);
-  h += plaque(3, p3);
+  // Podium 2 | 1 | 3
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:center;align-items:flex-end;gap:16px;padding:22px 4px 8px;max-width:900px;margin:0 auto">';
+  h += card(2, p2);
+  h += card(1, p1);
+  h += card(3, p3);
   h += '</div>';
 
-  h += '<div style="text-align:center;margin:8px 10px 14px;font-size:13px;font-weight:800;color:#1e40af;letter-spacing:0.06em">✦ CHÚC MỪNG CÁC BẠN ĐÃ CÓ NỖ LỰC VƯỢT BẬC! ✦</div>';
+  h += '<div style="text-align:center;margin:6px 8px 14px;font-size:13px;font-weight:800;color:#1e40af;letter-spacing:0.05em">✦ CHÚC MỪNG CÁC BẠN ĐÃ CÓ NỖ LỰC VƯỢT BẬC! ✦</div>';
 
-  // FOOTER dark blue bar
-  h += '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;margin:0 -16px;padding:14px 28px 16px;background:linear-gradient(90deg,#1e3a8a,#1d4ed8 50%,#1e3a8a);border-top:3px solid #fbbf24">';
-  h += '<div style="font-size:13px;font-weight:800;color:#fef9c3;letter-spacing:0.06em">🎓 LỚP ' + cls + ' – ' + periodShort + '</div>';
-  h += '<div style="text-align:center;color:#fde047;font-size:18px">📖 ★ ★</div>';
-  h += '<div style="text-align:right;min-width:120px">';
+  // Footer
+  h += '<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px;margin:0 -18px;padding:14px 24px 16px;background:linear-gradient(90deg,#1e3a8a,#1d4ed8,#1e3a8a);border-top:3px solid #fbbf24">';
+  h += '<div style="font-size:13px;font-weight:800;color:#fef9c3">🎓 LỚP ' + cls + ' – ' + periodShort + '</div>';
+  h += '<div style="color:#fde047;font-size:16px">📖 ★ ★</div>';
+  h += '<div style="text-align:right">';
   h += '<div style="font-size:11px;font-weight:700;color:#bfdbfe;letter-spacing:0.08em">GIÁO VIÊN CHỦ NHIỆM</div>';
-  h += '<img src="' + signSrc + '" alt="Chữ ký" style="max-height:48px;max-width:140px;object-fit:contain;display:block;margin:4px 0 0 auto;filter:brightness(1.15)" onerror="this.style.display=\'none\'"/>';
+  h += '<img src="' + signSrc + '" alt="CK" crossorigin="anonymous" style="max-height:46px;max-width:130px;object-fit:contain;display:block;margin:4px 0 0 auto;filter:brightness(1.2)" onerror="this.style.display=\'none\'"/>';
   h += '</div></div>';
 
-  h += '</div>'; // relative padding
+  h += '</div>';
 
   h += '<div class="no-print mt-3 mb-2 flex flex-wrap gap-2 justify-center" style="position:relative;z-index:2">';
   h += '<button type="button" class="px-3 py-1.5 rounded text-xs font-bold text-white" style="background:#0ea5e9" onclick="downloadHonorBoardJpg()">📷 Tải ảnh vinh danh .jpg</button>';
