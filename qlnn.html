@@ -9168,22 +9168,56 @@ function reportHeaderHtml(gvcnLabel, clsName, school, year) {
     '&nbsp;&nbsp;&nbsp;LỚP: <span style="color:#9f1239">' + lop + '</span>' +
     '&nbsp;&nbsp;&nbsp;NH: <span style="color:#065f46">' + nh + '</span></div></div>';
 }
-function rankByScoreWithTies(items, scoreKey) {
+/**
+ * Vị thứ lớp (tuần/tháng/HK/năm) — khớp quy tắc Vinh danh:
+ * - Vị 1: HS 0 VP có điểm cao nhất (vd YẾN MY 724)
+ * - Từ vị 2: còn lại xếp theo điểm giảm dần; điểm bằng → cùng hạng
+ *   (HS điểm cao nhất lớp nhưng ≤1 VP vẫn có thể đứng hạng 2, vd HUY 818)
+ * @param items [{id|s.id, score}]
+ * @param scoreKey mặc định "score"
+ * @param weekNos mảng tuần để đếm VP (null = chỉ xếp theo điểm)
+ */
+function rankByScoreWithTies(items, scoreKey, weekNos) {
   scoreKey = scoreKey || "score";
-  var sorted = items.slice().sort(function(a, b) {
-    return Number(b[scoreKey]) - Number(a[scoreKey]);
-  });
-  var posMap = {};
-  var i = 0;
-  while (i < sorted.length) {
-    var j = i;
-    var sc = Number(sorted[i][scoreKey]);
-    while (j < sorted.length && Number(sorted[j][scoreKey]) === sc) j++;
-    var rank = i + 1; // competition ranking
-    for (var k = i; k < j; k++) {
-      var id = sorted[k].s ? sorted[k].s.id : sorted[k].id;
-      posMap[String(id)] = rank;
+  function vpOf(id) {
+    if (!weekNos || !weekNos.length || typeof countViolStatsForRank !== "function") return 0;
+    try { return Number((countViolStatsForRank(id, weekNos) || {}).totalVp) || 0; } catch (e) { return 0; }
+  }
+  var normalized = (items || []).map(function(it) {
+    var id = it && it.s ? it.s.id : (it && it.id);
+    return { id: id, score: Number(it && it[scoreKey]) || 0, vp: vpOf(id) };
+  }).filter(function(x) { return x.id != null && x.id !== ""; });
+
+  var zeroBest = normalized.filter(function(x) { return x.vp === 0; })
+    .sort(function(a, b) { return b.score - a.score || String(a.id).localeCompare(String(b.id), "vi"); })[0];
+
+  var ordered = [];
+  var used = {};
+  if (zeroBest) {
+    ordered.push(zeroBest);
+    used[String(zeroBest.id)] = 1;
+  }
+  normalized.slice().sort(function(a, b) {
+    return b.score - a.score || String(a.id).localeCompare(String(b.id), "vi");
+  }).forEach(function(x) {
+    if (!used[String(x.id)]) {
+      ordered.push(x);
+      used[String(x.id)] = 1;
     }
+  });
+
+  var posMap = {};
+  if (!ordered.length) return posMap;
+  // Hạng 1 cố định cho zeroBest (dù điểm thấp hơn HS có 1 VP)
+  posMap[String(ordered[0].id)] = 1;
+  var rest = ordered.slice(1);
+  var i = 0;
+  while (i < rest.length) {
+    var sc = rest[i].score;
+    var j = i;
+    while (j < rest.length && rest[j].score === sc) j++;
+    var rank = i + 2;
+    for (var k = i; k < j; k++) posMap[String(rest[k].id)] = rank;
     i = j;
   }
   return posMap;
@@ -9675,7 +9709,7 @@ function renderSoKetTo(list) {
     return lines;
   }
 
-  // Dense rank helper
+  // Dense rank helper (nội bộ tổ — chỉ theo điểm)
   function denseRanks(scoreList) {
     var arr = scoreList.slice().sort(function(a, b) { return b.score - a.score; });
     var map = {};
@@ -9687,11 +9721,13 @@ function renderSoKetTo(list) {
     return map;
   }
 
-  // Vị thứ LỚP: so cả lớp (toàn bộ students), điểm tuần cao → thấp
+  // Vị thứ LỚP: ưu tiên 0 VP hạng 1 + điểm (khớp Vinh danh)
   var classPool = (students || []).map(function(s) {
     return { id: s.id, score: weekScoreOf(s.id) };
   });
-  var classRankMap = denseRanks(classPool);
+  var classRankMap = (typeof rankByScoreWithTies === "function")
+    ? rankByScoreWithTies(classPool, "score", [String(weekNo)])
+    : denseRanks(classPool);
 
   var byTeam = {};
   pool.forEach(function(s) {
@@ -10221,19 +10257,27 @@ function renderWeekMonthBoards(list, agg) {
         if (ta !== tb) return ta - tb;
         return String(a.s.id).localeCompare(String(b.s.id), "vi", { numeric: true });
       });
-      // Vị thứ tổ: điểm cao hơn hạng nhỏ hơn; điểm bằng → cùng hạng
+      // Vị thứ tổ: chỉ theo điểm trong tổ
       var posMap = {};
+      var weekNosPos = [String(weekNo)];
       if (isClass) {
         [1,2,3,4].forEach(function(tn) {
           var arr = rowData.filter(function(r){ return String(r.team) === String(tn); });
-          var m = rankByScoreWithTies(arr, "score");
+          var m = rankByScoreWithTies(arr, "score", null);
           Object.keys(m).forEach(function(k){ posMap[k] = m[k]; });
         });
       } else {
-        posMap = rankByScoreWithTies(rowData, "score");
+        posMap = rankByScoreWithTies(rowData, "score", null);
       }
-      // Vị thứ lớp (cả lớp / nhóm đang hiển thị)
-      var classPosMap = rankByScoreWithTies(rowData, "score");
+      // Vị thứ lớp: ưu tiên 0 VP hạng 1 (khớp Vinh danh)
+      var classPosMap = rankByScoreWithTies(
+        (students || []).map(function(s) {
+          var found = rowData.find(function(r){ return String(r.s.id) === String(s.id); });
+          return { id: s.id, score: found ? found.score : 100 };
+        }),
+        "score",
+        weekNosPos
+      );
       html += '<div class="overflow-x-auto"><table class="w-full text-sm" style="table-layout:fixed;border-collapse:collapse">';
       html += '<thead><tr style="background:#f0f9ff;color:#0c4a6e">';
       html += '<th class="py-2 px-1 text-center" style="width:7%">Tổ</th>';
@@ -10499,11 +10543,11 @@ function renderWeekMonthBoards(list, agg) {
       });
       return { id: s.id, team: s.team, score: 100 + b + v };
     });
-    var classRankMapY = typeof rankByScoreWithTies === "function" ? rankByScoreWithTies(rankRows, "score") : {};
+    var classRankMapY = typeof rankByScoreWithTies === "function" ? rankByScoreWithTies(rankRows, "score", weekNos) : {};
     var teamRankMapY = {};
     [1,2,3,4].forEach(function(tn) {
       var arr = rankRows.filter(function(r) { return String(r.team) === String(tn); });
-      var m = typeof rankByScoreWithTies === "function" ? rankByScoreWithTies(arr, "score") : {};
+      var m = typeof rankByScoreWithTies === "function" ? rankByScoreWithTies(arr, "score", null) : {};
       Object.keys(m).forEach(function(k) { teamRankMapY[k] = m[k]; });
     });
     poolSorted.forEach(function(s) {
@@ -11982,15 +12026,20 @@ function renderNotebook() {
     return typeof studentWeekScoreInWeeks === "function" ? studentWeekScoreInWeeks(sid, weekNos) : 100;
   }
 
-  // Class ranks
+  // Class ranks — ưu tiên 0 VP hạng 1 (khớp Vinh danh)
   var allScores = (students || []).map(function(s) {
     return { id: s.id, name: s.name, team: s.team, score: scoreOf(s.id) };
   }).sort(function(a, b) { return b.score - a.score; });
-  var classRank = {}, r = 0, prev = null;
-  allScores.forEach(function(x) {
-    if (prev === null || x.score !== prev) { r += 1; prev = x.score; }
-    classRank[String(x.id)] = r;
-  });
+  var classRank = (typeof rankByScoreWithTies === "function")
+    ? rankByScoreWithTies(allScores, "score", weekNos)
+    : (function() {
+        var m = {}, r = 0, prev = null;
+        allScores.forEach(function(x) {
+          if (prev === null || x.score !== prev) { r += 1; prev = x.score; }
+          m[String(x.id)] = r;
+        });
+        return m;
+      })();
   var idOrder = {};
   (students || []).slice().sort(typeof sortByIdAsc === "function" ? sortByIdAsc : function(a, b) {
     return String(a.id).localeCompare(String(b.id), "vi", { numeric: true });
@@ -13081,22 +13130,46 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   if (st) {
     var allSc = (students || []).map(function(s) {
       return { id: s.id, score: (typeof studentWeekScoreInWeeks === "function" ? studentWeekScoreInWeeks(s.id, weekNos) : 100) };
-    }).sort(function(a, b) { return b.score - a.score; });
-    var rr = 0, prevS = null;
-    allSc.forEach(function(x) {
-      if (prevS === null || x.score !== prevS) { rr += 1; prevS = x.score; }
-      if (String(x.id) === String(st.id)) classPos = rr;
     });
+    var posMapSelf = (typeof rankByScoreWithTies === "function")
+      ? rankByScoreWithTies(allSc, "score", weekNos)
+      : null;
+    if (posMapSelf) {
+      classPos = posMapSelf[String(st.id)] || "…";
+    } else {
+      allSc.sort(function(a, b) { return b.score - a.score; });
+      var rr = 0, prevS = null;
+      allSc.forEach(function(x) {
+        if (prevS === null || x.score !== prevS) { rr += 1; prevS = x.score; }
+        if (String(x.id) === String(st.id)) classPos = rr;
+      });
+    }
   }
   var monthTxt = ctx.scope === "month" ? String(ctx.mon) : "…";
   var periodWord = ctx.scope === "month" ? ("tháng " + monthTxt) : (ctx.scope === "year" ? "năm học" : "học kỳ");
   var scoreLabel = ctx.scope === "month" ? "THÁNG" : (ctx.scope === "year" ? "CẢ NĂM" : "HỌC KỲ");
+  var nextMonthGoal = "";
+  if (ctx.scope === "month" && ctx.mon) {
+    var nm = Number(ctx.mon) + 1;
+    if (nm === 13) nm = 1;
+    nextMonthGoal = "tháng " + nm;
+  } else if (ctx.scope === "year") {
+    nextMonthGoal = "năm học tiếp theo";
+  } else {
+    nextMonthGoal = "học kỳ tiếp theo";
+  }
   var schoolTitle = String(ctx.school || "THPT HÀ HUY TẬP").toUpperCase();
   if (schoolTitle.indexOf("TRƯỜNG") !== 0) schoolTitle = "TRƯỜNG " + schoolTitle;
   var name = st ? String(st.name) : ".................................................";
   var dob = (st && st.dob) ? String(st.dob) : "……………";
   var team = (st && st.team) ? String(st.team) : "…";
   var sid = st ? String(st.id) : "";
+  // Font co giãn 1 hàng cho tên Leader / HS
+  function nameFitStyle(nm) {
+    var len = String(nm || "").length;
+    var fs = len > 22 ? "8.5pt" : (len > 16 ? "9pt" : "10pt");
+    return "font-size:" + fs + ";font-weight:700;white-space:nowrap;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;line-height:1.2";
+  }
 
   // Ngày cuối kỳ/tháng để điền dòng địa điểm
   var dDay = "……", dMon = "……", dYear = "……";
@@ -13128,7 +13201,6 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   h += '<p style="text-align:center;font-weight:bold;margin:2pt 0 8pt 0;font-size:11pt">' + (ctx.periodLabel || "") + '</p>';
   h += '<p style="margin:4pt 0"><b>Kính gửi:</b> BGH nhà trường, GV chủ nhiệm lớp <b>' + (ctx.cls || "") + '</b></p>';
   h += '<p style="margin:3pt 0">Họ và tên học sinh: <b>' + name + '</b>' +
-    (sid ? ' &nbsp;(ID: ' + sid + ')' : '') +
     ' &nbsp;|&nbsp; Tổ: <b>' + team + '</b></p>';
   h += '<p style="margin:6pt 0">Trong ' + periodWord + ', năm học ' + (ctx.year || "2026-2027") +
     ' vừa qua em tự nhận thấy bản thân có những ưu, khuyết điểm như sau:</p>';
@@ -13147,19 +13219,20 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
     h += '<p style="margin:1pt 0 1pt 10pt"><i>Không có vi phạm ghi nhận trong kỳ này.</i></p>';
   }
 
-  // Mục 3: 1 hàng ngang — TỔNG ĐIỂM | Vị thứ tháng/HK | XẾP LOẠI
+  // Mục 3: tiêu đề tách khỏi khung — khung dịch xuống, không che chữ
   var posLabel = ctx.scope === "month"
     ? ("Vị thứ tháng " + (ctx.mon || monthTxt || ""))
     : (ctx.scope === "year" ? "Vị thứ năm học" : "Vị thứ học kỳ");
-  h += '<p style="margin:6pt 0 2pt 0"><b>3. Kết quả xếp loại ' + periodWord + ':</b></p>';
-  h += '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse;width:100%;margin:3pt 0 6pt 0;border:2px solid #000">';
+  h += '<p style="margin:10pt 0 6pt 0;line-height:1.4"><b>3. Kết quả xếp loại ' + periodWord + ':</b></p>';
+  h += '<table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse;width:100%;margin:8pt 0 10pt 0;border:2px solid #000;clear:both">';
   h += '<tr>';
-  h += '<td width="34%" style="text-align:center;vertical-align:middle;padding:6pt 4pt"><span style="font-size:9pt;font-weight:700">TỔNG ĐIỂM ' + scoreLabel + '</span><br/><span style="font-size:14pt;font-weight:900;color:#0f172a">' + (st ? sumScore : "…") + '</span></td>';
-  h += '<td width="33%" style="text-align:center;vertical-align:middle;padding:6pt 4pt"><span style="font-size:9pt;font-weight:700">' + posLabel + '</span><br/><span style="font-size:14pt;font-weight:900;color:#1d4ed8">' + (st ? classPos : "…") + '</span></td>';
-  h += '<td width="33%" style="text-align:center;vertical-align:middle;padding:6pt 4pt"><span style="font-size:9pt;font-weight:700">XẾP LOẠI</span><br/><span style="font-size:13pt;font-weight:900;color:' + (rk.color || "#166534") + '">' + (st ? rk.label : "…") + '</span></td>';
+  h += '<td width="34%" style="text-align:center;vertical-align:middle;padding:8pt 4pt"><div style="font-size:9pt;font-weight:700;margin-bottom:4pt">TỔNG ĐIỂM ' + scoreLabel + '</div><div style="font-size:14pt;font-weight:900;color:#0f172a">' + (st ? sumScore : "…") + '</div></td>';
+  h += '<td width="33%" style="text-align:center;vertical-align:middle;padding:8pt 4pt"><div style="font-size:9pt;font-weight:700;margin-bottom:4pt">' + posLabel + '</div><div style="font-size:14pt;font-weight:900;color:#1d4ed8">' + (st ? classPos : "…") + '</div></td>';
+  h += '<td width="33%" style="text-align:center;vertical-align:middle;padding:8pt 4pt"><div style="font-size:9pt;font-weight:700;margin-bottom:4pt">XẾP LOẠI</div><div style="font-size:13pt;font-weight:900;color:' + (rk.color || "#166534") + '">' + (st ? rk.label : "…") + '</div></td>';
   h += '</tr></table>';
 
-  h += '<p style="margin:6pt 0 2pt 0"><b>4. Ý kiến cá nhân HS và mục tiêu học tập:</b></p>';
+  h += '<p style="margin:8pt 0 2pt 0"><b>4. Ý kiến cá nhân HS và mục tiêu học tập' +
+    (nextMonthGoal ? (' ' + nextMonthGoal) : '') + ':</b></p>';
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
 
@@ -13168,10 +13241,10 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
 
   h += '<p style="text-align:right;margin:10pt 0 4pt 0"><i>Tây Nha Trang, ngày ' + dDay + ' tháng ' + dMon + ' năm ' + dYear + '</i></p>';
-  h += '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4pt"><tr>';
-  h += '<td width="33%" align="center" valign="top"><b>Phụ huynh</b><br/>(ký và ghi tên)<br/><br/><br/><span style="font-size:9pt">…………………</span></td>';
-  h += '<td width="33%" align="center" valign="top"><b>Tổ trưởng/phó</b><br/>(ký và ghi tên)<br/><br/><br/><b style="font-size:10pt">' + leaderName + '</b></td>';
-  h += '<td width="34%" align="center" valign="top"><b>Học sinh</b><br/>(ký và ghi tên)<br/><br/><br/><b style="font-size:10pt">' + name + '</b></td>';
+  h += '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4pt;table-layout:fixed"><tr>';
+  h += '<td width="33%" align="center" valign="top" style="overflow:hidden"><b>Phụ huynh</b><br/><span style="font-size:9pt">(ký và ghi tên)</span><br/><br/><br/><span style="font-size:9pt">…………………</span></td>';
+  h += '<td width="33%" align="center" valign="top" style="overflow:hidden"><b>Tổ trưởng/phó</b><br/><span style="font-size:9pt">(ký và ghi tên)</span><br/><br/><br/><span style="' + nameFitStyle(leaderName) + '" title="' + String(leaderName).replace(/"/g, "&quot;") + '">' + leaderName + '</span></td>';
+  h += '<td width="34%" align="center" valign="top" style="overflow:hidden"><b>Học sinh</b><br/><span style="font-size:9pt">(ký và ghi tên)</span><br/><br/><br/><span style="' + nameFitStyle(name) + '" title="' + String(name).replace(/"/g, "&quot;") + '">' + name + '</span></td>';
   h += '</tr></table>';
   h += '</div>';
   return h;
