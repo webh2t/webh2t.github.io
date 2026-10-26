@@ -13164,11 +13164,16 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   var dob = (st && st.dob) ? String(st.dob) : "……………";
   var team = (st && st.team) ? String(st.team) : "…";
   var sid = st ? String(st.id) : "";
-  // Font co giãn 1 hàng cho tên Leader / HS
+  // Font co giãn 1 hàng — tên dài → chữ nhỏ hơn, không cắt chữ
   function nameFitStyle(nm) {
-    var len = String(nm || "").length;
-    var fs = len > 22 ? "8.5pt" : (len > 16 ? "9pt" : "10pt");
-    return "font-size:" + fs + ";font-weight:700;white-space:nowrap;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;line-height:1.2";
+    var len = String(nm || "").replace(/\s+/g, " ").trim().length;
+    var fs = "9.5pt";
+    if (len > 28) fs = "7pt";
+    else if (len > 22) fs = "7.5pt";
+    else if (len > 18) fs = "8pt";
+    else if (len > 14) fs = "8.5pt";
+    return "font-size:" + fs + ";font-weight:700;line-height:1.15;display:block;width:100%;text-align:center;"
+      + "white-space:nowrap;overflow:visible;letter-spacing:-0.2pt;padding:0 1pt;box-sizing:border-box";
   }
 
   // Ngày cuối kỳ/tháng để điền dòng địa điểm
@@ -13190,9 +13195,9 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
     }
   } catch (errD) {}
 
-  // A5: 148×210mm — padding vừa khít
+  // A5: 148×210mm — padding vừa, chừa đáy cho hàng ký tên
   var h = "";
-  h += '<div class="self-sheet-one" style="font-family:\'Times New Roman\',Times,serif;font-size:10.5pt;color:#000;background:#fff;width:128mm;max-width:128mm;min-height:190mm;padding:8mm 10mm;margin:0 auto;line-height:1.35;box-sizing:border-box;page-break-after:always">';
+  h += '<div class="self-sheet-one" style="font-family:\'Times New Roman\',Times,serif;font-size:10.5pt;color:#000;background:#fff;width:128mm;max-width:128mm;min-height:190mm;padding:7mm 9mm 10mm 9mm;margin:0 auto;line-height:1.3;box-sizing:border-box;page-break-after:always;overflow:visible">';
   h += '<p style="text-align:center;font-weight:bold;margin:0 0 1pt 0;font-size:11pt">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</p>';
   h += '<p style="text-align:center;font-weight:bold;margin:0 0 1pt 0;font-size:11pt">Độc lập - Tự do - Hạnh phúc</p>';
   h += '<p style="text-align:center;margin:0 0 6pt 0">---------------</p>';
@@ -13240,11 +13245,28 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
 
-  h += '<p style="text-align:right;margin:10pt 0 4pt 0"><i>Tây Nha Trang, ngày ' + dDay + ' tháng ' + dMon + ' năm ' + dYear + '</i></p>';
-  h += '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:4pt;table-layout:fixed"><tr>';
-  h += '<td width="33%" align="center" valign="top" style="overflow:hidden"><b>Phụ huynh</b><br/><span style="font-size:9pt">(ký và ghi tên)</span><br/><br/><br/><span style="font-size:9pt">…………………</span></td>';
-  h += '<td width="33%" align="center" valign="top" style="overflow:hidden"><b>Tổ trưởng/phó</b><br/><span style="font-size:9pt">(ký và ghi tên)</span><br/><br/><br/><span style="' + nameFitStyle(leaderName) + '" title="' + String(leaderName).replace(/"/g, "&quot;") + '">' + leaderName + '</span></td>';
-  h += '<td width="34%" align="center" valign="top" style="overflow:hidden"><b>Học sinh</b><br/><span style="font-size:9pt">(ký và ghi tên)</span><br/><br/><br/><span style="' + nameFitStyle(name) + '" title="' + String(name).replace(/"/g, "&quot;") + '">' + name + '</span></td>';
+  h += '<p style="text-align:right;margin:8pt 0 3pt 0;font-size:10pt"><i>Tây Nha Trang, ngày ' + dDay + ' tháng ' + dMon + ' năm ' + dYear + '</i></p>';
+  // 3 cột ký tên — khoảng trống ký nén, tên 1 hàng rõ, chữ co theo độ dài
+  h += '<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:2pt;table-layout:fixed;width:100%;border-collapse:collapse">';
+  h += '<tr>';
+  h += '<td width="33%" style="text-align:center;vertical-align:top;padding:0 2pt">';
+  h += '<div style="font-weight:700;font-size:10pt">Phụ huynh</div>';
+  h += '<div style="font-size:8pt">(ký và ghi tên)</div>';
+  h += '<div style="height:22pt"></div>';
+  h += '<div style="font-size:8.5pt">…………………</div>';
+  h += '</td>';
+  h += '<td width="33%" style="text-align:center;vertical-align:top;padding:0 2pt">';
+  h += '<div style="font-weight:700;font-size:10pt">Tổ trưởng/phó</div>';
+  h += '<div style="font-size:8pt">(ký và ghi tên)</div>';
+  h += '<div style="height:22pt"></div>';
+  h += '<div style="' + nameFitStyle(leaderName) + '">' + leaderName + '</div>';
+  h += '</td>';
+  h += '<td width="34%" style="text-align:center;vertical-align:top;padding:0 2pt">';
+  h += '<div style="font-weight:700;font-size:10pt">Học sinh</div>';
+  h += '<div style="font-size:8pt">(ký và ghi tên)</div>';
+  h += '<div style="height:22pt"></div>';
+  h += '<div style="' + nameFitStyle(name) + '">' + name + '</div>';
+  h += '</td>';
   h += '</tr></table>';
   h += '</div>';
   return h;
