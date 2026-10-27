@@ -625,7 +625,7 @@ window.addEventListener("error", function (ev) {
     <h1 id="page-title">📝 Ôn thi tốt nghiệp THPT – Tin học</h1>
     <div class="warn-red-tn" id="tn-structure-warn" style="display:block!important;background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;border-radius:12px;padding:12px 14px;margin:12px 0 16px;font-size:.88rem;line-height:1.5;font-weight:600">
   ⚠ <b>Cấu trúc đề:</b> Phần 1 – 24 câu TN · Phần 2 – 2 Đ/S chung + 2 Đ/S Tin học ứng dụng (không có phần trả lời ngắn).<br>
-  ⏱ <b>Thời gian: 15 phút</b> đếm ngược. Làm hết câu rồi nộp để xem điểm &amp; đáp án đúng.
+  ⏱ <b>Thời gian: 10 phút</b> đếm ngược. Làm hết câu rồi nộp để xem điểm &amp; đáp án đúng.
 </div>
     <p class="sub" id="page-sub" style="display:none"></p>
     <div class="top-nav">
@@ -813,7 +813,7 @@ window.addEventListener("error", function (ev) {
 <div id="screen-exam" class="no-select">
   <div class="exam-header">
     <div class="title">Ôn thi TN THPT – Tin học</div>
-    <div class="timer-box" id="timer"><span class="timer-icon">⏱️</span> <span id="timer-text">15:00</span></div>
+    <div class="timer-box" id="timer"><span class="timer-icon">⏱️</span> <span id="timer-text">10:00</span></div>
     <button type="button" id="btn-submit-top" class="btn-submit-top">Nộp bài</button>
     <div class="student-info" id="exam-student-info">—</div>
   </div>
@@ -900,7 +900,7 @@ window.addEventListener("error", function (ev) {
 </div>
 
 <script>
-const EXAM_MINUTES = 15; // không giới hạn
+const EXAM_MINUTES = 10; // không giới hạn
 const STORAGE_KEY = "webh2t_totnghiep_scores";
 const DATA_KEY = "tn_v20261027b";
 const SCHEDULE_KEY = "webh2t_tn_lich_v2";
@@ -2455,11 +2455,92 @@ function loadAttempts() {
   try { return JSON.parse(localStorage.getItem("webh2t_tn_attempts_v1") || "[]"); } catch (e) { return []; }
 }
 
+
+function getTnWebhook() {
+  try {
+    var inp = document.getElementById("cloud-webhook");
+    if (inp && inp.value && inp.value.trim()) {
+      localStorage.setItem("webh2t_tn_webhook", inp.value.trim());
+      return inp.value.trim();
+    }
+  } catch (e) {}
+  try {
+    var w = localStorage.getItem("webh2t_tn_webhook") || "";
+    if (w) return w;
+  } catch (e2) {}
+  // Mac dinh: dung webhook diem Tin neu GV da gan
+  try {
+    return localStorage.getItem("webh2t_cloud_webhook") || "";
+  } catch (e3) { return ""; }
+}
+
+function pushAttemptToCloud(rec) {
+  var url = getTnWebhook();
+  if (!url) {
+    console.warn("[TN] Chưa có webhook — chỉ lưu local. Dán URL Apps Script vào ô webhook (GV).");
+    return;
+  }
+  var payload = {
+    action: "tn_attempt",
+    source: "totnghiep",
+    name: rec.name || "",
+    class: rec.class || "",
+    examId: rec.examId || "",
+    examTitle: rec.examTitle || "",
+    score: rec.score,
+    at: rec.at || Date.now(),
+    time: new Date(rec.at || Date.now()).toLocaleString("vi-VN")
+  };
+  try {
+    fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    }).then(function () { console.log("[TN] Đã gửi attempt lên cloud"); }).catch(function (e) { console.warn(e); });
+  } catch (e) { console.warn(e); }
+}
+
+function pullAttemptsFromCloud() {
+  var url = getTnWebhook();
+  if (!url) return Promise.resolve([]);
+  var sep = url.indexOf("?") >= 0 ? "&" : "?";
+  var getUrl = url + sep + "action=tn_list&source=totnghiep&_=" + Date.now();
+  return fetch(getUrl, { method: "GET", cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var list = [];
+      if (Array.isArray(data)) list = data;
+      else if (data && Array.isArray(data.rows)) list = data.rows;
+      else if (data && Array.isArray(data.attempts)) list = data.attempts;
+      // merge vao local
+      var local = [];
+      try { local = JSON.parse(localStorage.getItem("webh2t_tn_attempts_v1") || "[]"); } catch (e) {}
+      var keyset = {};
+      local.forEach(function (x) {
+        var k = (x.name||"")+"|"+(x.class||"")+"|"+(x.examId||"")+"|"+(x.at||"");
+        keyset[k] = true;
+      });
+      list.forEach(function (x) {
+        var k = (x.name||"")+"|"+(x.class||"")+"|"+(x.examId||"")+"|"+(x.at||"");
+        if (!keyset[k]) local.push(x);
+      });
+      try { localStorage.setItem("webh2t_tn_attempts_v1", JSON.stringify(local.slice(-800))); } catch (e2) {}
+      try { renderTnStats(); } catch (e3) {}
+      return local;
+    })
+    .catch(function (e) {
+      console.warn("[TN] pull cloud", e);
+      return [];
+    });
+}
+
 function saveAttemptRecord(rec) {
   var arr = loadAttempts();
   arr.push(rec);
-  try { localStorage.setItem(TN_ATTEMPT_KEY, JSON.stringify(arr.slice(-500))); } catch (e) {}
+  try { localStorage.setItem(TN_ATTEMPT_KEY || "webh2t_tn_attempts_v1", JSON.stringify(arr.slice(-800))); } catch (e) {}
   try { renderTnStats(); } catch (e2) {}
+  try { pushAttemptToCloud(rec); } catch (e3) {}
 }
 function renderTnStats() {
   try {
@@ -2536,7 +2617,7 @@ function ensureTopSubmit() {
 }
 function startTimer() {
   try { clearInterval(timerInterval); } catch (e) {}
-  timeLeft = 15 * 60;
+  timeLeft = (typeof EXAM_MINUTES === "number" && EXAM_MINUTES > 0 ? EXAM_MINUTES : 10) * 60;
   updateTimer();
   timerInterval = setInterval(function () {
     timeLeft--;
@@ -2548,6 +2629,7 @@ function startTimer() {
   }, 1000);
   try { ensureTopSubmit(); } catch (e0) {}
 }
+
 function updateTimer() {
   var m = Math.floor(Math.max(0, timeLeft) / 60);
   var s = Math.max(0, timeLeft) % 60;
@@ -2556,13 +2638,15 @@ function updateTimer() {
   var box = document.getElementById("timer");
   if (box) {
     if (timeLeft <= 60) {
-      box.style.background = "#DC2626";
-      box.style.color = "#fff";
+      box.style.background = "#9A3412";
+      box.style.color = "#FFF7ED";
       box.classList.add("urgent");
+      box.style.animation = "tnBlinkRed 0.55s infinite";
     } else {
       box.style.background = "";
       box.style.color = "";
       box.classList.remove("urgent");
+      box.style.animation = "";
     }
   }
 }
@@ -2963,8 +3047,8 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "";
-  try { localStorage.setItem("webh2t_tn_webhook", WH); } catch (e) {}
+  const WH = (typeof getTnWebhook === "function" ? getTnWebhook() : "") || "";
+  try { if (WH) localStorage.setItem("webh2t_tn_webhook", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
     return false;
@@ -4727,6 +4811,10 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 </script>
 <script>
+(function bootPullTn(){
+  try { pullAttemptsFromCloud(); } catch(e) {}
+  setTimeout(function(){ try { pullAttemptsFromCloud(); } catch(e) {} }, 2500);
+})();
 (function bootTnStats(){
   function run(){ try { if (typeof renderTnStats === "function") renderTnStats(); } catch(e) {} }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
