@@ -78,7 +78,7 @@
 
 .anti-cheat-bar{background:#FEF3C7;color:#92400E;padding:7px 18px;font-size:.82rem;font-weight:600;text-align:center;border-bottom:2px solid #F59E0B}
 .exam-body{display:flex;flex:1;max-width:1600px;margin:0 auto;width:100%;padding:8px 10px 12px 6px;gap:10px}
-.sidebar{width:200px;flex-shrink:0;background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:10px 8px;margin-left:0;height:fit-content;position:sticky;top:95px;border:1px solid #E8EEF7}
+.sidebar{width:100%;}
 .sidebar h3{font-size:.78rem;font-weight:700;color:#5B4BCC;margin:12px 0 8px;padding:0 2px;letter-spacing:.02em}.sidebar h3:first-child{margin-top:0}
 .q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}.q-grid.tf-grid{grid-template-columns:1fr;gap:8px}.q-grid.sa-grid{grid-template-columns:repeat(2,1fr);gap:8px}
 .q-btn{width:100%;min-height:44px;border-radius:10px;font-weight:700;font-size:.8rem;line-height:1.25;padding:8px 6px;background:#EEF3FF;color:#3B5BDB;border:1.5px solid #C5D4F7;cursor:pointer;transition:all .15s;text-align:center}
@@ -422,6 +422,103 @@ body.exam-selected #exam-picker{display:none!important}
 }
 .q-btn.current{ outline:2px solid #4F46E5; }
 .q-btn{ position:relative; }
+
+
+/* NAV-ROW-V7 */
+#screen-exam .exam-body{
+  display:flex!important;
+  flex-direction:column!important;
+  width:100%!important;
+  max-width:1100px!important;
+  margin:0 auto!important;
+  padding:12px 16px 24px!important;
+  box-sizing:border-box!important;
+}
+#screen-exam aside.sidebar,
+#screen-exam .sidebar{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  float:none!important;
+  position:relative!important;
+  background:#fff!important;
+  border:1px solid #E2E8F0!important;
+  border-radius:14px!important;
+  padding:12px 14px!important;
+  margin:0 0 12px 0!important;
+  box-sizing:border-box!important;
+}
+#screen-exam .side-label{
+  display:block!important;
+  width:100%!important;
+  font-size:.8rem!important;
+  font-weight:700!important;
+  color:#64748B!important;
+  margin:8px 0 6px 0!important;
+  clear:both!important;
+}
+#screen-exam .side-label:first-child{ margin-top:0!important; }
+#screen-exam .q-grid,
+#screen-exam #q-grid-p1,
+#screen-exam #q-grid-p2{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  width:100%!important;
+  margin:0 0 4px 0!important;
+  padding:0!important;
+  grid-template-columns:none!important;
+}
+#screen-exam .q-btn{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:44px!important;
+  height:44px!important;
+  min-width:44px!important;
+  max-width:44px!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:10px!important;
+  border:1px solid #E2E8F0!important;
+  background:#FFF7ED!important;
+  color:#9A3412!important;
+  font-size:.85rem!important;
+  font-weight:700!important;
+  cursor:pointer!important;
+  float:none!important;
+}
+#screen-exam .q-btn.answered{
+  background:#EFF6FF!important;
+  border-color:#93C5FD!important;
+  color:#1D4ED8!important;
+}
+#screen-exam .q-btn.current{
+  background:#4F46E5!important;
+  border-color:#4F46E5!important;
+  color:#fff!important;
+}
+#screen-exam .q-btn .tf-row,
+#screen-exam .q-btn .side-top,
+#screen-exam .q-btn .pts-badge,
+#screen-exam .q-btn small{ display:none!important; }
+#screen-exam #question-area,
+#screen-exam .question-area{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  background:#fff!important;
+  border:1px solid #E2E8F0!important;
+  border-radius:14px!important;
+  padding:16px 18px!important;
+  margin:0!important;
+  float:none!important;
+}
+/* vo hieu hoa grid 2 cot cu */
+#screen-exam .exam-body{display:flex;flex-direction:column;}
+#screen-exam .sidebar{ grid-column:auto!important; }
 
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
@@ -2119,14 +2216,17 @@ function buildSidebar() {
   if (g2) g2.className = "q-grid tf-grid";
   if (g3) g3.className = "q-grid sa-grid";
 
-  activeQuestions.forEach((q, i) => {
-    const btn = document.createElement("button");
+  activeQuestions.forEach(function (q, i) {
+    var btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "q-btn" + (q.type === "tf" ? " tf-btn-side" : q.type === "sa" ? " sa-btn-side" : "");
+    btn.className = "q-btn";
     btn.dataset.idx = i;
-    btn.onclick = () => goTo(i);
-    btn.innerHTML = "<span class=\"ans-main\">" + q.displayId + "</span>";
-    document.getElementById(map[q.part]).appendChild(btn);
+    btn.onclick = function () { goTo(i); };
+    btn.textContent = String(i + 1);
+    var targetId = (q.type === "tf" || i >= 24) ? "q-grid-p2" : "q-grid-p1";
+    if (q.type === "sa") targetId = "q-grid-p3";
+    var host = document.getElementById(targetId);
+    if (host) host.appendChild(btn);
   });
   updateSidebar();
 }
