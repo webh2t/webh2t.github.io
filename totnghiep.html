@@ -642,7 +642,7 @@ window.addEventListener("error", function (ev) {
     <div class="stats-bar" id="stats-bar">
       <div class="st-title">📊 Thống kê trang ôn thi</div>
       <div class="stats-grid stats-5">
-        <div class="stat-chip total"><span class="n" id="stat-total">0</span><span class="l">Lượt xem</span></div><div class="stat-chip total"><span class="n" id="stat-attempts">0</span><span class="l">Bài đã nộp (máy này)</span></div>
+        <div class="stat-chip total"><span class="n" id="stat-total">0</span><span class="l">Lượt xem</span></div>
         <div class="stat-chip"><span class="n" id="stat-de1">0</span><span class="l">Đề 1</span></div>
         <div class="stat-chip"><span class="n" id="stat-de2">0</span><span class="l">Đề 2</span></div>
         <div class="stat-chip"><span class="n" id="stat-de3">0</span><span class="l">Đề 3</span></div>
@@ -651,7 +651,7 @@ window.addEventListener("error", function (ev) {
         <div class="stat-chip"><span class="n" id="stat-de6">0</span><span class="l">Đề 6</span></div>
       </div>
     <div id="tn-student-stats-wrap" style="width:100%;max-width:720px;margin:12px auto 0;background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;box-sizing:border-box">
-      <div style="font-weight:800;color:#1E3A8A;margin-bottom:8px">📋 Báo cáo theo học sinh — đề [số lần] (lưu trên máy này)</div>
+      <div style="font-weight:800;color:#1E3A8A;margin-bottom:8px">📋 Báo cáo theo học sinh — toàn hệ thống</div>
       <div id="tn-student-stats"></div>
     </div>
     </div>
@@ -2467,6 +2467,7 @@ function renderTnStats() {
     try { arr = JSON.parse(localStorage.getItem("webh2t_tn_attempts_v1") || "[]"); } catch (e0) { arr = []; }
     if (!Array.isArray(arr)) arr = [];
     var byExam = { de1:0, de2:0, de3:0, de4:0, de5:0, de6:0 };
+    // byStudent[name][exam] = count
     var byStudent = {};
     arr.forEach(function (r) {
       if (!r) return;
@@ -2485,33 +2486,36 @@ function renderTnStats() {
       var ek = mapped || eid || "khac";
       byStudent[k][ek] = (byStudent[k][ek] || 0) + 1;
     });
-    // Ghi so de
     ["de1","de2","de3","de4","de5","de6"].forEach(function (id) {
       var el = document.getElementById("stat-" + id);
       if (el) el.textContent = String(byExam[id] || 0);
     });
-    var att = document.getElementById("stat-attempts");
-    if (att) att.textContent = String(arr.length);
-    // Bang HS
     var box = document.getElementById("tn-student-stats");
     if (box) {
       var keys = Object.keys(byStudent).sort();
       if (!keys.length) {
-        box.innerHTML = '<div style="color:#64748B;font-size:.85rem;padding:8px 4px">Chưa có bài nộp trên máy này. Hãy <b>chọn đề → làm bài → Nộp bài</b> để ghi nhận thống kê.</div>';
+        box.innerHTML = '<div style="color:#64748B;font-size:.85rem;padding:8px 4px">Chưa có dữ liệu. Sau khi học sinh <b>Nộp bài</b>, báo cáo sẽ hiển thị tại đây.</div>';
       } else {
         var h = '<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
           + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Học sinh</th>'
-          + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Đề [số lần]</th>'
-          + '<th style="text-align:right;padding:6px;border-bottom:1px solid #E2E8F0">Tổng</th></tr></thead><tbody>';
+          + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Đề</th>'
+          + '<th style="text-align:center;padding:6px;border-bottom:1px solid #E2E8F0">Số lần</th>'
+          + '<th style="text-align:right;padding:6px;border-bottom:1px solid #E2E8F0">Tổng</th>'
+          + '</tr></thead><tbody>';
         keys.forEach(function (name) {
-          var parts = []; var sum = 0;
-          Object.keys(byStudent[name]).sort().forEach(function (eid) {
-            var n = byStudent[name][eid]; sum += n;
-            parts.push(String(eid).toUpperCase() + " [" + n + "]");
+          var exams = Object.keys(byStudent[name]).sort();
+          var sum = 0;
+          exams.forEach(function (eid) { sum += byStudent[name][eid]; });
+          exams.forEach(function (eid, ix) {
+            var n = byStudent[name][eid];
+            var deLabel = String(eid).toUpperCase().replace(/^DE/, "Đề ");
+            h += '<tr>';
+            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + (ix === 0 ? name : "") + '</td>';
+            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + deLabel + '</td>';
+            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:center">' + n + '</td>';
+            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:right;font-weight:700">' + (ix === 0 ? sum : "") + '</td>';
+            h += '</tr>';
           });
-          h += '<tr><td style="padding:6px;border-bottom:1px solid #F1F5F9">' + name + '</td>'
-            + '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + parts.join(" · ") + '</td>'
-            + '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:right;font-weight:700">' + sum + '</td></tr>';
         });
         h += '</tbody></table>';
         box.innerHTML = h;
