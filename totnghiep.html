@@ -361,56 +361,67 @@ body.exam-selected #exam-picker{display:none!important}
 .warn-red-tn { display:block!important; }
 
 
-/* EXAM-LAYOUT-V5 */
+
+
+
+/* EQUAL-WIDTH-V6 */
+#screen-exam{
+  max-width:1100px; margin:0 auto;
+}
 .exam-header{
-  display:flex!important; flex-wrap:wrap; align-items:center; gap:12px;
+  display:grid!important;
+  grid-template-columns: 1fr auto auto auto;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  box-sizing:border-box;
   padding:12px 16px!important;
 }
-.exam-header .title{ flex:0 1 auto; font-size:1rem!important; line-height:1.3; }
+.exam-header .title{ justify-self:start; }
 .exam-header .timer-box, #timer{
-  margin:0 auto!important;
-  min-width:110px; text-align:center;
-  font-size:1.35rem!important; font-weight:800!important;
+  width:120px!important; min-width:120px!important; max-width:120px!important;
+  margin:0!important; text-align:center;
+  font-size:1.3rem!important; font-weight:800!important;
+  justify-self:center;
 }
-.btn-submit-top, #btn-submit-top{
+#btn-submit-top, .btn-submit-top{
+  width:120px!important; min-width:120px!important; max-width:120px!important;
+  box-sizing:border-box;
   background:#16A34A!important; color:#fff!important; border:0;
-  border-radius:12px; padding:10px 22px; font-weight:800; font-size:1rem;
-  cursor:pointer; white-space:nowrap;
+  border-radius:12px; padding:10px 8px; font-weight:800; font-size:.95rem;
+  cursor:pointer; text-align:center;
 }
-.exam-header .student-info, #exam-student-info{
-  margin-left:auto; font-weight:700; font-size:.95rem;
-  background:rgba(255,255,255,.18); padding:8px 14px; border-radius:999px;
-}
+.exam-header .student-info{ justify-self:end; }
 .exam-body{
   display:flex!important; flex-direction:column!important;
-  gap:10px; padding:12px 16px 24px!important;
+  width:100%; max-width:1100px; margin:0 auto; box-sizing:border-box;
+  padding:12px 16px 24px!important; gap:12px;
 }
-.exam-body .sidebar, .exam-body aside.sidebar{
+.exam-body .sidebar, aside.sidebar{
   width:100%!important; max-width:100%!important;
-  display:flex!important; flex-wrap:wrap!important; align-items:center; gap:6px;
-  border:none!important; border-bottom:1px solid #E2E8F0!important;
-  padding:8px 0 12px!important; margin:0!important;
-  max-height:none!important; overflow:visible!important;
-  background:transparent!important;
-}
-.exam-body .sidebar h3, .side-label{
-  width:100%; font-size:.78rem; font-weight:700; color:#64748B; margin:4px 0 2px;
-}
-.exam-body .q-grid{
+  box-sizing:border-box;
+  background:#fff!important; border:1px solid #E2E8F0!important;
+  border-radius:14px!important; padding:12px 14px!important;
   display:flex!important; flex-wrap:wrap!important; gap:6px!important;
-  width:auto!important;
+  align-items:center;
 }
-.exam-body .q-btn, .sidebar .q-btn{
-  width:42px!important; height:42px!important; min-width:42px!important;
-  padding:0!important; border-radius:10px!important; font-size:.85rem!important;
-}
-.exam-body .q-btn .tf-row, .exam-body .q-btn .side-top, .exam-body .q-btn .pts-badge{ display:none!important; }
 .exam-body .question-area, #question-area{
-  width:100%!important; max-width:960px!important; margin:0 auto!important;
-  font-size:1.12rem!important;
+  width:100%!important; max-width:100%!important;
+  box-sizing:border-box;
+  background:#fff; border:1px solid #E2E8F0; border-radius:14px;
+  padding:16px 18px!important; margin:0!important;
 }
-#question-area .q-text{ font-size:1.25rem!important; line-height:1.55!important; color:#B91C1C!important; font-weight:700!important; }
-#question-area .opt{ font-size:1.12rem!important; padding:14px 16px!important; margin-bottom:10px!important; }
+/* Câu đã làm: chữ đáp án xanh; chưa làm: nền vàng cam nhạt */
+.q-btn.answered{
+  background:#EFF6FF!important; border-color:#93C5FD!important;
+  color:#1D4ED8!important; font-weight:800!important;
+}
+.q-btn.answered .ans-letter{ color:#1D4ED8!important; font-weight:800; }
+.q-btn:not(.answered):not(.current){
+  background:#FFF7ED!important; border-color:#FDBA74!important; color:#9A3412!important;
+}
+.q-btn.current{ outline:2px solid #4F46E5; }
+.q-btn{ position:relative; }
 
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
@@ -470,6 +481,10 @@ window.addEventListener("error", function (ev) {
         <div class="stat-chip"><span class="n" id="stat-de5">…</span><span class="l">Đề 5</span></div>
         <div class="stat-chip"><span class="n" id="stat-de6">…</span><span class="l">Đề 6</span></div>
       </div>
+    <div id="tn-student-stats-wrap" style="width:100%;max-width:720px;margin:12px auto 0;background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;box-sizing:border-box">
+      <div style="font-weight:800;color:#1E3A8A;margin-bottom:8px">📋 Thống kê theo học sinh (máy này)</div>
+      <div id="tn-student-stats"></div>
+    </div>
     </div>
 
     <div id="exam-current" class="exam-current">
@@ -1552,7 +1567,7 @@ function selectExam(ex) {
         });
       } catch (eL) { console.warn(eL); }
     }
-    renderExamPicker();
+    renderExamPicker(); try { renderTnStats(); } catch(eS) {}
     try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
   }
   function clearExamSelection() {
@@ -2143,22 +2158,38 @@ function updateSidebar() {
     const q = activeQuestions[idx];
     if (!q) return;
     btn.classList.toggle("current", idx === currentQ);
-    btn.classList.toggle("answered", isAnswered(q));
-    const info = formatSideContent(q);
-    const ptsBadge = "<span class=\"pts-badge\">" + (info.pts || "") + "</span>";
-    if (q.type === "tf") {
-      const cells = (info.tf || []).map(c =>
-        "<span class=\"tf-cell\">" + c.L + ". " + c.v + "</span>"
-      ).join("");
-      btn.innerHTML = "<div class=\"side-top\"><span class=\"ans-main\">" + info.main + "</span>" + ptsBadge + "</div><div class=\"tf-row\">" + cells + "</div>";
-    } else if (q.type === "sa") {
-      btn.innerHTML = "<div class=\"side-top\"><span class=\"ans-main\">" + info.main + "</span>" + ptsBadge + "</div>" +
-        (info.sub ? "<span class=\"ans-sub\">" + info.sub + "</span>" : "");
-    } else {
-      btn.innerHTML = "<div class=\"side-top\"><span class=\"ans-main\">" + info.main + "</span>" + ptsBadge + "</div>";
+    const answered = isAnswered(q);
+    btn.classList.toggle("answered", answered);
+    // Hien thi: so cau + dap an da chon (chu xanh khi answered)
+    if (q.type === "mc") {
+      var letter = "";
+      if (answers[q.uid] !== undefined && answers[q.uid] !== null) {
+        letter = String.fromCharCode(65 + (+answers[q.uid]));
+      }
+      btn.innerHTML = answered
+        ? ('<span class="ans-letter">' + (idx + 1) + "." + letter + "</span>")
+        : ("<span>" + (idx + 1) + "</span>");
+      return;
     }
+    if (q.type === "tf") {
+      var ans = answers[q.uid];
+      var marks = "";
+      if (Array.isArray(ans)) {
+        marks = ans.map(function (v, i) {
+          if (v === true) return "Đ";
+          if (v === false) return "S";
+          return "·";
+        }).join("");
+      }
+      btn.innerHTML = answered
+        ? ('<span class="ans-letter">' + (idx + 1) + "</span><small style=\"display:block;font-size:.65rem;color:#1D4ED8\">" + marks + "</small>")
+        : ("<span>" + (idx + 1) + "</span>");
+      return;
+    }
+    btn.textContent = String(idx + 1);
   });
 }
+
 
 function isAnswered(q) {
   const k = q.uid;
@@ -2219,7 +2250,7 @@ function renderQuestion(idx) {
   html += '<button class="btn-nav btn-prev" id="btn-prev" ' + (idx === 0 ? "disabled" : "") + '>← Previous</button>';
   if (idx < activeQuestions.length - 1)
     html += '<button class="btn-nav btn-next" id="btn-next">Next →</button>';
-  html += '<div class="btn-submit-wrap"><button class="btn-nav btn-submit" id="btn-submit">🚀 Nộp bài</button></div>';
+  /* Nộp bài chỉ ở thanh tiêu đề */
   html += "</div>";
   area.innerHTML = html;
   updateSidebar();
@@ -2244,6 +2275,72 @@ function goTo(idx) {
   const sa = document.getElementById("sa-input");
   if (sa) answers[activeQuestions[currentQ].uid] = sa.value;
   renderQuestion(idx);
+}
+
+
+var TN_ATTEMPT_KEY = "webh2t_tn_attempts_v1";
+function loadAttempts() {
+  try { return JSON.parse(localStorage.getItem(TN_ATTEMPT_KEY) || "[]"); } catch (e) { return []; }
+}
+function saveAttemptRecord(rec) {
+  var arr = loadAttempts();
+  arr.push(rec);
+  try { localStorage.setItem(TN_ATTEMPT_KEY, JSON.stringify(arr.slice(-500))); } catch (e) {}
+  try { renderTnStats(); } catch (e2) {}
+}
+function renderTnStats() {
+  var arr = loadAttempts();
+  var byExam = {};
+  var byStudent = {};
+  arr.forEach(function (r) {
+    var eid = r.examId || r.exam || "?";
+    byExam[eid] = (byExam[eid] || 0) + 1;
+    var k = (r.name || "?") + " · " + (r.class || "");
+    if (!byStudent[k]) byStudent[k] = {};
+    byStudent[k][eid] = (byStudent[k][eid] || 0) + 1;
+  });
+  // Cap nhat o thong ke de
+  ["de1","de2","de3","de4","de5","de6"].forEach(function (id, i) {
+    var el = document.getElementById("stat-" + id);
+    if (!el) return;
+    var key = "de" + (i + 1);
+    // map exam ids de1.. 
+    var n = 0;
+    Object.keys(byExam).forEach(function (k) {
+      if (String(k).toLowerCase().indexOf("de" + (i + 1)) >= 0 || String(k) === String(i + 1)) n += byExam[k];
+    });
+    // also match tnde
+    if (!n) {
+      Object.keys(byExam).forEach(function (k) {
+        if (String(k).toLowerCase().indexOf("tnde" + (i + 1)) >= 0) n += byExam[k];
+      });
+    }
+    el.textContent = n || (byExam["de"+(i+1)] || 0) || "0";
+  });
+  var totalEl = document.getElementById("stat-total");
+  if (totalEl) totalEl.textContent = String(arr.length);
+  // Bang theo HS
+  var box = document.getElementById("tn-student-stats");
+  if (!box) return;
+  var keys = Object.keys(byStudent).sort();
+  if (!keys.length) {
+    box.innerHTML = "<div style=\"color:#64748B;font-size:.85rem;padding:8px\">Chưa có lượt làm nào trên máy này.</div>";
+    return;
+  }
+  var h = "<table style=\"width:100%;border-collapse:collapse;font-size:.82rem\"><thead><tr>"
+    + "<th style=\"text-align:left;padding:6px;border-bottom:1px solid #E2E8F0\">Học sinh</th>"
+    + "<th style=\"text-align:left;padding:6px;border-bottom:1px solid #E2E8F0\">Đề [số lần]</th>"
+    + "</tr></thead><tbody>";
+  keys.slice(0, 40).forEach(function (name) {
+    var parts = [];
+    Object.keys(byStudent[name]).sort().forEach(function (eid) {
+      parts.push(eid + " [" + byStudent[name][eid] + "]");
+    });
+    h += "<tr><td style=\"padding:6px;border-bottom:1px solid #F1F5F9\">" + name + "</td>"
+      + "<td style=\"padding:6px;border-bottom:1px solid #F1F5F9\">" + parts.join(" · ") + "</td></tr>";
+  });
+  h += "</tbody></table>";
+  box.innerHTML = h;
 }
 
 function ensureTopSubmit() {
@@ -2313,6 +2410,8 @@ function buildPattern() {
 }
 
 async function submitExam(auto) {
+  // se ghi attempt sau khi cham
+
   if (examCancelled) return;
 
   // Chuẩn hoá đáp án TF: object {a,b,c,d} → mảng [bool,bool,bool,bool]
@@ -2509,6 +2608,16 @@ async function submitExam(auto) {
   }
 
   document.getElementById("screen-exam").style.display = "none";
+  try {
+    saveAttemptRecord({
+      name: selectedStudent,
+      class: selectedClass,
+      examId: (currentExam && (currentExam.id || currentExam.code)) || "de?",
+      examTitle: (currentExam && currentExam.title) || "",
+      score: typeof totalScore !== "undefined" ? totalScore : null,
+      at: Date.now()
+    });
+  } catch (eAtt) {}
   document.getElementById("screen-result").style.display = "block";
   try { document.getElementById("screen-exam").style.display = "none"; document.getElementById("screen-select").style.display = "none"; } catch(eSc) {}
   document.getElementById("final-score").innerHTML = totalScore + "<span>/10</span>";
