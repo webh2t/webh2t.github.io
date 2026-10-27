@@ -887,6 +887,7 @@ function parseWorkbook(wb) {
         else if (n === "anh b" || n === "hinh b") col.imgb = i;
         else if (n === "anh c" || n === "hinh c") col.imgc = i;
         else if (n === "anh d" || n === "hinh d") col.imgd = i;
+        else if (/^nhom$|^group$/.test(n)) col.nhom = i;
       });
       // fallback vị trí cố định nếu thiếu tên
       if (col.qid == null && /^qid/i.test(String(rawRows[0][0] || ""))) col.qid = 0;
@@ -964,7 +965,7 @@ function parseWorkbook(wb) {
       }
       if (type === "MC" && part === 1) {
         questionBank.part1.push({
-          type: "mc", qid: finalQid, text: text, options: opts, group: (row.Nhóm || row.Nhom || row.group || ""),
+          type: "mc", qid: finalQid, text: text, options: opts, group: String(cell(row, "nhom") || "").trim(),
           correct: letterMap[ansRaw.charAt(0).toUpperCase()] != null ? letterMap[ansRaw.charAt(0).toUpperCase()] : 0,
           maxPts: maxPts != null ? maxPts : 0.25,
           imgQ: imgQ, videoQ: videoQ, imgOpts: imgOpts
@@ -973,7 +974,7 @@ function parseWorkbook(wb) {
         const ansClean = ansRaw.replace(/[\s\/|,;]/g, "");
         questionBank.part2.push({
           type: "tf", qid: finalQid, text: text,
-          group: String(row["Nhóm"] || row["Nhom"] || row["group"] || row[16] || ""),
+          group: String(cell(row, "nhom") || "").trim(),
           statements: [0, 1, 2, 3].map(function (i) {
             return {
               text: opts[i] || "",
@@ -1207,6 +1208,26 @@ function parseWorkbook(wb) {
 
   
   dataReady = true;
+  try {
+    var n1 = (questionBank.part1 || []).length;
+    var n2 = (questionBank.part2 || []).length;
+    var nHS = Object.keys(studentsByClass || {}).length;
+    console.log("[TN] Parse xong: MC=" + n1 + " TF=" + n2 + " lớp=" + nHS, questionBank);
+    if (loadBar) {
+      if (n1 < 1) {
+        loadBar.style.display = "block";
+        loadBar.textContent = "⚠️ File đề không có câu hỏi Phần 1 (MC). Kiểm tra sheet CauHoi: cột Phần=1, Loại=MC.";
+        loadBar.style.background = "#FEE2E2";
+        loadBar.style.color = "#991B1B";
+      } else {
+        loadBar.style.display = "block";
+        loadBar.textContent = "✅ Đã tải đề: " + n1 + " câu TN + " + n2 + " câu Đ/S · " + nHS + " lớp.";
+        loadBar.style.background = "#ECFDF5";
+        loadBar.style.color = "#065F46";
+        setTimeout(function(){ if (loadBar) loadBar.style.display = "none"; }, 4000);
+      }
+    }
+  } catch (eV) {}
   refreshClassDropdown();
   try { if (typeof renderScheduleList === "function") renderScheduleList(); } catch(e) {}
   loadBar.style.display = "none";
@@ -1354,7 +1375,7 @@ function exitAdminHint() {
   }
   // —— Multi-exam picker ——
   function examUrl(ex) {
-    return DATA_BASE + encodeURIComponent(ex.file) + "?t=" + Date.now();
+    return DATA_BASE + String(ex.file || "").replace(/^\//, "") + "?t=" + Date.now();
   }
   function renderExamPicker() {
     const box = document.getElementById("exam-picker");
@@ -3999,9 +4020,13 @@ function tidyBlogComment_(s) {
       Upload ảnh đề (JPG) hoặc PDF → <b>OCR tiếng Việt</b> tách câu vào Excel 28 dòng. Nên rà soát & điền đáp án (OCR có thể sai).: 24 TN (Phần 1) + 2 Đ/S phần chung + 2 Đ/S Tin học ứng dụng.
       Đặt ảnh vào <code>assets/THPT/</code> trên GitHub; điền nội dung/đáp án trong Excel.
     </p>
-    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Chọn ảnh hoặc PDF</label>
+    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">1) Ảnh/PDF đề thi (nhiều trang)</label>
     <input type="file" id="conv-files" accept="image/*,.pdf,application/pdf" multiple
       style="width:100%;padding:10px;border:1px dashed #93C5FD;border-radius:10px;background:#F8FAFC;margin-bottom:10px;box-sizing:border-box">
+    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">2) Ảnh/PDF đáp án (tuỳ chọn — hoặc file Excel đáp án)</label>
+    <input type="file" id="conv-ans-files" accept="image/*,.pdf,application/pdf,.xlsx,.xls"
+      style="width:100%;padding:10px;border:1px dashed #FDBA74;border-radius:10px;background:#FFF7ED;margin-bottom:10px;box-sizing:border-box">
+    <p style="font-size:.78rem;color:#9A3412;margin:0 0 10px;line-height:1.4">File Excel đáp án mẫu: cột <b>Câu | Đáp án</b> (1|D, 2|B…) hoặc sheet <b>DapAn</b>. Ảnh đáp án dạng bảng cũng được OCR.</p>
     <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Tên đề (file)</label>
     <input type="text" id="conv-name" value="tnde_moi" placeholder="tnde7"
       style="width:100%;padding:10px 12px;border:1px solid #CBD5E1;border-radius:10px;margin-bottom:12px;box-sizing:border-box">
@@ -4121,7 +4146,7 @@ function tidyBlogComment_(s) {
     var ansMap = {};
     if (answerHint) {
       // patterns like "1 D" or table style
-      var re = /(?:^|\n)\s*(\d{1,2})\s*[|: ]\s*([A-DĐđSs])/gi;
+      var re = /(?:^|\n)\s*(\d{1,2})\s*[\.|:|\)\]\s]+\s*([A-Da-dĐđSs])/gi;
       var mm;
       while ((mm = re.exec(answerHint))) {
         ansMap[parseInt(mm[1], 10)] = mm[2].toUpperCase().replace("Đ", "Đ");
@@ -4180,6 +4205,8 @@ function tidyBlogComment_(s) {
       var nameEl = document.getElementById("conv-name");
       var st = document.getElementById("conv-status");
       var files = inp && inp.files ? Array.prototype.slice.call(inp.files) : [];
+      var ansInp = document.getElementById("conv-ans-files");
+      var ansFiles = ansInp && ansInp.files ? Array.prototype.slice.call(ansInp.files) : [];
       var deName = (nameEl && nameEl.value || "tnde_moi").replace(/[^\w\-]+/g, "_");
       if (typeof XLSX === "undefined") {
         if (st) st.textContent = "Thiếu thư viện XLSX.";
@@ -4205,9 +4232,32 @@ function tidyBlogComment_(s) {
           }
         }
         var joined = allText.join("\n\n");
+        var ansText = "";
+        for (var af = 0; af < ansFiles.length; af++) {
+          var af0 = ansFiles[af];
+          var an = (af0.name || "").toLowerCase();
+          if (an.endsWith(".xlsx") || an.endsWith(".xls")) {
+            try {
+              var ab = await af0.arrayBuffer();
+              var awb = XLSX.read(new Uint8Array(ab), { type: "array" });
+              var asn = awb.SheetNames || [];
+              var ash = awb.Sheets[asn.find(function(n){ return /dapan|dap an|answer/i.test(n); }) || asn[0]];
+              var arows = XLSX.utils.sheet_to_json(ash, { header: 1, defval: "" });
+              arows.forEach(function(r){
+                if (r[0] != null && r[1] != null) ansText += String(r[0]).trim() + " " + String(r[1]).trim() + "\n";
+              });
+            } catch (eA) { console.warn(eA); }
+          } else {
+            if (st) st.textContent = "OCR đáp án " + (af+1) + "/" + ansFiles.length + "…";
+            var aurls = await fileToImageDataURLs(af0);
+            for (var ui2 = 0; ui2 < aurls.length; ui2++) {
+              ansText += "\n" + await ocrImage(aurls[ui2], function(){});
+            }
+          }
+        }
         var parsed = parseQuestionsFromText(joined);
-        if (st) st.textContent = "Đã OCR " + parsed.length + " khối câu — đang tạo Excel…";
-        var wb = buildWorkbookFromParsed(parsed, deName, joined);
+        if (st) st.textContent = "Đã OCR " + parsed.length + " câu + đáp án — đang tạo Excel…";
+        var wb = buildWorkbookFromParsed(parsed, deName, joined + "\n" + ansText);
         XLSX.writeFile(wb, deName + ".xlsx");
         if (st) st.textContent = "✅ Đã tải " + deName + ".xlsx (" + parsed.length + " khối OCR). Hãy mở Excel kiểm tra & sửa đáp án.";
       } catch (e) {
