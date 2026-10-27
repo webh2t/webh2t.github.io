@@ -348,6 +348,10 @@
 #exam-list,.exam-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .stats-grid.stats-5{grid-template-columns:repeat(3,1fr)!important}
 
+
+#student-ui.is-open{display:block!important;visibility:visible!important;margin-top:12px}
+.exam-current.visible{display:flex!important}
+#load-bar{margin:10px 0;padding:10px 12px;border-radius:10px;font-size:.88rem;font-weight:600}
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -402,12 +406,9 @@ window.addEventListener("error", function (ev) {
         <div class="stat-chip"><span class="n" id="stat-de5">…</span><span class="l">Đề 5</span></div>
         <div class="stat-chip"><span class="n" id="stat-de6">…</span><span class="l">Đề 6</span></div>
       </div>
-      </div>
-      </div>
-      </div>
     </div>
-    <div 
-<div id="exam-current" class="exam-current">
+
+    <div id="exam-current" class="exam-current">
       <span id="exam-current-label">—</span>
       <button type="button" id="btn-change-exam">Đổi bài</button>
     </div>
@@ -1408,7 +1409,13 @@ function exitAdminHint() {
     const picker = document.getElementById("exam-picker");
     if (picker) picker.style.display = "none";
     const sui = document.getElementById("student-ui");
-    if (sui) sui.style.display = "block";
+    if (sui) {
+      sui.style.display = "block";
+      sui.style.visibility = "visible";
+      sui.classList.add("is-open");
+    }
+    const cur2 = document.getElementById("exam-current");
+    if (cur2) { cur2.classList.add("visible"); cur2.style.display = "flex"; }
     // reset bank before load
     studentsByClass = {};
     questionBank = { part1: [], part2: [], part3: [] };
@@ -1441,7 +1448,26 @@ function exitAdminHint() {
       if (blog) blog.style.display = "none";
       const selEl = document.getElementById("screen-select");
       if (selEl) selEl.style.display = "block";
-      try { loadFromUrl(examUrl(ex)); } catch (eL) { console.warn(eL); }
+      try {
+        loadFromUrl(examUrl(ex)).then(function(ok){
+          var sui3 = document.getElementById("student-ui");
+          if (sui3) { sui3.style.display = "block"; sui3.classList.add("is-open"); }
+          if (!ok && loadBar) {
+            loadBar.style.display = "block";
+            loadBar.textContent = "⚠️ Không tải được " + (ex.file||"") + " — kiểm tra data/ trên GitHub.";
+            loadBar.style.background = "#FEE2E2";
+            loadBar.style.color = "#991B1B";
+          }
+        }).catch(function(e){
+          console.warn(e);
+          if (loadBar) {
+            loadBar.style.display = "block";
+            loadBar.textContent = "⚠️ Lỗi tải đề: " + (e.message||e);
+            loadBar.style.background = "#FEE2E2";
+            loadBar.style.color = "#991B1B";
+          }
+        });
+      } catch (eL) { console.warn(eL); }
     }
     renderExamPicker();
     try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
