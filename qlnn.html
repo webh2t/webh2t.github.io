@@ -13210,34 +13210,39 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
     '<option value="__ALL__">📋 CẢ LỚP (' + (students || []).length + ' HS)</option>' +
     students.slice().sort(sortByIdAsc).map(s => '<option value="' + s.id + '">' + s.name + " (Tổ " + (s.team||"?") + ")</option>").join("") +
     '</select></div>';
-  h += '<button type="button" onclick="(function(){var s=document.getElementById(\'nbSelfStudent\');if(s){s.value=\'__ALL__\';fillSelfAssessment();}})()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#7c3aed;color:#fff">📋 Cả lớp</button>';
-  h += '<label class="px-3 py-2 rounded-lg font-bold text-sm cursor-pointer" style="background:#0f766e;color:#fff">📤 Upload SDGHS.xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadSdghsExamFile(event)"></label>';
+  // Nút nền trắng · viền màu phân biệt
+  var btnBase = "px-3 py-2 rounded-lg font-bold text-sm cursor-pointer";
+  var btnWhite = "background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.06)";
+  h += '<button type="button" onclick="(function(){var s=document.getElementById(\'nbSelfStudent\');if(s){s.value=\'__ALL__\';fillSelfAssessment();}})()" class="' + btnBase + '" style="' + btnWhite + ';color:#6d28d9;border:2px solid #7c3aed">📋 Cả lớp</button>';
+  h += '<label class="' + btnBase + '" style="' + btnWhite + ';color:#0f766e;border:2px solid #0d9488">📤 Upload SDGHS.xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadSdghsExamFile(event)"></label>';
   h += '</div>';
   // 5 nút kỳ điểm — chỉ hiện kỳ phù hợp phạm vi
   if (allowedExams.length) {
     h += '<div class="mb-3 no-print flex flex-wrap gap-2 items-center">';
-    h += '<span class="text-sm text-slate-400 font-semibold">Mục 4 · Chèn điểm kiểm tra:</span>';
+    h += '<span class="text-sm text-slate-600 font-semibold">Mục 4 · Chèn điểm kiểm tra:</span>';
     allowedExams.forEach(function(k) {
       var meta = EXAM_PERIOD_META[k] || { label: k };
       var on = !!(window._nbSelfSelectedExams && window._nbSelfSelectedExams[k]);
       var has = examPeriodHasAnyScore(k);
-      var bg = on ? "#2563eb" : (has ? "#334155" : "#64748b");
-      h += '<button type="button" onclick="toggleSelfExamPeriod(\'' + k + '\')" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:' + bg + ';color:#fff;border:2px solid ' + (on ? "#93c5fd" : "transparent") + '">' +
+      var border = on ? "#1d4ed8" : (has ? "#64748b" : "#94a3b8");
+      var color = on ? "#1e40af" : (has ? "#334155" : "#64748b");
+      var bg = on ? "#eff6ff" : "#fff";
+      h += '<button type="button" onclick="toggleSelfExamPeriod(\'' + k + '\')" class="' + btnBase + '" style="background:' + bg + ';color:' + color + ';border:2px solid ' + border + '">' +
         (on ? "✓ " : "") + meta.label + (has ? "" : " (trống)") + "</button>";
     });
     h += '</div>';
   } else {
-    h += '<p class="text-sm text-slate-400 mb-2 no-print">Tháng này chưa có kỳ điểm kiểm tra (GK/CK) — không hiện nút điểm.</p>';
+    h += '<p class="text-sm text-slate-500 mb-2 no-print">Tháng này chưa có kỳ điểm kiểm tra (GK/CK) — không hiện nút điểm.</p>';
   }
   h += '<div id="nbSelfForm" class="week-board bg-white text-slate-900"></div>';
   h += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
-  h += '<button type="button" onclick="fillSelfAssessment()" class="px-3 py-2 rounded-lg bg-slate-600 text-white text-sm">Làm mới phiếu</button>';
-  h += '<button type="button" onclick="downloadSelfJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#0ea5e9;color:#fff">📷 Tải .jpg</button>';
-  h += '<button type="button" onclick="downloadSelfDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#16a34a;color:#fff">📝 Tải .docx</button>';
-  h += '<button type="button" onclick="downloadSelfDoc()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#2563eb;color:#fff">📝 Tải Word (.doc)</button>';
-  h += '<button type="button" onclick="downloadSelfPdf()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#dc2626;color:#fff">📄 Tải PDF</button>';
-  h += '<button type="button" onclick="downloadSelfClassAllDocx()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#ca8a04;color:#fff">📦 ZIP Word cả lớp (.doc × HS)</button>';
-  h += '<button type="button" onclick="downloadSelfClassAllJpg()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#db2777;color:#fff">📦 ZIP JPG cả lớp (× HS)</button>';
+  h += '<button type="button" onclick="fillSelfAssessment()" class="' + btnBase + '" style="' + btnWhite + ';color:#475569;border:2px solid #64748b">Làm mới phiếu</button>';
+  h += '<button type="button" onclick="downloadSelfJpg()" class="' + btnBase + '" style="' + btnWhite + ';color:#0369a1;border:2px solid #0ea5e9">📷 Tải .jpg</button>';
+  h += '<button type="button" onclick="downloadSelfDocx()" class="' + btnBase + '" style="' + btnWhite + ';color:#15803d;border:2px solid #16a34a">📝 Tải .docx</button>';
+  h += '<button type="button" onclick="downloadSelfDoc()" class="' + btnBase + '" style="' + btnWhite + ';color:#1d4ed8;border:2px solid #2563eb">📝 Tải Word (.doc)</button>';
+  h += '<button type="button" onclick="downloadSelfPdf()" class="' + btnBase + '" style="' + btnWhite + ';color:#b91c1c;border:2px solid #dc2626">📄 Tải PDF</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllDocx()" class="' + btnBase + '" style="' + btnWhite + ';color:#92400e;border:2px solid #b45309">📦 ZIP Word cả lớp (.doc × HS)</button>';
+  h += '<button type="button" onclick="downloadSelfClassAllJpg()" class="' + btnBase + '" style="' + btnWhite + ';color:#9f1239;border:2px solid #be123c">📦 ZIP JPG cả lớp (× HS)</button>';
   h += '</div></div>';
   window._nbSelfCtx = { scope, mon, hk, weekNos, nW, gvcn, cls, school, year, periodLabel, monthNum };
   setTimeout(fillSelfAssessment, 50);
