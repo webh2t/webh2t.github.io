@@ -2243,6 +2243,20 @@ let penaltyAssigns = [];
 let financeRows = []; // {id,type:'in'|'out',date,content,amount,qty,month,classId}
 let pendingRegs = [];
 let deadlineCfg = { day: 0, hour: 10, penaltyText: "" };
+/** Điểm SDGHS theo kỳ: examGrades[GK1|CK1|GK2|CK2|CN][normalizedName] = { "TOÁN": "8", ... } */
+let examGrades = {};
+const EXAM_SUBJECTS = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C. NGHỆ"];
+const EXAM_SUBJECT_LABELS = {
+  "TOÁN": "TOÁN", "TIN": "TIN", "VĂN": "VĂN", "SỬ": "SỬ", "ĐỊA": "ĐỊA",
+  "KT-PL": "KT-PL", "T.ANH": "T.ANH", "GDQP": "GDQP", "C. NGHỆ": "C. NGHỆ"
+};
+const EXAM_PERIOD_META = {
+  GK1: { key: "GK1", label: "Điểm giữa kỳ 1", sheet: "GK1 11B9" },
+  CK1: { key: "CK1", label: "Điểm cuối kỳ 1", sheet: "CK1 11B9" },
+  GK2: { key: "GK2", label: "Điểm giữa kỳ 2", sheet: "GK2 11B9" },
+  CK2: { key: "CK2", label: "Điểm cuối kỳ 2", sheet: "CK2 11B9" },
+  CN:  { key: "CN",  label: "Điểm cả năm",   sheet: "CN 11B9" }
+};
 let rankChart = null;
 let violContentChart = null;
 let bonusContentChart = null;
@@ -2474,6 +2488,15 @@ function loadClassData() {
     try {
       var dl = localStorage.getItem("qlnn_deadline_" + c);
       if (dl) { var ddl = JSON.parse(dl); if (ddl && typeof ddl === "object") deadlineCfg = ddl; }
+    } catch (e) {}
+    try {
+      var eg = localStorage.getItem("qlnn_examGrades_" + c);
+      if (eg) {
+        var egObj = JSON.parse(eg);
+        if (egObj && typeof egObj === "object" && Object.keys(egObj).length) {
+          examGrades = egObj;
+        }
+      }
     } catch (e) {}
   });
 
@@ -4786,6 +4809,7 @@ function saveClassData(opts) {
     localStorage.setItem("qlnn_penalties_" + cid, JSON.stringify(penalties));
     localStorage.setItem("qlnn_penAssign_" + cid, JSON.stringify(penaltyAssigns));
     localStorage.setItem("qlnn_deadline_" + cid, JSON.stringify(deadlineCfg));
+    try { localStorage.setItem("qlnn_examGrades_" + cid, JSON.stringify(examGrades || {})); } catch (eEg) {}
     if (userSnap && userSnap.id) {
       localStorage.setItem("qlnn_entries_user_" + String(userSnap.id).toLowerCase(), JSON.stringify(entries));
     }
@@ -12965,6 +12989,189 @@ function downloadNbClassXlsx() {
 }
 
 
+/** Chuẩn hoá họ tên để khớp điểm SDGHS */
+function normalizeStudentNameKey(nm) {
+  return String(nm || "")
+    .normalize("NFC")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toUpperCase();
+}
+
+/** Kỳ điểm phù hợp với phạm vi báo cáo (tháng / HK / năm) */
+function examKeysForScope(scope, mon, hk) {
+  mon = Number(mon) || 0;
+  if (scope === "year") return ["GK1", "CK1", "GK2", "CK2", "CN"];
+  if (scope === "hk1" || hk === "hk1") return ["GK1", "CK1"];
+  if (scope === "hk2" || hk === "hk2") return ["GK2", "CK2"];
+  // Tháng: chỉ hiện nút khi kỳ điểm tương ứng
+  if (mon === 10 || mon === 11) return ["GK1"];
+  if (mon === 12) return ["CK1"];
+  if (mon === 2 || mon === 3) return ["GK2"];
+  if (mon === 4) return ["CK2"];
+  if (mon === 5) return ["CK2", "CN"];
+  return []; // tháng 9, 1: chưa có điểm kiểm tra
+}
+
+function examPeriodHasAnyScore(key) {
+  var bag = (examGrades && examGrades[key]) || {};
+  var names = Object.keys(bag);
+  for (var i = 0; i < names.length; i++) {
+    var row = bag[names[i]] || {};
+    for (var s = 0; s < EXAM_SUBJECTS.length; s++) {
+      var v = row[EXAM_SUBJECTS[s]];
+      if (v !== undefined && v !== null && String(v).trim() !== "") return true;
+    }
+  }
+  return false;
+}
+
+function getStudentExamRow(st, periodKey) {
+  if (!st || !periodKey || !examGrades || !examGrades[periodKey]) return null;
+  var bag = examGrades[periodKey];
+  var byName = normalizeStudentNameKey(st.name);
+  if (bag[byName]) return bag[byName];
+  // thử khớp lỏng: bỏ dấu cách thừa
+  var keys = Object.keys(bag);
+  for (var i = 0; i < keys.length; i++) {
+    if (normalizeStudentNameKey(keys[i]) === byName) return bag[keys[i]];
+  }
+  return null;
+}
+
+function buildExamScoreTableHtml(st, periodKeys) {
+  periodKeys = (periodKeys || []).filter(Boolean);
+  if (!periodKeys.length) return "";
+  var html = "";
+  periodKeys.forEach(function(pk) {
+    var meta = EXAM_PERIOD_META[pk] || { label: pk };
+    var row = getStudentExamRow(st, pk);
+    html += '<p style="margin:6pt 0 2pt 0;font-weight:700;font-size:10.5pt">' + meta.label + '</p>';
+    html += '<table border="1" cellpadding="3" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0 0 6pt 0;font-size:8.5pt;table-layout:fixed">';
+    html += '<tr style="background:#f1f5f9">';
+    EXAM_SUBJECTS.forEach(function(sub) {
+      html += '<th style="text-align:center;padding:3pt 1pt;font-size:7.5pt;font-weight:700">' +
+        (EXAM_SUBJECT_LABELS[sub] || sub) + '</th>';
+    });
+    html += '</tr><tr>';
+    EXAM_SUBJECTS.forEach(function(sub) {
+      var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
+      html += '<td style="text-align:center;padding:4pt 1pt;font-weight:700">' + val + '</td>';
+    });
+    html += '</tr></table>';
+  });
+  return html;
+}
+
+function toggleSelfExamPeriod(key) {
+  if (!window._nbSelfSelectedExams) window._nbSelfSelectedExams = {};
+  window._nbSelfSelectedExams[key] = !window._nbSelfSelectedExams[key];
+  if (typeof fillSelfAssessment === "function") fillSelfAssessment();
+}
+
+function uploadSdghsExamFile(ev) {
+  var file = ev && ev.target && ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === "undefined") {
+    alert("Thư viện Excel chưa tải. Thử lại sau vài giây.");
+    ev.target.value = "";
+    return;
+  }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var data = new Uint8Array(e.target.result);
+      var wb = XLSX.read(data, { type: "array" });
+      var next = Object.assign({}, examGrades || {});
+      var imported = 0;
+      Object.keys(EXAM_PERIOD_META).forEach(function(pk) {
+        var meta = EXAM_PERIOD_META[pk];
+        // Tìm sheet theo tên gần đúng
+        var sheetName = null;
+        (wb.SheetNames || []).forEach(function(sn) {
+          var u = String(sn).toUpperCase().replace(/\s+/g, "");
+          if (u.indexOf(pk) >= 0) sheetName = sn;
+        });
+        if (!sheetName) {
+          // fallback: meta.sheet
+          if (wb.Sheets[meta.sheet]) sheetName = meta.sheet;
+        }
+        if (!sheetName || !wb.Sheets[sheetName]) return;
+        var aoa = XLSX.utils.sheet_to_json(wb.Sheets[sheetName], { header: 1, defval: "" });
+        var headerRow = -1, colMap = {};
+        for (var r = 0; r < Math.min(aoa.length, 25); r++) {
+          var row = aoa[r] || [];
+          var joined = row.map(function(c) { return String(c || "").toUpperCase(); }).join("|");
+          if (joined.indexOf("STT") >= 0 && (joined.indexOf("HỌ") >= 0 || joined.indexOf("HO") >= 0 || joined.indexOf("TÊN") >= 0 || joined.indexOf("TEN") >= 0)) {
+            headerRow = r;
+            row.forEach(function(cell, ci) {
+              var t = String(cell || "").trim().toUpperCase().replace(/\s+/g, " ");
+              if (t === "HỌ VÀ TÊN" || t === "HO VA TEN" || t === "HỌ TÊN" || t === "HOTEN" || t.indexOf("HỌ VÀ TÊN") >= 0 || t.indexOf("HO VA TEN") >= 0) colMap.name = ci;
+              if (t === "TOÁN" || t === "TOAN") colMap["TOÁN"] = ci;
+              if (t === "TIN") colMap["TIN"] = ci;
+              if (t === "VĂN" || t === "VAN") colMap["VĂN"] = ci;
+              if (t === "SỬ" || t === "SU") colMap["SỬ"] = ci;
+              if (t === "ĐỊA" || t === "DIA") colMap["ĐỊA"] = ci;
+              if (t === "KT-PL" || t === "KT PL" || t.indexOf("KT-PL") >= 0 || t.indexOf("KINH TẾ") >= 0) colMap["KT-PL"] = ci;
+              if (t === "T.ANH" || t === "T ANH" || t.indexOf("ANH") >= 0) colMap["T.ANH"] = ci;
+              if (t === "GDQP" || t.indexOf("QUỐC PHÒNG") >= 0 || t.indexOf("QUOC PHONG") >= 0) colMap["GDQP"] = ci;
+              if (t === "C. NGHỆ" || t === "C.NGHỆ" || t.indexOf("NGHỆ") >= 0 || t.indexOf("NGHE") >= 0) colMap["C. NGHỆ"] = ci;
+            });
+            break;
+          }
+        }
+        if (headerRow < 0 || colMap.name == null) return;
+        var bag = {};
+        for (var rr = headerRow + 1; rr < aoa.length; rr++) {
+          var cells = aoa[rr] || [];
+          var nm = String(cells[colMap.name] || "").trim();
+          if (!nm || /^\d+$/.test(nm)) continue;
+          var key = normalizeStudentNameKey(nm);
+          if (!key) continue;
+          var scores = {};
+          var has = false;
+          EXAM_SUBJECTS.forEach(function(sub) {
+            var ci = colMap[sub];
+            var val = (ci != null && cells[ci] != null) ? String(cells[ci]).trim() : "";
+            scores[sub] = val;
+            if (val) has = true;
+          });
+          bag[key] = scores;
+          if (has) imported++;
+        }
+        next[pk] = bag;
+      });
+      examGrades = next;
+      try {
+        var cid = (currentUser && (currentUser.classId || (typeof normalizeClassId === "function" ? normalizeClassId(currentUser) : ""))) || "";
+        if (cid) localStorage.setItem("qlnn_examGrades_" + cid, JSON.stringify(examGrades));
+      } catch (eSave) {}
+      if (typeof saveClassData === "function") {
+        try { saveClassData({ syncMeta: false }); } catch (e2) {}
+      }
+      // Mặc định chọn các kỳ có điểm trong phạm vi hiện tại
+      if (!window._nbSelfSelectedExams) window._nbSelfSelectedExams = {};
+      var ctx = window._nbSelfCtx || {};
+      examKeysForScope(ctx.scope, ctx.mon || ctx.monthNum, ctx.hk).forEach(function(k) {
+        if (examPeriodHasAnyScore(k)) window._nbSelfSelectedExams[k] = true;
+      });
+      alert("Đã nhập điểm SDGHS · " + imported + " ô điểm có giá trị.\nChọn nút kỳ điểm để chèn vào phiếu.");
+      if (typeof fillSelfAssessment === "function") fillSelfAssessment();
+      // re-render notebook section if possible
+      try {
+        if (typeof renderNotebookTab === "function") {
+          /* keep current view */
+        }
+      } catch (e3) {}
+    } catch (err) {
+      console.error(err);
+      alert("Lỗi đọc file Excel: " + (err && err.message ? err.message : err));
+    }
+    ev.target.value = "";
+  };
+  reader.readAsArrayBuffer(file);
+}
+
 function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, school, year) {
   var scopeTitle = scope === "month" ? "THÁNG" : (scope === "year" ? "CẢ NĂM" : "HỌC KỲ");
   const periodLabel = scope === "month"
@@ -12973,9 +13180,17 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
       ? ("CẢ NĂM HỌC " + year)
       : ((hk === "hk1" ? "HỌC KỲ 1" : "HỌC KỲ 2") + " NĂM HỌC " + year));
   const monthNum = scope === "month" ? mon : "";
+  var allowedExams = examKeysForScope(scope, mon, hk);
+  if (!window._nbSelfSelectedExams) window._nbSelfSelectedExams = {};
+  // Auto-select periods that already have scores
+  allowedExams.forEach(function(k) {
+    if (examPeriodHasAnyScore(k) && window._nbSelfSelectedExams[k] == null) {
+      window._nbSelfSelectedExams[k] = true;
+    }
+  });
   let h = '<div class="mt-6">';
   h += '<h3 class="font-bold text-yellow-400 mb-2 text-lg">BẢN TỰ ĐÁNH GIÁ CÁ NHÂN THEO ' + scopeTitle + '</h3>';
-  h += '<p class="text-sm text-slate-300 mb-3">Tự động điền mục 1–3 từ dữ liệu thi đua · Mục 4–5 để trống · Chọn 1 HS hoặc <b>Cả lớp</b></p>';
+  h += '<p class="text-sm text-slate-300 mb-3">Tự động điền mục 1–3 từ dữ liệu thi đua · Mục 4: điểm kiểm tra (SDGHS) · Mục 5: ý kiến cá nhân · Chọn 1 HS hoặc <b>Cả lớp</b></p>';
   h += '<div class="mb-3 no-print flex flex-wrap gap-2 items-end">';
   h += '<div><label class="text-sm text-slate-300 block">Chọn học sinh / lớp</label>';
   h += '<select id="nbSelfStudent" class="input-field text-base py-2" onchange="fillSelfAssessment()">' +
@@ -12984,7 +13199,24 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
     students.slice().sort(sortByIdAsc).map(s => '<option value="' + s.id + '">' + s.name + " (Tổ " + (s.team||"?") + ")</option>").join("") +
     '</select></div>';
   h += '<button type="button" onclick="(function(){var s=document.getElementById(\'nbSelfStudent\');if(s){s.value=\'__ALL__\';fillSelfAssessment();}})()" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:#7c3aed;color:#fff">📋 Cả lớp</button>';
+  h += '<label class="px-3 py-2 rounded-lg font-bold text-sm cursor-pointer" style="background:#0f766e;color:#fff">📤 Upload SDGHS.xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadSdghsExamFile(event)"></label>';
   h += '</div>';
+  // 5 nút kỳ điểm — chỉ hiện kỳ phù hợp phạm vi
+  if (allowedExams.length) {
+    h += '<div class="mb-3 no-print flex flex-wrap gap-2 items-center">';
+    h += '<span class="text-sm text-slate-400 font-semibold">Mục 4 · Chèn điểm kiểm tra:</span>';
+    allowedExams.forEach(function(k) {
+      var meta = EXAM_PERIOD_META[k] || { label: k };
+      var on = !!(window._nbSelfSelectedExams && window._nbSelfSelectedExams[k]);
+      var has = examPeriodHasAnyScore(k);
+      var bg = on ? "#2563eb" : (has ? "#334155" : "#64748b");
+      h += '<button type="button" onclick="toggleSelfExamPeriod(\'' + k + '\')" class="px-3 py-2 rounded-lg font-bold text-sm" style="background:' + bg + ';color:#fff;border:2px solid ' + (on ? "#93c5fd" : "transparent") + '">' +
+        (on ? "✓ " : "") + meta.label + (has ? "" : " (trống)") + "</button>";
+    });
+    h += '</div>';
+  } else {
+    h += '<p class="text-sm text-slate-400 mb-2 no-print">Tháng này chưa có kỳ điểm kiểm tra (GK/CK) — không hiện nút điểm.</p>';
+  }
   h += '<div id="nbSelfForm" class="week-board bg-white text-slate-900"></div>';
   h += '<div class="flex flex-wrap gap-2 mt-3 no-print">';
   h += '<button type="button" onclick="fillSelfAssessment()" class="px-3 py-2 rounded-lg bg-slate-600 text-white text-sm">Làm mới phiếu</button>';
@@ -13236,12 +13468,30 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   h += '<td width="33%" style="text-align:center;vertical-align:middle;padding:8pt 4pt"><div style="font-size:9pt;font-weight:700;margin-bottom:4pt">XẾP LOẠI</div><div style="font-size:13pt;font-weight:900;color:' + (rk.color || "#166534") + '">' + (st ? rk.label : "…") + '</div></td>';
   h += '</tr></table>';
 
-  h += '<p style="margin:8pt 0 2pt 0"><b>4. Ý kiến cá nhân HS và mục tiêu học tập' +
+  // Mục 4: Điểm kiểm tra SDGHS (các kỳ đã chọn nút)
+  var selectedKeys = [];
+  try {
+    var allowed = examKeysForScope(ctx.scope, ctx.mon || ctx.monthNum, ctx.hk);
+    var sel = window._nbSelfSelectedExams || {};
+    allowed.forEach(function(k) { if (sel[k]) selectedKeys.push(k); });
+  } catch (eSel) {}
+  h += '<p style="margin:8pt 0 2pt 0"><b>4. Kết quả điểm kiểm tra' +
+    (selectedKeys.length ? "" : " (chưa chọn kỳ điểm)") + ':</b></p>';
+  if (selectedKeys.length && st) {
+    h += buildExamScoreTableHtml(st, selectedKeys);
+  } else if (selectedKeys.length && !st) {
+    h += '<p style="margin:2pt 0 4pt 0;font-size:9pt;font-style:italic">Chọn học sinh để xem điểm kiểm tra.</p>';
+  } else {
+    h += '<p style="margin:2pt 0 4pt 0;font-size:9pt;font-style:italic">— Không chèn điểm (tháng/kỳ chưa chọn nút điểm hoặc chưa upload SDGHS.xlsx).</p>';
+  }
+
+  // Mục 5: Ý kiến cá nhân (đổi từ mục 4 cũ)
+  h += '<p style="margin:8pt 0 2pt 0"><b>5. Ý kiến cá nhân HS và mục tiêu học tập' +
     (nextMonthGoal ? (' ' + nextMonthGoal) : '') + ':</b></p>';
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
 
-  h += '<p style="margin:6pt 0 2pt 0"><b>5. Ý kiến của phụ huynh:</b></p>';
+  h += '<p style="margin:6pt 0 2pt 0"><b>6. Ý kiến của phụ huynh:</b></p>';
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
   h += '<p style="margin:1pt 0">…………………………………………………………………………………</p>';
 
