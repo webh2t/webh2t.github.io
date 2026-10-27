@@ -1495,32 +1495,27 @@ function selectExam(ex) {
   }
   function clearExamSelection() {
     currentExam = null;
+    dataReady = false;
     try { sessionStorage.removeItem("webh2t_tn_exam"); } catch (e) {}
     try { document.body.classList.remove("exam-selected"); } catch (e) {}
-    const cur = document.getElementById("exam-current");
+    var cur = document.getElementById("exam-current");
     if (cur) { cur.classList.remove("visible"); cur.style.display = "none"; }
-    const sui = document.getElementById("student-ui");
+    var sui = document.getElementById("student-ui");
     if (sui) { sui.style.display = "none"; sui.classList.remove("is-open"); }
     var stats = document.getElementById("stats-bar");
     if (stats) stats.style.display = "";
     var picker = document.getElementById("exam-picker");
     if (picker) picker.style.display = "grid";
-    var title = document.getElementById("page-title");
-    if (title) title.textContent = "📝 Ôn thi tốt nghiệp THPT – Tin học";
-    dataReady = false;
-
-    const blog = document.getElementById("screen-blog");
+    var blog = document.getElementById("screen-blog");
     if (blog) blog.style.display = "none";
-    const sel = document.getElementById("screen-select");
+    var sel = document.getElementById("screen-select");
     if (sel) sel.style.display = "flex";
-    const title = document.getElementById("page-title");
-    const sub = document.getElementById("page-sub");
-    if (title) title.textContent = "📝 Ôn thi tốt nghiệp THPT – Tin học";
-    if (sub) sub.textContent = "Chọn một bài kiểm tra bên dưới để bắt đầu";
+    var titleEl = document.getElementById("page-title");
+    var subEl = document.getElementById("page-sub");
+    if (titleEl) titleEl.textContent = "📝 Ôn thi tốt nghiệp THPT – Tin học";
+    if (subEl) subEl.textContent = "";
     document.title = "Ôn thi tốt nghiệp THPT – Tin học";
-    const picker = document.getElementById("exam-picker");
-    if (picker) picker.style.display = "grid";
-    renderExamPicker();
+    if (typeof renderExamPicker === "function") renderExamPicker();
   }
   const btnChange = document.getElementById("btn-change-exam");
   if (btnChange) btnChange.addEventListener("click", clearExamSelection);
