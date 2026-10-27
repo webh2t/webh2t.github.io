@@ -312,6 +312,15 @@
 #screen-blog{max-width:1280px;margin-left:auto;margin-right:auto;box-sizing:border-box}
 
 #btn-teacher-link,.btn-teacher,#teacher-link{display:none!important}
+
+#page-sub{display:none!important}
+.warn-banner,.alert-warn,.notice-exam,#exam-warn,#lich-warn,
+.select-card .warn,.select-card .alert{display:none!important}
+/* Ẩn khối cảnh báo đỏ/vàng trên màn chọn */
+.select-card > div[style*="background"][style*="#FEF"],
+.select-card > div[style*="border"][style*="#F"]{display:none!important}
+
+#schedule-box,.schedule-box,.warn-note,.note.danger,.student-warn,#page-sub{display:none!important}
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -343,18 +352,16 @@ window.addEventListener("error", function (ev) {
 <div id="screen-select">
   <div class="select-card" id="select-card">
     <h1 id="page-title">📝 Ôn thi tốt nghiệp THPT – Tin học</h1>
-    <p class="sub" id="page-sub">24 câu TN + 4 câu Đ/S (2 chung bắt buộc + 2 Tin học ứng dụng) · 50 phút · Không giới hạn lần thi</p>
+    <p class="sub" id="page-sub" style="display:none"></p>
     <div class="top-nav">
       <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Trang chủ</a>
+    <button type="button" id="btn-convert-open" class="btn-home" style="margin-left:8px;background:#EEF2FF;color:#1E3A8A;border:1px solid #C7D2FE;border-radius:999px;padding:8px 14px;font-weight:700;cursor:pointer">📄 Chuyển đề Excel</button>
       <button type="button" class="btn-nav-top btn-teacher" id="btn-teacher-link">👨‍🏫 Giáo viên</button>
     </div>
     <div class="load-bar" id="load-bar" style="display:none"></div>
 
     
-    <div class="warning-once" id="warn-once">
-      ⚠️ <b>Ôn thi TN THPT Tin học · 50 phút · 24 TN + 4 Đ/S (2 chung + 2 THUD). Không giới hạn số lần · Làm hết câu mới nộp · Xem đáp án sau nộp.</b><br>
-      Chỉ hiện lớp đang trong khung giờ giáo viên quy định. Sau khi <b>Bắt đầu thi</b>: đóng tab / quay lại / gian lận mà không nộp bài = <b>0 điểm</b> và khóa tên.
-    </div>
+    
 
     <div id="exam-picker" class="exam-picker" aria-label="Chọn bài kiểm tra"></div>
     <div class="stats-bar" id="stats-bar">
@@ -371,27 +378,6 @@ window.addEventListener("error", function (ev) {
       </div>
     </div>
     <div 
-<!-- Chuyển ảnh/PDF → đề Excel -->
-<div id="converter-panel" class="select-card" style="margin-top:18px;max-width:560px;margin-left:auto;margin-right:auto">
-  <h3 style="margin:0 0 8px;color:#1E3A8A;font-size:1.05rem">📄 Chuyển ảnh / PDF → đề Excel (.xlsx)</h3>
-  <p style="font-size:.82rem;color:#64748B;margin:0 0 12px;line-height:1.45">
-    Tải ảnh đề (JPG/PNG) hoặc file PDF. Hệ thống tạo file Excel đúng cấu trúc ôn TN:
-    <b>24 câu TN (Phần 1)</b> + <b>4 câu Đ/S</b> (2 chung + 2 Tin học ứng dụng).
-    Ảnh gắn vào cột «Ảnh câu hỏi» — đặt file vào <code>assets/THPT/</code> trên GitHub.
-  </p>
-  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Chọn ảnh hoặc PDF</label>
-  <input type="file" id="conv-files" accept="image/*,.pdf,application/pdf" multiple
-    style="width:100%;padding:10px;border:1px dashed #93C5FD;border-radius:10px;background:#F8FAFC;margin-bottom:10px">
-  <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Tên đề (file)</label>
-  <input type="text" id="conv-name" value="tnde_moi" placeholder="tnde7"
-    style="width:100%;padding:10px 12px;border:1px solid #CBD5E1;border-radius:10px;margin-bottom:12px;box-sizing:border-box">
-  <button type="button" id="btn-convert-xlsx" class="btn-primary"
-    style="width:100%;padding:12px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;font-weight:700;cursor:pointer">
-    Tạo &amp; tải đề Excel (.xlsx)
-  </button>
-  <p id="conv-status" style="font-size:.8rem;color:#64748B;margin:10px 0 0"></p>
-</div>
-
 <div id="exam-current" class="exam-current">
       <span id="exam-current-label">—</span>
       <button type="button" id="btn-change-exam">Đổi bài</button>
@@ -494,7 +480,7 @@ window.addEventListener("error", function (ev) {
         </div>
       </div>
 
-      <div class="schedule-box" id="schedule-box">
+      <div class="schedule-box" id="schedule-box" style="display:none!important">
         <h4>⏰ Khóa lớp / khung giờ làm bài</h4>
         <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Chỉ <b>hiện lớp đang trong khung giờ</b>. Lớp không có suất hoặc ngoài giờ → <b>ẩn</b>. Thêm suất → Sửa/Xóa → <b>Lưu lên GitHub</b> để mọi máy đồng bộ.</p>
         <div class="schedule-row">
@@ -552,7 +538,7 @@ window.addEventListener("error", function (ev) {
     <div class="timer-box" id="timer"><span class="timer-icon">⏱️</span> <span id="timer-text">15:00</span></div>
     <div class="student-info" id="exam-student-info">Họ tên: — · Lớp: —</div>
   </div>
-  <div class="anti-cheat-bar">⚠️ Bài thi chỉ làm 1 lần. Thoát / Reload / đóng tab → lưu 0 điểm, không được làm lại. Cấm copy · đổi tab · F5 · Ctrl+R.</div>
+  
   <div class="exam-body">
     <aside class="sidebar">
       <h3>Phần 1: Trắc nghiệm <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(6đ · 24×0,25)</span></h3><div class="q-grid" id="q-grid-p1"></div>
@@ -1766,7 +1752,7 @@ function buildExam() {
     return shuffle(arr.slice()).slice(0, Math.min(n, arr.length));
   }
 
-  let p1 = pick(pools.mc, 24);
+  let p1 = shuffle(pick(pools.mc, 24));
   // Nếu thiếu (ngân hàng nhỏ) — lặp có kiểm soát
   while (p1.length < 24 && pools.mc.length) {
     const more = pick(pools.mc, 24 - p1.length);
@@ -1779,21 +1765,19 @@ function buildExam() {
     return shuffleMC(ensureQid(Object.assign({}, q, { part: 1, type: "mc" })));
   });
 
-  // Ôn TN THPT: 24 MC + 4 Đ/S (2 phần chung bắt buộc + 2 Tin học ứng dụng)
-  // Nhóm CHUNG | THUD | KHMT — loại KHMT
+  // Đúng 28 câu: 24 MC + 2 Đ/S CHUNG + 2 Đ/S THUD — xáo trong từng phần
   var allTf = (pools.tf || []).filter(function (q) {
     var g = String(q.group || q.nhom || "").toUpperCase();
     return g.indexOf("KHMT") < 0 && g.indexOf("KHOA HOC") < 0;
   });
   var tfChung = allTf.filter(function (q) {
     var g = String(q.group || q.nhom || "").toUpperCase();
-    return g === "CHUNG" || g.indexOf("CHUNG") >= 0 || g === "COMMON";
+    return g === "CHUNG" || g.indexOf("CHUNG") >= 0;
   });
   var tfThud = allTf.filter(function (q) {
     var g = String(q.group || q.nhom || "").toUpperCase();
     return g === "THUD" || g.indexOf("UNG") >= 0 || g.indexOf("ỨNG") >= 0;
   });
-  // Fallback nếu thiếu nhóm: lấy lần lượt
   if (tfChung.length < 2) {
     allTf.forEach(function (q) {
       if (tfChung.length >= 2) return;
@@ -1808,37 +1792,25 @@ function buildExam() {
       tfThud.push(q);
     });
   }
-  var p2a = pick(tfChung, 2);
-  while (p2a.length < 2 && tfChung.length) {
-    var more = pick(tfChung, 2 - p2a.length);
-    more.forEach(function (q) { if (p2a.length < 2) p2a.push(Object.assign({}, q)); });
-    if (!more.length) break;
+  var p2a = shuffle(tfChung.slice()).slice(0, 2);
+  var p2b = shuffle(tfThud.slice()).slice(0, 2);
+  // đủ 2+2
+  while (p2a.length < 2 && allTf.length) {
+    var x = allTf[p2a.length % allTf.length];
+    p2a.push(Object.assign({}, x));
   }
-  var p2b = pick(tfThud, 2);
-  while (p2b.length < 2 && tfThud.length) {
-    var more2 = pick(tfThud, 2 - p2b.length);
-    more2.forEach(function (q) { if (p2b.length < 2) p2b.push(Object.assign({}, q)); });
-    if (!more2.length) break;
+  while (p2b.length < 2 && allTf.length) {
+    var y = allTf[(p2b.length + 2) % allTf.length];
+    p2b.push(Object.assign({}, y));
   }
-  // Nếu vẫn thiếu: lấy thêm từ allTf
-  var p2 = p2a.concat(p2b);
-  while (p2.length < 4 && allTf.length) {
-    var extra = pick(allTf, 4 - p2.length);
-    extra.forEach(function (q) {
-      if (p2.length < 4 && !p2.some(function (x) { return x.qid && x.qid === q.qid; }))
-        p2.push(Object.assign({}, q));
-    });
-    if (!extra.length) break;
-  }
-  p2 = p2.slice(0, 4).map(function (q, idx) {
-    var nhom = idx < 2 ? "CHUNG" : "THUD";
+  var p2 = p2a.concat(p2b).slice(0, 4).map(function (q, idx) {
     return ensureQid(Object.assign({}, q, {
-      part: 2, type: "tf", maxPoints: 1.0, group: q.group || nhom,
+      part: 2, type: "tf", maxPoints: 1.0,
+      group: idx < 2 ? "CHUNG" : "THUD",
       sectionLabel: idx < 2 ? "Phần chung (bắt buộc)" : "Tin học ứng dụng"
     }));
   });
-
-  // Không dùng phần trả lời ngắn
+  // Xáo thứ tự trong từng nhóm phần 2 (chung / riêng) — đã slice từ shuffle
   let p3 = [];
 
   const all = p1.concat(p2, p3);
@@ -4077,6 +4049,62 @@ function tidyBlogComment_(s) {
         console.error(e);
       }
     });
+  });
+})();
+</script>
+
+
+<div id="screen-convert" style="display:none;min-height:100vh;padding:32px 16px;background:linear-gradient(135deg,#EEF2FF,#F8FAFC);box-sizing:border-box">
+  <div class="select-card" style="max-width:560px;margin:0 auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <h2 style="margin:0;color:#1E3A8A;font-size:1.15rem">📄 Chuyển ảnh / PDF → đề Excel</h2>
+      <button type="button" id="btn-convert-back" style="border:0;background:#F1F5F9;border-radius:8px;padding:8px 12px;font-weight:600;cursor:pointer">← Về trang thi</button>
+    </div>
+    <p style="font-size:.85rem;color:#64748B;line-height:1.5;margin:0 0 14px">
+      Tạo file <b>.xlsx</b> đủ <b>28 câu</b>: 24 TN (Phần 1) + 2 Đ/S phần chung + 2 Đ/S Tin học ứng dụng.
+      Đặt ảnh vào <code>assets/THPT/</code> trên GitHub; điền nội dung/đáp án trong Excel.
+    </p>
+    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Chọn ảnh hoặc PDF</label>
+    <input type="file" id="conv-files" accept="image/*,.pdf,application/pdf" multiple
+      style="width:100%;padding:10px;border:1px dashed #93C5FD;border-radius:10px;background:#F8FAFC;margin-bottom:10px;box-sizing:border-box">
+    <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Tên đề (file)</label>
+    <input type="text" id="conv-name" value="tnde_moi" placeholder="tnde7"
+      style="width:100%;padding:10px 12px;border:1px solid #CBD5E1;border-radius:10px;margin-bottom:12px;box-sizing:border-box">
+    <button type="button" id="btn-convert-xlsx"
+      style="width:100%;padding:12px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:#fff;font-weight:700;cursor:pointer">
+      Tạo &amp; tải đề Excel (.xlsx)
+    </button>
+    <p id="conv-status" style="font-size:.8rem;color:#64748B;margin:10px 0 0"></p>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  function showConvert(yes){
+    var a = document.getElementById("screen-select");
+    var b = document.getElementById("screen-convert");
+    var c = document.getElementById("screen-exam");
+    var d = document.getElementById("screen-result");
+    if (yes) {
+      if (a) a.style.display = "none";
+      if (c) c.style.display = "none";
+      if (d) d.style.display = "none";
+      if (b) b.style.display = "block";
+    } else {
+      if (b) b.style.display = "none";
+      if (a) a.style.display = "";
+    }
+  }
+  document.addEventListener("click", function(ev){
+    var t = ev.target;
+    if (!t) return;
+    if (t.id === "btn-convert-open" || (t.closest && t.closest("#btn-convert-open"))) {
+      ev.preventDefault(); showConvert(true);
+    }
+    if (t.id === "btn-convert-back") {
+      ev.preventDefault(); showConvert(false);
+    }
   });
 })();
 </script>
