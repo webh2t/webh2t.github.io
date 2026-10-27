@@ -352,6 +352,10 @@
 #student-ui.is-open{display:block!important;visibility:visible!important;margin-top:12px}
 .exam-current.visible{display:flex!important}
 #load-bar{margin:10px 0;padding:10px 12px;border-radius:10px;font-size:.88rem;font-weight:600}
+
+/* Khi đang chọn đề: ẩn thống kê */
+body.exam-selected #stats-bar{display:none!important}
+body.exam-selected #exam-picker{display:none!important}
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -425,7 +429,7 @@ window.addEventListener("error", function (ev) {
       <button class="btn-start" id="btn-start" data-start="1" disabled>🚀 Bắt đầu thi</button>
     </div>
 
-    <div class="teacher-panel" id="teacher-panel">
+    <div class="teacher-panel" id="teacher-panel" style="display:none!important">
       <h3>📋 Quản trị điểm kiểm tra</h3>
       <div class="top-nav" style="justify-content:flex-start;margin-bottom:12px">
         <a class="btn-nav-top btn-home" href="https://webh2t.github.io/totnghiep.html" id="btn-back-student">📝 Về trang học sinh</a>
@@ -510,7 +514,7 @@ window.addEventListener("error", function (ev) {
         </div>
       </div>
 
-      <div class="schedule-box" id="schedule-box" style="display:none!important">
+      <div class="schedule-box" id="schedule-box" style="display:none!important" style="display:none!important">
         <h4>⏰ Khóa lớp / khung giờ làm bài</h4>
         <p style="font-size:.8rem;color:#0369A1;margin-bottom:8px">Chỉ <b>hiện lớp đang trong khung giờ</b>. Lớp không có suất hoặc ngoài giờ → <b>ẩn</b>. Thêm suất → Sửa/Xóa → <b>Lưu lên GitHub</b> để mọi máy đồng bộ.</p>
         <div class="schedule-row">
@@ -650,7 +654,7 @@ window.addEventListener("error", function (ev) {
 </div>
 
 <script>
-const EXAM_MINUTES = 50;
+const EXAM_MINUTES = 0; // không giới hạn
 const STORAGE_KEY = "webh2t_totnghiep_scores";
 const DATA_KEY = "tn_v20261027b";
 const SCHEDULE_KEY = "webh2t_tn_lich_v2";
@@ -1236,86 +1240,35 @@ function parseWorkbook(wb) {
 }
 
 function refreshClassDropdown() {
+  // On TN: luon hien moi lop trong HocSinh - khong phu thuoc lich thi
+  if (!classSelect) return;
   classSelect.innerHTML = '<option value="">-- Chọn lớp --</option>';
-  const schList = (typeof loadSchedule === "function") ? loadSchedule() : [];
-  const hasAny = schList.length > 0;
-  let shown = 0;
-  Object.keys(studentsByClass || {}).sort().forEach(lop => {
-    if (!hasAny) return; // chưa có lịch nào → không hiện lớp
-    if (typeof isClassOpenNow === "function" && !isClassOpenNow(lop)) return; // ngoài giờ / không có suất → ẩn
-    const opt = document.createElement("option");
+  var keys = Object.keys(studentsByClass || {}).sort();
+  keys.forEach(function (lop) {
+    var n = (studentsByClass[lop] || []).length;
+    var opt = document.createElement("option");
     opt.value = lop;
-    const n = (studentsByClass[lop] || []).length;
-    const slots = schList.filter(s => s.lop === lop);
-    const active = slots.filter(s => {
-      const now = Date.now();
-      return now >= new Date(s.from).getTime() && now <= new Date(s.to).getTime();
-    });
-    const to = active[0] ? new Date(active[0].to).toLocaleString("vi-VN") : "";
-    opt.textContent = lop + " (" + n + " HS)" + (to ? " · đến " + to : "");
+    opt.textContent = lop + " (" + n + " HS)";
     classSelect.appendChild(opt);
-    shown++;
   });
-  classSelect.disabled = shown === 0;
-  const lb = document.getElementById("load-bar");
-  if (lb) {
-    if (!hasAny) {
-      lb.style.display = "flex";
-      lb.style.background = "#FEF3C7";
-      lb.style.color = "#92400E";
-      lb.textContent = "⚠️ Giáo viên chưa cấu hình khung giờ. Chỉ lớp trong lịch mới được thi.";
-    } else if (!shown) {
-      lb.style.display = "flex";
-      lb.style.background = "#FEF3C7";
-      lb.style.color = "#92400E";
-      let extra = "";
-      try {
-        const st = window._lichThiStatus;
-        if (st && st.detail && st.detail.length) {
-          extra = " Lịch đã nạp " + st.total + " suất (" + st.detail.join(" | ") + "). Máy: " + new Date().toLocaleString("vi-VN") + ".";
-        } else if (schList.length) {
-          extra = " Có " + schList.length + " suất nhưng ngoài giờ. Giờ máy: " + new Date().toLocaleString("vi-VN") + ".";
-        } else {
-          extra = " Chưa nạp được LichThi từ Excel. Ctrl+F5 hoặc xóa dữ liệu trang (localStorage).";
-        }
-      } catch (e) {}
-      lb.textContent = "⚠️ Hiện không có lớp nào trong khung giờ được phép làm bài." + extra;
-    } else {
-      lb.style.display = "flex";
-      lb.style.background = "#D1FAE5";
-      lb.style.color = "#065F46";
-      lb.textContent = "✅ Đang mở: " + Array.from(classSelect.options).filter(function(o){return o.value;}).map(function(o){return o.value;}).join(", ");
-      setTimeout(function () { if (lb && lb.textContent.indexOf("Đang mở") >= 0) lb.style.display = "none"; }, 8000);
-    }
+  classSelect.disabled = keys.length === 0;
+  if (studentSelect) {
+    studentSelect.innerHTML = '<option value="">-- Chọn lớp trước --</option>';
+    studentSelect.disabled = true;
   }
-}
-
-async function loadFromUrl(url) {
-  if (!url) return false;
-  if (loadBar) { loadBar.style.display = "none"; }
-  try {
-    const resp = await fetch(url + (url.includes("?") ? "&" : "?") + "t=" + Date.now());
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    parseWorkbook(XLSX.read(new Uint8Array(await resp.arrayBuffer()), { type: "array" }));
-    return true;
-  } catch (err) {
-    console.warn("loadFromUrl", err);
-    if (loadBar) {
-      loadBar.style.display = "block";
-      loadBar.textContent = "⚠️ Không tải được từ GitHub. Dùng cache / upload local.";
-      loadBar.style.background = "#FEF3C7";
-      loadBar.style.color = "#92400E";
-    }
-    try {
-      const d = JSON.parse(localStorage.getItem(DATA_KEY + (currentExam ? ("_" + currentExam.id) : "")) || "{}");
-      if (d.students) studentsByClass = d.students;
-      if (d.bank) questionBank = d.bank;
-      dataReady = true;
-      if (typeof refreshClassDropdown === "function") refreshClassDropdown();
-      if (loadBar) loadBar.style.display = "none";
-      if (isAdmin && typeof renderScoreTable === "function") renderScoreTable();
-    } catch (e) {}
-    return false;
+  if (startBtn) startBtn.disabled = true;
+  var lb = document.getElementById("load-bar");
+  if (lb && keys.length) {
+    lb.style.display = "block";
+    lb.style.background = "#ECFDF5";
+    lb.style.color = "#065F46";
+    lb.textContent = "Sẵn sàng: " + keys.length + " lớp — chọn lớp & học sinh (không giới hạn thời gian).";
+    setTimeout(function () { if (lb) lb.style.display = "none"; }, 5000);
+  } else if (lb && !keys.length) {
+    lb.style.display = "block";
+    lb.style.background = "#FEE2E2";
+    lb.style.color = "#991B1B";
+    lb.textContent = "Chưa có học sinh — kiểm tra sheet HocSinh trong file đề.";
   }
 }
 
@@ -1413,6 +1366,7 @@ function exitAdminHint() {
       sui.style.display = "block";
       sui.style.visibility = "visible";
       sui.classList.add("is-open");
+    try { document.body.classList.add("exam-selected"); } catch(eB) {}
     }
     const cur2 = document.getElementById("exam-current");
     if (cur2) { cur2.classList.add("visible"); cur2.style.display = "flex"; }
@@ -2133,6 +2087,15 @@ function goTo(idx) {
 }
 
 function startTimer() {
+  // EXAM_MINUTES = 0 → không giới hạn thời gian
+  if (!EXAM_MINUTES || EXAM_MINUTES <= 0) {
+    timeLeft = 999999;
+    var t = document.getElementById("timer-text");
+    if (t) t.textContent = "∞";
+    var box = document.getElementById("timer");
+    if (box) { box.style.background = "#EEF2FF"; box.style.color = "#1E3A8A"; box.classList.remove("urgent"); }
+    return;
+  }
   timeLeft = EXAM_MINUTES * 60;
   updateTimer();
   timerInterval = setInterval(() => {
@@ -2141,6 +2104,11 @@ function startTimer() {
   }, 1000);
 }
 function updateTimer() {
+  if (!EXAM_MINUTES || EXAM_MINUTES <= 0) {
+    var t2 = document.getElementById("timer-text");
+    if (t2) t2.textContent = "∞";
+    return;
+  }
   const m = Math.floor(timeLeft / 60), s = timeLeft % 60;
   document.getElementById("timer-text").textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
   const box = document.getElementById("timer");
