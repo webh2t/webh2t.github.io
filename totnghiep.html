@@ -640,18 +640,18 @@ window.addEventListener("error", function (ev) {
 
     <div id="exam-picker" class="exam-picker" aria-label="Chọn bài kiểm tra"></div>
     <div class="stats-bar" id="stats-bar">
-      <div class="st-title">📊 Lượt xem trang thi</div>
+      <div class="st-title">📊 Thống kê trang ôn thi</div>
       <div class="stats-grid stats-5">
-        <div class="stat-chip total"><span class="n" id="stat-total">…</span><span class="l">Lượt xem</span></div><div class="stat-chip total"><span class="n" id="stat-attempts">0</span><span class="l">Bài đã nộp (máy này)</span></div>
-        <div class="stat-chip"><span class="n" id="stat-de1">…</span><span class="l">Đề 1</span></div>
-        <div class="stat-chip"><span class="n" id="stat-de2">…</span><span class="l">Đề 2</span></div>
-        <div class="stat-chip"><span class="n" id="stat-de3">…</span><span class="l">Đề 3</span></div>
-        <div class="stat-chip"><span class="n" id="stat-de4">…</span><span class="l">Đề 4</span></div>
-        <div class="stat-chip"><span class="n" id="stat-de5">…</span><span class="l">Đề 5</span></div>
-        <div class="stat-chip"><span class="n" id="stat-de6">…</span><span class="l">Đề 6</span></div>
+        <div class="stat-chip total"><span class="n" id="stat-total">0</span><span class="l">Lượt xem</span></div><div class="stat-chip total"><span class="n" id="stat-attempts">0</span><span class="l">Bài đã nộp (máy này)</span></div>
+        <div class="stat-chip"><span class="n" id="stat-de1">0</span><span class="l">Đề 1</span></div>
+        <div class="stat-chip"><span class="n" id="stat-de2">0</span><span class="l">Đề 2</span></div>
+        <div class="stat-chip"><span class="n" id="stat-de3">0</span><span class="l">Đề 3</span></div>
+        <div class="stat-chip"><span class="n" id="stat-de4">0</span><span class="l">Đề 4</span></div>
+        <div class="stat-chip"><span class="n" id="stat-de5">0</span><span class="l">Đề 5</span></div>
+        <div class="stat-chip"><span class="n" id="stat-de6">0</span><span class="l">Đề 6</span></div>
       </div>
     <div id="tn-student-stats-wrap" style="width:100%;max-width:720px;margin:12px auto 0;background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;box-sizing:border-box">
-      <div style="font-weight:800;color:#1E3A8A;margin-bottom:8px">📋 Thống kê theo học sinh (máy này)</div>
+      <div style="font-weight:800;color:#1E3A8A;margin-bottom:8px">📋 Báo cáo theo học sinh — đề [số lần] (lưu trên máy này)</div>
       <div id="tn-student-stats"></div>
     </div>
     </div>
@@ -2452,8 +2452,9 @@ function goTo(idx) {
 
 var TN_ATTEMPT_KEY = "webh2t_tn_attempts_v1";
 function loadAttempts() {
-  try { return JSON.parse(localStorage.getItem(TN_ATTEMPT_KEY) || "[]"); } catch (e) { return []; }
+  try { return JSON.parse(localStorage.getItem("webh2t_tn_attempts_v1") || "[]"); } catch (e) { return []; }
 }
+
 function saveAttemptRecord(rec) {
   var arr = loadAttempts();
   arr.push(rec);
@@ -2461,61 +2462,64 @@ function saveAttemptRecord(rec) {
   try { renderTnStats(); } catch (e2) {}
 }
 function renderTnStats() {
-  var arr = loadAttempts();
-  var byExam = { de1:0, de2:0, de3:0, de4:0, de5:0, de6:0 };
-  var byStudent = {};
-  arr.forEach(function (r) {
-    var eid = String(r.examId || r.exam || "").toLowerCase();
-    var mapped = null;
-    ["de1","de2","de3","de4","de5","de6"].forEach(function (k) {
-      if (eid === k || eid.indexOf(k) >= 0) mapped = k;
+  try {
+    var arr = [];
+    try { arr = JSON.parse(localStorage.getItem("webh2t_tn_attempts_v1") || "[]"); } catch (e0) { arr = []; }
+    if (!Array.isArray(arr)) arr = [];
+    var byExam = { de1:0, de2:0, de3:0, de4:0, de5:0, de6:0 };
+    var byStudent = {};
+    arr.forEach(function (r) {
+      if (!r) return;
+      var eid = String(r.examId || r.exam || "").toLowerCase().trim();
+      var mapped = null;
+      if (byExam.hasOwnProperty(eid)) mapped = eid;
+      else {
+        var m = eid.match(/de\s*([1-6])/i) || eid.match(/tnde\s*([1-6])/i) || eid.match(/^([1-6])$/);
+        if (m) mapped = "de" + m[1];
+      }
+      if (mapped) byExam[mapped] += 1;
+      var name = String(r.name || "?").trim();
+      var cls = String(r.class || r.lop || "").trim();
+      var k = name + (cls ? (" · " + cls) : "");
+      if (!byStudent[k]) byStudent[k] = {};
+      var ek = mapped || eid || "khac";
+      byStudent[k][ek] = (byStudent[k][ek] || 0) + 1;
     });
-    if (!mapped && /^[1-6]$/.test(eid)) mapped = "de" + eid;
-    if (mapped) byExam[mapped] = (byExam[mapped] || 0) + 1;
-    var k = (r.name || "?") + " · " + (r.class || "");
-    if (!byStudent[k]) byStudent[k] = {};
-    var ek = mapped || eid || "?";
-    byStudent[k][ek] = (byStudent[k][ek] || 0) + 1;
-  });
-  ["de1","de2","de3","de4","de5","de6"].forEach(function (id) {
-    var el = document.getElementById("stat-" + id);
-    if (el) el.textContent = String(byExam[id] || 0);
-  });
-  var totalEl = document.getElementById("stat-total");
-  if (totalEl) {
-    // giu countapi neu co, khong de 0 de xoa view count - chi set attempts neu muon
-    // hien thi them so bai da nop
-    var viewN = totalEl.getAttribute("data-views");
-    if (viewN) totalEl.textContent = viewN;
-  }
-  var attEl = document.getElementById("stat-attempts");
-  if (attEl) attEl.textContent = String(arr.length);
-  var box = document.getElementById("tn-student-stats");
-  if (!box) return;
-  var keys = Object.keys(byStudent).sort();
-  if (!keys.length) {
-    box.innerHTML = '<div style="color:#64748B;font-size:.85rem;padding:8px">Chưa có bài nộp trên <b>máy này</b>. Sau khi HS bấm <b>Nộp bài</b>, thống kê sẽ hiện tại đây (localStorage).</div>';
-    return;
-  }
-  var h = '<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
-    + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Học sinh</th>'
-    + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Đề [số lần]</th>'
-    + '<th style="text-align:right;padding:6px;border-bottom:1px solid #E2E8F0">Tổng lần</th>'
-    + '</tr></thead><tbody>';
-  keys.forEach(function (name) {
-    var parts = [];
-    var sum = 0;
-    Object.keys(byStudent[name]).sort().forEach(function (eid) {
-      var n = byStudent[name][eid];
-      sum += n;
-      parts.push(String(eid).toUpperCase() + " [" + n + "]");
+    // Ghi so de
+    ["de1","de2","de3","de4","de5","de6"].forEach(function (id) {
+      var el = document.getElementById("stat-" + id);
+      if (el) el.textContent = String(byExam[id] || 0);
     });
-    h += '<tr><td style="padding:6px;border-bottom:1px solid #F1F5F9">' + name + '</td>'
-      + '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + parts.join(" · ") + '</td>'
-      + '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:right;font-weight:700">' + sum + '</td></tr>';
-  });
-  h += '</tbody></table>';
-  box.innerHTML = h;
+    var att = document.getElementById("stat-attempts");
+    if (att) att.textContent = String(arr.length);
+    // Bang HS
+    var box = document.getElementById("tn-student-stats");
+    if (box) {
+      var keys = Object.keys(byStudent).sort();
+      if (!keys.length) {
+        box.innerHTML = '<div style="color:#64748B;font-size:.85rem;padding:8px 4px">Chưa có bài nộp trên máy này. Hãy <b>chọn đề → làm bài → Nộp bài</b> để ghi nhận thống kê.</div>';
+      } else {
+        var h = '<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
+          + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Học sinh</th>'
+          + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Đề [số lần]</th>'
+          + '<th style="text-align:right;padding:6px;border-bottom:1px solid #E2E8F0">Tổng</th></tr></thead><tbody>';
+        keys.forEach(function (name) {
+          var parts = []; var sum = 0;
+          Object.keys(byStudent[name]).sort().forEach(function (eid) {
+            var n = byStudent[name][eid]; sum += n;
+            parts.push(String(eid).toUpperCase() + " [" + n + "]");
+          });
+          h += '<tr><td style="padding:6px;border-bottom:1px solid #F1F5F9">' + name + '</td>'
+            + '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + parts.join(" · ") + '</td>'
+            + '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:right;font-weight:700">' + sum + '</td></tr>';
+        });
+        h += '</tbody></table>';
+        box.innerHTML = h;
+      }
+    }
+  } catch (err) {
+    console.warn("renderTnStats", err);
+  }
 }
 
 function ensureTopSubmit() {
@@ -4717,6 +4721,15 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 });
+</script>
+<script>
+(function bootTnStats(){
+  function run(){ try { if (typeof renderTnStats === "function") renderTnStats(); } catch(e) {} }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", run);
+  else run();
+  setTimeout(run, 300);
+  setTimeout(run, 1200);
+})();
 </script>
 </body>
 </html>
