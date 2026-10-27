@@ -520,6 +520,78 @@ body.exam-selected #exam-picker{display:none!important}
 #screen-exam .exam-body{display:flex;flex-direction:column;}
 #screen-exam .sidebar{ grid-column:auto!important; }
 
+
+/* WIDE-EXAM-V8 */
+#screen-exam{
+  max-width:1400px!important;
+  margin:0 auto!important;
+  width:100%!important;
+}
+.exam-header{
+  display:grid!important;
+  grid-template-columns: minmax(140px,1fr) 130px 130px minmax(120px,1fr)!important;
+  align-items:center!important;
+  gap:10px!important;
+  max-width:1400px!important;
+  margin:0 auto!important;
+  width:100%!important;
+  box-sizing:border-box!important;
+}
+.exam-header .title{ justify-self:start!important; }
+.exam-header .timer-box, #timer{
+  justify-self:center!important;
+  width:130px!important; min-width:130px!important;
+  text-align:center!important;
+  font-size:1.35rem!important; font-weight:800!important;
+}
+#btn-submit-top{
+  justify-self:center!important;
+  width:130px!important; min-width:130px!important;
+}
+.exam-header .student-info{ justify-self:end!important; }
+#screen-exam .exam-body{
+  max-width:1400px!important;
+  width:100%!important;
+  margin:0 auto!important;
+  box-sizing:border-box!important;
+}
+#screen-exam aside.sidebar{
+  max-width:1400px!important;
+}
+#screen-exam #q-grid-p1{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  gap:6px!important;
+  overflow-x:auto!important;
+  width:100%!important;
+  padding-bottom:4px!important;
+}
+#screen-exam #q-grid-p1 .q-btn{
+  flex:0 0 40px!important;
+  width:40px!important; min-width:40px!important; height:40px!important;
+}
+#screen-exam #q-grid-p2{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  gap:8px!important;
+}
+#res-breakdown{
+  max-height:none!important;
+  overflow:visible!important;
+}
+.rev-q{
+  border:1px solid #E2E8F0; border-radius:12px; padding:12px 14px; margin:0 0 12px;
+  background:#fff;
+}
+.rev-q .rq-head{ font-weight:800; color:#1E3A8A; margin-bottom:6px; font-size:.9rem; }
+.rev-q .rq-text{ font-weight:700; color:#B91C1C; margin-bottom:8px; font-size:1rem; line-height:1.45; }
+.rev-q .rq-opt{ padding:6px 10px; border-radius:8px; margin:3px 0; font-size:.92rem; border:1px solid #F1F5F9; }
+.rev-q .rq-opt.pick{ background:#FEF3C7; border-color:#FBBF24; }
+.rev-q .rq-opt.ok{ background:#D1FAE5; border-color:#34D399; }
+.rev-q .rq-pts{ font-weight:800; margin-top:6px; }
+.rev-q .rq-pts.good{ color:#047857; }
+.rev-q .rq-pts.bad{ color:#B91C1C; }
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -570,7 +642,7 @@ window.addEventListener("error", function (ev) {
     <div class="stats-bar" id="stats-bar">
       <div class="st-title">📊 Lượt xem trang thi</div>
       <div class="stats-grid stats-5">
-        <div class="stat-chip total"><span class="n" id="stat-total">…</span><span class="l">Toàn trang</span></div>
+        <div class="stat-chip total"><span class="n" id="stat-total">…</span><span class="l">Lượt xem</span></div><div class="stat-chip total"><span class="n" id="stat-attempts">0</span><span class="l">Bài đã nộp (máy này)</span></div>
         <div class="stat-chip"><span class="n" id="stat-de1">…</span><span class="l">Đề 1</span></div>
         <div class="stat-chip"><span class="n" id="stat-de2">…</span><span class="l">Đề 2</span></div>
         <div class="stat-chip"><span class="n" id="stat-de3">…</span><span class="l">Đề 3</span></div>
@@ -747,9 +819,9 @@ window.addEventListener("error", function (ev) {
   </div>
   <div class="exam-body">
     <aside class="sidebar">
-      <div class="side-label">Phần 1: TN (6đ · 24×0,25)</div>
+      <div class="side-label">Phần 1: Trắc nghiệm — mỗi câu đúng <b>0,25 điểm</b> (24 câu × 0,25 = 6đ)</div>
       <div class="q-grid" id="q-grid-p1"></div>
-      <div class="side-label">Phần 2: Đúng–Sai (4đ · 4×1)</div>
+      <div class="side-label">Phần 2: Đúng–Sai — đúng 1 ý = 0,1 · 2 ý = 0,25 · 3 ý = 0,5 · 4 ý = 1,0 điểm/câu (4 câu)</div>
       <div class="q-grid" id="q-grid-p2"></div>
       <div class="q-grid" id="q-grid-p3" style="display:none"></div>
     </aside>
@@ -1664,7 +1736,7 @@ function selectExam(ex) {
         });
       } catch (eL) { console.warn(eL); }
     }
-    renderExamPicker(); try { renderTnStats(); } catch(eS) {}
+    renderExamPicker(); try { renderTnStats(); } catch(eS) {}; setTimeout(function(){ try{ renderTnStats(); }catch(e){} }, 800);
     try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
   }
   function clearExamSelection() {
@@ -2390,56 +2462,59 @@ function saveAttemptRecord(rec) {
 }
 function renderTnStats() {
   var arr = loadAttempts();
-  var byExam = {};
+  var byExam = { de1:0, de2:0, de3:0, de4:0, de5:0, de6:0 };
   var byStudent = {};
   arr.forEach(function (r) {
-    var eid = r.examId || r.exam || "?";
-    byExam[eid] = (byExam[eid] || 0) + 1;
+    var eid = String(r.examId || r.exam || "").toLowerCase();
+    var mapped = null;
+    ["de1","de2","de3","de4","de5","de6"].forEach(function (k) {
+      if (eid === k || eid.indexOf(k) >= 0) mapped = k;
+    });
+    if (!mapped && /^[1-6]$/.test(eid)) mapped = "de" + eid;
+    if (mapped) byExam[mapped] = (byExam[mapped] || 0) + 1;
     var k = (r.name || "?") + " · " + (r.class || "");
     if (!byStudent[k]) byStudent[k] = {};
-    byStudent[k][eid] = (byStudent[k][eid] || 0) + 1;
+    var ek = mapped || eid || "?";
+    byStudent[k][ek] = (byStudent[k][ek] || 0) + 1;
   });
-  // Cap nhat o thong ke de
-  ["de1","de2","de3","de4","de5","de6"].forEach(function (id, i) {
+  ["de1","de2","de3","de4","de5","de6"].forEach(function (id) {
     var el = document.getElementById("stat-" + id);
-    if (!el) return;
-    var key = "de" + (i + 1);
-    // map exam ids de1.. 
-    var n = 0;
-    Object.keys(byExam).forEach(function (k) {
-      if (String(k).toLowerCase().indexOf("de" + (i + 1)) >= 0 || String(k) === String(i + 1)) n += byExam[k];
-    });
-    // also match tnde
-    if (!n) {
-      Object.keys(byExam).forEach(function (k) {
-        if (String(k).toLowerCase().indexOf("tnde" + (i + 1)) >= 0) n += byExam[k];
-      });
-    }
-    el.textContent = n || (byExam["de"+(i+1)] || 0) || "0";
+    if (el) el.textContent = String(byExam[id] || 0);
   });
   var totalEl = document.getElementById("stat-total");
-  if (totalEl) totalEl.textContent = String(arr.length);
-  // Bang theo HS
+  if (totalEl) {
+    // giu countapi neu co, khong de 0 de xoa view count - chi set attempts neu muon
+    // hien thi them so bai da nop
+    var viewN = totalEl.getAttribute("data-views");
+    if (viewN) totalEl.textContent = viewN;
+  }
+  var attEl = document.getElementById("stat-attempts");
+  if (attEl) attEl.textContent = String(arr.length);
   var box = document.getElementById("tn-student-stats");
   if (!box) return;
   var keys = Object.keys(byStudent).sort();
   if (!keys.length) {
-    box.innerHTML = "<div style=\"color:#64748B;font-size:.85rem;padding:8px\">Chưa có lượt làm nào trên máy này.</div>";
+    box.innerHTML = '<div style="color:#64748B;font-size:.85rem;padding:8px">Chưa có bài nộp trên <b>máy này</b>. Sau khi HS bấm <b>Nộp bài</b>, thống kê sẽ hiện tại đây (localStorage).</div>';
     return;
   }
-  var h = "<table style=\"width:100%;border-collapse:collapse;font-size:.82rem\"><thead><tr>"
-    + "<th style=\"text-align:left;padding:6px;border-bottom:1px solid #E2E8F0\">Học sinh</th>"
-    + "<th style=\"text-align:left;padding:6px;border-bottom:1px solid #E2E8F0\">Đề [số lần]</th>"
-    + "</tr></thead><tbody>";
-  keys.slice(0, 40).forEach(function (name) {
+  var h = '<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
+    + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Học sinh</th>'
+    + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Đề [số lần]</th>'
+    + '<th style="text-align:right;padding:6px;border-bottom:1px solid #E2E8F0">Tổng lần</th>'
+    + '</tr></thead><tbody>';
+  keys.forEach(function (name) {
     var parts = [];
+    var sum = 0;
     Object.keys(byStudent[name]).sort().forEach(function (eid) {
-      parts.push(eid + " [" + byStudent[name][eid] + "]");
+      var n = byStudent[name][eid];
+      sum += n;
+      parts.push(String(eid).toUpperCase() + " [" + n + "]");
     });
-    h += "<tr><td style=\"padding:6px;border-bottom:1px solid #F1F5F9\">" + name + "</td>"
-      + "<td style=\"padding:6px;border-bottom:1px solid #F1F5F9\">" + parts.join(" · ") + "</td></tr>";
+    h += '<tr><td style="padding:6px;border-bottom:1px solid #F1F5F9">' + name + '</td>'
+      + '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + parts.join(" · ") + '</td>'
+      + '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:right;font-weight:700">' + sum + '</td></tr>';
   });
-  h += "</tbody></table>";
+  h += '</tbody></table>';
   box.innerHTML = h;
 }
 
@@ -2588,9 +2663,10 @@ async function submitExam(auto) {
     }
     if (q.type === "tf") {
       const ans = answers[key] || [null, null, null, null];
-      let p = 0;
-      (q.statements || []).forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) p += 0.25; });
-      return Math.round(p * 100) / 100;
+      let rightSt = 0;
+      (q.statements || []).forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) rightSt++; });
+      const table = { 0: 0, 1: 0.1, 2: 0.25, 3: 0.5, 4: 1.0 };
+      return table[rightSt] != null ? table[rightSt] : 0;
     }
     const user = (answers[key] || "").trim().toLowerCase();
     if (!user) return 0;
@@ -2740,61 +2816,67 @@ async function submitExam(auto) {
 }
 
 function renderResultBreakdown(reviewList, partScores, totalScore) {
-  const box = document.getElementById("res-breakdown");
+  var box = document.getElementById("res-breakdown");
   if (!box) return;
   if (!reviewList || !reviewList.length) {
-    box.innerHTML = "<p style=\"padding:10px;color:#888;font-size:.85rem\">Không có bảng chi tiết câu.</p>";
+    box.innerHTML = "<p style=\"padding:10px;color:#888\">Không có chi tiết bài làm.</p>";
     return;
   }
-  let sum = 0;
-  let rows = reviewList.map(function (it) {
-    const pts = Number(it.pts) || 0;
-    sum += pts;
-    const maxP = Number(it.maxPts) || (it.type === "mc" ? 0.25 : (it.type === "sa" ? 0.5 : (4/6)));
-    const ok = pts >= maxP - 0.001;
-    const partial = pts > 0 && !ok;
-    const status = ok ? "Đúng" : (partial ? "Một phần" : (String(it.user || "").indexOf("bỏ") >= 0 || it.user === "(bỏ)" ? "Bỏ" : "Sai"));
-    const col = ok ? "#065F46" : partial ? "#92400E" : "#991B1B";
-    const bg = ok ? "#ECFDF5" : partial ? "#FFFBEB" : "#FEF2F2";
-    let chon = it.userLetter || it.user || "—";
-    let dung = it.correctLetter || it.correct || it.answer || "—";
-    if (it.type === "tf" && it.lines) {
-      chon = it.lines.map(function (ln) {
-        return (ln.label || "") + ":" + (ln.user === true ? "Đ" : ln.user === false ? "S" : "—");
-      }).join(" ");
-      dung = it.lines.map(function (ln) {
-        return (ln.label || "") + ":" + (ln.correct === true ? "Đ" : ln.correct === false ? "S" : (ln.ans || "—"));
-      }).join(" ");
+  function esc(s) {
+    return (typeof escHtml === "function" ? escHtml(s) : String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"));
+  }
+  var h = '<div style="font-weight:800;color:#1E3A8A;margin:8px 0 12px">📄 Xem bài làm chi tiết (đầy đủ câu hỏi &amp; đáp án)</div>';
+  reviewList.forEach(function (it, idx) {
+    var pts = Number(it.pts) || 0;
+    var maxP = Number(it.maxPts) || (it.type === "mc" ? 0.25 : 1);
+    var no = it.id || it.displayId || ("Câu " + (idx + 1));
+    var head = no + (it.type === "mc" ? " · Trắc nghiệm (0,25đ)" : (it.type === "tf" ? " · Đúng/Sai" : ""));
+    h += '<div class="rev-q">';
+    h += '<div class="rq-head">' + esc(head) + '</div>';
+    h += '<div class="rq-text">' + esc(it.text || "") + '</div>';
+    if (it.type === "mc") {
+      var opts = it.options || [];
+      var ul = it.userLetter || "";
+      var cl = it.correctLetter || "";
+      // options co the la "A. noi dung"
+      opts.forEach(function (op) {
+        var L = String(op).charAt(0);
+        var cls = "rq-opt";
+        if (L === cl) cls += " ok";
+        if (L === ul) cls += " pick";
+        var mark = "";
+        if (L === cl) mark += " ✓ đáp án đúng";
+        if (L === ul) mark += " ← HS chọn";
+        h += '<div class="' + cls + '">' + esc(op) + (mark ? ' <i style="color:#64748B">' + mark + '</i>' : '') + '</div>';
+      });
+      if (!opts.length) {
+        h += '<div class="rq-opt pick">HS chọn: ' + esc(it.user || "—") + '</div>';
+        h += '<div class="rq-opt ok">Đáp án đúng: ' + esc(it.correct || "—") + '</div>';
+      }
+    } else if (it.type === "tf" && it.lines) {
+      it.lines.forEach(function (ln) {
+        var hsS = ln.user === true ? "Đ" : (ln.user === false ? "S" : "—");
+        var crS = ln.correct === true ? "Đ" : (ln.correct === false ? "S" : "—");
+        var cls = "rq-opt " + (ln.ok ? "ok" : "pick");
+        h += '<div class="' + cls + '"><b>' + esc(ln.label) + '.</b> ' + esc(ln.text)
+          + ' · HS: <b>' + hsS + '</b> · Đáp án: <b>' + crS + '</b></div>';
+      });
+      h += '<div style="font-size:.8rem;color:#64748B;margin-top:4px">Thang điểm: 1 ý=0,1 · 2 ý=0,25 · 3 ý=0,5 · 4 ý=1,0</div>';
+    } else {
+      h += '<div class="rq-opt pick">HS: ' + esc(it.user || "—") + '</div>';
+      h += '<div class="rq-opt ok">Đúng: ' + esc(it.correct || "—") + '</div>';
     }
-    const qid = it.qid ? String(it.qid) : "";
-    const short = (it.text || "").replace(/\s+/g, " ").trim();
-    const shortShow = short.length > 42 ? short.slice(0, 42) + "…" : short;
-    const label = (qid ? qid + " · " : "") + shortShow;
-    return "<tr style=\"background:" + bg + "\">" +
-      "<td style=\"padding:6px 8px;font-weight:700;color:#1E3A8A\">" + it.id + "</td>" +
-      "<td style=\"padding:6px 8px;font-size:.8rem;max-width:200px\" title=\"" + (qid + " " + short).replace(/"/g, "'") + "\">" + label + "</td>" +
-      "<td style=\"padding:6px 8px;font-size:.82rem\">" + chon + "</td>" +
-      "<td style=\"padding:6px 8px;font-size:.82rem;font-weight:700;color:#1D4ED8\">" + dung + "</td>" +
-      "<td style=\"padding:6px 8px;font-weight:700;color:" + col + "\">" + status + "</td>" +
-      "<td style=\"padding:6px 8px;text-align:right;font-weight:700\">" + pts + "</td></tr>";
-  }).join("");
-  sum = Math.round(sum * 100) / 100;
-  box.innerHTML = "<div style=\"padding:8px 4px 4px;font-weight:800;color:#1E3A8A\">Chi tiết từng câu (HS chọn &amp; đáp án đúng)</div>" +
-    "<table style=\"width:100%;border-collapse:collapse;font-size:.85rem\">" +
-    "<thead><tr style=\"background:#EEF2FF\">" +
-    "<th style=\"padding:8px;text-align:left\">#</th>" +
-    "<th style=\"padding:8px;text-align:left\">Câu hỏi</th>" +
-    "<th style=\"padding:8px;text-align:left\">HS chọn</th>" +
-    "<th style=\"padding:8px;text-align:left\">Đáp án đúng</th>" +
-    "<th style=\"padding:8px;text-align:left\">KQ</th>" +
-    "<th style=\"padding:8px;text-align:right\">Điểm</th></tr></thead>" +
-    "<tbody>" + rows + "</tbody>" +
-    "<tfoot><tr style=\"background:#EEF2FF\">" +
-    "<td colspan=\"5\" style=\"padding:10px;font-weight:800;color:#1E3A8A\">Tổng điểm</td>" +
-    "<td style=\"padding:10px;font-weight:900;text-align:right;color:#1D4ED8;font-size:1.05rem\">" + (totalScore != null ? totalScore : sum) + " / 10</td></tr></tfoot>" +
-    "</table>";
+    var ptsCls = pts >= maxP - 0.001 ? "good" : (pts > 0 ? "good" : "bad");
+    h += '<div class="rq-pts ' + ptsCls + '">Điểm câu: ' + pts.toFixed(2).replace(".", ",") + ' / ' + String(maxP).replace(".", ",") + '</div>';
+    h += '</div>';
+  });
+  var p1 = partScores && partScores.p1 != null ? partScores.p1 : "—";
+  var p2 = partScores && partScores.p2 != null ? partScores.p2 : "—";
+  h += '<div style="font-weight:800;padding:12px;background:#EEF2FF;border-radius:10px">Tổng điểm: '
+    + (Number(totalScore) || 0).toFixed(2).replace(".", ",") + '/10 · Phần 1: ' + p1 + ' · Phần 2: ' + p2 + '</div>';
+  box.innerHTML = h;
 }
-
 
 function buildQuestionLookup() {
   const map = {};
