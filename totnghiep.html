@@ -1345,7 +1345,74 @@ function exitAdminHint() {
       box.appendChild(btn);
     });
   }
-  function selectExam(ex) {
+  
+async function loadFromUrl(url) {
+  if (!url) {
+    console.warn("loadFromUrl: empty url");
+    return false;
+  }
+  var lb = document.getElementById("load-bar");
+  try {
+    if (typeof XLSX === "undefined") {
+      throw new Error("Thư viện XLSX chưa tải — kiểm tra mạng / CDN");
+    }
+    if (lb) {
+      lb.style.display = "block";
+      lb.style.background = "#EEF2FF";
+      lb.style.color = "#1E3A8A";
+      lb.textContent = "Đang tải đề từ GitHub…";
+    }
+    var resp = await fetch(url, { cache: "no-store" });
+    if (!resp.ok) throw new Error("HTTP " + resp.status + " — " + url);
+    var buf = await resp.arrayBuffer();
+    var wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+    if (typeof parseWorkbook !== "function") throw new Error("Thiếu parseWorkbook");
+    parseWorkbook(wb);
+    // parseWorkbook tự gọi refreshClassDropdown + dataReady
+    if (!(questionBank && questionBank.part1 && questionBank.part1.length)) {
+      if (lb) {
+        lb.style.display = "block";
+        lb.style.background = "#FEE2E2";
+        lb.style.color = "#991B1B";
+        lb.textContent = "File tải được nhưng không có câu hỏi MC (sheet CauHoi).";
+      }
+      return false;
+    }
+    if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+    return true;
+  } catch (err) {
+    console.warn("loadFromUrl", err);
+    if (lb) {
+      lb.style.display = "block";
+      lb.style.background = "#FEE2E2";
+      lb.style.color = "#991B1B";
+      lb.textContent = "Không tải được đề: " + (err && err.message ? err.message : err);
+    }
+    // Thử cache localStorage
+    try {
+      var key = (typeof DATA_KEY !== "undefined" ? DATA_KEY : "tn") + (currentExam ? ("_" + currentExam.id) : "");
+      var raw = localStorage.getItem(key);
+      if (raw) {
+        var d = JSON.parse(raw);
+        if (d && d.bank) {
+          questionBank = d.bank;
+          studentsByClass = d.students || {};
+          dataReady = true;
+          if (typeof refreshClassDropdown === "function") refreshClassDropdown();
+          if (lb) {
+            lb.style.background = "#FEF3C7";
+            lb.style.color = "#92400E";
+            lb.textContent = "Dùng bản cache local (GitHub lỗi).";
+          }
+          return true;
+        }
+      }
+    } catch (e2) {}
+    return false;
+  }
+}
+
+function selectExam(ex) {
     try { console.log("Chọn đề", ex && ex.file); } catch(e) {}
 
     currentExam = ex;
@@ -1429,10 +1496,19 @@ function exitAdminHint() {
   function clearExamSelection() {
     currentExam = null;
     try { sessionStorage.removeItem("webh2t_tn_exam"); } catch (e) {}
+    try { document.body.classList.remove("exam-selected"); } catch (e) {}
     const cur = document.getElementById("exam-current");
-    if (cur) cur.classList.remove("visible");
+    if (cur) { cur.classList.remove("visible"); cur.style.display = "none"; }
     const sui = document.getElementById("student-ui");
-    if (sui) sui.style.display = "none";
+    if (sui) { sui.style.display = "none"; sui.classList.remove("is-open"); }
+    var stats = document.getElementById("stats-bar");
+    if (stats) stats.style.display = "";
+    var picker = document.getElementById("exam-picker");
+    if (picker) picker.style.display = "grid";
+    var title = document.getElementById("page-title");
+    if (title) title.textContent = "📝 Ôn thi tốt nghiệp THPT – Tin học";
+    dataReady = false;
+
     const blog = document.getElementById("screen-blog");
     if (blog) blog.style.display = "none";
     const sel = document.getElementById("screen-select");
@@ -4000,10 +4076,6 @@ function tidyBlogComment_(s) {
 </script>
 
 
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-
-
-
 <div id="screen-convert" style="display:none;min-height:100vh;padding:32px 16px;background:linear-gradient(135deg,#EEF2FF,#F8FAFC);box-sizing:border-box">
   <div class="select-card" style="max-width:560px;margin:0 auto">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -4263,5 +4335,35 @@ function tidyBlogComment_(s) {
 })();
 </script>
 
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  var btnCh = document.getElementById("btn-change-exam");
+  if (btnCh && !btnCh._tnBound) {
+    btnCh._tnBound = true;
+    btnCh.addEventListener("click", function (ev) {
+      ev.preventDefault();
+      try { if (typeof clearExamSelection === "function") clearExamSelection(); } catch (e) {}
+      try { document.body.classList.remove("exam-selected"); } catch (e) {}
+      var sui = document.getElementById("student-ui");
+      if (sui) { sui.style.display = "none"; sui.classList.remove("is-open"); }
+      var cur = document.getElementById("exam-current");
+      if (cur) { cur.classList.remove("visible"); cur.style.display = "none"; }
+      var stats = document.getElementById("stats-bar");
+      if (stats) stats.style.display = "";
+      var picker = document.getElementById("exam-picker");
+      if (picker) picker.style.display = "grid";
+      var title = document.getElementById("page-title");
+      if (title) title.textContent = "📝 Ôn thi tốt nghiệp THPT – Tin học";
+      currentExam = null;
+      dataReady = false;
+      studentsByClass = {};
+      questionBank = { part1: [], part2: [], part3: [] };
+      if (typeof renderExamPicker === "function") renderExamPicker();
+      var cs = document.getElementById("class-select");
+      if (cs) { cs.innerHTML = '<option value="">-- Chọn bài kiểm tra trước --</option>'; cs.disabled = true; }
+    });
+  }
+});
+</script>
 </body>
 </html>
