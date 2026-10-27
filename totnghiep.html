@@ -1996,7 +1996,7 @@ function startExam() {
   const st = (studentsByClass[selectedClass] || []).find(s => s.name === selectedStudent);
   const alreadyTaken = (st && st.score !== "" && st.score != null) || takenMap[selectedClass + "|" + selectedStudent];
   const openRetake = typeof isClassAlwaysOpen === "function" && isClassAlwaysOpen(selectedClass);
-  if (alreadyTaken && !openRetake) {
+  if (false && alreadyTaken && !openRetake) {
     alert("Bạn đã hoàn thành bài kiểm tra rồi! Không thể làm lại.\n(Lớp đang LOCK / theo lịch — chỉ 1 lần. Giáo viên bật OPEN để cho làm lại.)");
     return;
   }
@@ -2017,6 +2017,20 @@ function startExam() {
     const el = document.documentElement;
     if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
     else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  } catch (err) {}
+}
+
+
+function onKey(e) {
+  // On luyen TN: chi chan phim nguy hiem, khong huy bai
+  try {
+    if (e.target && (e.target.id === "sa-input" || e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
+    var k = e.key || "";
+    if (k === "F12" || k === "PrintScreen" || (e.ctrlKey && (k === "c" || k === "C" || k === "u" || k === "U" || k === "p" || k === "P"))) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
   } catch (err) {}
 }
 
@@ -3335,17 +3349,8 @@ function isClassOpenNow(lop) {
   return true; /* Ôn TN: không khóa lịch — làm không giới hạn */
 }
 /** OPEN = suất dài (≥360 ngày hoặc 2020–2099) → cho làm lại không giới hạn */
-function isClassAlwaysOpen(lop) {
-  const list = loadSchedule().filter(function (s) { return s.lop === lop; });
-  return list.some(function (s) {
-    const id = String(s.id || "");
-    if (id.indexOf("xls_open_") === 0 || id.indexOf("open_") === 0) return true;
-    const a = new Date(s.from), b = new Date(s.to);
-    if (isNaN(a) || isNaN(b)) return false;
-    const days = (b - a) / 86400000;
-    return (a.getFullYear() <= 2020 && b.getFullYear() >= 2090) || days >= 360;
-  });
-}
+function isClassAlwaysOpen(){ return true; /* on TN: cho lam lai */ }
+
 function scheduleMessage(lop) {
   const list = loadSchedule().filter(s => s.lop === lop);
   if (!list.length) return "Lớp " + lop + " chưa có suất trong lịch thi (bị khóa).";
