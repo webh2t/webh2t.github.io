@@ -317,10 +317,36 @@
 .warn-banner,.alert-warn,.notice-exam,#exam-warn,#lich-warn,
 .select-card .warn,.select-card .alert{display:none!important}
 /* Ẩn khối cảnh báo đỏ/vàng trên màn chọn */
-.select-card > div[style*="background"][style*="#FEF"],
-.select-card > div[style*="border"][style*="#F"]{display:none!important}
+/* keep warn-red-tn visible */
 
 #schedule-box,.schedule-box,.warn-note,.note.danger,.student-warn,#page-sub{display:none!important}
+
+.select-card{max-width:720px!important;width:100%}
+.stats-bar{max-width:720px!important}
+#student-ui,#exam-current{max-width:720px!important}
+.stats-grid.stats-5{display:grid!important;grid-template-columns:repeat(3,1fr)!important;gap:10px}
+.stats-grid.stats-5 .stat-chip.total{grid-column:1/-1}
+.exam-tile,.exam-card,button.exam-btn,[data-exam]{
+  border:2px solid #1E3A8A!important;border-radius:14px!important;
+}
+.exam-tile .file,.exam-card .file,.exam-fname{display:none!important}
+.warn-red-tn{display:block!important;
+  background:#FEF2F2;border:1.5px solid #FECACA;color:#991B1B;
+  border-radius:12px;padding:12px 14px;margin:12px 0 16px;font-size:.88rem;line-height:1.45;font-weight:600;
+}
+
+
+.exam-btn{
+  border:2.5px solid #1E40AF!important;border-radius:14px!important;
+  background:#fff!important;padding:14px 12px!important;text-align:left!important;
+  box-shadow:0 2px 8px rgba(30,64,175,.08);
+}
+.exam-btn.active,.exam-btn:hover{border-color:#7C3AED!important;background:#F5F3FF!important}
+.exam-btn .eb-code{display:block;font-size:.72rem;font-weight:800;color:#1D4ED8;letter-spacing:.04em}
+.exam-btn .eb-title{display:block;font-size:1rem;font-weight:800;color:#0F172A;margin-top:4px}
+.exam-btn .eb-file{display:none!important}
+#exam-list,.exam-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -366,14 +392,14 @@ window.addEventListener("error", function (ev) {
     <div id="exam-picker" class="exam-picker" aria-label="Chọn bài kiểm tra"></div>
     <div class="stats-bar" id="stats-bar">
       <div class="st-title">📊 Lượt xem trang thi</div>
-      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(70px,1fr))">
+      <div class="stats-grid stats-5">
         <div class="stat-chip total"><span class="n" id="stat-total">…</span><span class="l">Toàn trang</span></div>
         <div class="stat-chip"><span class="n" id="stat-de1">…</span><span class="l">Đề 1</span></div>
         <div class="stat-chip"><span class="n" id="stat-de2">…</span><span class="l">Đề 2</span></div>
         <div class="stat-chip"><span class="n" id="stat-de3">…</span><span class="l">Đề 3</span></div>
         <div class="stat-chip"><span class="n" id="stat-de4">…</span><span class="l">Đề 4</span></div>
         <div class="stat-chip"><span class="n" id="stat-de5">…</span><span class="l">Đề 5</span></div>
-        <div class="stat-chip"><span class="n" id="stat-de6">…</span><span class="l">Đề 6</span></div>
+      </div>
       </div>
       </div>
     </div>
@@ -628,12 +654,11 @@ const SCHEDULE_KEY_LEGACY = "webh2t_tn_lich";
 try { localStorage.setItem("webh2t_tn_webhook", ""); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
 const EXAMS = [
-  { id: "de1", code: "Đề 1", title: "Thi thử đề 1", file: "tnde1.xlsx", sub: "Mã đề tham khảo · Phần chung + Tin học ứng dụng" },
-  { id: "de2", code: "Đề 2", title: "Thi thử đề 2", file: "tnde2.xlsx", sub: "Mã đề tham khảo · Phần chung + Tin học ứng dụng" },
-  { id: "de3", code: "Đề 3", title: "Thi thử đề 3", file: "tnde3.xlsx", sub: "Mã đề tham khảo · Phần chung + Tin học ứng dụng" },
-  { id: "de4", code: "Đề 4", title: "Thi thử đề 4", file: "tnde4.xlsx", sub: "Mã đề 0525/0526/0530 · Phần chung + Tin học ứng dụng" },
-  { id: "de5", code: "Đề 5", title: "Thi thử đề 5", file: "tnde5.xlsx", sub: "Mã đề 0525/0526/0530 · Phần chung + Tin học ứng dụng" },
-  { id: "de6", code: "Đề 6", title: "Thi thử đề 6", file: "tnde6.xlsx", sub: "Mã đề chính thức tham khảo · Phần chung + Tin học ứng dụng" }
+  { id: "de1", code: "ĐỀ 1", title: "Thi thử đề 1", file: "tnde1.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
+  { id: "de2", code: "ĐỀ 2", title: "Thi thử đề 2", file: "tnde2.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
+  { id: "de3", code: "ĐỀ 3", title: "Thi thử đề 3", file: "tnde3.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
+  { id: "de4", code: "ĐỀ 4", title: "Thi thử đề 4", file: "tnde4.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
+  { id: "de5", code: "ĐỀ 5", title: "Thi thử đề 5", file: "tnde5.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" }
 ];
 let currentExam = null;
 const DEFAULT_DATA_URL = DATA_BASE + "tnde1.xlsx";
@@ -1325,7 +1350,7 @@ function exitAdminHint() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "exam-btn" + (currentExam && currentExam.id === ex.id ? " active" : "");
-      btn.innerHTML = '<span class="eb-code">' + ex.code + '</span><span class="eb-title">' + ex.title + '</span><span class="eb-file">' + ex.file + '</span>';
+      btn.innerHTML = '<span class="eb-code">' + ex.code + '</span><span class="eb-title">' + ex.title + '</span>';
       btn.addEventListener("click", function () { selectExam(ex); });
       box.appendChild(btn);
     });
@@ -3363,8 +3388,8 @@ if (_cancelExam) {
   get("webh2t-totnghiep-b18", "stat-b18");
   get("webh2t-totnghiep-b25", "stat-b25");
   window.hitExamView = function (examId) {
-    var map = { de1: "webh2t-totnghiep-de1", de2: "webh2t-totnghiep-de2", de3: "webh2t-totnghiep-de3", de4: "webh2t-totnghiep-de4", de5: "webh2t-totnghiep-de5", de6: "webh2t-totnghiep-de6" };
-    var elMap = { de1: "stat-de1", de2: "stat-de2", de3: "stat-de3", de4: "stat-de4", de5: "stat-de5", de6: "stat-de6" };
+    var map = { de1: "webh2t-totnghiep-de1", de2: "webh2t-totnghiep-de2", de3: "webh2t-totnghiep-de3", de4: "webh2t-totnghiep-de4", de5: "webh2t-totnghiep-de5" };
+    var elMap = { de1: "stat-de1", de2: "stat-de2", de3: "stat-de3", de4: "stat-de4", de5: "stat-de5" };
     var k = map[examId];
     if (k) hit(k, elMap[examId]);
   };
@@ -4061,7 +4086,7 @@ function tidyBlogComment_(s) {
       <button type="button" id="btn-convert-back" style="border:0;background:#F1F5F9;border-radius:8px;padding:8px 12px;font-weight:600;cursor:pointer">← Về trang thi</button>
     </div>
     <p style="font-size:.85rem;color:#64748B;line-height:1.5;margin:0 0 14px">
-      Tạo file <b>.xlsx</b> đủ <b>28 câu</b>: 24 TN (Phần 1) + 2 Đ/S phần chung + 2 Đ/S Tin học ứng dụng.
+      Tạo khung file <b>.xlsx</b> đủ <b>28 câu</b> (cần điền nội dung tay hoặc dùng đề mẫu đã nhập sẵn): 24 TN (Phần 1) + 2 Đ/S phần chung + 2 Đ/S Tin học ứng dụng.
       Đặt ảnh vào <code>assets/THPT/</code> trên GitHub; điền nội dung/đáp án trong Excel.
     </p>
     <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Chọn ảnh hoặc PDF</label>
