@@ -743,7 +743,7 @@ window.addEventListener("error", function (ev) {
         </p>
         <div class="schedule-row">
           <label style="flex:1;min-width:220px">URL Webhook nhận điểm (Apps Script)
-            <input type="url" id="cloud-webhook" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;margin-top:4px;padding:8px;border:1px solid #BBF7D0;border-radius:8px;font-size:.85rem">
+            <input type="url" id="cloud-webhook" placeholder="https://script.google.com/macros/s/.../exec" style="width:100%;margin-top:4px;padding:8px;border:1px solid #BBF7D0;border-radius:8px;font-size:.85rem" value="https://script.google.com/macros/s/AKfycbxdBFIwB43YeBFDxddP91_mLYN7HhXwfubthUvT9tcAaU0rNEUg44cLEsVNSx5cFDze/exec">
           </label>
         </div>
         <div class="schedule-row">
@@ -900,7 +900,9 @@ window.addEventListener("error", function (ev) {
 </div>
 
 <script>
-const EXAM_MINUTES = 10; // không giới hạn
+const EXAM_MINUTES = 10;
+const TN_DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxdBFIwB43YeBFDxddP91_mLYN7HhXwfubthUvT9tcAaU0rNEUg44cLEsVNSx5cFDze/exec";
+const TN_DEFAULT_SHEET = "https://docs.google.com/spreadsheets/d/172Rs1HEHDSJkgRJFBhKqKZFhQDpTzozHBPLWF3UA_hs/edit?usp=sharing"; // không giới hạn
 const STORAGE_KEY = "webh2t_totnghiep_scores";
 const DATA_KEY = "tn_v20261027b";
 const SCHEDULE_KEY = "webh2t_tn_lich_v2";
@@ -2465,13 +2467,15 @@ function getTnWebhook() {
     }
   } catch (e) {}
   try {
-    var w = localStorage.getItem("webh2t_tn_webhook") || "";
-    if (w) return w;
+    var w = localStorage.getItem("webh2t_tn_webhook");
+    if (w && w.trim()) return w.trim();
   } catch (e2) {}
-  // Mac dinh: dung webhook diem Tin neu GV da gan
   try {
-    return localStorage.getItem("webh2t_cloud_webhook") || "";
-  } catch (e3) { return ""; }
+    var w2 = localStorage.getItem("webh2t_cloud_webhook");
+    if (w2 && w2.trim()) return w2.trim();
+  } catch (e3) {}
+  if (typeof TN_DEFAULT_WEBHOOK === "string" && TN_DEFAULT_WEBHOOK) return TN_DEFAULT_WEBHOOK;
+  return "";
 }
 
 function pushAttemptToCloud(rec) {
@@ -4821,6 +4825,19 @@ document.addEventListener("DOMContentLoaded", function () {
   else run();
   setTimeout(run, 300);
   setTimeout(run, 1200);
+})();
+</script>
+<script>
+(function bootTnWebhook(){
+  try {
+    if (typeof TN_DEFAULT_WEBHOOK === "string" && TN_DEFAULT_WEBHOOK) {
+      if (!localStorage.getItem("webh2t_tn_webhook"))
+        localStorage.setItem("webh2t_tn_webhook", TN_DEFAULT_WEBHOOK);
+    }
+    var inp = document.getElementById("cloud-webhook");
+    if (inp && !inp.value && typeof TN_DEFAULT_WEBHOOK === "string")
+      inp.value = TN_DEFAULT_WEBHOOK;
+  } catch (e) {}
 })();
 </script>
 </body>
