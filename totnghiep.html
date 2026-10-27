@@ -568,7 +568,7 @@ window.addEventListener("error", function (ev) {
 
 <div id="screen-exam" class="no-select">
   <div class="exam-header">
-    <div class="title">Ôn thi tốt nghiệp THPT – Tin học<br><span style="font-weight:500;font-size:.8rem;opacity:.9">Bài 4: Giao thức mạng</span></div>
+    <div class="title">Ôn thi tốt nghiệp THPT – Tin học<br><span style="font-weight:500;font-size:.8rem;opacity:.9">Ôn thi TN THPT – Tin học</span></div>
     <div class="timer-box" id="timer"><span class="timer-icon">⏱️</span> <span id="timer-text">15:00</span></div>
     <div class="student-info" id="exam-student-info">Họ tên: — · Lớp: —</div>
   </div>
@@ -693,7 +693,7 @@ const loadBar = document.getElementById("load-bar");
 function getTakenMap() {
   const map = {};
   try {
-    JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]").forEach(r => {
+    JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").forEach(r => {
       map[r.class + "|" + r.name] = r.score;
     });
   } catch (e) {}
@@ -703,7 +703,7 @@ function getTakenMap() {
 function renderScoreTable() {
   const tbody = document.getElementById("score-tbody");
   if (!tbody) return;
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="10" style="padding:16px;color:#888">Chưa có dữ liệu điểm</td></tr>';
   } else {
@@ -1596,7 +1596,7 @@ function tryLogin() {
 function renderRetakeList() {
   const box = document.getElementById("retake-list");
   if (!box) return;
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   if (!list.length) {
     box.innerHTML = '<div style="padding:12px;color:#888;font-size:.85rem">Chưa có học sinh đã nộp bài</div>';
     return;
@@ -1620,9 +1620,9 @@ function renderRetakeList() {
 
 function allowRetake(cls, name) {
   if (!confirm("Cho phép " + name + " (" + cls + ") làm lại? Điểm cũ sẽ bị xóa.")) return;
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   list = list.filter(r => !(r.class === cls && r.name === name));
-  localStorage.setItem(STORAGE_KEY_TN, JSON.stringify(list));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   // Xóa điểm trong memory studentsByClass
   if (studentsByClass[cls]) {
     const st = studentsByClass[cls].find(s => s.name === name);
@@ -1635,7 +1635,7 @@ function allowRetake(cls, name) {
 
 document.getElementById("btn-clear-all-retake")?.addEventListener("click", function () {
   if (!confirm("Xóa TẤT CẢ điểm để cả khối làm lại?")) return;
-  localStorage.removeItem(STORAGE_KEY_TN);
+  localStorage.removeItem(STORAGE_KEY);
   Object.keys(studentsByClass).forEach(lop => {
     studentsByClass[lop].forEach(s => { s.score = ""; });
   });
@@ -1657,7 +1657,7 @@ document.getElementById("file-upload").addEventListener("change", function (e) {
 });
 
 document.getElementById("btn-download-scores").addEventListener("click", function () {
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   if (!list.length) { alert("Chưa có dữ liệu điểm."); return; }
   // Sắp xếp theo lớp + thứ tự danh sách Excel (studentsByClass)
   const orderMap = {};
@@ -1690,7 +1690,7 @@ document.getElementById("btn-download-scores").addEventListener("click", functio
 });
 document.getElementById("btn-clear-scores").addEventListener("click", function () {
   if (confirm("Xóa sạch toàn bộ dữ liệu điểm trên máy này?")) {
-    localStorage.removeItem(STORAGE_KEY_TN);
+    localStorage.removeItem(STORAGE_KEY);
     Object.keys(studentsByClass).forEach(lop => {
       (studentsByClass[lop] || []).forEach(s => { s.score = ""; });
     });
@@ -1713,10 +1713,10 @@ document.getElementById("btn-logout")?.addEventListener("click", function () {
 
 /* ----- Lưu đồng bộ cloud & local ----- */
 document.getElementById("btn-sync-cloud")?.addEventListener("click", async function () {
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   const dataBlob = localStorage.getItem(DATA_KEY) || "";
   // 1) Local: đảm bảo đã lưu
-  localStorage.setItem(STORAGE_KEY_TN, JSON.stringify(list));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   // 2) Tải file điểm + backup JSON
   if (list.length) {
     const data = [["STT","Lớp","Họ và tên","Điểm","Đúng","Sai","Bỏ qua","Bài làm","Thời điểm nộp","Mã đề"]];
@@ -1814,13 +1814,16 @@ function shuffle(a) {
   return arr;
 }
 function shuffleMC(q) {
+  var opts = (q.options || ["A", "B", "C", "D"]).slice(0, 4);
+  while (opts.length < 4) opts.push("");
   const idxs = shuffle([0, 1, 2, 3]);
   const imgs = (q.imgOpts && q.imgOpts.length === 4) ? q.imgOpts : ["", "", "", ""];
+  var corr = (typeof q.correct === "number" && q.correct >= 0 && q.correct < 4) ? q.correct : 0;
   return {
     ...q,
-    options: idxs.map(i => q.options[i]),
+    options: idxs.map(i => opts[i] != null ? opts[i] : ""),
     imgOpts: idxs.map(i => imgs[i] || ""),
-    correct: idxs.indexOf(q.correct),
+    correct: idxs.indexOf(corr),
     optionOrder: idxs.slice(),
     optionOrderLetters: idxs.map(i => String.fromCharCode(65 + i)).join("")
   };
@@ -2113,7 +2116,7 @@ function renderQuestion(idx) {
   html += mediaHtmlForQuestion(q);
   if (q.type === "mc") {
     html += '<div class="options">';
-    q.options.forEach((opt, i) => {
+    (q.options && q.options.length ? q.options : ['','','','']).forEach((opt, i) => {
       const img = (q.imgOpts && q.imgOpts[i]) ? '<img class="opt-img" src="' + String(q.imgOpts[i]).replace(/"/g, "&quot;") + '" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.display=\'none\'">' : "";
       html += '<label class="opt ' + (answers[key] === i ? "selected" : "") + '" data-idx="' + i + '"><input type="radio"><span class="letter">' + String.fromCharCode(65 + i) + '</span><span class="content">' + opt + img + "</span></label>";
     });
@@ -2133,8 +2136,7 @@ function renderQuestion(idx) {
   html += '<button class="btn-nav btn-prev" id="btn-prev" ' + (idx === 0 ? "disabled" : "") + '>← Câu trước</button>';
   if (idx < activeQuestions.length - 1)
     html += '<button class="btn-nav btn-next" id="btn-next">Câu tiếp theo →</button>';
-  else
-    html += '<div class="btn-submit-wrap"><button class="btn-nav btn-submit" id="btn-submit">🚀 Nộp bài</button></div>';
+  html += '<div class="btn-submit-wrap"><button class="btn-nav btn-submit" id="btn-submit">🚀 Nộp bài</button></div>';
   html += "</div>";
   area.innerHTML = html;
   updateSidebar();
@@ -2255,6 +2257,22 @@ function buildPattern() {
 
 async function submitExam(auto) {
   if (examCancelled) return;
+
+  // Chuẩn hoá đáp án TF: object {a,b,c,d} → mảng [bool,bool,bool,bool]
+  try {
+    (activeQuestions || []).forEach(function (q) {
+      if (q.type !== "tf") return;
+      var a = answers[q.uid];
+      if (a && !Array.isArray(a) && typeof a === "object") {
+        answers[q.uid] = [a.a, a.b, a.c, a.d].map(function (v) {
+          if (v === true || v === "true" || v === "Đ" || v === "D") return true;
+          if (v === false || v === "false" || v === "S") return false;
+          return null;
+        });
+      }
+    });
+  } catch (eNorm) {}
+
   try { if (document.fullscreenElement) document.exitFullscreen(); } catch(e) {}
   const sa = document.getElementById("sa-input");
   if (sa) answers[activeQuestions[currentQ].uid] = sa.value;
@@ -2418,11 +2436,11 @@ async function submitExam(auto) {
     correct: correctCount, wrong: wrongCount, skip: skipCount,
     elapsed, time: new Date().toLocaleString("vi-VN"), pattern, maDe: window._currentMaDe || "", examId: window._currentExamId || "", review: reviewList, partScores: window._lastPartScores || null, hasReview: true
   };
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   // Ghi đè nếu đã có điểm cùng HS (làm lại)
   list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
   list.push(record);
-  localStorage.setItem(STORAGE_KEY_TN, JSON.stringify(list));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   // Gửi điểm lên Google Sheet (mọi máy)
   try {
     pushScoreToCloud(record);
@@ -2435,6 +2453,7 @@ async function submitExam(auto) {
 
   document.getElementById("screen-exam").style.display = "none";
   document.getElementById("screen-result").style.display = "block";
+  try { document.getElementById("screen-exam").style.display = "none"; document.getElementById("screen-select").style.display = "none"; } catch(eSc) {}
   document.getElementById("final-score").innerHTML = totalScore + "<span>/10</span>";
   document.getElementById("res-name").textContent = (window.tnStudentCodes && window.tnStudentCodes[(selectedClass||"")+"|"+selectedStudent] ? ("["+window.tnStudentCodes[(selectedClass||"")+"|"+selectedStudent]+"] ") : "") + selectedStudent;
   document.getElementById("res-class").textContent = selectedClass;
@@ -2732,7 +2751,7 @@ async function pullScoresFromCloud() {
     return;
   }
 
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   let added = 0, updated = 0;
   rows.forEach(function (rec) {
     const r = typeof normalizeCloudRow_ === "function" ? normalizeCloudRow_(rec) : rec;
@@ -2772,7 +2791,7 @@ async function pullScoresFromCloud() {
       added++;
     }
   });
-  localStorage.setItem(STORAGE_KEY_TN, JSON.stringify(list));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   if (typeof renderScoreTable === "function") renderScoreTable();
   alert("Đã tải " + rows.length + " bài từ cloud (" + source + ").\nThêm mới: " + added + " · Cập nhật: " + updated + " · Tổng: " + list.length);
 }
@@ -3418,10 +3437,10 @@ function saveZeroScore(reason) {
     pattern: "THOAT/" + (reason || "no-submit"),
     maDe: window._currentMaDe || ""
   };
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY_TN) || "[]");
+  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
   list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
   list.push(record);
-  localStorage.setItem(STORAGE_KEY_TN, JSON.stringify(list));
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
   try { pushScoreToCloud(record); } catch (e) {}
   if (studentsByClass[selectedClass]) {
     const st = studentsByClass[selectedClass].find(s => s.name === selectedStudent);
