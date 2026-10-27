@@ -346,6 +346,7 @@
 .exam-btn .eb-title{display:block;font-size:1rem;font-weight:800;color:#0F172A;margin-top:4px}
 .exam-btn .eb-file{display:none!important}
 #exam-list,.exam-list{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.stats-grid.stats-5{grid-template-columns:repeat(3,1fr)!important}
 
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
@@ -399,6 +400,8 @@ window.addEventListener("error", function (ev) {
         <div class="stat-chip"><span class="n" id="stat-de3">…</span><span class="l">Đề 3</span></div>
         <div class="stat-chip"><span class="n" id="stat-de4">…</span><span class="l">Đề 4</span></div>
         <div class="stat-chip"><span class="n" id="stat-de5">…</span><span class="l">Đề 5</span></div>
+        <div class="stat-chip"><span class="n" id="stat-de6">…</span><span class="l">Đề 6</span></div>
+      </div>
       </div>
       </div>
       </div>
@@ -648,7 +651,7 @@ window.addEventListener("error", function (ev) {
 <script>
 const EXAM_MINUTES = 50;
 const STORAGE_KEY = "webh2t_totnghiep_scores";
-const DATA_KEY = "webh2t_exam_data_bai4";
+const DATA_KEY = "tn_v20261027b";
 const SCHEDULE_KEY = "webh2t_tn_lich_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_tn_lich";
 try { localStorage.setItem("webh2t_tn_webhook", ""); } catch (e) {}
@@ -658,10 +661,11 @@ const EXAMS = [
   { id: "de2", code: "ĐỀ 2", title: "Thi thử đề 2", file: "tnde2.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
   { id: "de3", code: "ĐỀ 3", title: "Thi thử đề 3", file: "tnde3.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
   { id: "de4", code: "ĐỀ 4", title: "Thi thử đề 4", file: "tnde4.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
-  { id: "de5", code: "ĐỀ 5", title: "Thi thử đề 5", file: "tnde5.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" }
+  { id: "de5", code: "ĐỀ 5", title: "Thi thử đề 5", file: "tnde5.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" },
+  { id: "de6", code: "ĐỀ 6", title: "Thi thử đề 6", file: "tnde6.xlsx", sub: "Đề tham khảo · Phần chung + Tin học ứng dụng" }
 ];
 let currentExam = null;
-const DEFAULT_DATA_URL = DATA_BASE + "tnde1.xlsx";
+const DEFAULT_DATA_URL = DATA_BASE + "tnde1.xlsx" + "?v=" + (typeof DATA_KEY!=="undefined"?DATA_KEY:"1");
 // cache-bust khi tải
 
 let studentsByClass = {};
@@ -823,8 +827,13 @@ btnStart.addEventListener("click", startExam);
 
 function parseWorkbook(wb) {
   studentsByClass = {};
-  if (wb.Sheets["HocSinh"]) {
-    XLSX.utils.sheet_to_json(wb.Sheets["HocSinh"], { header: 1 }).forEach((row, idx) => {
+  var sheetHS = wb.Sheets["HocSinh"] || wb.Sheets["Hocsinh"] || wb.Sheets["HOCSINH"];
+  if (!sheetHS) {
+    var sn2 = (wb.SheetNames || []).find(function (n) { return /hoc\s*sinh/i.test(String(n)); });
+    if (sn2) sheetHS = wb.Sheets[sn2];
+  }
+  if (sheetHS) {
+    XLSX.utils.sheet_to_json(sheetHS, { header: 1 }).forEach((row, idx) => {
       if (idx === 0 && /lớp|lop|họ|tên/i.test(String(row[0] || ""))) return;
       const lop = String(row[0] || "").trim();
       const ten = String(row[1] || "").trim();
@@ -842,8 +851,14 @@ function parseWorkbook(wb) {
   }
   questionBank = { part1: [], part2: [], part3: [] };
   window.examCodes = {}; // pool theo mã (nếu có) — buildExam xáo từ toàn bộ ngân hàng
-  if (wb.Sheets["CauHoi"]) {
-    const rawRows = XLSX.utils.sheet_to_json(wb.Sheets["CauHoi"], { header: 1, defval: "" });
+  // Tìm sheet CauHoi không phân biệt hoa thường
+  var sheetCau = wb.Sheets["CauHoi"] || wb.Sheets["Cauhoi"] || wb.Sheets["CAUHOI"] || wb.Sheets["cauhoi"];
+  if (!sheetCau) {
+    var sn = (wb.SheetNames || []).find(function (n) { return /^cau\s*hoi$/i.test(String(n).replace(/\s+/g, "")); });
+    if (sn) sheetCau = wb.Sheets[sn];
+  }
+  if (sheetCau) {
+    const rawRows = XLSX.utils.sheet_to_json(sheetCau, { header: 1, defval: "" });
     // Hỗ trợ 3 format header:
     // media: QID|Phần|Loại|Nội dung|Ảnh CH|Video|A|ẢnhA|B|ẢnhB|C|ẢnhC|D|ẢnhD|Đáp án|Điểm
     // new:   QID|Phần|Loại|Nội dung|A|B|C|D|Đáp án|Điểm
@@ -1356,6 +1371,8 @@ function exitAdminHint() {
     });
   }
   function selectExam(ex) {
+    try { console.log("Chọn đề", ex && ex.file); } catch(e) {}
+
     currentExam = ex;
     try { sessionStorage.setItem("webh2t_tn_exam", ex.id); } catch (e) {}
     const title = document.getElementById("page-title");
@@ -2171,18 +2188,17 @@ async function submitExam(auto) {
       else { wrongCount++; mcWrong++; }
       scoreP1 += score;
     } else if (q.type === "tf") {
-      // 4 câu Đ/S × 1.0 điểm (mỗi ý 0.25) → 4 điểm
-      const maxQ = (q.maxPoints && Number(q.maxPoints) > 0) ? Number(q.maxPoints) : 1.0;
-      const perItem = maxQ / 4;
+      // Thang điểm chính thức TN: 1ý=0.1 · 2ý=0.25 · 3ý=0.5 · 4ý=1.0
       const ans = answers[key] || [null, null, null, null];
-      let partial = 0, answered = 0, rightSt = 0, wrongSt = 0;
+      let rightSt = 0, wrongSt = 0, answered = 0;
       (q.statements || []).forEach((s, i) => {
         if (ans[i] == null) return;
         answered++;
-        if (ans[i] === s.correct) { partial += perItem; rightSt++; }
+        if (ans[i] === s.correct) rightSt++;
         else wrongSt++;
       });
-      score = Math.round(partial * 1000) / 1000;
+      const table = { 0: 0, 1: 0.1, 2: 0.25, 3: 0.5, 4: 1.0 };
+      score = table[rightSt] != null ? table[rightSt] : 0;
       correctCount += rightSt;
       wrongCount += wrongSt;
       if (answered === 0) skipCount += 4;
@@ -2246,16 +2262,15 @@ async function submitExam(auto) {
       var userLetter = answers[key] === undefined || answers[key] === null ? "" : letters[+answers[key]];
       var correctLetter = letters[ci];
     } else if (q.type === "tf") {
-      // 4 câu Đ/S × 1 điểm = 4; mỗi ý 0.25
-      maxPts = (q.maxPoints && Number(q.maxPoints) > 0) ? Number(q.maxPoints) : 1.0;
-      const perItem = maxPts / 4;
+      maxPts = 1.0;
       const ans = answers[key] || [null, null, null, null];
       userShow = ans.map((v, i) => ["a","b","c","d"][i] + "." + (v === true ? "Đ" : v === false ? "S" : "-")).join(" ");
-      correctShow = q.statements.map((s, i) => ["a","b","c","d"][i] + "." + (s.correct ? "Đ" : "S")).join(" ");
-      let partial = 0;
-      q.statements.forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) partial += perItem; });
-      pts = Math.round(partial * 1000) / 1000;
-      ok = pts >= maxPts - 0.001;
+      correctShow = (q.statements || []).map((s, i) => ["a","b","c","d"][i] + "." + (s.correct ? "Đ" : "S")).join(" ");
+      let rightSt = 0;
+      (q.statements || []).forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) rightSt++; });
+      const table = { 0: 0, 1: 0.1, 2: 0.25, 3: 0.5, 4: 1.0 };
+      pts = table[rightSt] != null ? table[rightSt] : 0;
+      ok = pts >= 1.0 - 0.001;
     } else {
       maxPts = 0.5;
       userShow = (answers[key] || "").trim() || "(bỏ)";
@@ -3388,8 +3403,8 @@ if (_cancelExam) {
   get("webh2t-totnghiep-b18", "stat-b18");
   get("webh2t-totnghiep-b25", "stat-b25");
   window.hitExamView = function (examId) {
-    var map = { de1: "webh2t-totnghiep-de1", de2: "webh2t-totnghiep-de2", de3: "webh2t-totnghiep-de3", de4: "webh2t-totnghiep-de4", de5: "webh2t-totnghiep-de5" };
-    var elMap = { de1: "stat-de1", de2: "stat-de2", de3: "stat-de3", de4: "stat-de4", de5: "stat-de5" };
+    var map = { de1: "webh2t-totnghiep-de1", de2: "webh2t-totnghiep-de2", de3: "webh2t-totnghiep-de3", de4: "webh2t-totnghiep-de4", de5: "webh2t-totnghiep-de5", de6: "webh2t-totnghiep-de6" };
+    var elMap = { de1: "stat-de1", de2: "stat-de2", de3: "stat-de3", de4: "stat-de4", de5: "stat-de5", de6: "stat-de6" };
     var k = map[examId];
     if (k) hit(k, elMap[examId]);
   };
@@ -3971,112 +3986,7 @@ function tidyBlogComment_(s) {
 
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script>
-(function () {
-  function pad(n, w) { n = String(n); while (n.length < w) n = "0" + n; return n; }
 
-  function buildWorkbook(files, deName) {
-    var wb = XLSX.utils.book_new();
-
-    // 0_HUONG_DAN
-    var hd = [
-      ["ÔN THI TỐT NGHIỆP THPT – TIN HỌC – " + deName],
-      ["Phần 1: 24 câu TN (A/B/C/D). Phần 2: 4 câu Đ/S × 4 ý a/b/c/d"],
-      ["  - 2 câu phần chung (bắt buộc) — Nhóm CHUNG"],
-      ["  - 2 câu Tin học ứng dụng — Nhóm THUD"],
-      ["Ảnh đặt tại assets/THPT/ trên GitHub. Cột Ảnh câu hỏi = tên file hoặc URL raw."],
-      ["Không dùng sheet LichThi — ôn luyện không giới hạn lần."]
-    ];
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hd), "0_HUONG_DAN");
-
-    // HocSinh mẫu
-    var hs = [["Lớp", "Họ và tên", "Mã HS"]];
-    ["12A1", "12A2"].forEach(function (lop) {
-      for (var i = 1; i <= 5; i++) hs.push([lop, "Học sinh " + i, pad(i, 2)]);
-    });
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hs), "HocSinh");
-
-    // CauHoi headers
-    var headers = ["QID","Phần","Loại","Nội dung","A","B","C","D","Đáp án","Điểm tối đa",
-      "Ảnh câu hỏi","Video câu hỏi","Ảnh A","Ảnh B","Ảnh C","Ảnh D","Nhóm"];
-    var rows = [headers];
-    var qid = 1;
-    var imgNames = [];
-    for (var fi = 0; fi < files.length; fi++) {
-      imgNames.push(files[fi].name || ("img_" + (fi + 1) + ".jpg"));
-    }
-
-    // 24 MC placeholders — gắn ảnh lần lượt nếu có
-    for (var i = 1; i <= 24; i++) {
-      var img = imgNames[i - 1] || "";
-      if (img && img.toLowerCase().indexOf(".pdf") >= 0) img = ""; // PDF: ghi chú trang
-      rows.push([
-        "Q" + pad(qid++, 3), 1, "MC",
-        "[Phần 1 – Câu " + i + "] Nhập nội dung câu hỏi (hoặc OCR từ ảnh).",
-        "A", "B", "C", "D", "A", 0.25,
-        img ? ("assets/THPT/" + img) : "",
-        "", "", "", "", "", "CHUNG"
-      ]);
-    }
-    // 4 TF: 2 CHUNG + 2 THUD
-    var labels = [
-      { n: 1, g: "CHUNG", t: "Phần chung – Câu 1" },
-      { n: 2, g: "CHUNG", t: "Phần chung – Câu 2" },
-      { n: 3, g: "THUD", t: "Tin học ứng dụng – Câu 3" },
-      { n: 4, g: "THUD", t: "Tin học ứng dụng – Câu 4" }
-    ];
-    labels.forEach(function (L, idx) {
-      var img = imgNames[24 + idx] || imgNames[imgNames.length - 1] || "";
-      if (img && String(img).toLowerCase().indexOf(".pdf") >= 0) img = "";
-      rows.push([
-        "Q" + pad(qid++, 3), 2, "TF",
-        "[" + L.t + "] Nhập nội dung / 4 ý a/b/c/d.",
-        "Ý a", "Ý b", "Ý c", "Ý d", "ĐSĐS", 1,
-        img ? ("assets/THPT/" + img) : "",
-        "", "", "", "", "", L.g
-      ]);
-    });
-
-    // Nếu file là PDF — thêm dòng ghi chú
-    var pdfNote = files.filter(function (f) { return /\.pdf$/i.test(f.name || ""); });
-    if (pdfNote.length) {
-      rows.push(["", "", "", "PDF nguồn: " + pdfNote.map(function (f) { return f.name; }).join(", ") +
-        " — hãy tách ảnh từng câu vào assets/THPT và điền tên file cột Ảnh câu hỏi.",
-        "", "", "", "", "", "", "", "", "", "", "", "", ""]);
-    }
-
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "CauHoi");
-    return wb;
-  }
-
-  document.addEventListener("DOMContentLoaded", function () {
-    var btn = document.getElementById("btn-convert-xlsx");
-    if (!btn) return;
-    btn.addEventListener("click", function () {
-      var inp = document.getElementById("conv-files");
-      var nameEl = document.getElementById("conv-name");
-      var st = document.getElementById("conv-status");
-      var files = inp && inp.files ? Array.prototype.slice.call(inp.files) : [];
-      var deName = (nameEl && nameEl.value || "tnde_moi").replace(/[^\w\-]+/g, "_");
-      if (!files.length) {
-        if (st) st.textContent = "Chưa chọn ảnh/PDF — vẫn tạo khung đề trống.";
-      }
-      try {
-        if (typeof XLSX === "undefined") {
-          if (st) st.textContent = "Thiếu thư viện XLSX. Kiểm tra mạng.";
-          return;
-        }
-        var wb = buildWorkbook(files, deName);
-        XLSX.writeFile(wb, deName + ".xlsx");
-        if (st) st.textContent = "✅ Đã tải " + deName + ".xlsx — upload vào data/ và ảnh vào assets/THPT/";
-      } catch (e) {
-        if (st) st.textContent = "Lỗi: " + (e.message || e);
-        console.error(e);
-      }
-    });
-  });
-})();
-</script>
 
 
 <div id="screen-convert" style="display:none;min-height:100vh;padding:32px 16px;background:linear-gradient(135deg,#EEF2FF,#F8FAFC);box-sizing:border-box">
@@ -4086,7 +3996,7 @@ function tidyBlogComment_(s) {
       <button type="button" id="btn-convert-back" style="border:0;background:#F1F5F9;border-radius:8px;padding:8px 12px;font-weight:600;cursor:pointer">← Về trang thi</button>
     </div>
     <p style="font-size:.85rem;color:#64748B;line-height:1.5;margin:0 0 14px">
-      Tạo khung file <b>.xlsx</b> đủ <b>28 câu</b> (cần điền nội dung tay hoặc dùng đề mẫu đã nhập sẵn): 24 TN (Phần 1) + 2 Đ/S phần chung + 2 Đ/S Tin học ứng dụng.
+      Upload ảnh đề (JPG) hoặc PDF → <b>OCR tiếng Việt</b> tách câu vào Excel 28 dòng. Nên rà soát & điền đáp án (OCR có thể sai).: 24 TN (Phần 1) + 2 Đ/S phần chung + 2 Đ/S Tin học ứng dụng.
       Đặt ảnh vào <code>assets/THPT/</code> trên GitHub; điền nội dung/đáp án trong Excel.
     </p>
     <label style="display:block;font-weight:600;margin-bottom:6px;font-size:.9rem">Chọn ảnh hoặc PDF</label>
@@ -4130,6 +4040,181 @@ function tidyBlogComment_(s) {
     if (t.id === "btn-convert-back") {
       ev.preventDefault(); showConvert(false);
     }
+  });
+})();
+</script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<script>
+(function () {
+  function pad(n, w) { n = String(n); while (n.length < w) n = "0" + n; return n; }
+
+  async function fileToImageDataURLs(file) {
+    var name = (file.name || "").toLowerCase();
+    if (name.endsWith(".pdf")) {
+      if (typeof pdfjsLib === "undefined") throw new Error("Thiếu pdf.js");
+      pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+      var buf = await file.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      var urls = [];
+      for (var p = 1; p <= pdf.numPages; p++) {
+        var page = await pdf.getPage(p);
+        var scale = 2;
+        var viewport = page.getViewport({ scale: scale });
+        var canvas = document.createElement("canvas");
+        canvas.width = viewport.width; canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext("2d"), viewport: viewport }).promise;
+        urls.push(canvas.toDataURL("image/png"));
+      }
+      return urls;
+    }
+    return [URL.createObjectURL(file)];
+  }
+
+  async function ocrImage(url, onProgress) {
+    if (typeof Tesseract === "undefined") throw new Error("Thiếu Tesseract.js");
+    var result = await Tesseract.recognize(url, "vie+eng", {
+      logger: function (m) {
+        if (onProgress && m.status === "recognizing text")
+          onProgress(Math.round((m.progress || 0) * 100));
+      }
+    });
+    return (result && result.data && result.data.text) || "";
+  }
+
+  /** Tách sơ bộ câu hỏi từ văn bản OCR */
+  function parseQuestionsFromText(text) {
+    text = String(text || "").replace(/\r/g, "\n");
+    var blocks = [];
+    // Tách theo "Câu 1." / "Câu 1:"
+    var parts = text.split(/(?=(?:Câu|CAU|CÂU)\s*\d+\s*[\.\:\-])/i);
+    parts.forEach(function (part) {
+      part = part.trim();
+      if (!part || part.length < 20) return;
+      var m = part.match(/^(?:Câu|CAU|CÂU)\s*(\d+)\s*[\.\:\-]\s*([\s\S]*)/i);
+      var num = m ? parseInt(m[1], 10) : blocks.length + 1;
+      var body = m ? m[2].trim() : part;
+      // options A B C D
+      var opts = { A: "", B: "", C: "", D: "" };
+      var om = body.match(/\n\s*A[\.\)]\s*([\s\S]*?)(?=\n\s*B[\.\)])/i);
+      var bm = body.match(/\n\s*B[\.\)]\s*([\s\S]*?)(?=\n\s*C[\.\)])/i);
+      var cm = body.match(/\n\s*C[\.\)]\s*([\s\S]*?)(?=\n\s*D[\.\)])/i);
+      var dm = body.match(/\n\s*D[\.\)]\s*([\s\S]*?)(?=\n|$)/i);
+      if (om) opts.A = om[1].replace(/\s+/g, " ").trim();
+      if (bm) opts.B = bm[1].replace(/\s+/g, " ").trim();
+      if (cm) opts.C = cm[1].replace(/\s+/g, " ").trim();
+      if (dm) opts.D = dm[1].replace(/\s+/g, " ").trim();
+      var stem = body;
+      if (om) stem = body.slice(0, body.search(/\n\s*A[\.\)]/i)).replace(/\s+/g, " ").trim();
+      blocks.push({ num: num, text: stem || body.slice(0, 300), opts: opts, raw: body.slice(0, 800) });
+    });
+    return blocks;
+  }
+
+  function buildWorkbookFromParsed(parsed, deName, answerHint) {
+    var headers = ["QID","Phần","Loại","Nội dung","A","B","C","D","Đáp án","Điểm tối đa",
+      "Ảnh câu hỏi","Video câu hỏi","Ảnh A","Ảnh B","Ảnh C","Ảnh D","Nhóm"];
+    var rows = [headers];
+    // Map answers if answer key text present
+    var ansMap = {};
+    if (answerHint) {
+      // patterns like "1 D" or table style
+      var re = /(?:^|\n)\s*(\d{1,2})\s*[|: ]\s*([A-DĐđSs])/gi;
+      var mm;
+      while ((mm = re.exec(answerHint))) {
+        ansMap[parseInt(mm[1], 10)] = mm[2].toUpperCase().replace("Đ", "Đ");
+      }
+    }
+    // Fill 24 MC from parsed (or empty slots)
+    var mcList = parsed.filter(function (p) { return p.num <= 24; }).sort(function (a,b){ return a.num-b.num; });
+    for (var i = 1; i <= 24; i++) {
+      var q = mcList.find(function (x) { return x.num === i; });
+      rows.push([
+        "Q" + pad(i, 3), 1, "MC",
+        q ? q.text : ("[Phần 1 – Câu " + i + "] (OCR chưa nhận — sửa tay)"),
+        q && q.opts.A ? q.opts.A : "A",
+        q && q.opts.B ? q.opts.B : "B",
+        q && q.opts.C ? q.opts.C : "C",
+        q && q.opts.D ? q.opts.D : "D",
+        ansMap[i] || "",
+        0.25, "", "", "", "", "", "", "CHUNG"
+      ]);
+    }
+    // 4 TF placeholders — OCR body into text if found num 1-6 in part II
+    var groups = ["CHUNG","CHUNG","THUD","THUD"];
+    for (var t = 0; t < 4; t++) {
+      var tfNum = t + 1;
+      var q2 = parsed.find(function (x) { return x.num === tfNum && x.raw && /[aA][\.\)]/.test(x.raw); });
+      rows.push([
+        "Q" + pad(25 + t, 3), 2, "TF",
+        q2 ? q2.text : ("[Phần 2 – Câu " + tfNum + "] (OCR — kiểm tra 4 ý a/b/c/d)"),
+        q2 && q2.opts.A ? q2.opts.A : "Ý a",
+        q2 && q2.opts.B ? q2.opts.B : "Ý b",
+        q2 && q2.opts.C ? q2.opts.C : "Ý c",
+        q2 && q2.opts.D ? q2.opts.D : "Ý d",
+        "", 1, "", "", "", "", "", "", groups[t]
+      ]);
+    }
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([
+      ["ÔN THI TN THPT – " + deName],
+      ["Sinh từ OCR ảnh/PDF — cần rà soát nội dung & đáp án trước khi dùng."],
+      ["Thang Đ/S: 1ý=0,1; 2ý=0,25; 3ý=0,5; 4ý=1."]
+    ]), "0_HUONG_DAN");
+    var hs = [["Lớp","Họ và tên","Mã HS"]];
+    ["12A1","12A2"].forEach(function(lop){
+      for (var i=1;i<=5;i++) hs.push([lop, "Học sinh "+i, pad(i,2)]);
+    });
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(hs), "HocSinh");
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), "CauHoi");
+    return wb;
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    var btn = document.getElementById("btn-convert-xlsx");
+    if (!btn) return;
+    btn.addEventListener("click", async function () {
+      var inp = document.getElementById("conv-files");
+      var nameEl = document.getElementById("conv-name");
+      var st = document.getElementById("conv-status");
+      var files = inp && inp.files ? Array.prototype.slice.call(inp.files) : [];
+      var deName = (nameEl && nameEl.value || "tnde_moi").replace(/[^\w\-]+/g, "_");
+      if (typeof XLSX === "undefined") {
+        if (st) st.textContent = "Thiếu thư viện XLSX.";
+        return;
+      }
+      try {
+        if (!files.length) {
+          if (st) st.textContent = "Chưa chọn ảnh/PDF — tạo khung trống.";
+          var wb0 = buildWorkbookFromParsed([], deName, "");
+          XLSX.writeFile(wb0, deName + ".xlsx");
+          return;
+        }
+        if (st) st.textContent = "Đang đọc ảnh/PDF (OCR tiếng Việt)… có thể mất 1–3 phút.";
+        var allText = [];
+        for (var fi = 0; fi < files.length; fi++) {
+          var urls = await fileToImageDataURLs(files[fi]);
+          for (var ui = 0; ui < urls.length; ui++) {
+            if (st) st.textContent = "OCR file " + (fi+1) + "/" + files.length + " trang " + (ui+1) + "/" + urls.length + "…";
+            var txt = await ocrImage(urls[ui], function (p) {
+              if (st) st.textContent = "OCR " + (fi+1) + "/" + files.length + " — " + p + "%";
+            });
+            allText.push(txt);
+          }
+        }
+        var joined = allText.join("\n\n");
+        var parsed = parseQuestionsFromText(joined);
+        if (st) st.textContent = "Đã OCR " + parsed.length + " khối câu — đang tạo Excel…";
+        var wb = buildWorkbookFromParsed(parsed, deName, joined);
+        XLSX.writeFile(wb, deName + ".xlsx");
+        if (st) st.textContent = "✅ Đã tải " + deName + ".xlsx (" + parsed.length + " khối OCR). Hãy mở Excel kiểm tra & sửa đáp án.";
+      } catch (e) {
+        console.error(e);
+        if (st) st.textContent = "Lỗi OCR: " + (e.message || e) + " — vẫn có thể tạo khung trống.";
+      }
+    });
   });
 })();
 </script>
