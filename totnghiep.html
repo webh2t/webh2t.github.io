@@ -357,33 +357,60 @@
 body.exam-selected #stats-bar{display:none!important}
 body.exam-selected #exam-picker{display:none!important}
 
-/* TN-LAYOUT-V4 */
-#screen-exam .exam-layout, #screen-exam .main-row, #screen-exam .exam-body {
-  display:flex!important; flex-direction:column!important;
-}
-#q-sidebar, .q-sidebar, #sidebar {
-  width:100%!important; max-width:100%!important;
-  display:flex!important; flex-wrap:wrap!important; gap:6px!important;
-  max-height:none!important; overflow:visible!important;
-  border-right:none!important; border-bottom:1px solid #E2E8F0!important;
-  padding:8px 0 12px!important; margin-bottom:12px!important;
-}
-#q-sidebar .q-btn, .q-btn {
-  width:44px!important; height:44px!important; min-width:44px!important;
-  padding:0!important; font-size:.9rem!important; border-radius:10px!important;
-}
-#q-sidebar .tf-row, #q-sidebar .side-top, #q-sidebar .pts-badge { display:none!important; }
-#question-area .q-text { font-size:1.28rem!important; line-height:1.55!important; font-weight:700!important; color:#B91C1C!important; }
-#question-area .opt, .opt { font-size:1.15rem!important; line-height:1.5!important; padding:14px 16px!important; margin-bottom:10px!important; }
-#btn-submit-top {
-  background:#16A34A!important; color:#fff!important; border:0; border-radius:10px;
-  padding:10px 18px; font-weight:800; font-size:1rem; cursor:pointer; margin-left:8px;
-}
-.btn-prev, #btn-prev { background:#F1F5F9!important; color:#334155!important; font-weight:700!important; }
-.btn-next, #btn-next { background:#4F46E5!important; color:#fff!important; font-weight:700!important; }
-#timer.urgent { animation: tnBlink .6s infinite; }
-@keyframes tnBlink { 50% { opacity:.6; } }
+ }
 .warn-red-tn { display:block!important; }
+
+
+/* EXAM-LAYOUT-V5 */
+.exam-header{
+  display:flex!important; flex-wrap:wrap; align-items:center; gap:12px;
+  padding:12px 16px!important;
+}
+.exam-header .title{ flex:0 1 auto; font-size:1rem!important; line-height:1.3; }
+.exam-header .timer-box, #timer{
+  margin:0 auto!important;
+  min-width:110px; text-align:center;
+  font-size:1.35rem!important; font-weight:800!important;
+}
+.btn-submit-top, #btn-submit-top{
+  background:#16A34A!important; color:#fff!important; border:0;
+  border-radius:12px; padding:10px 22px; font-weight:800; font-size:1rem;
+  cursor:pointer; white-space:nowrap;
+}
+.exam-header .student-info, #exam-student-info{
+  margin-left:auto; font-weight:700; font-size:.95rem;
+  background:rgba(255,255,255,.18); padding:8px 14px; border-radius:999px;
+}
+.exam-body{
+  display:flex!important; flex-direction:column!important;
+  gap:10px; padding:12px 16px 24px!important;
+}
+.exam-body .sidebar, .exam-body aside.sidebar{
+  width:100%!important; max-width:100%!important;
+  display:flex!important; flex-wrap:wrap!important; align-items:center; gap:6px;
+  border:none!important; border-bottom:1px solid #E2E8F0!important;
+  padding:8px 0 12px!important; margin:0!important;
+  max-height:none!important; overflow:visible!important;
+  background:transparent!important;
+}
+.exam-body .sidebar h3, .side-label{
+  width:100%; font-size:.78rem; font-weight:700; color:#64748B; margin:4px 0 2px;
+}
+.exam-body .q-grid{
+  display:flex!important; flex-wrap:wrap!important; gap:6px!important;
+  width:auto!important;
+}
+.exam-body .q-btn, .sidebar .q-btn{
+  width:42px!important; height:42px!important; min-width:42px!important;
+  padding:0!important; border-radius:10px!important; font-size:.85rem!important;
+}
+.exam-body .q-btn .tf-row, .exam-body .q-btn .side-top, .exam-body .q-btn .pts-badge{ display:none!important; }
+.exam-body .question-area, #question-area{
+  width:100%!important; max-width:960px!important; margin:0 auto!important;
+  font-size:1.12rem!important;
+}
+#question-area .q-text{ font-size:1.25rem!important; line-height:1.55!important; color:#B91C1C!important; font-weight:700!important; }
+#question-area .opt{ font-size:1.12rem!important; padding:14px 16px!important; margin-bottom:10px!important; }
 
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
@@ -601,16 +628,18 @@ window.addEventListener("error", function (ev) {
 
 <div id="screen-exam" class="no-select">
   <div class="exam-header">
-    <div class="title">Ôn thi tốt nghiệp THPT – Tin học<br><span style="font-weight:500;font-size:.8rem;opacity:.9">Ôn thi TN THPT – Tin học</span></div>
+    <div class="title">Ôn thi TN THPT – Tin học</div>
     <div class="timer-box" id="timer"><span class="timer-icon">⏱️</span> <span id="timer-text">15:00</span></div>
-    <div class="student-info" id="exam-student-info">Họ tên: — · Lớp: —</div>
+    <button type="button" id="btn-submit-top" class="btn-submit-top">Nộp bài</button>
+    <div class="student-info" id="exam-student-info">—</div>
   </div>
-  
   <div class="exam-body">
     <aside class="sidebar">
-      <h3>Phần 1: Trắc nghiệm <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(6đ · 24×0,25)</span></h3><div class="q-grid" id="q-grid-p1"></div>
-      <h3>Phần 2: Đúng – Sai <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(3đ · 3×1)</span></h3><div class="q-grid" id="q-grid-p2"></div>
-      <h3> <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(1đ · 2×0,5)</span></h3><div class="q-grid" id="q-grid-p3"></div>
+      <div class="side-label">Phần 1: TN (6đ · 24×0,25)</div>
+      <div class="q-grid" id="q-grid-p1"></div>
+      <div class="side-label">Phần 2: Đúng–Sai (4đ · 4×1)</div>
+      <div class="q-grid" id="q-grid-p2"></div>
+      <div class="q-grid" id="q-grid-p3" style="display:none"></div>
     </aside>
     <main class="question-area" id="question-area"></main>
   </div>
@@ -637,9 +666,9 @@ window.addEventListener("error", function (ev) {
         <div style="margin-top:6px;font-weight:800;color:#1D4ED8">Tổng = Phần1 + Phần2 + Phần3</div>
       </div>
       <div id="res-breakdown" style="margin-bottom:14px;max-height:320px;overflow:auto;border:1px solid #E2E8F0;border-radius:10px"></div>
-      <p class="result-note">Cảm ơn bạn đã hoàn thành bài kiểm tra thường xuyên môn Tin học!</p>
+      <p class="result-note">Bạn đã hoàn thành đề ôn tập thi thử tốt nghiệp THPT môn Tin học!</p>
       <div style="text-align:center;margin-top:16px">
-        <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Về trang chủ</a>
+        <a class="btn-nav-top btn-home" href="https://webh2t.github.io/totnghiep.html">📝 Về trang ôn thi tốt nghiệp</a>
       </div>
     </div>
   </div>
@@ -2008,7 +2037,7 @@ function startExam() {
   if (activeQuestions.length < 3) { alert("Ngân hàng câu hỏi chưa đủ."); return; }
   document.getElementById("screen-select").style.display = "none";
   document.getElementById("screen-exam").style.display = "flex";
-  document.getElementById("exam-student-info").textContent = "Họ tên: " + selectedStudent + " · Lớp: " + selectedClass + (window._currentMaDe ? " · Mã đề: " + window._currentMaDe : "");
+  document.getElementById("exam-student-info").textContent = selectedStudent || "—";
   answers = {}; currentQ = 0; examCancelled = false;
   buildSidebar(); renderQuestion(0); startTimer(); startTime = Date.now();
   enableAntiCheat();
@@ -2218,18 +2247,12 @@ function goTo(idx) {
 }
 
 function ensureTopSubmit() {
-  var host = document.getElementById("exam-student") || document.querySelector(".exam-student") || document.querySelector(".exam-header") || document.getElementById("screen-exam");
-  if (!host) return;
-  if (document.getElementById("btn-submit-top")) return;
-  var btn = document.createElement("button");
-  btn.type = "button";
-  btn.id = "btn-submit-top";
-  btn.textContent = "Nộp bài";
+  var btn = document.getElementById("btn-submit-top");
+  if (!btn) return;
   btn.onclick = function (e) {
     if (e) { e.preventDefault(); e.stopPropagation(); }
     if (typeof submitExam === "function") submitExam(false);
   };
-  host.appendChild(btn);
 }
 function startTimer() {
   try { clearInterval(timerInterval); } catch (e) {}
@@ -2489,7 +2512,7 @@ async function submitExam(auto) {
   document.getElementById("screen-result").style.display = "block";
   try { document.getElementById("screen-exam").style.display = "none"; document.getElementById("screen-select").style.display = "none"; } catch(eSc) {}
   document.getElementById("final-score").innerHTML = totalScore + "<span>/10</span>";
-  document.getElementById("res-name").textContent = (window.tnStudentCodes && window.tnStudentCodes[(selectedClass||"")+"|"+selectedStudent] ? ("["+window.tnStudentCodes[(selectedClass||"")+"|"+selectedStudent]+"] ") : "") + selectedStudent;
+  document.getElementById("res-name").textContent = selectedStudent;
   document.getElementById("res-class").textContent = selectedClass;
   document.getElementById("res-date").textContent = new Date().toLocaleString("vi-VN");
   document.getElementById("res-time").textContent = Math.floor(elapsed / 60) + ":" + String(elapsed % 60).padStart(2, "0");
