@@ -650,10 +650,7 @@ window.addEventListener("error", function (ev) {
         <div class="stat-chip"><span class="n" id="stat-de5">0</span><span class="l">Đề 5</span></div>
         <div class="stat-chip"><span class="n" id="stat-de6">0</span><span class="l">Đề 6</span></div>
       </div>
-    <div id="tn-student-stats-wrap" style="width:100%;max-width:720px;margin:12px auto 0;background:#fff;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;box-sizing:border-box">
-      <div style="font-weight:800;color:#1E3A8A;margin-bottom:8px">📋 Báo cáo theo học sinh — toàn hệ thống</div>
-      <div id="tn-student-stats"></div>
-    </div>
+    
     </div>
 
     <div id="exam-current" class="exam-current">
@@ -671,6 +668,10 @@ window.addEventListener("error", function (ev) {
         <select id="student-select" disabled><option value="">-- Chọn lớp trước --</option></select>
       </div>
       <button class="btn-start" id="btn-start" data-start="1" disabled>🚀 Bắt đầu thi</button>
+    <div id="tn-student-stats-wrap" style="width:100%;margin-top:16px;background:#F8FAFC;border:1px solid #E2E8F0;border-radius:14px;padding:12px 14px;box-sizing:border-box;text-align:left">
+      <div style="font-weight:800;color:#1E3A8A;margin-bottom:8px;font-size:.9rem">📋 Báo cáo theo học sinh — toàn hệ thống</div>
+      <div id="tn-student-stats" style="max-height:220px;overflow:auto"></div>
+    </div>
     </div>
 
     <div class="teacher-panel" id="teacher-panel" style="display:none!important">
@@ -1740,6 +1741,7 @@ function selectExam(ex) {
     }
     renderExamPicker(); try { renderTnStats(); } catch(eS) {}; setTimeout(function(){ try{ renderTnStats(); }catch(e){} }, 800);
     try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
+    try { renderTnStats(); } catch (eR) {}
   }
   function clearExamSelection() {
     currentExam = null;
@@ -2551,9 +2553,14 @@ function renderTnStats() {
     var arr = [];
     try { arr = JSON.parse(localStorage.getItem("webh2t_tn_attempts_v1") || "[]"); } catch (e0) { arr = []; }
     if (!Array.isArray(arr)) arr = [];
+
+    // Loc theo de dang chon (neu co)
+    var filterExam = null;
+    if (typeof currentExam !== "undefined" && currentExam && currentExam.id) {
+      filterExam = String(currentExam.id).toLowerCase();
+    }
+
     var byExam = { de1:0, de2:0, de3:0, de4:0, de5:0, de6:0 };
-    // byStudent[name][exam] = count
-    var byStudent = {};
     arr.forEach(function (r) {
       if (!r) return;
       var eid = String(r.examId || r.exam || "").toLowerCase().trim();
@@ -2564,48 +2571,63 @@ function renderTnStats() {
         if (m) mapped = "de" + m[1];
       }
       if (mapped) byExam[mapped] += 1;
-      var name = String(r.name || "?").trim();
-      var cls = String(r.class || r.lop || "").trim();
-      var k = name + (cls ? (" · " + cls) : "");
-      if (!byStudent[k]) byStudent[k] = {};
-      var ek = mapped || eid || "khac";
-      byStudent[k][ek] = (byStudent[k][ek] || 0) + 1;
     });
     ["de1","de2","de3","de4","de5","de6"].forEach(function (id) {
       var el = document.getElementById("stat-" + id);
       if (el) el.textContent = String(byExam[id] || 0);
     });
+
     var box = document.getElementById("tn-student-stats");
-    if (box) {
-      var keys = Object.keys(byStudent).sort();
-      if (!keys.length) {
-        box.innerHTML = '<div style="color:#64748B;font-size:.85rem;padding:8px 4px">Chưa có dữ liệu. Sau khi học sinh <b>Nộp bài</b>, báo cáo sẽ hiển thị tại đây.</div>';
-      } else {
-        var h = '<table style="width:100%;border-collapse:collapse;font-size:.82rem"><thead><tr>'
-          + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Học sinh</th>'
-          + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Đề</th>'
-          + '<th style="text-align:center;padding:6px;border-bottom:1px solid #E2E8F0">Số lần</th>'
-          + '<th style="text-align:right;padding:6px;border-bottom:1px solid #E2E8F0">Tổng</th>'
-          + '</tr></thead><tbody>';
-        keys.forEach(function (name) {
-          var exams = Object.keys(byStudent[name]).sort();
-          var sum = 0;
-          exams.forEach(function (eid) { sum += byStudent[name][eid]; });
-          exams.forEach(function (eid, ix) {
-            var n = byStudent[name][eid];
-            var deLabel = String(eid).toUpperCase().replace(/^DE/, "Đề ");
-            h += '<tr>';
-            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + (ix === 0 ? name : "") + '</td>';
-            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + deLabel + '</td>';
-            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:center">' + n + '</td>';
-            h += '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:right;font-weight:700">' + (ix === 0 ? sum : "") + '</td>';
-            h += '</tr>';
-          });
-        });
-        h += '</tbody></table>';
-        box.innerHTML = h;
-      }
+    if (!box) return;
+
+    // Danh sach ban ghi (moi lan nop = 1 dong), loc theo de
+    var rows = arr.filter(function (r) {
+      if (!r || !r.name) return false;
+      if (!filterExam) return true;
+      var eid = String(r.examId || "").toLowerCase();
+      return eid === filterExam || eid.indexOf(filterExam) >= 0;
+    });
+
+    // Dem so lan theo HS (trong pham vi de dang loc)
+    var countByHS = {};
+    rows.forEach(function (r) {
+      var k = String(r.name || "") + " · " + String(r.class || r.lop || "");
+      countByHS[k] = (countByHS[k] || 0) + 1;
+    });
+
+    // Sap xep moi nhat tren
+    rows.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
+
+    if (!rows.length) {
+      box.innerHTML = '<div style="color:#64748B;font-size:.85rem;padding:6px 2px">Chưa có bài nộp' + (filterExam ? " cho đề này" : "") + '.</div>';
+      return;
     }
+
+    var h = '<table style="width:100%;border-collapse:collapse;font-size:.8rem"><thead><tr>'
+      + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Học sinh</th>'
+      + '<th style="text-align:center;padding:6px;border-bottom:1px solid #E2E8F0">Số lần</th>'
+      + '<th style="text-align:center;padding:6px;border-bottom:1px solid #E2E8F0">Điểm</th>'
+      + '<th style="text-align:left;padding:6px;border-bottom:1px solid #E2E8F0">Date</th>'
+      + '</tr></thead><tbody>';
+
+    rows.slice(0, 80).forEach(function (r) {
+      var k = String(r.name || "") + " · " + String(r.class || r.lop || "");
+      var times = countByHS[k] || 1;
+      var score = (r.score != null && r.score !== "") ? r.score : "—";
+      var dt = r.time || "";
+      if (!dt && r.at) {
+        try { dt = new Date(Number(r.at)).toLocaleString("vi-VN"); } catch (e) { dt = String(r.at); }
+      }
+      var hsLabel = String(r.name || "") + (r.class || r.lop ? (" · " + (r.class || r.lop)) : "");
+      h += '<tr>'
+        + '<td style="padding:6px;border-bottom:1px solid #F1F5F9">' + hsLabel + '</td>'
+        + '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700">' + times + '</td>'
+        + '<td style="padding:6px;border-bottom:1px solid #F1F5F9;text-align:center;color:#1D4ED8;font-weight:700">' + score + '</td>'
+        + '<td style="padding:6px;border-bottom:1px solid #F1F5F9;white-space:nowrap">' + dt + '</td>'
+        + '</tr>';
+    });
+    h += '</tbody></table>';
+    box.innerHTML = h;
   } catch (err) {
     console.warn("renderTnStats", err);
   }
