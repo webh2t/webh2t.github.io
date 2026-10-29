@@ -13052,7 +13052,7 @@ function parseExamScoreNum(v) {
   return isFinite(n) ? n : null;
 }
 
-/** Thống kê môn theo khoảng điểm (<5 · 5–<8 · 8–10), không tính TBM */
+/** Thống kê môn theo khoảng — chỉ tên môn, gộp 1 hàng, không ghi điểm trong ngoặc */
 function buildExamScoreBandHtml(row) {
   if (!row) return "";
   var low = [], mid = [], high = [];
@@ -13060,19 +13060,20 @@ function buildExamScoreBandHtml(row) {
     var n = parseExamScoreNum(row[sub]);
     if (n == null) return;
     var lab = EXAM_SUBJECT_LABELS[sub] || sub;
-    var item = lab + " (" + (Number.isInteger(n) ? n : n) + ")";
-    if (n < 5) low.push(item);
-    else if (n < 8) mid.push(item);
-    else high.push(item);
+    if (n < 5) low.push(lab);
+    else if (n < 8) mid.push(lab);
+    else high.push(lab);
   });
-  function line(title, arr, color) {
-    if (!arr.length) return '<div style="margin:1pt 0;font-size:9pt;color:#64748b">• ' + title + ': <i>không có</i></div>';
-    return '<div style="margin:1pt 0;font-size:9pt;color:' + color + '"><b>• ' + title + ' (' + arr.length + '):</b> ' + arr.join("; ") + '</div>';
-  }
-  return '<div style="margin:2pt 0 6pt 0;padding:4pt 6pt;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;font-family:\'Times New Roman\',Times,serif">' +
-    line("Môn &lt; 5", low, "#b91c1c") +
-    line("Môn từ 5 đến &lt; 8", mid, "#b45309") +
-    line("Môn từ 8 đến 10", high, "#15803d") +
+  var parts = [];
+  if (low.length) parts.push('<span style="color:#b91c1c"><b>Môn &lt; 5:</b> ' + low.join("; ") + '</span>');
+  else parts.push('<span style="color:#94a3b8">Môn &lt; 5: —</span>');
+  if (mid.length) parts.push('<span style="color:#b45309"><b>Môn 5 đến &lt; 8:</b> ' + mid.join("; ") + '</span>');
+  else parts.push('<span style="color:#94a3b8">Môn 5 đến &lt; 8: —</span>');
+  if (high.length) parts.push('<span style="color:#15803d"><b>Môn 8 đến 10:</b> ' + high.join("; ") + '</span>');
+  else parts.push('<span style="color:#94a3b8">Môn 8 đến 10: —</span>');
+  return '<div style="margin:2pt 0 6pt 0;padding:3pt 5pt;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;' +
+    'font-family:\'Times New Roman\',Times,serif;font-size:8.5pt;line-height:1.35">' +
+    parts.join(' <span style="color:#cbd5e1">·</span> ') +
     '</div>';
 }
 
@@ -13208,13 +13209,9 @@ function uploadSdghsExamFile(ev) {
       if (typeof saveClassData === "function") {
         try { saveClassData({ syncMeta: false }); } catch (e2) {}
       }
-      // Mặc định chọn các kỳ có điểm trong phạm vi hiện tại
+      // Không tự chọn tất cả kỳ — GV bấm từng nút để chèn đúng sheet
       if (!window._nbSelfSelectedExams) window._nbSelfSelectedExams = {};
-      var ctx = window._nbSelfCtx || {};
-      examKeysForScope(ctx.scope, ctx.mon || ctx.monthNum, ctx.hk).forEach(function(k) {
-        if (examPeriodHasAnyScore(k)) window._nbSelfSelectedExams[k] = true;
-      });
-      alert("Đã nhập điểm TBM/SDGHS · " + imported + " dòng có điểm.\nChọn nút kỳ điểm (TX/GK/CK/CN) để chèn vào phiếu.");
+      alert("Đã nhập điểm TBM · " + imported + " dòng có điểm.\nBấm đúng 1 (hoặc vài) nút kỳ điểm để chèn vào phiếu — mỗi nút = 1 sheet.");
       if (typeof fillSelfAssessment === "function") fillSelfAssessment();
       // re-render notebook section if possible
       try {
@@ -13241,11 +13238,9 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   const monthNum = scope === "month" ? mon : "";
   var allowedExams = examKeysForScope(scope, mon, hk);
   if (!window._nbSelfSelectedExams) window._nbSelfSelectedExams = {};
-  // Auto-select periods that already have scores
-  allowedExams.forEach(function(k) {
-    if (examPeriodHasAnyScore(k) && window._nbSelfSelectedExams[k] == null) {
-      window._nbSelfSelectedExams[k] = true;
-    }
+  // Chỉ giữ lựa chọn thuộc phạm vi hiện tại — KHÔNG tự bật tất cả kỳ có điểm
+  Object.keys(window._nbSelfSelectedExams).forEach(function(k) {
+    if (allowedExams.indexOf(k) < 0) delete window._nbSelfSelectedExams[k];
   });
   let h = '<div class="mt-6">';
   h += '<h3 class="font-bold text-yellow-400 mb-2 text-lg">BẢN TỰ ĐÁNH GIÁ CÁ NHÂN THEO ' + scopeTitle + '</h3>';
