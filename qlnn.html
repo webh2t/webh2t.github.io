@@ -2243,19 +2243,21 @@ let penaltyAssigns = [];
 let financeRows = []; // {id,type:'in'|'out',date,content,amount,qty,month,classId}
 let pendingRegs = [];
 let deadlineCfg = { day: 0, hour: 10, penaltyText: "" };
-/** Điểm SDGHS theo kỳ: examGrades[GK1|CK1|GK2|CK2|CN][normalizedName] = { "TOÁN": "8", ... } */
+/** Điểm TBM/SDGHS theo kỳ: examGrades[TX|GK1|…][normalizedName] = { "TOÁN": "8", …, "TBM": "7.33" } */
 let examGrades = {};
-const EXAM_SUBJECTS = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C. NGHỆ"];
-/* Nhãn môn gọn 1 hàng — tránh "C. NGHỆ" xuống dòng khi xuất JPG */
+const EXAM_SUBJECTS = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C.NGHỆ", "TBM"];
 const EXAM_SUBJECT_LABELS = {
   "TOÁN": "TOÁN", "TIN": "TIN", "VĂN": "VĂN", "SỬ": "SỬ", "ĐỊA": "ĐỊA",
-  "KT-PL": "KT-PL", "T.ANH": "T.ANH", "GDQP": "GDQP", "C. NGHỆ": "C.NGHỆ"
+  "KT-PL": "KT-PL", "T.ANH": "T.ANH", "GDQP": "GDQP", "C.NGHỆ": "C.NGHỆ", "TBM": "TBM"
 };
+/** Môn thống kê khoảng điểm (không tính cột TBM) */
+const EXAM_SUBJECTS_STAT = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C.NGHỆ"];
 const EXAM_PERIOD_META = {
-  GK1: { key: "GK1", label: "Điểm GK1 (giữa kỳ 1)", sheet: "GK1 11B9" },
-  CK1: { key: "CK1", label: "Điểm CK1 (cuối kỳ 1)", sheet: "CK1 11B9" },
-  GK2: { key: "GK2", label: "Điểm GK2 (giữa kỳ 2)", sheet: "GK2 11B9" },
-  CK2: { key: "CK2", label: "Điểm CK2 (cuối kỳ 2)", sheet: "CK2 11B9" },
+  TX:  { key: "TX",  label: "Điểm thường xuyên (TX)", sheet: "TX 11B9" },
+  GK1: { key: "GK1", label: "Điểm giữa kỳ 1 (GK1)", sheet: "GK1 11B9" },
+  CK1: { key: "CK1", label: "Điểm cuối kỳ 1 (CK1)", sheet: "CK1 11B9" },
+  GK2: { key: "GK2", label: "Điểm giữa kỳ 2 (GK2)", sheet: "GK2 11B9" },
+  CK2: { key: "CK2", label: "Điểm cuối kỳ 2 (CK2)", sheet: "CK2 11B9" },
   CN:  { key: "CN",  label: "Điểm cả năm (CN)", sheet: "CN 11B9" }
 };
 let rankChart = null;
@@ -12999,19 +13001,21 @@ function normalizeStudentNameKey(nm) {
     .toUpperCase();
 }
 
-/** Kỳ điểm phù hợp với phạm vi báo cáo (tháng / HK / năm) */
+/** Kỳ điểm phù hợp với phạm vi báo cáo (tháng / HK / năm) — file TBM_11B9 */
 function examKeysForScope(scope, mon, hk) {
   mon = Number(mon) || 0;
-  if (scope === "year") return ["GK1", "CK1", "GK2", "CK2", "CN"];
-  if (scope === "hk1" || hk === "hk1") return ["GK1", "CK1"];
-  if (scope === "hk2" || hk === "hk2") return ["GK2", "CK2"];
-  // Tháng: chỉ hiện nút khi kỳ điểm tương ứng
-  if (mon === 10 || mon === 11) return ["GK1"];
-  if (mon === 12) return ["CK1"];
-  if (mon === 2 || mon === 3) return ["GK2"];
-  if (mon === 4) return ["CK2"];
-  if (mon === 5) return ["CK2", "CN"];
-  return []; // tháng 9, 1: chưa có điểm kiểm tra
+  if (scope === "year") return ["TX", "GK1", "CK1", "GK2", "CK2", "CN"];
+  if (scope === "hk1" || hk === "hk1") return ["TX", "GK1", "CK1"];
+  if (scope === "hk2" || hk === "hk2") return ["TX", "GK2", "CK2"];
+  // Tháng: TX xuyên suốt HK; GK/CK theo lịch kiểm tra
+  if (mon === 9) return ["TX"];
+  if (mon === 10 || mon === 11) return ["TX", "GK1"];
+  if (mon === 12) return ["TX", "CK1"];
+  if (mon === 1) return ["TX"];
+  if (mon === 2 || mon === 3) return ["TX", "GK2"];
+  if (mon === 4) return ["TX", "CK2"];
+  if (mon === 5) return ["TX", "CK2", "CN"];
+  return [];
 }
 
 function examPeriodHasAnyScore(key) {
@@ -13040,37 +13044,79 @@ function getStudentExamRow(st, periodKey) {
   return null;
 }
 
+function parseExamScoreNum(v) {
+  if (v == null || v === "") return null;
+  var s = String(v).trim().replace(",", ".");
+  if (s === "" || s === "—") return null;
+  var n = Number(s);
+  return isFinite(n) ? n : null;
+}
+
+/** Thống kê môn theo khoảng điểm (<5 · 5–<8 · 8–10), không tính TBM */
+function buildExamScoreBandHtml(row) {
+  if (!row) return "";
+  var low = [], mid = [], high = [];
+  EXAM_SUBJECTS_STAT.forEach(function(sub) {
+    var n = parseExamScoreNum(row[sub]);
+    if (n == null) return;
+    var lab = EXAM_SUBJECT_LABELS[sub] || sub;
+    var item = lab + " (" + (Number.isInteger(n) ? n : n) + ")";
+    if (n < 5) low.push(item);
+    else if (n < 8) mid.push(item);
+    else high.push(item);
+  });
+  function line(title, arr, color) {
+    if (!arr.length) return '<div style="margin:1pt 0;font-size:9pt;color:#64748b">• ' + title + ': <i>không có</i></div>';
+    return '<div style="margin:1pt 0;font-size:9pt;color:' + color + '"><b>• ' + title + ' (' + arr.length + '):</b> ' + arr.join("; ") + '</div>';
+  }
+  return '<div style="margin:2pt 0 6pt 0;padding:4pt 6pt;border:1px solid #cbd5e1;border-radius:4px;background:#f8fafc;font-family:\'Times New Roman\',Times,serif">' +
+    line("Môn &lt; 5", low, "#b91c1c") +
+    line("Môn từ 5 đến &lt; 8", mid, "#b45309") +
+    line("Môn từ 8 đến 10", high, "#15803d") +
+    '</div>';
+}
+
 function buildExamScoreTableHtml(st, periodKeys) {
   periodKeys = (periodKeys || []).filter(Boolean);
   if (!periodKeys.length) return "";
   var cellBorder = "border:1px solid #334155";
+  var colW = "10%"; // 10 cột
   var html = "";
   periodKeys.forEach(function(pk) {
     var meta = EXAM_PERIOD_META[pk] || { label: pk };
     var row = getStudentExamRow(st, pk);
-    // Tiêu đề kỳ + khoảng trống riêng, không đè lên bảng điểm
     html += '<div style="margin:8pt 0 0 0;clear:both">';
     html += '<p style="margin:0 0 6pt 0;padding:0;font-weight:700;font-size:10.5pt;line-height:1.4;font-family:\'Times New Roman\',Times,serif">' +
       meta.label + '</p>';
-    html += '<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0 0 8pt 0;' +
+    html += '<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0 0 4pt 0;' +
       'table-layout:fixed;border:1.5px solid #0f172a;font-family:\'Times New Roman\',Times,serif">';
-    // Hàng tên môn — nowrap, chữ nhỏ đều 1 hàng
     html += '<tr style="background:#e2e8f0">';
     EXAM_SUBJECTS.forEach(function(sub) {
       var lab = EXAM_SUBJECT_LABELS[sub] || sub;
-      html += '<th style="width:11.11%;text-align:center;vertical-align:middle;padding:5pt 1pt;' +
-        cellBorder + ';font-size:7pt;font-weight:700;white-space:nowrap;line-height:1.15;overflow:hidden">' +
-        lab + '</th>';
+      var isTbm = sub === "TBM";
+      html += '<th style="width:' + colW + ';text-align:center;vertical-align:middle;padding:5pt 1pt;' +
+        cellBorder + ';font-size:7pt;font-weight:700;white-space:nowrap;line-height:1.15;overflow:hidden' +
+        (isTbm ? ';background:#dbeafe' : '') + '">' + lab + '</th>';
     });
     html += '</tr>';
-    // Hàng điểm — tách rõ khỏi header
     html += '<tr style="background:#fff">';
     EXAM_SUBJECTS.forEach(function(sub) {
       var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
-      html += '<td style="width:11.11%;text-align:center;vertical-align:middle;padding:7pt 2pt;' +
-        cellBorder + ';font-size:11pt;font-weight:800;line-height:1.2;white-space:nowrap">' + val + '</td>';
+      var isTbm = sub === "TBM";
+      var n = parseExamScoreNum(val);
+      var color = "#0f172a";
+      if (n != null && sub !== "TBM") {
+        if (n < 5) color = "#b91c1c";
+        else if (n < 8) color = "#b45309";
+        else color = "#15803d";
+      }
+      html += '<td style="width:' + colW + ';text-align:center;vertical-align:middle;padding:7pt 1pt;' +
+        cellBorder + ';font-size:10.5pt;font-weight:800;line-height:1.2;white-space:nowrap;color:' + color +
+        (isTbm ? ';background:#eff6ff' : '') + '">' + val + '</td>';
     });
-    html += '</tr></table></div>';
+    html += '</tr></table>';
+    html += buildExamScoreBandHtml(row);
+    html += '</div>';
   });
   return html;
 }
@@ -13127,7 +13173,8 @@ function uploadSdghsExamFile(ev) {
               if (t === "KT-PL" || t === "KT PL" || t.indexOf("KT-PL") >= 0 || t.indexOf("KINH TẾ") >= 0) colMap["KT-PL"] = ci;
               if (t === "T.ANH" || t === "T ANH" || t.indexOf("ANH") >= 0) colMap["T.ANH"] = ci;
               if (t === "GDQP" || t.indexOf("QUỐC PHÒNG") >= 0 || t.indexOf("QUOC PHONG") >= 0) colMap["GDQP"] = ci;
-              if (t === "C. NGHỆ" || t === "C.NGHỆ" || t.indexOf("NGHỆ") >= 0 || t.indexOf("NGHE") >= 0) colMap["C. NGHỆ"] = ci;
+              if (t === "C. NGHỆ" || t === "C.NGHỆ" || t === "C.NGHE" || t.indexOf("NGHỆ") >= 0 || t.indexOf("NGHE") >= 0) colMap["C.NGHỆ"] = ci;
+              if (t === "TBM" || t.indexOf("TRUNG BÌNH") >= 0 || t.indexOf("TRUNG BINH") >= 0) colMap["TBM"] = ci;
             });
             break;
           }
@@ -13167,7 +13214,7 @@ function uploadSdghsExamFile(ev) {
       examKeysForScope(ctx.scope, ctx.mon || ctx.monthNum, ctx.hk).forEach(function(k) {
         if (examPeriodHasAnyScore(k)) window._nbSelfSelectedExams[k] = true;
       });
-      alert("Đã nhập điểm SDGHS · " + imported + " ô điểm có giá trị.\nChọn nút kỳ điểm để chèn vào phiếu.");
+      alert("Đã nhập điểm TBM/SDGHS · " + imported + " dòng có điểm.\nChọn nút kỳ điểm (TX/GK/CK/CN) để chèn vào phiếu.");
       if (typeof fillSelfAssessment === "function") fillSelfAssessment();
       // re-render notebook section if possible
       try {
@@ -13202,7 +13249,7 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   });
   let h = '<div class="mt-6">';
   h += '<h3 class="font-bold text-yellow-400 mb-2 text-lg">BẢN TỰ ĐÁNH GIÁ CÁ NHÂN THEO ' + scopeTitle + '</h3>';
-  h += '<p class="text-sm text-slate-300 mb-3">Tự động điền mục 1–3 từ dữ liệu thi đua · Mục 4: điểm kiểm tra (SDGHS) · Mục 5: ý kiến cá nhân · Chọn 1 HS hoặc <b>Cả lớp</b></p>';
+  h += '<p class="text-sm text-slate-300 mb-3">Tự động điền mục 1–3 từ dữ liệu thi đua · Mục 4: điểm kiểm tra (TBM.xlsx · TX/GK/CK/CN) · Mục 5: ý kiến cá nhân · Chọn 1 HS hoặc <b>Cả lớp</b></p>';
   h += '<div class="mb-3 no-print flex flex-wrap gap-2 items-end">';
   h += '<div><label class="text-sm text-slate-300 block">Chọn học sinh / lớp</label>';
   h += '<select id="nbSelfStudent" class="input-field text-base py-2" onchange="fillSelfAssessment()">' +
@@ -13214,7 +13261,7 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
   var btnBase = "px-3 py-2 rounded-lg font-bold text-sm cursor-pointer";
   var btnWhite = "background:#fff;box-shadow:0 1px 2px rgba(15,23,42,.06)";
   h += '<button type="button" onclick="(function(){var s=document.getElementById(\'nbSelfStudent\');if(s){s.value=\'__ALL__\';fillSelfAssessment();}})()" class="' + btnBase + '" style="' + btnWhite + ';color:#6d28d9;border:2px solid #7c3aed">📋 Cả lớp</button>';
-  h += '<label class="' + btnBase + '" style="' + btnWhite + ';color:#0f766e;border:2px solid #0d9488">📤 Upload SDGHS.xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadSdghsExamFile(event)"></label>';
+  h += '<label class="' + btnBase + '" style="' + btnWhite + ';color:#0f766e;border:2px solid #0d9488">📤 Upload TBM.xlsx<input type="file" accept=".xlsx,.xls" class="hidden" onchange="uploadSdghsExamFile(event)"></label>';
   h += '</div>';
   // 5 nút kỳ điểm — chỉ hiện kỳ phù hợp phạm vi
   if (allowedExams.length) {
@@ -13499,7 +13546,7 @@ function buildSelfSheetHtmlForStudent(st, ctx) {
   } else if (selectedKeys.length && !st) {
     h += '<p style="margin:2pt 0 4pt 0;font-size:9pt;font-style:italic">Chọn học sinh để xem điểm kiểm tra.</p>';
   } else {
-    h += '<p style="margin:2pt 0 4pt 0;font-size:9pt;font-style:italic">— Không chèn điểm (tháng/kỳ chưa chọn nút điểm hoặc chưa upload SDGHS.xlsx).</p>';
+    h += '<p style="margin:2pt 0 4pt 0;font-size:9pt;font-style:italic">— Không chèn điểm (tháng/kỳ chưa chọn nút điểm hoặc chưa upload TBM.xlsx).</p>';
   }
 
   // Mục 5: Ý kiến cá nhân (đổi từ mục 4 cũ)
