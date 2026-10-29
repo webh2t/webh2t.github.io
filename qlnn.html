@@ -2250,6 +2250,16 @@ const EXAM_SUBJECT_LABELS = {
   "TOÁN": "TOÁN", "TIN": "TIN", "VĂN": "VĂN", "SỬ": "SỬ", "ĐỊA": "ĐỊA",
   "KT-PL": "KT-PL", "T.ANH": "T.ANH", "GDQP": "GDQP", "C.NGHỆ": "C.NGHỆ", "TBM": "TBM"
 };
+/** Tên đầy đủ trong khung thống kê khoảng điểm */
+const EXAM_SUBJECT_FULL = {
+  "TOÁN": "Toán", "TIN": "Tin", "VĂN": "Văn", "SỬ": "Sử", "ĐỊA": "Địa",
+  "KT-PL": "Kinh tế pháp luật", "T.ANH": "Ngoại ngữ Anh", "GDQP": "Quốc phòng", "C.NGHỆ": "Công nghệ"
+};
+/** Độ rộng cột — ưu tiên môn tên dài */
+const EXAM_COL_WIDTH = {
+  "TOÁN": "9%", "TIN": "8%", "VĂN": "9%", "SỬ": "8%", "ĐỊA": "8%",
+  "KT-PL": "11%", "T.ANH": "11%", "GDQP": "10%", "C.NGHỆ": "12%", "TBM": "9%"
+};
 /** Môn thống kê khoảng điểm (không tính cột TBM) */
 const EXAM_SUBJECTS_STAT = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C.NGHỆ"];
 const EXAM_PERIOD_META = {
@@ -13052,14 +13062,14 @@ function parseExamScoreNum(v) {
   return isFinite(n) ? n : null;
 }
 
-/** Thống kê môn: 2 hàng · chữ đen đậm · căn giữa · không ghi điểm trong ngoặc */
+/** Thống kê môn: 2 hàng · tên đầy đủ · chữ đen đậm · căn giữa */
 function buildExamScoreBandHtml(row) {
   if (!row) return "";
   var low = [], mid = [], high = [];
   EXAM_SUBJECTS_STAT.forEach(function(sub) {
     var n = parseExamScoreNum(row[sub]);
     if (n == null) return;
-    var lab = EXAM_SUBJECT_LABELS[sub] || sub;
+    var lab = (EXAM_SUBJECT_FULL && EXAM_SUBJECT_FULL[sub]) || EXAM_SUBJECT_LABELS[sub] || sub;
     if (n < 5) low.push(lab);
     else if (n < 8) mid.push(lab);
     else high.push(lab);
@@ -13067,8 +13077,8 @@ function buildExamScoreBandHtml(row) {
   var r1a = low.length ? ("Môn &lt; 5: " + low.join("; ")) : "Môn &lt; 5: —";
   var r1b = mid.length ? ("Môn 5 đến &lt; 8: " + mid.join("; ")) : "Môn 5 đến &lt; 8: —";
   var r2 = high.length ? ("Môn 8 đến 10: " + high.join("; ")) : "Môn 8 đến 10: —";
-  return '<div style="margin:2pt 0 6pt 0;padding:4pt 4pt;border:1px solid #94a3b8;border-radius:3px;background:#fff;' +
-    'font-family:\'Times New Roman\',Times,serif;font-size:8pt;line-height:1.4;color:#000;text-align:center;font-weight:700">' +
+  return '<div style="margin:2pt 0 6pt 0;padding:4pt 5pt;border:1px solid #94a3b8;border-radius:3px;background:#fff;' +
+    'font-family:\'Times New Roman\',Times,serif;font-size:8pt;line-height:1.45;color:#000;text-align:center;font-weight:700">' +
     '<div style="margin:0 0 2pt 0">' + r1a + ' &nbsp;·&nbsp; ' + r1b + '</div>' +
     '<div style="margin:0">' + r2 + '</div>' +
     '</div>';
@@ -13078,7 +13088,6 @@ function buildExamScoreTableHtml(st, periodKeys) {
   periodKeys = (periodKeys || []).filter(Boolean);
   if (!periodKeys.length) return "";
   var cellBorder = "border:1px solid #334155";
-  var colW = "10%";
   var html = "";
   periodKeys.forEach(function(pk) {
     var meta = EXAM_PERIOD_META[pk] || { label: pk };
@@ -13092,9 +13101,10 @@ function buildExamScoreTableHtml(st, periodKeys) {
     EXAM_SUBJECTS.forEach(function(sub) {
       var lab = EXAM_SUBJECT_LABELS[sub] || sub;
       var isTbm = sub === "TBM";
-      // Chữ môn nhỏ hơn, căn giữa ô, 1 hàng
-      html += '<th style="width:' + colW + ';text-align:center;vertical-align:middle;padding:3pt 0;' +
-        cellBorder + ';font-size:6.5pt;font-weight:700;white-space:nowrap;line-height:1.1;overflow:hidden' +
+      var w = (EXAM_COL_WIDTH && EXAM_COL_WIDTH[sub]) || "10%";
+      // Header rõ tên môn — độ rộng ưu tiên KT-PL / T.ANH / GDQP / C.NGHỆ
+      html += '<th style="width:' + w + ';text-align:center;vertical-align:middle;padding:4pt 1pt;' +
+        cellBorder + ';font-size:7.5pt;font-weight:800;white-space:nowrap;line-height:1.15;letter-spacing:0' +
         (isTbm ? ';background:#dbeafe' : '') + '">' + lab + '</th>';
     });
     html += '</tr>';
@@ -13102,9 +13112,9 @@ function buildExamScoreTableHtml(st, periodKeys) {
     EXAM_SUBJECTS.forEach(function(sub) {
       var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
       var isTbm = sub === "TBM";
-      // Điểm căn giữa, chữ vừa, đen (TBM nổi nhẹ)
-      html += '<td style="width:' + colW + ';text-align:center;vertical-align:middle;padding:4pt 0;' +
-        cellBorder + ';font-size:9pt;font-weight:800;line-height:1.15;white-space:nowrap;color:#0f172a' +
+      var w = (EXAM_COL_WIDTH && EXAM_COL_WIDTH[sub]) || "10%";
+      html += '<td style="width:' + w + ';text-align:center;vertical-align:middle;padding:5pt 1pt;' +
+        cellBorder + ';font-size:9.5pt;font-weight:800;line-height:1.15;white-space:nowrap;color:#0f172a' +
         (isTbm ? ';background:#eff6ff' : '') + '">' + val + '</td>';
     });
     html += '</tr></table>';
