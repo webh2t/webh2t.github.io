@@ -13112,26 +13112,26 @@ function buildExamScoreTableHtml(st, periodKeys) {
       html += '<col style="width:' + w + '">';
     });
     html += '</colgroup>';
-    // Hàng môn
+    // Hàng môn — align center + valign middle (HTML attr + CSS) để JPG căn giữa ô
     html += '<tr style="background:#e2e8f0">';
     EXAM_SUBJECTS.forEach(function(sub) {
       var lab = EXAM_SUBJECT_LABELS[sub] || sub;
       var isTbm = sub === "TBM";
-      html += '<th style="text-align:center;vertical-align:middle;padding:4pt 0;' +
+      html += '<th align="center" valign="middle" style="text-align:center;vertical-align:middle;padding:6pt 2px;' +
         cellBorder + ';font-size:8pt;font-weight:800;line-height:1.2;white-space:nowrap;' +
-        'font-family:Arial,Helvetica,sans-serif;overflow:visible;letter-spacing:0.02em' +
-        (isTbm ? ';background:#dbeafe' : '') + '">' + lab + '</th>';
+        'font-family:Arial,Helvetica,sans-serif;overflow:visible' +
+        (isTbm ? ';background:#dbeafe' : '') + '"><div style="text-align:center;width:100%">' + lab + '</div></th>';
     });
     html += '</tr>';
-    // Hàng điểm
+    // Hàng điểm — căn giữa tuyệt đối trong ô
     html += '<tr style="background:#fff">';
     EXAM_SUBJECTS.forEach(function(sub) {
       var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
       var isTbm = sub === "TBM";
-      html += '<td style="text-align:center;vertical-align:middle;padding:5pt 0;' +
+      html += '<td align="center" valign="middle" style="text-align:center;vertical-align:middle;padding:6pt 2px;' +
         cellBorder + ';font-size:10pt;font-weight:800;line-height:1.15;white-space:nowrap;' +
         'font-family:Arial,Helvetica,sans-serif;color:#0f172a;overflow:visible' +
-        (isTbm ? ';background:#eff6ff' : '') + '">' + val + '</td>';
+        (isTbm ? ';background:#eff6ff' : '') + '"><div style="text-align:center;width:100%">' + val + '</div></td>';
     });
     html += '</tr>';
     // Thống kê nằm trong bảng, căn giữa các cột
@@ -13334,18 +13334,23 @@ function downloadSelfJpg() {
     windowHeight: (target.scrollHeight || 800) + 20,
     onclone: function(doc) {
       try {
-        doc.querySelectorAll(".exam-score-table th, .self-sheet-one table th").forEach(function(th) {
-          th.style.fontSize = "7.5px";
-          th.style.fontFamily = "Arial,Helvetica,sans-serif";
-          th.style.fontWeight = "700";
-          th.style.whiteSpace = "nowrap";
-          th.style.overflow = "visible";
-          th.style.padding = "4px 1px";
+        doc.querySelectorAll(".exam-score-table th, .exam-score-table td").forEach(function(cell) {
+          cell.style.textAlign = "center";
+          cell.style.verticalAlign = "middle";
+          cell.setAttribute("align", "center");
+          cell.setAttribute("valign", "middle");
+          cell.style.fontFamily = "Arial,Helvetica,sans-serif";
+          cell.style.whiteSpace = "nowrap";
+          cell.style.overflow = "visible";
+          cell.style.padding = "6px 2px";
         });
-        doc.querySelectorAll(".exam-score-table td, .self-sheet-one table td").forEach(function(td) {
-          td.style.fontFamily = "Arial,Helvetica,sans-serif";
-          td.style.overflow = "visible";
-          td.style.whiteSpace = "nowrap";
+        doc.querySelectorAll(".exam-score-table th").forEach(function(th) {
+          th.style.fontSize = "8px";
+          th.style.fontWeight = "800";
+        });
+        doc.querySelectorAll(".exam-score-table td").forEach(function(td) {
+          td.style.fontSize = "11px";
+          td.style.fontWeight = "800";
         });
       } catch (e) {}
     }
@@ -13767,28 +13772,33 @@ function downloadSelfClassAllJpg() {
       windowWidth: Math.max(sheet.scrollWidth, 560),
       windowHeight: sheet.scrollHeight + 20,
       onclone: function(doc) {
-        // Ép header bảng điểm giống web: đủ chỗ, không cắt chữ
+        // Ép môn + điểm căn giữa tuyệt đối (middle / center) khi xuất ZIP JPG
         try {
-          var ths = doc.querySelectorAll(".exam-score-table th, .self-sheet-one table th");
-          ths.forEach(function(th) {
-            th.style.fontSize = "7.5px";
-            th.style.fontFamily = "Arial,Helvetica,sans-serif";
-            th.style.fontWeight = "700";
-            th.style.whiteSpace = "nowrap";
-            th.style.overflow = "visible";
-            th.style.textOverflow = "clip";
-            th.style.padding = "4px 1px";
-            th.style.lineHeight = "1.25";
-            th.style.letterSpacing = "0";
+          doc.querySelectorAll(".exam-score-table th, .exam-score-table td").forEach(function(cell) {
+            cell.style.textAlign = "center";
+            cell.style.verticalAlign = "middle";
+            cell.setAttribute("align", "center");
+            cell.setAttribute("valign", "middle");
+            cell.style.fontFamily = "Arial,Helvetica,sans-serif";
+            cell.style.whiteSpace = "nowrap";
+            cell.style.overflow = "visible";
+            cell.style.padding = "6px 2px";
+            cell.style.lineHeight = "1.25";
           });
-          var tds = doc.querySelectorAll(".exam-score-table td, .self-sheet-one table td");
-          tds.forEach(function(td) {
-            td.style.fontFamily = "Arial,Helvetica,sans-serif";
-            td.style.overflow = "visible";
-            td.style.whiteSpace = "nowrap";
+          doc.querySelectorAll(".exam-score-table th").forEach(function(th) {
+            th.style.fontSize = "8px";
+            th.style.fontWeight = "800";
           });
-          var tbls = doc.querySelectorAll(".exam-score-table");
-          tbls.forEach(function(tb) {
+          doc.querySelectorAll(".exam-score-table td").forEach(function(td) {
+            if (td.getAttribute("colspan")) {
+              td.style.fontSize = "7.5px";
+              td.style.fontWeight = "700";
+            } else {
+              td.style.fontSize = "11px";
+              td.style.fontWeight = "800";
+            }
+          });
+          doc.querySelectorAll(".exam-score-table").forEach(function(tb) {
             tb.style.tableLayout = "fixed";
             tb.style.width = "100%";
           });
