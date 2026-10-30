@@ -2261,8 +2261,8 @@ const EXAM_SUBJECT_FULL = {
 };
 /** 10 cột đều nhau — ổn định khi xuất JPG */
 const EXAM_COL_WIDTH = {
-  "TOÁN": "10%", "TIN": "10%", "VĂN": "10%", "SỬ": "9%", "ĐỊA": "9%",
-  "KT-PL": "10%", "T.ANH": "10%", "GDQP": "11%", "C.NGHỆ": "10%", "TBM": "11%"
+  "TOÁN": "10%", "TIN": "10%", "VĂN": "10%", "SỬ": "10%", "ĐỊA": "10%",
+  "KT-PL": "10%", "T.ANH": "10%", "GDQP": "10%", "C.NGHỆ": "10%", "TBM": "10%"
 };
 /** Môn thống kê khoảng điểm (không tính cột TBM) */
 const EXAM_SUBJECTS_STAT = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C.NGHỆ"];
@@ -13112,26 +13112,27 @@ function buildExamScoreTableHtml(st, periodKeys) {
       html += '<col style="width:' + w + '">';
     });
     html += '</colgroup>';
-    // Hàng môn — align center + valign middle (HTML attr + CSS) để JPG căn giữa ô
-    html += '<tr style="background:#e2e8f0">';
+    // Hàng môn + điểm: bảng lồng 100% — căn giữa ngang/dọc ổn định html2canvas (như diem mau.png)
+    function examCell(content, isHead, isTbm) {
+      var bg = isHead ? (isTbm ? "#dbeafe" : "#e2e8f0") : (isTbm ? "#eff6ff" : "#ffffff");
+      var fs = isHead ? "8pt" : "10pt";
+      var pad = isHead ? "5pt 0" : "6pt 0";
+      return '<td align="center" valign="middle" style="border:1px solid #334155;padding:0;background:' + bg +
+        ';vertical-align:middle;text-align:center">' +
+        '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse">' +
+        '<tr><td align="center" valign="middle" style="text-align:center;vertical-align:middle;padding:' + pad +
+        ';font-size:' + fs + ';font-weight:800;font-family:Arial,Helvetica,sans-serif;line-height:1.2;' +
+        'white-space:nowrap;color:#0f172a">' + content + '</td></tr></table></td>';
+    }
+    html += '<tr>';
     EXAM_SUBJECTS.forEach(function(sub) {
-      var lab = EXAM_SUBJECT_LABELS[sub] || sub;
-      var isTbm = sub === "TBM";
-      html += '<th align="center" valign="middle" style="text-align:center;vertical-align:middle;padding:6pt 2px;' +
-        cellBorder + ';font-size:8pt;font-weight:800;line-height:1.2;white-space:nowrap;' +
-        'font-family:Arial,Helvetica,sans-serif;overflow:visible' +
-        (isTbm ? ';background:#dbeafe' : '') + '"><div style="text-align:center;width:100%">' + lab + '</div></th>';
+      html += examCell(EXAM_SUBJECT_LABELS[sub] || sub, true, sub === "TBM");
     });
     html += '</tr>';
-    // Hàng điểm — căn giữa tuyệt đối trong ô
-    html += '<tr style="background:#fff">';
+    html += '<tr>';
     EXAM_SUBJECTS.forEach(function(sub) {
       var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
-      var isTbm = sub === "TBM";
-      html += '<td align="center" valign="middle" style="text-align:center;vertical-align:middle;padding:6pt 2px;' +
-        cellBorder + ';font-size:10pt;font-weight:800;line-height:1.15;white-space:nowrap;' +
-        'font-family:Arial,Helvetica,sans-serif;color:#0f172a;overflow:visible' +
-        (isTbm ? ';background:#eff6ff' : '') + '"><div style="text-align:center;width:100%">' + val + '</div></td>';
+      html += examCell(val, false, sub === "TBM");
     });
     html += '</tr>';
     // Thống kê nằm trong bảng, căn giữa các cột
