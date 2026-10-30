@@ -2246,20 +2246,23 @@ let deadlineCfg = { day: 0, hour: 10, penaltyText: "" };
 /** Điểm TBM/SDGHS theo kỳ: examGrades[TX|GK1|…][normalizedName] = { "TOÁN": "8", …, "TBM": "7.33" } */
 let examGrades = {};
 const EXAM_SUBJECTS = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C.NGHỆ", "TBM"];
-/** Header bảng: nhãn gọn, tránh lỗi font khi xuất JPG (Ệ → I) */
+/**
+ * Header JPG-safe: không dấu chấm / ký tự dễ méo (Q→O, E→F)
+ * Web + html2canvas đều đọc rõ
+ */
 const EXAM_SUBJECT_LABELS = {
-  "TOÁN": "TOÁN", "TIN": "TIN", "VĂN": "VĂN", "SỬ": "SỬ", "ĐỊA": "ĐỊA",
-  "KT-PL": "KT-PL", "T.ANH": "T.ANH", "GDQP": "GDQP", "C.NGHỆ": "C.NGHE", "TBM": "TBM"
+  "TOÁN": "TOAN", "TIN": "TIN", "VĂN": "VAN", "SỬ": "SU", "ĐỊA": "DIA",
+  "KT-PL": "KTPL", "T.ANH": "ANH", "GDQP": "GDQP", "C.NGHỆ": "CN", "TBM": "TBM"
 };
 /** Tên đầy đủ trong khung thống kê khoảng điểm */
 const EXAM_SUBJECT_FULL = {
   "TOÁN": "Toán", "TIN": "Tin", "VĂN": "Văn", "SỬ": "Sử", "ĐỊA": "Địa",
   "KT-PL": "Kinh tế pháp luật", "T.ANH": "Ngoại ngữ Anh", "GDQP": "Quốc phòng", "C.NGHỆ": "Công nghệ"
 };
-/** Độ rộng cột % — ưu tiên KT-PL / T.ANH / GDQP / C.NGHE / TBM (tổng 100%) */
+/** 10 cột đều nhau — ổn định khi xuất JPG */
 const EXAM_COL_WIDTH = {
-  "TOÁN": "8%", "TIN": "7%", "VĂN": "8%", "SỬ": "7%", "ĐỊA": "7%",
-  "KT-PL": "13%", "T.ANH": "13%", "GDQP": "12%", "C.NGHỆ": "13%", "TBM": "12%"
+  "TOÁN": "10%", "TIN": "10%", "VĂN": "10%", "SỬ": "9%", "ĐỊA": "9%",
+  "KT-PL": "10%", "T.ANH": "10%", "GDQP": "11%", "C.NGHỆ": "10%", "TBM": "11%"
 };
 /** Môn thống kê khoảng điểm (không tính cột TBM) */
 const EXAM_SUBJECTS_STAT = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C.NGHỆ"];
@@ -13063,32 +13066,37 @@ function parseExamScoreNum(v) {
   return isFinite(n) ? n : null;
 }
 
-/** Thống kê môn: 2 hàng · tên đầy đủ · chữ đen đậm · căn giữa */
-function buildExamScoreBandHtml(row) {
-  if (!row) return "";
+/** Thống kê môn → 2 hàng trong <td colspan> (nằm giữa bảng điểm, căn giữa cột) */
+function buildExamScoreBandRows(row, colCount, cellBorder) {
+  colCount = colCount || 10;
+  cellBorder = cellBorder || "border:1px solid #334155";
   var low = [], mid = [], high = [];
-  EXAM_SUBJECTS_STAT.forEach(function(sub) {
-    var n = parseExamScoreNum(row[sub]);
-    if (n == null) return;
-    var lab = (EXAM_SUBJECT_FULL && EXAM_SUBJECT_FULL[sub]) || EXAM_SUBJECT_LABELS[sub] || sub;
-    if (n < 5) low.push(lab);
-    else if (n < 8) mid.push(lab);
-    else high.push(lab);
-  });
+  if (row) {
+    EXAM_SUBJECTS_STAT.forEach(function(sub) {
+      var n = parseExamScoreNum(row[sub]);
+      if (n == null) return;
+      var lab = (EXAM_SUBJECT_FULL && EXAM_SUBJECT_FULL[sub]) || EXAM_SUBJECT_LABELS[sub] || sub;
+      if (n < 5) low.push(lab);
+      else if (n < 8) mid.push(lab);
+      else high.push(lab);
+    });
+  }
   var r1a = low.length ? ("Môn &lt; 5: " + low.join("; ")) : "Môn &lt; 5: —";
   var r1b = mid.length ? ("Môn 5 đến &lt; 8: " + mid.join("; ")) : "Môn 5 đến &lt; 8: —";
   var r2 = high.length ? ("Môn 8 đến 10: " + high.join("; ")) : "Môn 8 đến 10: —";
-  return '<div style="margin:2pt 0 6pt 0;padding:4pt 5pt;border:1px solid #94a3b8;border-radius:3px;background:#fff;' +
-    'font-family:\'Times New Roman\',Times,serif;font-size:8pt;line-height:1.45;color:#000;text-align:center;font-weight:700">' +
-    '<div style="margin:0 0 2pt 0">' + r1a + ' &nbsp;·&nbsp; ' + r1b + '</div>' +
-    '<div style="margin:0">' + r2 + '</div>' +
-    '</div>';
+  var base = cellBorder + ';text-align:center;vertical-align:middle;padding:3pt 4pt;' +
+    'font-family:Arial,Helvetica,sans-serif;font-size:7.5pt;font-weight:700;color:#000;line-height:1.35;background:#f8fafc';
+  var html = "";
+  html += '<tr><td colspan="' + colCount + '" style="' + base + '">' + r1a + ' &nbsp;·&nbsp; ' + r1b + '</td></tr>';
+  html += '<tr><td colspan="' + colCount + '" style="' + base + '">' + r2 + '</td></tr>';
+  return html;
 }
 
 function buildExamScoreTableHtml(st, periodKeys) {
   periodKeys = (periodKeys || []).filter(Boolean);
   if (!periodKeys.length) return "";
   var cellBorder = "border:1px solid #334155";
+  var nCol = EXAM_SUBJECTS.length;
   var html = "";
   periodKeys.forEach(function(pk) {
     var meta = EXAM_PERIOD_META[pk] || { label: pk };
@@ -13096,8 +13104,7 @@ function buildExamScoreTableHtml(st, periodKeys) {
     html += '<div style="margin:8pt 0 0 0;clear:both">';
     html += '<p style="margin:0 0 4pt 0;padding:0;font-weight:700;font-size:10pt;line-height:1.3;font-family:\'Times New Roman\',Times,serif">' +
       meta.label + '</p>';
-    // Bảng điểm: header không overflow:hidden (html2canvas cắt chữ nếu hidden)
-    html += '<table class="exam-score-table" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0 0 3pt 0;' +
+    html += '<table class="exam-score-table" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0;' +
       'table-layout:fixed;border:1.5px solid #0f172a">';
     html += '<colgroup>';
     EXAM_SUBJECTS.forEach(function(sub) {
@@ -13105,29 +13112,31 @@ function buildExamScoreTableHtml(st, periodKeys) {
       html += '<col style="width:' + w + '">';
     });
     html += '</colgroup>';
+    // Hàng môn
     html += '<tr style="background:#e2e8f0">';
     EXAM_SUBJECTS.forEach(function(sub) {
       var lab = EXAM_SUBJECT_LABELS[sub] || sub;
       var isTbm = sub === "TBM";
-      // 6.5pt · Arial · không cắt chữ khi xuất JPG
-      html += '<th style="text-align:center;vertical-align:middle;padding:3pt 0;' +
-        cellBorder + ';font-size:6.5pt;font-weight:700;line-height:1.2;white-space:nowrap;' +
-        'font-family:Arial,Helvetica,sans-serif;overflow:visible' +
+      html += '<th style="text-align:center;vertical-align:middle;padding:4pt 0;' +
+        cellBorder + ';font-size:8pt;font-weight:800;line-height:1.2;white-space:nowrap;' +
+        'font-family:Arial,Helvetica,sans-serif;overflow:visible;letter-spacing:0.02em' +
         (isTbm ? ';background:#dbeafe' : '') + '">' + lab + '</th>';
     });
     html += '</tr>';
+    // Hàng điểm
     html += '<tr style="background:#fff">';
     EXAM_SUBJECTS.forEach(function(sub) {
       var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
       var isTbm = sub === "TBM";
       html += '<td style="text-align:center;vertical-align:middle;padding:5pt 0;' +
-        cellBorder + ';font-size:9.5pt;font-weight:800;line-height:1.15;white-space:nowrap;' +
+        cellBorder + ';font-size:10pt;font-weight:800;line-height:1.15;white-space:nowrap;' +
         'font-family:Arial,Helvetica,sans-serif;color:#0f172a;overflow:visible' +
         (isTbm ? ';background:#eff6ff' : '') + '">' + val + '</td>';
     });
-    html += '</tr></table>';
-    html += buildExamScoreBandHtml(row);
-    html += '</div>';
+    html += '</tr>';
+    // Thống kê nằm trong bảng, căn giữa các cột
+    html += buildExamScoreBandRows(row, nCol, cellBorder);
+    html += '</table></div>';
   });
   return html;
 }
