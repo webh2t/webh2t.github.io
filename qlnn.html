@@ -13096,8 +13096,8 @@ function buildExamScoreTableHtml(st, periodKeys) {
     html += '<div style="margin:8pt 0 0 0;clear:both">';
     html += '<p style="margin:0 0 4pt 0;padding:0;font-weight:700;font-size:10pt;line-height:1.3;font-family:\'Times New Roman\',Times,serif">' +
       meta.label + '</p>';
-    // Arial cho header: tránh Times New Roman làm Q→O, chữ dính khi scale JPG
-    html += '<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0 0 3pt 0;' +
+    // Bảng điểm: header không overflow:hidden (html2canvas cắt chữ nếu hidden)
+    html += '<table class="exam-score-table" border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0 0 3pt 0;' +
       'table-layout:fixed;border:1.5px solid #0f172a">';
     html += '<colgroup>';
     EXAM_SUBJECTS.forEach(function(sub) {
@@ -13109,10 +13109,10 @@ function buildExamScoreTableHtml(st, periodKeys) {
     EXAM_SUBJECTS.forEach(function(sub) {
       var lab = EXAM_SUBJECT_LABELS[sub] || sub;
       var isTbm = sub === "TBM";
-      // 6pt · Arial · đậm · căn giữa tuyệt đối trong ô
-      html += '<th style="text-align:center;vertical-align:middle;padding:4pt 1px;' +
-        cellBorder + ';font-size:6pt;font-weight:700;line-height:1.25;white-space:nowrap;' +
-        'font-family:Arial,Helvetica,sans-serif;overflow:hidden' +
+      // 6.5pt · Arial · không cắt chữ khi xuất JPG
+      html += '<th style="text-align:center;vertical-align:middle;padding:3pt 0;' +
+        cellBorder + ';font-size:6.5pt;font-weight:700;line-height:1.2;white-space:nowrap;' +
+        'font-family:Arial,Helvetica,sans-serif;overflow:visible' +
         (isTbm ? ';background:#dbeafe' : '') + '">' + lab + '</th>';
     });
     html += '</tr>';
@@ -13120,9 +13120,9 @@ function buildExamScoreTableHtml(st, periodKeys) {
     EXAM_SUBJECTS.forEach(function(sub) {
       var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
       var isTbm = sub === "TBM";
-      html += '<td style="text-align:center;vertical-align:middle;padding:5pt 1px;' +
-        cellBorder + ';font-size:9pt;font-weight:800;line-height:1.15;white-space:nowrap;' +
-        'font-family:Arial,Helvetica,sans-serif;color:#0f172a' +
+      html += '<td style="text-align:center;vertical-align:middle;padding:5pt 0;' +
+        cellBorder + ';font-size:9.5pt;font-weight:800;line-height:1.15;white-space:nowrap;' +
+        'font-family:Arial,Helvetica,sans-serif;color:#0f172a;overflow:visible' +
         (isTbm ? ';background:#eff6ff' : '') + '">' + val + '</td>';
     });
     html += '</tr></table>';
@@ -13302,11 +13302,54 @@ function renderSelfAssessmentForms(scope, mon, hk, weekNos, nW, gvcn, cls, schoo
 }
 
 function downloadSelfJpg() {
-  if (typeof downloadReportBoardJpg === "function") {
-    downloadReportBoardJpg("selfAssessSheet", "TuDanhGia", "BẢN TỰ ĐÁNH GIÁ CÁ NHÂN");
-  } else {
-    alert("Chức năng tải ảnh chưa sẵn sàng");
+  var el = document.getElementById("selfAssessSheet");
+  if (!el) { alert("Chưa có phiếu"); return; }
+  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
+  var sheet = el.querySelector(".self-sheet-one") || el;
+  var host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:-9999px;top:0;width:160mm;background:#fff;z-index:-1";
+  host.innerHTML = sheet.outerHTML;
+  document.body.appendChild(host);
+  var target = host.querySelector(".self-sheet-one") || host.firstElementChild;
+  if (target) {
+    target.style.width = "148mm";
+    target.style.maxWidth = "148mm";
+    target.style.boxSizing = "border-box";
   }
+  html2canvas(target, {
+    scale: 2.5,
+    backgroundColor: "#ffffff",
+    useCORS: true,
+    logging: false,
+    windowWidth: Math.max(target.scrollWidth, 560),
+    windowHeight: (target.scrollHeight || 800) + 20,
+    onclone: function(doc) {
+      try {
+        doc.querySelectorAll(".exam-score-table th, .self-sheet-one table th").forEach(function(th) {
+          th.style.fontSize = "7.5px";
+          th.style.fontFamily = "Arial,Helvetica,sans-serif";
+          th.style.fontWeight = "700";
+          th.style.whiteSpace = "nowrap";
+          th.style.overflow = "visible";
+          th.style.padding = "4px 1px";
+        });
+        doc.querySelectorAll(".exam-score-table td, .self-sheet-one table td").forEach(function(td) {
+          td.style.fontFamily = "Arial,Helvetica,sans-serif";
+          td.style.overflow = "visible";
+          td.style.whiteSpace = "nowrap";
+        });
+      } catch (e) {}
+    }
+  }).then(function(canvas) {
+    try { document.body.removeChild(host); } catch (e) {}
+    var a = document.createElement("a");
+    a.download = "TuDanhGia.jpg";
+    a.href = canvas.toDataURL("image/jpeg", 0.93);
+    a.click();
+  }).catch(function(err) {
+    try { document.body.removeChild(host); } catch (e) {}
+    alert("Lỗi JPG: " + (err && err.message ? err.message : err));
+  });
 }
 
 function downloadSelfDocx() {
@@ -13676,7 +13719,8 @@ function downloadSelfClassAllJpg() {
   if (!list.length) { alert("Chưa có danh sách lớp"); return; }
 
   var host = document.createElement("div");
-  host.style.cssText = "position:fixed;left:-9999px;top:0;width:148mm;background:#fff;z-index:-1";
+  // Rộng hơn A5 một chút để html2canvas không cắt header bảng điểm
+  host.style.cssText = "position:fixed;left:-9999px;top:0;width:160mm;background:#fff;z-index:-1";
   document.body.appendChild(host);
 
   var zip = new JSZip();
@@ -13701,23 +13745,57 @@ function downloadSelfClassAllJpg() {
     var st = list[idx];
     host.innerHTML = buildSelfSheetHtmlForStudent(st, ctx);
     var sheet = host.querySelector(".self-sheet-one") || host.firstElementChild;
+    if (sheet) {
+      sheet.style.width = "148mm";
+      sheet.style.maxWidth = "148mm";
+      sheet.style.boxSizing = "border-box";
+    }
     html2canvas(sheet, {
-      scale: 2,
+      scale: 2.5,
       backgroundColor: "#ffffff",
       logging: false,
-      windowWidth: sheet.scrollWidth,
-      windowHeight: sheet.scrollHeight
+      useCORS: true,
+      windowWidth: Math.max(sheet.scrollWidth, 560),
+      windowHeight: sheet.scrollHeight + 20,
+      onclone: function(doc) {
+        // Ép header bảng điểm giống web: đủ chỗ, không cắt chữ
+        try {
+          var ths = doc.querySelectorAll(".exam-score-table th, .self-sheet-one table th");
+          ths.forEach(function(th) {
+            th.style.fontSize = "7.5px";
+            th.style.fontFamily = "Arial,Helvetica,sans-serif";
+            th.style.fontWeight = "700";
+            th.style.whiteSpace = "nowrap";
+            th.style.overflow = "visible";
+            th.style.textOverflow = "clip";
+            th.style.padding = "4px 1px";
+            th.style.lineHeight = "1.25";
+            th.style.letterSpacing = "0";
+          });
+          var tds = doc.querySelectorAll(".exam-score-table td, .self-sheet-one table td");
+          tds.forEach(function(td) {
+            td.style.fontFamily = "Arial,Helvetica,sans-serif";
+            td.style.overflow = "visible";
+            td.style.whiteSpace = "nowrap";
+          });
+          var tbls = doc.querySelectorAll(".exam-score-table");
+          tbls.forEach(function(tb) {
+            tb.style.tableLayout = "fixed";
+            tb.style.width = "100%";
+          });
+        } catch (eOn) {}
+      }
     }).then(function(canvas) {
-      var dataUrl = canvas.toDataURL("image/jpeg", 0.92);
+      var dataUrl = canvas.toDataURL("image/jpeg", 0.93);
       var base64 = dataUrl.split(",")[1];
       var fname = String(idx + 1).padStart(2, "0") + "_" + safeFileNamePart(st.id) + "_" + safeFileNamePart(st.name) + ".jpg";
       folder.file(fname, base64, { base64: true });
       idx++;
-      setTimeout(next, 30);
+      setTimeout(next, 40);
     }).catch(function(err) {
       console.warn("JPG HS lỗi", st && st.id, err);
       idx++;
-      setTimeout(next, 30);
+      setTimeout(next, 40);
     });
   }
 
