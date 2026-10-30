@@ -2256,10 +2256,10 @@ const EXAM_SUBJECT_FULL = {
   "TOÁN": "Toán", "TIN": "Tin", "VĂN": "Văn", "SỬ": "Sử", "ĐỊA": "Địa",
   "KT-PL": "Kinh tế pháp luật", "T.ANH": "Ngoại ngữ Anh", "GDQP": "Quốc phòng", "C.NGHỆ": "Công nghệ"
 };
-/** Độ rộng cột % — nới KT-PL / T.ANH / GDQP / C.NGHE */
+/** Độ rộng cột % — ưu tiên KT-PL / T.ANH / GDQP / C.NGHE / TBM (tổng 100%) */
 const EXAM_COL_WIDTH = {
-  "TOÁN": "8.5%", "TIN": "7.5%", "VĂN": "8%", "SỬ": "7.5%", "ĐỊA": "7.5%",
-  "KT-PL": "12%", "T.ANH": "12%", "GDQP": "11%", "C.NGHỆ": "13%", "TBM": "8.5%"
+  "TOÁN": "8%", "TIN": "7%", "VĂN": "8%", "SỬ": "7%", "ĐỊA": "7%",
+  "KT-PL": "13%", "T.ANH": "13%", "GDQP": "12%", "C.NGHỆ": "13%", "TBM": "12%"
 };
 /** Môn thống kê khoảng điểm (không tính cột TBM) */
 const EXAM_SUBJECTS_STAT = ["TOÁN", "TIN", "VĂN", "SỬ", "ĐỊA", "KT-PL", "T.ANH", "GDQP", "C.NGHỆ"];
@@ -13096,17 +13096,23 @@ function buildExamScoreTableHtml(st, periodKeys) {
     html += '<div style="margin:8pt 0 0 0;clear:both">';
     html += '<p style="margin:0 0 4pt 0;padding:0;font-weight:700;font-size:10pt;line-height:1.3;font-family:\'Times New Roman\',Times,serif">' +
       meta.label + '</p>';
+    // Arial cho header: tránh Times New Roman làm Q→O, chữ dính khi scale JPG
     html += '<table border="1" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;margin:0 0 3pt 0;' +
-      'table-layout:fixed;border:1.5px solid #0f172a;font-family:\'Times New Roman\',Times,serif">';
+      'table-layout:fixed;border:1.5px solid #0f172a">';
+    html += '<colgroup>';
+    EXAM_SUBJECTS.forEach(function(sub) {
+      var w = (EXAM_COL_WIDTH && EXAM_COL_WIDTH[sub]) || "10%";
+      html += '<col style="width:' + w + '">';
+    });
+    html += '</colgroup>';
     html += '<tr style="background:#e2e8f0">';
     EXAM_SUBJECTS.forEach(function(sub) {
       var lab = EXAM_SUBJECT_LABELS[sub] || sub;
       var isTbm = sub === "TBM";
-      var w = (EXAM_COL_WIDTH && EXAM_COL_WIDTH[sub]) || "10%";
-      // Header 6pt đậm · căn giữa · cột rộng cho KT-PL / T.ANH / GDQP / C.NGHE
-      html += '<th style="width:' + w + ';text-align:center;vertical-align:middle;padding:3pt 0;' +
-        cellBorder + ';font-size:6pt;font-weight:800;white-space:nowrap;line-height:1.2;' +
-        'overflow:visible;text-overflow:clip' +
+      // 6pt · Arial · đậm · căn giữa tuyệt đối trong ô
+      html += '<th style="text-align:center;vertical-align:middle;padding:4pt 1px;' +
+        cellBorder + ';font-size:6pt;font-weight:700;line-height:1.25;white-space:nowrap;' +
+        'font-family:Arial,Helvetica,sans-serif;overflow:hidden' +
         (isTbm ? ';background:#dbeafe' : '') + '">' + lab + '</th>';
     });
     html += '</tr>';
@@ -13114,9 +13120,9 @@ function buildExamScoreTableHtml(st, periodKeys) {
     EXAM_SUBJECTS.forEach(function(sub) {
       var val = row && row[sub] != null && String(row[sub]).trim() !== "" ? String(row[sub]).trim() : "—";
       var isTbm = sub === "TBM";
-      var w = (EXAM_COL_WIDTH && EXAM_COL_WIDTH[sub]) || "10%";
-      html += '<td style="width:' + w + ';text-align:center;vertical-align:middle;padding:4pt 0;' +
-        cellBorder + ';font-size:9pt;font-weight:800;line-height:1.15;white-space:nowrap;color:#0f172a' +
+      html += '<td style="text-align:center;vertical-align:middle;padding:5pt 1px;' +
+        cellBorder + ';font-size:9pt;font-weight:800;line-height:1.15;white-space:nowrap;' +
+        'font-family:Arial,Helvetica,sans-serif;color:#0f172a' +
         (isTbm ? ';background:#eff6ff' : '') + '">' + val + '</td>';
     });
     html += '</tr></table>';
