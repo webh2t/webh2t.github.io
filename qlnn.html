@@ -12494,18 +12494,24 @@ function renderNotebook() {
       return s.replace(/\s+/g, " ").trim();
     }
     var byType = {};
+    var byStudentTimes = {}; // tổng số lần VP theo tên HS
     viols.forEach(function(e) {
+      var t = Number(e.times) || 1;
+      if (t < 1) t = 1;
       var raw = (typeof resolveEntryContentText === "function") ? resolveEntryContentText(e) : (e.contentText || e.contentCode || contentLine(e));
       var label = stripViolLabelCls(raw) || "Vi phạm khác";
       var key = label.toLowerCase();
-      if (!byType[key]) byType[key] = { label: label, times: 0, names: {} };
-      byType[key].times += Number(e.times) || 1;
+      if (!byType[key]) byType[key] = { label: label, times: 0, nameTimes: {} };
+      byType[key].times += t;
       var nm = "";
       try {
         var st = (students || []).find(function(s) { return String(s.id) === String(e.studentId); });
         nm = (st && st.name) || e.studentName || String(e.studentId || "");
       } catch (errN) { nm = e.studentName || ""; }
-      if (nm) byType[key].names[nm] = true;
+      if (nm) {
+        byType[key].nameTimes[nm] = (byType[key].nameTimes[nm] || 0) + t;
+        byStudentTimes[nm] = (byStudentTimes[nm] || 0) + t;
+      }
     });
     var typeKeys = Object.keys(byType).sort(function(a, b) {
       return byType[b].times - byType[a].times || a.localeCompare(b, "vi");
@@ -12515,11 +12521,31 @@ function renderNotebook() {
       html += '<b style="color:#b91c1c">THỐNG KÊ NỘI DUNG VI PHẠM CẢ LỚP</b><br/>';
       typeKeys.forEach(function(k, idx) {
         var o = byType[k];
-        var nameList = Object.keys(o.names).sort(function(a, b) { return a.localeCompare(b, "vi"); }).join(", ");
+        // ≥2 lần → ghi "TÊN (×n)"; 1 lần → chỉ tên
+        var nameList = Object.keys(o.nameTimes).sort(function(a, b) {
+          return o.nameTimes[b] - o.nameTimes[a] || a.localeCompare(b, "vi");
+        }).map(function(nm) {
+          var n = o.nameTimes[nm];
+          return n >= 2 ? (nm + " (×" + n + ")") : nm;
+        }).join(", ");
         html += '<div style="margin-top:4px">' + (idx + 1) + ". <b>" + o.label + "</b>: " + o.times + " lượt" +
           (nameList ? ' gồm <span style="color:#0f172a">' + nameList + "</span>" : "") + "</div>";
       });
       html += "</div>";
+
+      // Thống kê số lần theo từng học sinh (chỉ HS có ≥1 VP)
+      var stuKeys = Object.keys(byStudentTimes).sort(function(a, b) {
+        return byStudentTimes[b] - byStudentTimes[a] || a.localeCompare(b, "vi");
+      });
+      if (stuKeys.length) {
+        html += '<div class="mt-3 p-3 rounded-lg border text-sm" style="border-color:#fdba74;background:#fff7ed;color:#9a3412;text-align:left">';
+        html += '<b style="color:#c2410c">THỐNG KÊ VI PHẠM SỐ LẦN THEO TÊN HỌC SINH</b><br/>';
+        var parts = stuKeys.map(function(nm) {
+          return '<span style="color:#0f172a;font-weight:700">' + nm + "</span>: " + byStudentTimes[nm] + " lần";
+        });
+        html += '<div style="margin-top:6px;line-height:1.6">' + parts.join(" · ") + "</div>";
+        html += "</div>";
+      }
     }
   }
   html += '</div>';
