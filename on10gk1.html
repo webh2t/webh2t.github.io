@@ -1536,37 +1536,54 @@ option.locked-option {
     }
 
 
-    // --- LICHTHI (lịch mở khóa lớp) ---
-    classUnlockMap = { "*": [{ days: [1, 2, 3, 4, 5, 6], start: "06:30", end: "22:00" }] };
+
+    // --- LICHTHI: Lớp | Ngày (OPEN/LOCK/dd/mm/yyyy) | Giờ từ | Giờ đến ---
+    classUnlockMap = {};
     const shLT = findSheet(wb, ["LICHTHI", "Lichthi", "Lịch thi", "LichThi", "Schedule", "LICH_THI"]);
     if (shLT) {
       const rows = XLSX.utils.sheet_to_json(shLT, { header: 1, defval: "" });
       if (rows.length) {
         const h = rows[0].map(function (c) { return String(c || "").trim().toLowerCase(); });
         let iLop = h.findIndex(function (x) { return /lớp|lop|class/.test(x); });
-        let iThu = h.findIndex(function (x) { return /thứ|thu|day|ngày|ngay/.test(x); });
-        let iTu = h.findIndex(function (x) { return /từ|tu|start|bắt|bat|giờ bắt|gio bat/.test(x); });
-        let iDen = h.findIndex(function (x) { return /đến|den|end|kết|ket|giờ kết|gio ket/.test(x); });
+        let iNgay = h.findIndex(function (x) { return /ngày|ngay|date|open|lock|ngày \(/.test(x); });
+        let iTu = h.findIndex(function (x) { return /từ|tu|start|giờ từ|gio tu/.test(x); });
+        let iDen = h.findIndex(function (x) { return /đến|den|end|giờ đến|gio den/.test(x); });
         let start = 1;
-        if (iLop < 0) { iLop = 0; iThu = 1; iTu = 2; iDen = 3; start = 0; }
+        if (iLop < 0) { iLop = 0; iNgay = 1; iTu = 2; iDen = 3; start = 0; }
         const map = {};
         for (let r = start; r < rows.length; r++) {
           const lop = String(rows[r][iLop] || "").trim();
           if (!lop || /^hướng|^huong|^#/.test(lop.toLowerCase())) continue;
-          const thuRaw = String(rows[r][iThu >= 0 ? iThu : 1] || "").trim();
-          const tu = String(rows[r][iTu >= 0 ? iTu : 2] || "06:30").trim() || "06:30";
-          const den = String(rows[r][iDen >= 0 ? iDen : 3] || "22:00").trim() || "22:00";
-          if (!thuRaw) continue;
-          const days = parseThuList(thuRaw);
-          if (!days.length) continue;
+          const ngayRaw = String(rows[r][iNgay >= 0 ? iNgay : 1] || "").trim();
+          if (!ngayRaw) continue;
+          const tu = String(rows[r][iTu >= 0 ? iTu : 2] || "").trim();
+          const den = String(rows[r][iDen >= 0 ? iDen : 3] || "").trim();
+          const mode = ngayRaw.toUpperCase();
           if (!map[lop]) map[lop] = [];
-          map[lop].push({ days: days, start: tu, end: den });
+          if (mode === "OPEN" || mode === "MỞ" || mode === "MO") {
+            map[lop].push({ type: "open" });
+          } else if (mode === "LOCK" || mode === "KHÓA" || mode === "KHOA" || mode === "CLOSE") {
+            map[lop].push({ type: "lock" });
+          } else {
+            // dd/mm/yyyy or d/m/yyyy
+            const m = ngayRaw.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+            if (m) {
+              let dd = parseInt(m[1], 10), mm = parseInt(m[2], 10), yy = parseInt(m[3], 10);
+              if (yy < 100) yy += 2000;
+              map[lop].push({
+                type: "date",
+                day: dd, month: mm, year: yy,
+                start: tu || "00:00",
+                end: den || "23:59"
+              });
+            }
+          }
         }
-        if (Object.keys(map).length) classUnlockMap = map;
+        classUnlockMap = map;
       }
     }
 
-    // --- CAUHOI ---
+// --- CAUHOI ---
     const shCH = findSheet(wb, ["CAUHOI", "CauHoi", "Câu hỏi", "Questions", "cauhoi"]);
     if (shCH) {
       const rows = XLSX.utils.sheet_to_json(shCH, { header: 1, defval: "" });
@@ -1739,109 +1756,88 @@ option.locked-option {
   }
 
 
-  /* ----- Lịch mở khóa lớp (sheet Excel Lichthi) ----- */
-  /** Thứ trong Excel: 1=CN, 2=T2, … 7=T7 → JS getDay 0=CN … 6=T7 */
-  function parseThuList(raw) {
-    const s = String(raw || "").trim().toLowerCase();
-    if (!s) return [];
-    const parts = s.split(/[,;/|\s]+/).map(function (x) { return x.trim(); }).filter(Boolean);
-    const days = [];
-    parts.forEach(function (p) {
-      let t = p.replace(/^thứ\s*/i, "").replace(/^thu\s*/i, "");
-      if (/^t[0-7]$/i.test(t)) t = t.slice(1);
-      if (t === "cn" || t === "c.n" || t === "chủ nhật" || t === "chu nhat") {
-        if (days.indexOf(0) < 0) days.push(0);
-        return;
-      }
-      let n = parseInt(t, 10);
-      if (!Number.isFinite(n)) return;
-      if (n >= 1 && n <= 7) {
-        // Excel: 1=CN, 2=T2, … 7=T7 → JS getDay: 0=CN … 6=T7
-        n = (n - 1) % 7;
-      }
-      if (n >= 0 && n <= 6 && days.indexOf(n) < 0) days.push(n);
-    });
-    return days;
-  }
-
-
-  const DAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
-
-  function nowVN() {
-    // Giờ Việt Nam (UTC+7) ổn định, không phụ thuộc timezone máy
-    const now = new Date();
-    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-    return new Date(utc + 7 * 3600000);
-  }
-
-  function minutesOf(d) {
-    return d.getHours() * 60 + d.getMinutes();
-  }
-
+  /* ----- Lịch mở khóa lớp (sheet Excel Lichthi: OPEN / LOCK / dd/mm/yyyy) ----- */
   function parseHM(hm) {
     const p = String(hm || "00:00").split(":");
     return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
   }
-
   function formatHM(mins) {
     const h = Math.floor(mins / 60), m = mins % 60;
     return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
   }
-
-  function windowsForClass(lop) {
+  function minutesOf(d) {
+    return d.getHours() * 60 + d.getMinutes();
+  }
+  function nowVN() {
+    const now = new Date();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    return new Date(utc + 7 * 3600000);
+  }
+  function rulesForClass(lop) {
     if (classUnlockMap[lop] && classUnlockMap[lop].length) return classUnlockMap[lop];
-    return classUnlockMap["*"] || classUnlockMap["ALL"] || [];
+    if (classUnlockMap["*"] && classUnlockMap["*"].length) return classUnlockMap["*"];
+    return [];
   }
-
-  function describeWindows(wins) {
-    if (!wins || !wins.length) return "Không có lịch mở";
-    return wins.map(function (w) {
-      const days = (w.days || []).map(function (d) { return DAY_NAMES[d] || d; }).join(", ");
-      return days + " · " + (w.start || "00:00") + "–" + (w.end || "23:59");
-    }).join(" | ");
+  function describeRules(rules) {
+    if (!rules || !rules.length) return "Chưa cấu hình (mặc định khóa)";
+    return rules.map(function (r) {
+      if (r.type === "open") return "OPEN — luôn mở";
+      if (r.type === "lock") return "LOCK — luôn khóa";
+      if (r.type === "date") {
+        const dd = String(r.day).padStart(2, "0");
+        const mm = String(r.month).padStart(2, "0");
+        return dd + "/" + mm + "/" + r.year + " · " + (r.start || "00:00") + "–" + (r.end || "23:59");
+      }
+      return "";
+    }).filter(Boolean).join(" | ");
   }
-
   /** { open, reason, nextHint } */
   function classUnlockStatus(lop, at) {
     const d = at || nowVN();
-    const day = d.getDay();
-    const mins = minutesOf(d);
-    const wins = windowsForClass(lop);
-    if (!wins.length) return { open: false, reason: "Chưa cấu hình lịch mở cho lớp này", nextHint: "" };
-
-    for (let i = 0; i < wins.length; i++) {
-      const w = wins[i];
-      const days = w.days || [];
-      if (days.indexOf(day) < 0) continue;
-      const a = parseHM(w.start), b = parseHM(w.end);
-      if (mins >= a && mins < b) {
-        return { open: true, reason: "Đang mở đến " + (w.end || ""), nextHint: "" };
-      }
+    const rules = rulesForClass(lop);
+    if (!rules.length) {
+      return { open: false, reason: "Chưa có lịch trong sheet Lichthi", nextHint: "Thêm dòng OPEN/LOCK hoặc ngày thi trong Excel" };
     }
-
-    // Tìm khung gần nhất trong 7 ngày
-    for (let add = 0; add < 7; add++) {
-      const t = new Date(d.getTime());
-      t.setDate(t.getDate() + add);
-      const td = t.getDay();
-      for (let i = 0; i < wins.length; i++) {
-        const w = wins[i];
-        if ((w.days || []).indexOf(td) < 0) continue;
-        const a = parseHM(w.start);
-        if (add === 0 && mins >= a) continue; // đã qua khung hôm nay
-        if (add === 0 && mins < a) {
-          return { open: false, reason: "Chưa đến giờ mở", nextHint: "Mở lúc " + w.start + " hôm nay (" + DAY_NAMES[td] + ")" };
+    // Priority: any OPEN → open; else check date windows; else any LOCK → lock
+    let hasOpen = false, hasLock = false;
+    let dateHit = null; // {open:bool, reason}
+    let nextDate = null;
+    for (let i = 0; i < rules.length; i++) {
+      const r = rules[i];
+      if (r.type === "open") hasOpen = true;
+      else if (r.type === "lock") hasLock = true;
+      else if (r.type === "date") {
+        const same = d.getFullYear() === r.year && (d.getMonth() + 1) === r.month && d.getDate() === r.day;
+        if (same) {
+          const mins = minutesOf(d);
+          const a = parseHM(r.start), b = parseHM(r.end);
+          if (mins >= a && mins < b) {
+            dateHit = { open: true, reason: "Trong ca thi đến " + r.end };
+          } else if (mins < a) {
+            dateHit = dateHit || { open: false, reason: "Chưa đến giờ", nextHint: "Mở lúc " + r.start + " hôm nay" };
+          } else {
+            dateHit = dateHit || { open: false, reason: "Đã hết ca", nextHint: "Ca kết thúc lúc " + r.end };
+          }
+        } else {
+          // future date?
+          const dt = new Date(r.year, r.month - 1, r.day, parseHM(r.start) / 60, parseHM(r.start) % 60);
+          if (dt > d && !nextDate) {
+            nextDate = String(r.day).padStart(2, "0") + "/" + String(r.month).padStart(2, "0") + "/" + r.year + " " + r.start;
+          }
         }
-        return { open: false, reason: "Ngoài lịch mở khóa", nextHint: "Mở " + DAY_NAMES[td] + " lúc " + w.start };
       }
     }
-    return { open: false, reason: "Ngoài lịch mở khóa", nextHint: describeWindows(wins) };
+    if (hasOpen) return { open: true, reason: "OPEN — luôn mở", nextHint: "" };
+    if (dateHit) return { open: dateHit.open, reason: dateHit.reason, nextHint: dateHit.nextHint || (nextDate ? "Ca tiếp: " + nextDate : "") };
+    if (hasLock) return { open: false, reason: "LOCK — đang khóa", nextHint: nextDate ? "Ca tiếp: " + nextDate : "Đổi OPEN hoặc thêm ngày thi trong Excel" };
+    if (nextDate) return { open: false, reason: "Ngoài ngày thi", nextHint: "Ca tiếp: " + nextDate };
+    return { open: false, reason: "Ngoài lịch mở khóa", nextHint: "" };
   }
-
   function renderSchedulePanel() {
     const box = $("schedule-list");
     const nowEl = $("schedule-now");
     const d = nowVN();
+    const DAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
     if (nowEl) {
       nowEl.textContent = "Bây giờ (VN): " + DAY_NAMES[d.getDay()] + " " +
         String(d.getDate()).padStart(2, "0") + "/" +
@@ -1854,7 +1850,7 @@ option.locked-option {
       box.innerHTML = '<p class="class-stats-empty">Đang tải danh sách lớp…</p>';
       return;
     }
-    let html = '<table class="schedule-table"><thead><tr><th>Lớp</th><th>Trạng thái</th><th>Lịch mở</th></tr></thead><tbody>';
+    let html = '<table class="schedule-table"><thead><tr><th>Lớp</th><th>Trạng thái</th><th>Lịch (Excel Lichthi)</th></tr></thead><tbody>';
     classes.forEach(function (lop) {
       const st = classUnlockStatus(lop, d);
       const badge = st.open
@@ -1862,14 +1858,13 @@ option.locked-option {
         : '<span class="badge-locked">🔒 Đang khóa</span>';
       const extra = st.open ? escapeHtml(st.reason) : escapeHtml(st.nextHint || st.reason);
       html += '<tr><td><b>' + escapeHtml(lop) + '</b></td><td>' + badge + '</td><td style="font-size:.82rem;color:#64748B">' +
-        escapeHtml(describeWindows(windowsForClass(lop))) +
+        escapeHtml(describeRules(rulesForClass(lop))) +
         (extra ? '<br><span style="color:' + (st.open ? '#15803D' : '#B91C1C') + '">' + extra + '</span>' : '') +
         '</td></tr>';
     });
     html += '</tbody></table>';
     box.innerHTML = html;
   }
-
   function updateLockMessage() {
     const el = $("lock-msg");
     if (!el) return;
@@ -1882,27 +1877,22 @@ option.locked-option {
     const st = classUnlockStatus(lop);
     if (st.open) {
       el.className = "lock-msg show open";
-      el.textContent = "🔓 Lớp " + lop + " đang được mở khóa — " + st.reason;
+      el.textContent = "🔓 Lớp " + lop + " đang mở — " + st.reason;
     } else {
       el.className = "lock-msg show";
-      el.textContent = "🔒 Lớp " + lop + " đang khóa. " + (st.nextHint || st.reason) +
-        ". Lịch: " + describeWindows(windowsForClass(lop));
+      el.textContent = "🔒 Lớp " + lop + " đang khóa. " + (st.nextHint || st.reason);
     }
   }
-
   function refreshUnlockUI() {
     renderSchedulePanel();
-    // Cập nhật nhãn option khóa/mở
     const d = nowVN();
     Array.prototype.forEach.call(selClass.options, function (opt) {
       if (!opt.value) return;
       const st = classUnlockStatus(opt.value, d);
-      const base = opt.value;
-      opt.textContent = st.open ? base + " — 🔓 mở" : base + " — 🔒 khóa";
+      opt.textContent = st.open ? opt.value + " — 🔓 mở" : opt.value + " — 🔒 khóa";
       opt.className = st.open ? "" : "locked-option";
     });
     updateLockMessage();
-    // Khóa nút bắt đầu nếu lớp đang khóa
     if (selClass.value && !classUnlockStatus(selClass.value).open) {
       btnStart.disabled = true;
     } else if (selClass.value && selStudent.value) {
