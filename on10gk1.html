@@ -261,6 +261,91 @@ a { text-decoration: none; color: inherit; }
   line-height: 1.3;
 }
 
+
+.schedule-card {
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 4px 16px rgba(0,0,0,.06);
+  padding: 18px 16px;
+  margin-top: 16px;
+  border: 1px solid var(--border);
+}
+.schedule-card h2 {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.schedule-now {
+  font-size: 0.85rem;
+  color: var(--text-soft);
+  margin-bottom: 12px;
+}
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+.schedule-table th {
+  text-align: left;
+  padding: 8px 10px;
+  background: #F8FAFC;
+  color: var(--text-soft);
+  font-weight: 700;
+  font-size: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+.schedule-table td {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.schedule-table tr:last-child td { border-bottom: none; }
+.badge-open {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: #DCFCE7;
+  color: #15803D;
+}
+.badge-locked {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+.lock-msg {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  display: none;
+  line-height: 1.4;
+}
+.lock-msg.show {
+  display: block;
+  background: #FEF2F2;
+  color: #B91C1C;
+  border: 1px solid #FECACA;
+}
+.lock-msg.open {
+  background: #F0FDF4;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+}
+option.locked-option {
+  color: #B91C1C;
+}
+
 .stats-class-block {
   margin-top: 16px;
   border-top: 1px dashed var(--border);
@@ -1070,6 +1155,7 @@ a { text-decoration: none; color: inherit; }
       <button class="btn-start" id="btn-start" disabled>
         Bắt đầu làm bài <span style="font-size:1.3rem">→</span>
       </button>
+      <div class="lock-msg" id="lock-msg"></div>
       <div class="status-bar" id="status-bar"></div>
     </div>
 
@@ -1211,6 +1297,21 @@ a { text-decoration: none; color: inherit; }
   const TIME_LIMIT_SEC = 5 * 60; // 5 phút
   const POINT_PER_Q = 0.1;       // MCQ / Short đúng = 0.1
   const POINT_TF_STMT = 0.025;   // TF: mỗi ý đúng = 0.025 (4 ý = 0.1)
+
+  /* ===== LỊCH MỞ KHÓA LỚP (giờ Việt Nam) =====
+     days: 0=CN, 1=Thứ 2, ... 6=Thứ 7
+     Sửa khung giờ / ngày cho từng lớp bên dưới khi cần.
+     UNLOCK_ALWAYS = true → bỏ qua lịch (mở hết).
+  */
+  const UNLOCK_ALWAYS = false;
+  const CLASS_UNLOCK = {
+    "*": [
+      { days: [1, 2, 3, 4, 5, 6], start: "06:30", end: "22:00" }
+    ],
+    // Ví dụ tùy chỉnh từng lớp (bỏ comment khi dùng):
+    // "10C1": [{ days: [1, 3, 5], start: "07:00", end: "11:30" }, { days: [1, 3, 5], start: "13:30", end: "17:00" }],
+    // "10C2": [{ days: [2, 4, 6], start: "07:00", end: "11:30" }, { days: [2, 4, 6], start: "13:30", end: "17:00" }],
+  };
 
   /* ========== STATE ========== */
   let studentsByClass = {};   // { "12A1": [{id, ten}, ...] }
@@ -1619,6 +1720,156 @@ a { text-decoration: none; color: inherit; }
     return 0;
   }
 
+
+  /* ----- Lịch mở khóa lớp ----- */
+  const DAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
+
+  function nowVN() {
+    // Giờ Việt Nam (UTC+7) ổn định, không phụ thuộc timezone máy
+    const now = new Date();
+    const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+    return new Date(utc + 7 * 3600000);
+  }
+
+  function minutesOf(d) {
+    return d.getHours() * 60 + d.getMinutes();
+  }
+
+  function parseHM(hm) {
+    const p = String(hm || "00:00").split(":");
+    return (parseInt(p[0], 10) || 0) * 60 + (parseInt(p[1], 10) || 0);
+  }
+
+  function formatHM(mins) {
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0");
+  }
+
+  function windowsForClass(lop) {
+    if (CLASS_UNLOCK[lop] && CLASS_UNLOCK[lop].length) return CLASS_UNLOCK[lop];
+    return CLASS_UNLOCK["*"] || [];
+  }
+
+  function describeWindows(wins) {
+    if (!wins || !wins.length) return "Không có lịch mở";
+    return wins.map(function (w) {
+      const days = (w.days || []).map(function (d) { return DAY_NAMES[d] || d; }).join(", ");
+      return days + " · " + (w.start || "00:00") + "–" + (w.end || "23:59");
+    }).join(" | ");
+  }
+
+  /** { open, reason, nextHint } */
+  function classUnlockStatus(lop, at) {
+    if (UNLOCK_ALWAYS) return { open: true, reason: "Mở không giới hạn lịch", nextHint: "" };
+    const d = at || nowVN();
+    const day = d.getDay();
+    const mins = minutesOf(d);
+    const wins = windowsForClass(lop);
+    if (!wins.length) return { open: false, reason: "Chưa cấu hình lịch mở cho lớp này", nextHint: "" };
+
+    for (let i = 0; i < wins.length; i++) {
+      const w = wins[i];
+      const days = w.days || [];
+      if (days.indexOf(day) < 0) continue;
+      const a = parseHM(w.start), b = parseHM(w.end);
+      if (mins >= a && mins < b) {
+        return { open: true, reason: "Đang mở đến " + (w.end || ""), nextHint: "" };
+      }
+    }
+
+    // Tìm khung gần nhất trong 7 ngày
+    for (let add = 0; add < 7; add++) {
+      const t = new Date(d.getTime());
+      t.setDate(t.getDate() + add);
+      const td = t.getDay();
+      for (let i = 0; i < wins.length; i++) {
+        const w = wins[i];
+        if ((w.days || []).indexOf(td) < 0) continue;
+        const a = parseHM(w.start);
+        if (add === 0 && mins >= a) continue; // đã qua khung hôm nay
+        if (add === 0 && mins < a) {
+          return { open: false, reason: "Chưa đến giờ mở", nextHint: "Mở lúc " + w.start + " hôm nay (" + DAY_NAMES[td] + ")" };
+        }
+        return { open: false, reason: "Ngoài lịch mở khóa", nextHint: "Mở " + DAY_NAMES[td] + " lúc " + w.start };
+      }
+    }
+    return { open: false, reason: "Ngoài lịch mở khóa", nextHint: describeWindows(wins) };
+  }
+
+  function renderSchedulePanel() {
+    const box = $("schedule-list");
+    const nowEl = $("schedule-now");
+    const d = nowVN();
+    if (nowEl) {
+      nowEl.textContent = "Bây giờ (VN): " + DAY_NAMES[d.getDay()] + " " +
+        String(d.getDate()).padStart(2, "0") + "/" +
+        String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear() +
+        " · " + formatHM(minutesOf(d)) +
+        (UNLOCK_ALWAYS ? " — chế độ mở không giới hạn" : "");
+    }
+    if (!box) return;
+    const classes = Object.keys(studentsByClass || {}).sort(cmpClass);
+    if (!classes.length) {
+      box.innerHTML = '<p class="class-stats-empty">Đang tải danh sách lớp…</p>';
+      return;
+    }
+    let html = '<table class="schedule-table"><thead><tr><th>Lớp</th><th>Trạng thái</th><th>Lịch mở</th></tr></thead><tbody>';
+    classes.forEach(function (lop) {
+      const st = classUnlockStatus(lop, d);
+      const badge = st.open
+        ? '<span class="badge-open">🔓 Đang mở</span>'
+        : '<span class="badge-locked">🔒 Đang khóa</span>';
+      const extra = st.open ? escapeHtml(st.reason) : escapeHtml(st.nextHint || st.reason);
+      html += '<tr><td><b>' + escapeHtml(lop) + '</b></td><td>' + badge + '</td><td style="font-size:.82rem;color:#64748B">' +
+        escapeHtml(describeWindows(windowsForClass(lop))) +
+        (extra ? '<br><span style="color:' + (st.open ? '#15803D' : '#B91C1C') + '">' + extra + '</span>' : '') +
+        '</td></tr>';
+    });
+    html += '</tbody></table>';
+    box.innerHTML = html;
+  }
+
+  function updateLockMessage() {
+    const el = $("lock-msg");
+    if (!el) return;
+    const lop = selClass.value;
+    if (!lop) {
+      el.className = "lock-msg";
+      el.textContent = "";
+      return;
+    }
+    const st = classUnlockStatus(lop);
+    if (st.open) {
+      el.className = "lock-msg show open";
+      el.textContent = "🔓 Lớp " + lop + " đang được mở khóa — " + st.reason;
+    } else {
+      el.className = "lock-msg show";
+      el.textContent = "🔒 Lớp " + lop + " đang khóa. " + (st.nextHint || st.reason) +
+        ". Lịch: " + describeWindows(windowsForClass(lop));
+    }
+  }
+
+  function refreshUnlockUI() {
+    renderSchedulePanel();
+    // Cập nhật nhãn option khóa/mở
+    const d = nowVN();
+    Array.prototype.forEach.call(selClass.options, function (opt) {
+      if (!opt.value) return;
+      const st = classUnlockStatus(opt.value, d);
+      const base = opt.value;
+      opt.textContent = st.open ? base + " — 🔓 mở" : base + " — 🔒 khóa";
+      opt.className = st.open ? "" : "locked-option";
+    });
+    updateLockMessage();
+    // Khóa nút bắt đầu nếu lớp đang khóa
+    if (selClass.value && !classUnlockStatus(selClass.value).open) {
+      btnStart.disabled = true;
+    } else if (selClass.value && selStudent.value) {
+      btnStart.disabled = false;
+    }
+  }
+
+
   function populateClassSelect() {
     const classes = Object.keys(studentsByClass).sort(cmpClass);
     selClass.innerHTML = '<option value="">-- Chọn lớp --</option>';
@@ -1631,16 +1882,19 @@ a { text-decoration: none; color: inherit; }
     selStudent.innerHTML = '<option value="">-- Chọn học sinh --</option>';
     selStudent.disabled = true;
     btnStart.disabled = true;
+    refreshUnlockUI();
   }
 
   selClass.addEventListener("change", () => {
     const lop = selClass.value;
     selStudent.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+    updateLockMessage();
     if (!lop || !studentsByClass[lop]) {
       selStudent.disabled = true;
       btnStart.disabled = true;
       return;
     }
+    const unlocked = classUnlockStatus(lop).open;
     // Hiện ID toàn cục (cột ID trong Excel) + Họ tên
     studentsByClass[lop].forEach(function (item) {
       const opt = document.createElement("option");
@@ -1650,12 +1904,18 @@ a { text-decoration: none; color: inherit; }
       opt.textContent = (id ? (String(id).padStart(2, "0") + ". ") : "") + name;
       selStudent.appendChild(opt);
     });
-    selStudent.disabled = false;
+    selStudent.disabled = !unlocked;
     btnStart.disabled = true;
+    if (!unlocked) {
+      setStatus("Lớp " + lop + " đang khóa theo lịch. Xem bảng lịch mở khóa bên dưới.", "error");
+    } else {
+      setStatus("", "ok");
+    }
   });
 
   selStudent.addEventListener("change", () => {
-    btnStart.disabled = !(selClass.value && selStudent.value);
+    const ok = !!(selClass.value && selStudent.value && classUnlockStatus(selClass.value).open);
+    btnStart.disabled = !ok;
   });
 
   btnStart.addEventListener("click", () => {
@@ -1666,8 +1926,19 @@ a { text-decoration: none; color: inherit; }
     studentClass = selClass.value;
     studentName = selStudent.value;
     if (!studentClass || !studentName) return;
+    const st = classUnlockStatus(studentClass);
+    if (!st.open) {
+      setStatus("🔒 Lớp " + studentClass + " đang khóa. " + (st.nextHint || st.reason), "error");
+      refreshUnlockUI();
+      return;
+    }
     startExam();
   });
+
+  // Làm mới trạng thái mở khóa mỗi phút
+  setInterval(function () {
+    if (screenSelect && screenSelect.style.display !== "none") refreshUnlockUI();
+  }, 60000);
 
   /* ========== HISTORY ========== */
   function getHistory() {
