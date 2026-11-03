@@ -1298,23 +1298,10 @@ option.locked-option {
   const POINT_PER_Q = 0.1;       // MCQ / Short đúng = 0.1
   const POINT_TF_STMT = 0.025;   // TF: mỗi ý đúng = 0.025 (4 ý = 0.1)
 
-  /* ===== LỊCH MỞ KHÓA LỚP (giờ Việt Nam) =====
-     days: 0=CN, 1=Thứ 2, ... 6=Thứ 7
-     Sửa khung giờ / ngày cho từng lớp bên dưới khi cần.
-     UNLOCK_ALWAYS = true → bỏ qua lịch (mở hết).
-  */
-  const UNLOCK_ALWAYS = false;
-  const CLASS_UNLOCK = {
-    "*": [
-      { days: [1, 2, 3, 4, 5, 6], start: "06:30", end: "22:00" }
-    ],
-    // Ví dụ tùy chỉnh từng lớp (bỏ comment khi dùng):
-    // "10C1": [{ days: [1, 3, 5], start: "07:00", end: "11:30" }, { days: [1, 3, 5], start: "13:30", end: "17:00" }],
-    // "10C2": [{ days: [2, 4, 6], start: "07:00", end: "11:30" }, { days: [2, 4, 6], start: "13:30", end: "17:00" }],
-  };
 
   /* ========== STATE ========== */
   let studentsByClass = {};   // { "12A1": [{id, ten}, ...] }
+  let classUnlockMap = { "*": [{ days: [1, 2, 3, 4, 5, 6], start: "06:30", end: "22:00" }] };
   let allQuestions = [];      // full bank
   let examQuestions = [];     // 100 shuffled
   let answers = {};           // { idx: value }
@@ -1548,6 +1535,37 @@ option.locked-option {
       }
     }
 
+
+    // --- LICHTHI (lịch mở khóa lớp) ---
+    classUnlockMap = { "*": [{ days: [1, 2, 3, 4, 5, 6], start: "06:30", end: "22:00" }] };
+    const shLT = findSheet(wb, ["LICHTHI", "Lichthi", "Lịch thi", "LichThi", "Schedule", "LICH_THI"]);
+    if (shLT) {
+      const rows = XLSX.utils.sheet_to_json(shLT, { header: 1, defval: "" });
+      if (rows.length) {
+        const h = rows[0].map(function (c) { return String(c || "").trim().toLowerCase(); });
+        let iLop = h.findIndex(function (x) { return /lớp|lop|class/.test(x); });
+        let iThu = h.findIndex(function (x) { return /thứ|thu|day|ngày|ngay/.test(x); });
+        let iTu = h.findIndex(function (x) { return /từ|tu|start|bắt|bat|giờ bắt|gio bat/.test(x); });
+        let iDen = h.findIndex(function (x) { return /đến|den|end|kết|ket|giờ kết|gio ket/.test(x); });
+        let start = 1;
+        if (iLop < 0) { iLop = 0; iThu = 1; iTu = 2; iDen = 3; start = 0; }
+        const map = {};
+        for (let r = start; r < rows.length; r++) {
+          const lop = String(rows[r][iLop] || "").trim();
+          if (!lop || /^hướng|^huong|^#/.test(lop.toLowerCase())) continue;
+          const thuRaw = String(rows[r][iThu >= 0 ? iThu : 1] || "").trim();
+          const tu = String(rows[r][iTu >= 0 ? iTu : 2] || "06:30").trim() || "06:30";
+          const den = String(rows[r][iDen >= 0 ? iDen : 3] || "22:00").trim() || "22:00";
+          if (!thuRaw) continue;
+          const days = parseThuList(thuRaw);
+          if (!days.length) continue;
+          if (!map[lop]) map[lop] = [];
+          map[lop].push({ days: days, start: tu, end: den });
+        }
+        if (Object.keys(map).length) classUnlockMap = map;
+      }
+    }
+
     // --- CAUHOI ---
     const shCH = findSheet(wb, ["CAUHOI", "CauHoi", "Câu hỏi", "Questions", "cauhoi"]);
     if (shCH) {
@@ -1721,7 +1739,32 @@ option.locked-option {
   }
 
 
-  /* ----- Lịch mở khóa lớp ----- */
+  /* ----- Lịch mở khóa lớp (sheet Excel Lichthi) ----- */
+  /** Thứ trong Excel: 1=CN, 2=T2, … 7=T7 → JS getDay 0=CN … 6=T7 */
+  function parseThuList(raw) {
+    const s = String(raw || "").trim().toLowerCase();
+    if (!s) return [];
+    const parts = s.split(/[,;/|\s]+/).map(function (x) { return x.trim(); }).filter(Boolean);
+    const days = [];
+    parts.forEach(function (p) {
+      let t = p.replace(/^thứ\s*/i, "").replace(/^thu\s*/i, "");
+      if (/^t[0-7]$/i.test(t)) t = t.slice(1);
+      if (t === "cn" || t === "c.n" || t === "chủ nhật" || t === "chu nhat") {
+        if (days.indexOf(0) < 0) days.push(0);
+        return;
+      }
+      let n = parseInt(t, 10);
+      if (!Number.isFinite(n)) return;
+      if (n >= 1 && n <= 7) {
+        // Excel: 1=CN, 2=T2, … 7=T7 → JS getDay: 0=CN … 6=T7
+        n = (n - 1) % 7;
+      }
+      if (n >= 0 && n <= 6 && days.indexOf(n) < 0) days.push(n);
+    });
+    return days;
+  }
+
+
   const DAY_NAMES = ["CN", "T2", "T3", "T4", "T5", "T6", "T7"];
 
   function nowVN() {
@@ -1746,8 +1789,8 @@ option.locked-option {
   }
 
   function windowsForClass(lop) {
-    if (CLASS_UNLOCK[lop] && CLASS_UNLOCK[lop].length) return CLASS_UNLOCK[lop];
-    return CLASS_UNLOCK["*"] || [];
+    if (classUnlockMap[lop] && classUnlockMap[lop].length) return classUnlockMap[lop];
+    return classUnlockMap["*"] || classUnlockMap["ALL"] || [];
   }
 
   function describeWindows(wins) {
@@ -1760,7 +1803,6 @@ option.locked-option {
 
   /** { open, reason, nextHint } */
   function classUnlockStatus(lop, at) {
-    if (UNLOCK_ALWAYS) return { open: true, reason: "Mở không giới hạn lịch", nextHint: "" };
     const d = at || nowVN();
     const day = d.getDay();
     const mins = minutesOf(d);
@@ -1804,8 +1846,7 @@ option.locked-option {
       nowEl.textContent = "Bây giờ (VN): " + DAY_NAMES[d.getDay()] + " " +
         String(d.getDate()).padStart(2, "0") + "/" +
         String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear() +
-        " · " + formatHM(minutesOf(d)) +
-        (UNLOCK_ALWAYS ? " — chế độ mở không giới hạn" : "");
+        " · " + formatHM(minutesOf(d));
     }
     if (!box) return;
     const classes = Object.keys(studentsByClass || {}).sort(cmpClass);
