@@ -361,7 +361,7 @@ window.addEventListener("error", function (ev) {
       <div class="stats-grid">
         <div class="stat-chip total"><span class="n" id="stat-total">…</span><span class="l">Toàn trang</span></div>
         <div class="stat-chip"><span class="n" id="stat-b4">…</span><span class="l">Bài 4</span></div>
-        <div class="stat-chip"><span class="n" id="stat-b11">…</span><span class="l">Bài 11</span></div>
+        <div class="stat-chip"><span class="n" id="stat-b11">…</span><span class="l">HTML intro</span></div>
         <div class="stat-chip"><span class="n" id="stat-b18">…</span><span class="l">Bài 18</span></div>
         <div class="stat-chip"><span class="n" id="stat-b25">…</span><span class="l">Bài 25</span></div>
       </div>
@@ -617,7 +617,7 @@ try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macr
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
-  { id: "b11", code: "B11", title: "Bài 11. Chèn tệp tin", file: "B11CHENTEP_TIN12.xlsx", sub: "Chèn tệp tin · Kết nối tri thức" },
+  { id: "b11", code: "B11", title: "Trang giới thiệu HTML", file: "B11CHENTEP_TIN12.xlsx", sub: "TX3 Thực hành · JSBin · Hạn 20h 21/11/2026" },
   { id: "b18", code: "B18", title: "Bài 18. Tổng hợp HTML", file: "B18HTML_TIN12.xlsx", sub: "Tổng hợp HTML · Kết nối tri thức" },
   { id: "b25", code: "B25", title: "Bài 25. Blog cá nhân", file: "B25BLOG_TIN12.xlsx", sub: "Blog cá nhân · Kết nối tri thức" }
 ];
@@ -1332,6 +1332,29 @@ function exitAdminHint() {
     dataReady = false;
     const cs = document.getElementById("class-select");
     if (cs) { cs.innerHTML = '<option value="">-- Đang tải ' + ex.file + ' --</option>'; cs.disabled = true; }
+    if (ex.id === "b11") {
+      try {
+        var sui11 = document.getElementById("student-ui");
+        if (sui11) sui11.style.display = "none";
+        var htmlEl = document.getElementById("screen-htmlintro");
+        var selEl11 = document.getElementById("screen-select");
+        var blogEl11 = document.getElementById("screen-blog");
+        if (blogEl11) blogEl11.style.display = "none";
+        if (htmlEl) htmlEl.style.display = "block";
+        if (selEl11) selEl11.style.display = "none";
+        Promise.resolve(loadFromUrl(examUrl(ex)))
+          .then(function () {
+            try { if (typeof initHtmlIntroUI === "function") initHtmlIntroUI(); } catch (e1) { console.warn(e1); }
+          })
+          .catch(function (e2) {
+            console.warn(e2);
+            try { if (typeof initHtmlIntroUI === "function") initHtmlIntroUI(); } catch (e3) {}
+          });
+      } catch (eB11) { console.warn(eB11); }
+      renderExamPicker();
+      try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
+      return;
+    }
     if (ex.id === "b25") {
       try {
         const sui = document.getElementById("student-ui");
@@ -1364,6 +1387,11 @@ function exitAdminHint() {
     try { if (typeof window.hitExamView === "function") window.hitExamView(ex.id); } catch (e0) {}
   }
   function clearExamSelection() {
+    try {
+      var hi = document.getElementById("screen-htmlintro");
+      if (hi) hi.style.display = "none";
+    } catch (eHi) {}
+
     currentExam = null;
     try { sessionStorage.removeItem("webh2t_current_exam"); } catch (e) {}
     const cur = document.getElementById("exam-current");
@@ -3319,6 +3347,69 @@ if (_cancelExam) {
 })();
 </script>
 
+
+<div id="screen-htmlintro" style="display:none;min-height:100vh;padding:24px 16px;background:linear-gradient(135deg,#EEF2FF,#F0F9FF)">
+  <div class="blog-card" style="max-width:720px;margin:0 auto 20px;background:#fff;border-radius:16px;padding:24px 22px;box-shadow:0 12px 40px rgba(39,82,214,.12)">
+    <h2 style="margin:0 0 6px;color:#1E3A8A;font-size:1.25rem">NỘP BÀI – TRANG GIỚI THIỆU HTML</h2>
+    <p class="blog-deadline" style="color:#B91C1C;font-weight:700;margin:0 0 12px">TX3 Thực hành · Hạn nộp: <b>20h thứ 7, 21/11/2026</b> · Công bố điểm: 23/11/2026</p>
+    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:12px 14px;font-size:.86rem;line-height:1.55;color:#7F1D1D;margin-bottom:14px">
+      <b>Hướng dẫn nộp:</b><br>
+      1. Thực hành trên <b>jsbin.com</b> — viết HTML/CSS trang giới thiệu bản thân.<br>
+      2. Copy toàn bộ <b>URL</b> trên thanh địa chỉ trình duyệt.<br>
+      3. Chọn lớp + họ tên, dán link JSBin bên dưới rồi <b>Nộp bài</b>.<br>
+      4. Mỗi học sinh chỉ nộp <b>1 lần</b>. Sao chép code lẫn nhau → 0 điểm.
+    </div>
+    <div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:12px 14px;font-size:.84rem;line-height:1.5;margin-bottom:14px;color:#334155">
+      <b>Thang điểm (10đ):</b><br>
+      • Nội dung cơ bản (3đ): ảnh đại diện rõ nét (1,5) · Họ tên, ngày sinh, lớp, địa chỉ (1,5)<br>
+      • Mở rộng (2đ): Sở thích &amp; ước mơ (1) · Thông điệp cho tương lai (1)<br>
+      • Kỹ thuật chống gian lận (5đ):<br>
+      &nbsp;&nbsp;– Bẫy 1 (1đ): dòng 1 HTML có <code>&lt;!-- Bài thi của: HỌ TÊN - Lớp: LỚP --&gt;</code><br>
+      &nbsp;&nbsp;– Bẫy 2 (1đ): <code>&lt;title&gt;</code> = <b>Tên - Lớp</b><br>
+      &nbsp;&nbsp;– Bẫy 3 (1,5đ): <code>&lt;img ... alt="Image [tên]"&gt;</code><br>
+      &nbsp;&nbsp;– Bẫy 4 (1,5đ): màu Họ và tên theo tháng sinh (chẵn = xanh, lẻ = đỏ/cam)
+    </div>
+    <div class="blog-grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div>
+        <label style="font-weight:700;font-size:.85rem">Lớp</label>
+        <select id="htmlintro-class" style="width:100%;padding:10px;border-radius:10px;border:1px solid #CBD5E1;margin-top:4px"><option value="">-- Chọn lớp --</option></select>
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:.85rem">Họ và tên</label>
+        <select id="htmlintro-student" disabled style="width:100%;padding:10px;border-radius:10px;border:1px solid #CBD5E1;margin-top:4px"><option value="">-- Chọn lớp trước --</option></select>
+      </div>
+    </div>
+    <div style="margin-top:14px">
+      <label style="font-weight:700;font-size:.85rem">Link JSBin (URL đầy đủ)</label>
+      <input type="url" id="htmlintro-link" placeholder="https://jsbin.com/xxxxx/edit?html,output" style="width:100%;padding:10px;border-radius:10px;border:1px solid #CBD5E1;margin-top:4px;box-sizing:border-box">
+    </div>
+    <p id="htmlintro-hint" style="text-align:center;color:#B91C1C;font-size:.85rem;min-height:1.2em"></p>
+    <button type="button" class="btn-blog-submit" id="btn-htmlintro-submit" style="display:block;margin:12px auto;padding:12px 36px;border:none;border-radius:10px;background:linear-gradient(135deg,#4F46E5,#2563EB);color:#fff;font-weight:800;font-size:1rem;cursor:pointer">NỘP BÀI</button>
+    <p style="text-align:center;margin:8px 0 0">
+      <button type="button" class="btn-nav-top btn-home" id="btn-htmlintro-back" style="border:none;cursor:pointer">← Đổi bài / Về chọn bài</button>
+    </p>
+  </div>
+  <div class="blog-table-wrap" style="max-width:960px;margin:0 auto;background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(15,23,42,.08)">
+    <h3 style="margin:0 0 10px;color:#1E3A8A">Bảng sản phẩm đã nộp — Trang giới thiệu HTML</h3>
+    <p style="font-size:.82rem;color:#64748B;margin:0 0 8px">Kết quả điểm công bố từ 23/11/2026 · AI/GV chấm theo rubric bẫy kỹ thuật</p>
+    <table class="blog-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
+      <thead>
+        <tr style="background:#EEF2FF">
+          <th style="padding:8px;text-align:left">Thời gian</th>
+          <th style="padding:8px;text-align:left">Lớp</th>
+          <th style="padding:8px;text-align:left">Họ và tên</th>
+          <th style="padding:8px;text-align:left">JSBin</th>
+          <th style="padding:8px;text-align:center">Tổng</th>
+          <th style="padding:8px;text-align:left">Nhận xét</th>
+        </tr>
+      </thead>
+      <tbody id="htmlintro-result-body">
+        <tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
 <div id="screen-blog">
   <div class="blog-card">
     <h2>NỘP SẢN PHẨM WEBSITE – TIN HỌC 12</h2>
@@ -3848,5 +3939,180 @@ function tidyBlogComment_(s) {
 }
 </script>
 
+<script>
+
+/* ===== B11 – Trang giới thiệu HTML (cá nhân, JSBin) ===== */
+window.htmlIntroSubmissions = window.htmlIntroSubmissions || [];
+
+function initHtmlIntroUI() {
+  var classSel = document.getElementById("htmlintro-class");
+  var stuSel = document.getElementById("htmlintro-student");
+  var btn = document.getElementById("btn-htmlintro-submit");
+  var back = document.getElementById("btn-htmlintro-back");
+  if (!classSel) return;
+
+  var classes = Object.keys(studentsByClass || {}).sort();
+  classSel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  classes.forEach(function (lop) {
+    var o = document.createElement("option");
+    o.value = lop;
+    o.textContent = lop + " (" + ((studentsByClass[lop] || []).length) + " HS)";
+    classSel.appendChild(o);
+  });
+  if (stuSel) {
+    stuSel.innerHTML = '<option value="">-- Chọn lớp trước --</option>';
+    stuSel.disabled = true;
+  }
+
+  classSel.onchange = function () {
+    var lop = classSel.value;
+    stuSel.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+    if (!lop || !studentsByClass[lop]) { stuSel.disabled = true; return; }
+    studentsByClass[lop].forEach(function (s) {
+      var name = s.name || s;
+      var o = document.createElement("option");
+      o.value = name;
+      o.textContent = name;
+      stuSel.appendChild(o);
+    });
+    stuSel.disabled = false;
+    checkHtmlIntroDup();
+  };
+  if (stuSel) stuSel.onchange = checkHtmlIntroDup;
+
+  function checkHtmlIntroDup() {
+    var hint = document.getElementById("htmlintro-hint");
+    var lop = classSel.value;
+    var name = stuSel.value;
+    if (!lop || !name) { if (hint) hint.textContent = ""; if (btn) btn.disabled = false; return; }
+    try {
+      var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+      var existed = all.find(function (x) { return x.class === lop && x.name === name && x.link; });
+      if (existed) {
+        if (hint) hint.textContent = "Bạn đã nộp bài rồi (" + (existed.score !== "" && existed.score != null ? "điểm " + existed.score : "chờ chấm") + "). Không nộp lại.";
+        if (btn) btn.disabled = true;
+        var linkInp = document.getElementById("htmlintro-link");
+        if (linkInp && existed.link) linkInp.value = existed.link;
+      } else {
+        if (hint) hint.textContent = "";
+        if (btn) btn.disabled = false;
+      }
+    } catch (e) {}
+  }
+
+  if (btn) {
+    btn.onclick = function () {
+      var lop = classSel.value;
+      var name = stuSel.value;
+      var link = (document.getElementById("htmlintro-link").value || "").trim();
+      if (!lop || !name) { alert("Chọn lớp và họ tên"); return; }
+      if (!/^https?:\/\//i.test(link)) { alert("Link JSBin phải bắt đầu bằng http:// hoặc https://"); return; }
+      try {
+        var all0 = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+        if (all0.find(function (x) { return x.class === lop && x.name === name && x.link; })) {
+          alert("Bạn đã nộp bài rồi. Không thể nộp lại.");
+          return;
+        }
+      } catch (eDup) {}
+      btn.disabled = true;
+      btn.textContent = "Đang nộp...";
+      var timeStr = new Date().toLocaleString("vi-VN");
+      var rec = {
+        time: timeStr,
+        class: lop,
+        name: name,
+        link: link,
+        score: "",
+        note: "Chờ AI/GV chấm theo rubric TX3",
+        at: Date.now(),
+        examId: "b11"
+      };
+      window.htmlIntroSubmissions.unshift(rec);
+      try {
+        var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+        all = all.filter(function (x) { return !(x.class === lop && x.name === name); });
+        all.unshift(rec);
+        localStorage.setItem("webh2t_htmlintro11", JSON.stringify(all.slice(0, 500)));
+      } catch (e) {}
+      try {
+        if (typeof pushScoreToCloud === "function") {
+          pushScoreToCloud({
+            name: name,
+            class: lop,
+            score: "",
+            correct: 0,
+            wrong: 0,
+            skip: 0,
+            elapsed: 0,
+            time: timeStr,
+            pattern: "HTML_INTRO|" + link,
+            maDe: "B11-HTML",
+            examId: "b11",
+            review: [{ type: "link", text: "JSBin", user: link }],
+            partScores: null,
+            hasReview: false,
+            note: "Trang giới thiệu HTML · JSBin · chờ chấm"
+          });
+        }
+      } catch (eC) { console.warn(eC); }
+      renderHtmlIntroTable();
+      btn.textContent = "ĐÃ NỘP";
+      var hint = document.getElementById("htmlintro-hint");
+      if (hint) hint.textContent = "Đã nộp thành công lúc " + timeStr + ". Kết quả điểm từ 23/11/2026.";
+      alert("Đã nộp bài Trang giới thiệu HTML!\nLink: " + link + "\nCông bố điểm: 23/11/2026");
+    };
+  }
+
+  if (back) {
+    back.onclick = function () {
+      var el = document.getElementById("screen-htmlintro");
+      if (el) el.style.display = "none";
+      var sel = document.getElementById("screen-select");
+      if (sel) sel.style.display = "flex";
+      if (typeof clearExamSelection === "function") clearExamSelection();
+      else {
+        var picker = document.getElementById("exam-picker");
+        if (picker) picker.style.display = "grid";
+        currentExam = null;
+      }
+    };
+  }
+
+  renderHtmlIntroTable();
+}
+
+function renderHtmlIntroTable() {
+  var body = document.getElementById("htmlintro-result-body");
+  if (!body) return;
+  var all = [];
+  try { all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]"); } catch (e) {}
+  if (!all.length) {
+    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>';
+    return;
+  }
+  // newest first
+  all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
+  body.innerHTML = all.map(function (r) {
+    var link = r.link ? ('<a href="' + String(r.link).replace(/"/g, "&quot;") + '" target="_blank" rel="noopener">Mở JSBin</a>') : "—";
+    var score = (r.score !== "" && r.score != null) ? r.score : "—";
+    return "<tr>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;white-space:nowrap">' + (r.time || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.class || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.name || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + link + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700;color:#1D4ED8">' + score + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;font-size:.78rem;color:#475569">' + (r.note || "") + "</td>"
+      + "</tr>";
+  }).join("");
+}
+
+// load table when page ready
+try {
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", function () { try { renderHtmlIntroTable(); } catch (e) {} });
+  else renderHtmlIntroTable();
+} catch (e0) {}
+
+</script>
 </body>
 </html>
