@@ -314,6 +314,12 @@
 
 /* HTMLINTRO-EQ */
 #screen-htmlintro .htmlintro-card{max-width:900px!important;width:100%!important;box-sizing:border-box!important}
+
+/* HI-FULLSIZE */
+#screen-htmlintro .cm-wrap{height:min(62vh,560px)!important;min-height:420px}
+#screen-htmlintro .CodeMirror{height:100%!important}
+#screen-htmlintro .hi-preview-box{height:min(62vh,560px)!important;min-height:420px}
+#screen-htmlintro #htmlintro-editor{width:100%;height:100%;min-height:420px;box-sizing:border-box}
 </style>
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -4021,12 +4027,23 @@ try {
 } catch (e0) {}
 
 </script>
-<script>
 
-/* ===== B11 HTML cá nhân – editor + preview (no JSBin) ===== */
+(function bootHtmlIntroWebhook(){
+  try {
+    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) {
+      localStorage.setItem("webh2t_cloud_webhook", HTML_INTRO_WEBHOOK);
+      localStorage.setItem("webh2t_htmlintro_webhook", HTML_INTRO_WEBHOOK);
+    }
+  } catch (e) {}
+})();
+</script>
+
+<script>
+/* B11 HTML editor – fixed syntax */
 window.htmlIntroSubmissions = window.htmlIntroSubmissions || [];
 window.htmlIntroPins = window.htmlIntroPins || {};
 window.htmlIntroEditor = null;
+var HTMLINTRO_DEFAULT = "\x3C!DOCTYPE html>\n\x3Chtml lang=\"vi\">\n\x3Chead>\n  \x3Cmeta charset=\"UTF-8\">\n  \x3Ctitle>Ten em - Lop\x3C/title>\n  \x3Cstyle>\n    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; color: #0f172a; }\n    h1 { color: #2563eb; }\n    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }\n    img { max-width: 160px; border-radius: 12px; }\n  \x3C/style>\n\x3C/head>\n\x3Cbody>\n  \x3C!-- Bai thi cua: [Ho ten em] - Lop: [Lop em] -->\n  \x3Cdiv class=\"card\">\n    \x3Ch1>GIOI THIEU BAN THAN\x3C/h1>\n    \x3Cimg src=\"\" alt=\"Image [Ten em]\" width=\"160\" height=\"160\">\n    \x3Cp>\x3Cb>Ho va ten:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Ngay sinh:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Lop:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Dia chi:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>So thich:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Uoc mo:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Thong diep cho tuong lai:\x3C/b> ...\x3C/p>\n  \x3C/div>\n\x3C/body>\n\x3C/html>";
 
 function normalizePin_(v) { return String(v == null ? "" : v).trim(); }
 
@@ -4060,17 +4077,22 @@ function runHtmlIntroPreview() {
   var code = getHtmlIntroCode();
   var iframe = document.getElementById("htmlintro-preview");
   if (!iframe) return;
-  var doc = iframe.contentDocument || iframe.contentWindow.document;
-  doc.open();
-  doc.write(code || "<p>Chưa có nội dung</p>");
-  doc.close();
+  try {
+    var doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
+    if (!doc) return;
+    doc.open();
+    doc.write(code || "<p style='padding:12px;color:#64748b'>Chua co noi dung</p>");
+    doc.close();
+  } catch (e) {
+    console.warn("preview", e);
+  }
 }
 
 function ensureHtmlIntroEditor() {
   var ta = document.getElementById("htmlintro-editor");
   if (!ta) return;
   if (window.htmlIntroEditor) {
-    window.htmlIntroEditor.refresh();
+    try { window.htmlIntroEditor.refresh(); } catch (e) {}
     return;
   }
   if (typeof CodeMirror !== "undefined") {
@@ -4082,27 +4104,15 @@ function ensureHtmlIntroEditor() {
       tabSize: 2,
       indentUnit: 2
     });
-    window.htmlIntroEditor.on("change", function () {
-      /* live optional - only on CHAY THU to avoid lag */
-    });
   } else {
     ta.style.width = "100%";
-    ta.style.height = "400px";
-    ta.style.fontFamily = "monospace";
+    ta.style.height = "100%";
+    ta.style.minHeight = "420px";
+    ta.style.fontFamily = "ui-monospace, Menlo, Consolas, monospace";
+    ta.style.fontSize = "13.5px";
+    ta.style.boxSizing = "border-box";
   }
 }
-
-var HTMLINTRO_DEFAULT = "<!DOCTYPE html>\n<html lang=\"vi\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>T\u00ean em - L\u1edbp</title>\n  <style>\n    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; color: #0f172a; }\n    h1 { /* \u0111\u1ed5i m\u00e0u theo th\u00e1ng sinh: ch\u1eb5n=xanh, l\u1ebb=\u0111\u1ecf/cam */ color: #2563eb; }\n    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }\n    img { max-width: 160px; border-radius: 12px; }\n  </style>\n</head>\n<body>\n  <!-- B\u00e0i thi c\u1ee7a: [H\u1ecd t\u00ean em] - L\u1edbp: [L\u1edbp em] -->\n  <div class=\"card\">\n    <h1>GI\u1edaI THI\u1ec6U B\u1ea2N TH\u00c2N</h1>\n    <img src=\"\" alt=\"Image [T\u00ean em]\" width=\"160\" height=\"160\">\n    <p><b>H\u1ecd v\u00e0 t\u00ean:</b> ...</p>\n    <p><b>Ng\u00e0y sinh:</b> ...</p>\n    <p><b>L\u1edbp:</b> ...</p>\n    <p><b>\u0110\u1ecba ch\u1ec9:</b> ...</p>\n    <p><b>S\u1edf th\u00edch:</b> ...</p>\n    <p><b>\u01af\u1edbc m\u01a1:</b> ...</p>\n    <p><b>Th\u00f4ng \u0111i\u1ec7p cho t\u01b0\u01a1ng lai:</b> ...</p>\n  </div>\n<script>
-(function bootHtmlIntroWebhook(){
-  try {
-    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) {
-      localStorage.setItem("webh2t_cloud_webhook", HTML_INTRO_WEBHOOK);
-      localStorage.setItem("webh2t_htmlintro_webhook", HTML_INTRO_WEBHOOK);
-    }
-  } catch (e) {}
-})();
-</script>
-</body>\n</html>\n";
 
 function initHtmlIntroUI() {
   buildHtmlIntroPinsFromStudents();
@@ -4121,10 +4131,10 @@ function initHtmlIntroUI() {
   }
   setTimeout(function () {
     try { ensureHtmlIntroEditor(); runHtmlIntroPreview(); } catch (e) {}
-  }, 80);
+  }, 120);
 
   var classes = Object.keys(studentsByClass || {}).sort();
-  classSel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  classSel.innerHTML = '<option value="">-- Chon lop --</option>';
   classes.forEach(function (lop) {
     var o = document.createElement("option");
     o.value = lop;
@@ -4132,17 +4142,18 @@ function initHtmlIntroUI() {
     classSel.appendChild(o);
   });
   if (stuSel) {
-    stuSel.innerHTML = '<option value="">-- Chọn lớp trước --</option>';
+    stuSel.innerHTML = '<option value="">-- Chon lop truoc --</option>';
     stuSel.disabled = true;
   }
-  if (pinInp) pinInp.value = "";
+  if (pinInp) { pinInp.value = ""; pinInp.readOnly = false; }
 
   classSel.onchange = function () {
     var lop = classSel.value;
-    stuSel.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+    stuSel.innerHTML = '<option value="">-- Chon hoc sinh --</option>';
     if (!lop || !studentsByClass[lop]) { stuSel.disabled = true; return; }
     studentsByClass[lop].forEach(function (s) {
-      var name = s.name || s;
+      var name = typeof s === "string" ? s : (s.name || "");
+      if (!name) return;
       var o = document.createElement("option");
       o.value = name;
       o.textContent = name;
@@ -4160,7 +4171,7 @@ function initHtmlIntroUI() {
     if (pinInp) pinInp.readOnly = !!locked;
     if (btn) {
       btn.disabled = !!locked;
-      btn.textContent = locked ? "ĐÃ NỘP" : "NỘP BÀI";
+      btn.textContent = locked ? "DA NOP" : "NOP BAI";
     }
   }
 
@@ -4171,9 +4182,9 @@ function initHtmlIntroUI() {
     if (!lop || !name) { if (hint) hint.textContent = ""; lockEditor(false); return; }
     try {
       var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
-      var existed = all.find(function (x) { return x.class === lop && x.name === name && (x.html || x.link); });
+      var existed = all.find(function (x) { return x.class === lop && x.name === name && x.html; });
       if (existed) {
-        if (hint) hint.textContent = "Bạn đã nộp bài rồi (" + (existed.score !== "" && existed.score != null ? "điểm " + existed.score : "chờ chấm") + "). Không sửa / nộp lại.";
+        if (hint) hint.textContent = "Ban da nop bai roi. Khong sua / nop lai.";
         if (existed.html) setHtmlIntroCode(existed.html);
         runHtmlIntroPreview();
         lockEditor(true);
@@ -4194,7 +4205,7 @@ function initHtmlIntroUI() {
     a.download = (name.replace(/\s+/g, "_") || "gioi_thieu") + ".html";
     document.body.appendChild(a);
     a.click();
-    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
   };
 
   if (btn) {
@@ -4203,73 +4214,56 @@ function initHtmlIntroUI() {
       var name = stuSel.value;
       var pin = normalizePin_(pinInp && pinInp.value);
       var code = getHtmlIntroCode();
-      if (!lop || !name) { alert("Chọn lớp và họ tên"); return; }
-      if (!pin) { alert("Nhập Mã PIN"); return; }
+      if (!lop || !name) { alert("Chon lop va ho ten"); return; }
+      if (!pin) { alert("Nhap Ma PIN"); return; }
       var expect = window.htmlIntroPins[lop + "|" + name];
       if (expect !== undefined && expect !== "" && String(expect) !== String(pin)) {
-        alert("Mã PIN không khớp với học sinh đã chọn.");
+        alert("Ma PIN khong khop.");
         return;
       }
       if (!code || code.replace(/\s/g, "").length < 80) {
-        alert("Bài làm quá ngắn. Hãy hoàn thiện HTML trước khi nộp.");
+        alert("Bai lam qua ngan.");
         return;
       }
       try {
         var all0 = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
         if (all0.find(function (x) { return x.class === lop && x.name === name && x.html; })) {
-          alert("Bạn đã nộp bài rồi. Không thể nộp lại.");
+          alert("Ban da nop bai roi.");
           return;
         }
       } catch (eDup) {}
 
       runHtmlIntroPreview();
       btn.disabled = true;
-      btn.textContent = "Đang nộp...";
+      btn.textContent = "Dang nop...";
 
       var timeStr = new Date().toLocaleString("vi-VN");
       var plag = detectHtmlPlagiarism_(code, lop, name);
       var rec = {
-        time: timeStr,
-        class: lop,
-        name: name,
-        pin: pin,
-        link: "",
-        html: code,
-        css: "",
-        codeHash: simpleHash_(code),
+        time: timeStr, class: lop, name: name, pin: pin, link: "",
+        html: code, css: "", codeHash: simpleHash_(code),
         score: plag.flag ? 0 : "",
-        note: plag.flag ? ("⚠ Trùng mã với " + plag.with + " → 0 điểm") : "Chờ AI/GV chấm theo Rubric TX3",
-        plagFlag: plag.flag,
-        plagWith: plag.with || "",
-        at: Date.now(),
-        examId: "b11"
+        note: plag.flag ? ("Trung ma voi " + plag.with + " -> 0 diem") : "Cho AI/GV cham theo Rubric TX3",
+        plagFlag: plag.flag, plagWith: plag.with || "", at: Date.now(), examId: "b11"
       };
-      window.htmlIntroSubmissions.unshift(rec);
       try {
         var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
         all = all.filter(function (x) { return !(x.class === lop && x.name === name); });
-        // khong luu html qua dai trong localStorage neu can — cat 200kb
         var store = Object.assign({}, rec);
         if (store.html && store.html.length > 180000) store.html = store.html.slice(0, 180000);
         all.unshift(store);
         localStorage.setItem("webh2t_htmlintro11", JSON.stringify(all.slice(0, 300)));
-      } catch (e) { console.warn(e); }
+      } catch (e) {}
 
       try {
         if (typeof pushScoreToCloud === "function") {
           pushScoreToCloud({
-            name: name,
-            class: lop,
-            score: rec.score === "" ? "" : rec.score,
-            correct: 0, wrong: 0, skip: 0, elapsed: 0,
-            time: timeStr,
+            name: name, class: lop, score: rec.score === "" ? "" : rec.score,
+            correct: 0, wrong: 0, skip: 0, elapsed: 0, time: timeStr,
             pattern: "HTML_INTRO|SOURCE" + (plag.flag ? "|PLAG:" + plag.with : "") + "|PIN:" + pin,
-            maDe: "B11-HTML",
-            examId: "b11",
+            maDe: "B11-HTML", examId: "b11",
             review: [{ type: "html", text: code.slice(0, 8000) }],
-            note: rec.note,
-            htmlSnapshot: code.slice(0, 90000),
-            cssSnapshot: ""
+            note: rec.note, htmlSnapshot: code.slice(0, 90000), cssSnapshot: ""
           });
         }
       } catch (eC) {}
@@ -4280,8 +4274,8 @@ function initHtmlIntroUI() {
       renderHtmlIntroTable();
       lockEditor(true);
       var hint = document.getElementById("htmlintro-hint");
-      if (hint) hint.textContent = plag.flag ? rec.note : ("Đã nộp " + timeStr + ". Mã nguồn đã lưu độc lập. Không thể sửa.");
-      alert(plag.flag ? ("Phát hiện trùng mã với " + plag.with + ". Điểm 0.") : "Nộp bài thành công!\nMã HTML đã lưu độc lập trên hệ thống.\nKhông còn dùng JSBin / không sửa sau nộp.");
+      if (hint) hint.textContent = plag.flag ? rec.note : ("Da nop " + timeStr + ". Ma nguon da luu. Khong the sua.");
+      alert(plag.flag ? ("Phat hien trung ma. Diem 0.") : "Nop bai thanh cong!");
     };
   }
 
@@ -4309,7 +4303,7 @@ function simpleHash_(s) {
   return String(h);
 }
 function normalizeCode_(s) {
-  return String(s || "").toLowerCase().replace(/\s+/g, " ").replace(/<!--.*?-->/g, "").trim();
+  return String(s || "").toLowerCase().replace(/\s+/g, " ").replace(/<!--[\s\S]*?-->/g, "").trim();
 }
 function codeSimilarity_(a, b) {
   a = normalizeCode_(a); b = normalizeCode_(b);
@@ -4357,7 +4351,7 @@ function requestHtmlIntroGrade_(rec) {
       class: rec.class,
       pin: rec.pin,
       html: (rec.html || "").slice(0, 90000),
-      rubric: "TX3: anh 1.5; thong tin 1.5; so thich 1; thong diep 1; bay1 comment 1; bay2 title 1; bay3 alt 1.5; bay4 mau thang sinh 1.5"
+      rubric: "TX3 HTML"
     })
   }).catch(function () {});
 }
@@ -4367,7 +4361,7 @@ function renderHtmlIntroTable() {
   var all = [];
   try { all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]"); } catch (e) {}
   if (!all.length) {
-    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chua co du lieu</td></tr>';
     return;
   }
   all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
@@ -4394,7 +4388,7 @@ function renderHtmlIntroTable() {
       if (sheet && typeof XLSX !== "undefined") {
         var rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
         rows.forEach(function (r) {
-          var lop = r["Lớp"] || r["Lop"] || "";
+          var lop = r["Lớp"] || r["Lop"] || r["lop"] || "";
           var name = r["Họ và tên"] || r["Ho va ten"] || r["Họ tên"] || r["Name"] || "";
           var pin = r["Mã PIN"] || r["Ma PIN"] || r["PIN"] || r["Mã"] || "";
           if (lop && name) {
@@ -4416,17 +4410,7 @@ try {
     document.addEventListener("DOMContentLoaded", function () { try { renderHtmlIntroTable(); } catch (e) {} });
   else renderHtmlIntroTable();
 } catch (e0) {}
+</script>
 
-</script>
-<script>
-(function bootHtmlIntroWebhook(){
-  try {
-    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) {
-      localStorage.setItem("webh2t_cloud_webhook", HTML_INTRO_WEBHOOK);
-      localStorage.setItem("webh2t_htmlintro_webhook", HTML_INTRO_WEBHOOK);
-    }
-  } catch (e) {}
-})();
-</script>
 </body>
 </html>
