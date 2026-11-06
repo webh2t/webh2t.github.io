@@ -645,9 +645,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1329,7 +1329,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2474,7 +2474,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2491,7 +2491,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2571,7 +2571,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3465,7 +3465,7 @@ if (_cancelExam) {
 
   <div style="max-width:1100px;margin:18px auto 0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 8px 28px rgba(15,23,42,.08);box-sizing:border-box">
     <h3 style="margin:0 0 8px;color:#1E3A8A;font-size:1rem">Bảng sản phẩm đã nộp</h3>
-    <p style="margin:0 0 8px;font-size:.8rem;color:#64748B">Mỗi bài = một bản mã nguồn độc lập · Hàng đỏ = nghi sao chép · Điểm/nhận xét AI theo Rubric TX3</p>
+    
     <div style="overflow:auto">
       <table style="width:100%;border-collapse:collapse;font-size:.8rem">
         <thead><tr style="background:#EEF2FF">
@@ -3712,7 +3712,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec";
+    WH = "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4069,7 +4069,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4374,16 +4374,35 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   var msg = /th[oô]ng\s*[đd]i[eệ]p/i.test(src) && /th[oô]ng\s*[đd]i[eệ]p[^A-Za-zÀ-ỹ]{0,20}[A-Za-zÀ-ỹ]{3,}/i.test(plain);
   add("Thong diep", 1.0, msg ? 1.0 : 0, msg ? "Co" : "Thieu");
 
-  var cmt = /<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:/i.test(src);
-  add("Bay 1 comment", 1.0, cmt ? 1.0 : 0, cmt ? "Co" : "Thieu comment");
+  var cmtM = src.match(/<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:([^>]*)-->/i);
+  var cmtPts = 0, cmtW = "Thieu comment";
+  if (cmtM) {
+    var cmt = String(cmtM[1]||"");
+    if (/\[|Ho ten|Họ tên|Lop em|Lớp em/i.test(cmt)) { cmtPts = 0; cmtW = "Comment placeholder"; }
+    else if (name && cmt.toLowerCase().indexOf(String(name).toLowerCase().split(/\s+/).pop())>=0) { cmtPts = 1; cmtW = "OK"; }
+    else { cmtPts = 0.3; cmtW = "Comment chua khop ten"; }
+  }
+  add("Bay 1 comment", 1.0, cmtPts, cmtW);
 
   var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-  var tOk = tm && /-|–/.test(tm[1]) && String(tm[1]).trim().length > 3;
-  add("Bay 2 title", 1.0, tOk ? 1.0 : (tm ? 0.3 : 0), tOk ? "Title dang Ten - Lop" : "Title chua du");
+  var tOk = false, tW = "Thieu title";
+  if (tm) {
+    var tt = String(tm[1]||"").trim();
+    if (/ten em|tên em|\[/i.test(tt)) { tOk = false; tW = "Title placeholder"; }
+    else if (tt.length > 3 && /-|–/.test(tt)) { tOk = true; tW = "OK"; }
+    else { tW = "Title chua dang Ten - Lop"; }
+  }
+  add("Bay 2 title", 1.0, tOk ? 1.0 : 0, tW);
 
   var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
-  var altOk = altM && /^image\b/i.test(String(altM[1] || "").trim());
-  add("Bay 3 alt", 1.5, altOk ? 1.5 : (altM ? 0.4 : 0), altOk ? "alt Image ..." : "alt chua dung");
+  var altOk = false, aW = "Thieu alt";
+  if (altM) {
+    var al = String(altM[1]||"").trim();
+    if (/\[|Ten em|Tên em/i.test(al)) { aW = "alt placeholder"; }
+    else if (/^image\b/i.test(al) && al.length > 6) { altOk = true; aW = "OK"; }
+    else { aW = "alt chua dung dang"; }
+  }
+  add("Bay 3 alt", 1.5, altOk ? 1.5 : 0, aW);
 
   var color = /color\s*:\s*(#(?:[0-9a-f]{3}|[0-9a-f]{6})|rgb|blue|green|red|orange)/i.test(src);
   add("Bay 4 mau", 1.5, color ? 1.0 : 0, color ? "Co mau (GV doi chieu thang sinh)" : "Thieu mau");
@@ -4432,8 +4451,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbyXixc5Oy35HHPCTkKtJzM0oIJN-W96U-77AN-PjzHJyWiUliTrBLPJWKBlq8A_nhvy/exec"; }
 }
 
 function requestHtmlIntroGrade_(rec) {
