@@ -818,16 +818,42 @@ btnStart.addEventListener("click", startExam);
 
 function parseWorkbook(wb) {
   studentsByClass = {};
-  if (wb.Sheets["HocSinh"]) {
-    XLSX.utils.sheet_to_json(wb.Sheets["HocSinh"], { header: 1 }).forEach((row, idx) => {
-      if (idx === 0 && /lớp|lop|họ|tên/i.test(String(row[0] || ""))) return;
-      const lop = String(row[0] || "").trim();
-      const ten = String(row[1] || "").trim();
-      const diem = row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "" ? String(row[2]).trim() : "";
+  if (wb.Sheets["HocSinh"] || wb.Sheets["Hocsinh"]) {
+    const hsSheet = wb.Sheets["HocSinh"] || wb.Sheets["Hocsinh"];
+    const hsRows = XLSX.utils.sheet_to_json(hsSheet, { header: 1, defval: "" });
+    // Nhận diện cột theo header: hỗ trợ
+    //  (A) Lớp | Họ tên | Điểm/Nhóm
+    //  (B) Mã PIN | Lớp | Họ và tên   ← gioithieu_12.xlsx
+    let iPin = -1, iLop = 0, iTen = 1, iExtra = 2;
+    if (hsRows.length) {
+      const h0 = hsRows[0].map(function (h) {
+        return String(h || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
+      });
+      h0.forEach(function (h, i) {
+        if (h.indexOf("pin") >= 0 || h === "ma" || h.indexOf("ma pin") >= 0 || h.indexOf("ma so") >= 0) iPin = i;
+        if (h === "lop" || h.indexOf("lop") === 0) iLop = i;
+        if (h.indexOf("ho") >= 0 && h.indexOf("ten") >= 0) iTen = i;
+        else if (h === "ten" || h === "ho ten" || h === "name") iTen = i;
+      });
+      // Nếu cột 0 là PIN / số thứ tự và cột 1 giống lớp (12A…) → layout B
+      if (iPin < 0 && h0[0] && (h0[0].indexOf("pin") >= 0 || h0[0].indexOf("ma") >= 0)) iPin = 0;
+      if (iPin === 0 && iLop === 0) iLop = 1;
+      if (iPin === 0 && iTen === 1) iTen = 2;
+    }
+    hsRows.forEach(function (row, idx) {
+      if (idx === 0) {
+        const a = String(row[0] || "");
+        const b = String(row[1] || "");
+        if (/lớp|lop|pin|mã|ma |họ|tên|ten/i.test(a + " " + b)) return;
+      }
+      const lop = String(row[iLop] != null ? row[iLop] : "").trim();
+      const ten = String(row[iTen] != null ? row[iTen] : "").trim();
+      const pin = iPin >= 0 ? String(row[iPin] != null ? row[iPin] : "").trim() : "";
       if (!ten || !lop) return;
+      // bỏ dòng header lọt lưới
+      if (/^lớp$|^lop$/i.test(lop) || /^họ/i.test(ten)) return;
       if (!studentsByClass[lop]) studentsByClass[lop] = [];
-      const nhom = row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "" ? String(row[2]).trim() : "";
-      studentsByClass[lop].push({ name: ten, score: diem, group: nhom });
+      studentsByClass[lop].push({ name: ten, score: "", group: "", pin: pin });
     });
   }
   questionBank = { part1: [], part2: [], part3: [] };
