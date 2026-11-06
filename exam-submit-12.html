@@ -326,6 +326,29 @@
     page_location: window.location.href
   });
 </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/material-darker.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/htmlmixed/htmlmixed.min.js"></script>
+  <style>
+    #screen-htmlintro .cm-wrap{border:1px solid #1e293b;border-radius:12px;overflow:hidden;height:420px}
+    #screen-htmlintro .CodeMirror{height:100%;font-size:13.5px;font-family:ui-monospace,Menlo,Consolas,monospace}
+    #screen-htmlintro .hi-split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    @media(max-width:900px){#screen-htmlintro .hi-split{grid-template-columns:1fr}}
+    #screen-htmlintro .hi-preview-box{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;height:420px;display:flex;flex-direction:column}
+    #screen-htmlintro .hi-preview-hd{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#fff;border-bottom:1px solid #e2e8f0;font-size:.8rem;font-weight:700;color:#64748b}
+    #screen-htmlintro #htmlintro-preview{flex:1;width:100%;border:0;background:#fff}
+    #screen-htmlintro .hi-actions{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:14px}
+    #screen-htmlintro .hi-actions button{padding:10px 20px;border:none;border-radius:999px;font-weight:800;cursor:pointer;font-size:.9rem}
+    #screen-htmlintro .btn-run{background:#DBEAFE;color:#1D4ED8}
+    #screen-htmlintro .btn-save{background:#D1FAE5;color:#047857}
+    #screen-htmlintro .btn-submit-hi{background:#FED7AA;color:#9A3412}
+    #screen-htmlintro .hi-checklist{background:#0f172a;color:#e2e8f0;border-radius:12px;padding:12px 14px;font-size:.82rem;line-height:1.55;margin-bottom:12px}
+    #screen-htmlintro .hi-checklist b{color:#93c5fd}
+  </style>
 </head>
 <body>
 <div id="webh2t-boot-error" style="display:none;position:fixed;left:12px;right:12px;top:12px;z-index:99999;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;padding:12px 14px;border-radius:10px;font:600 14px/1.4 system-ui">Lỗi tải trang. Bấm Ctrl+Shift+R hoặc xóa dữ liệu site.</div>
@@ -618,6 +641,8 @@ const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
 try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxfZAlhbbO3URevg56UbmvdktV0cHyUHEWx9EApWBRHz2snM-ARbJXfZtP7EgopqM0T/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec";
+const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
   { id: "b11", code: "B11", title: "Trang giới thiệu HTML", file: "gioithieu_12.xlsx", sub: "TX3 Thực hành · JSBin · Hạn 20h 21/11/2026" },
@@ -3352,68 +3377,80 @@ if (_cancelExam) {
 
 
 
-<div id="screen-htmlintro" style="display:none;min-height:100vh;padding:24px 16px;background:linear-gradient(135deg,#EEF2FF,#F0F9FF)">
-  <div style="max-width:900px;margin:0 auto 14px;text-align:left">
-    <a href="https://webh2t.github.io/" class="btn-nav-top btn-home" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #C7D2FE;color:#1E3A8A;font-weight:700;text-decoration:none">🏠 Trang chủ</a>
+
+<div id="screen-htmlintro" style="display:none;min-height:100vh;padding:20px 14px 40px;background:linear-gradient(135deg,#EEF2FF,#F0F9FF)">
+  <div style="max-width:1100px;margin:0 auto 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+    <a href="https://webh2t.github.io/" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #C7D2FE;color:#1E3A8A;font-weight:700;text-decoration:none">🏠 Trang chủ</a>
+    <button type="button" id="btn-htmlintro-back" style="padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #E2E8F0;color:#475569;font-weight:700;cursor:pointer">← Đổi bài</button>
   </div>
-  <div class="blog-card htmlintro-card" style="max-width:900px;width:100%;margin:0 auto 16px;background:#fff;border-radius:16px;padding:24px 22px;box-shadow:0 12px 40px rgba(39,82,214,.12);box-sizing:border-box">
-    <h2 style="margin:0 0 6px;color:#1E3A8A;font-size:1.25rem;text-align:center">NỘP BÀI – TRANG GIỚI THIỆU HTML CÁ NHÂN</h2>
-    <p class="blog-deadline" style="color:#B91C1C;font-weight:700;margin:0 0 12px;text-align:center">TX3 Thực hành · Hạn nộp: <b>20h thứ 7, 21/11/2026</b> · Công bố điểm: 23/11/2026</p>
-    <div style="background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:12px 14px;font-size:.86rem;line-height:1.55;color:#7F1D1D;margin-bottom:14px">
-      <b>Hướng dẫn nộp:</b><br>
-      1. Thực hành trên <b>jsbin.com</b> — viết HTML/CSS trang giới thiệu bản thân.<br>
-      2. Copy toàn bộ <b>URL</b> trên thanh địa chỉ trình duyệt.<br>
-      3. Chọn lớp + họ tên, nhập <b>Mã PIN</b>, dán link JSBin rồi <b>Nộp bài</b>.<br>
-      4. Mỗi học sinh chỉ nộp <b>1 lần</b>. Hệ thống lưu mã HTML/CSS lúc nộp; không sửa sau khi nộp. Sao chép code lẫn nhau → 0 điểm.
-    </div>
-    <div class="blog-grid2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+
+  <div style="max-width:1100px;margin:0 auto 14px;background:#fff;border-radius:16px;padding:18px 18px 14px;box-shadow:0 10px 32px rgba(39,82,214,.1);box-sizing:border-box">
+    <h2 style="margin:0 0 4px;color:#1E3A8A;font-size:1.2rem;text-align:center">NỘP BÀI – TRANG GIỚI THIỆU HTML CÁ NHÂN</h2>
+    <p style="margin:0 0 12px;text-align:center;color:#B91C1C;font-weight:700;font-size:.9rem">TX3 · Hạn nộp 20h thứ 7 21/11/2026 · Công bố điểm 23/11/2026 · Mỗi HS 1 lần · Lưu mã nguồn độc lập</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr 120px;gap:10px">
       <div>
-        <label style="font-weight:700;font-size:.85rem">Lớp</label>
-        <select id="htmlintro-class" style="width:100%;padding:10px;border-radius:10px;border:1px solid #CBD5E1;margin-top:4px;box-sizing:border-box"><option value="">-- Chọn lớp --</option></select>
+        <label style="font-weight:700;font-size:.82rem">Lớp</label>
+        <select id="htmlintro-class" style="width:100%;padding:9px;border-radius:10px;border:1px solid #CBD5E1;margin-top:3px;box-sizing:border-box"><option value="">-- Chọn lớp --</option></select>
       </div>
       <div>
-        <label style="font-weight:700;font-size:.85rem">Họ và tên</label>
-        <select id="htmlintro-student" disabled style="width:100%;padding:10px;border-radius:10px;border:1px solid #CBD5E1;margin-top:4px;box-sizing:border-box"><option value="">-- Chọn lớp trước --</option></select>
+        <label style="font-weight:700;font-size:.82rem">Họ và tên</label>
+        <select id="htmlintro-student" disabled style="width:100%;padding:9px;border-radius:10px;border:1px solid #CBD5E1;margin-top:3px;box-sizing:border-box"><option value="">-- Chọn lớp trước --</option></select>
+      </div>
+      <div>
+        <label style="font-weight:700;font-size:.82rem">Mã PIN</label>
+        <input id="htmlintro-pin" type="text" inputmode="numeric" placeholder="PIN" style="width:100%;padding:9px;border-radius:10px;border:1px solid #CBD5E1;margin-top:3px;box-sizing:border-box;text-align:center;font-weight:800">
       </div>
     </div>
-    <div style="margin-top:12px;display:grid;grid-template-columns:140px 1fr;gap:12px">
-      <div>
-        <label style="font-weight:700;font-size:.85rem">Mã PIN</label>
-        <input type="text" id="htmlintro-pin" inputmode="numeric" placeholder="PIN" style="width:100%;padding:10px;border-radius:10px;border:1px solid #CBD5E1;margin-top:4px;box-sizing:border-box;font-weight:700;text-align:center">
-      </div>
-      <div>
-        <label style="font-weight:700;font-size:.85rem">Link JSBin (URL đầy đủ)</label>
-        <input type="url" id="htmlintro-link" placeholder="https://jsbin.com/xxxxx/edit?html,output" style="width:100%;padding:10px;border-radius:10px;border:1px solid #CBD5E1;margin-top:4px;box-sizing:border-box">
-      </div>
-    </div>
-    <p id="htmlintro-hint" style="text-align:center;color:#B91C1C;font-size:.85rem;min-height:1.2em;margin:10px 0 0"></p>
-    <button type="button" class="btn-blog-submit" id="btn-htmlintro-submit" style="display:block;margin:14px auto 8px;padding:12px 36px;border:none;border-radius:10px;background:linear-gradient(135deg,#4F46E5,#2563EB);color:#fff;font-weight:800;font-size:1rem;cursor:pointer">NỘP BÀI</button>
-    <p style="text-align:center;margin:8px 0 0">
-      <button type="button" class="btn-nav-top btn-home" id="btn-htmlintro-back" style="border:none;cursor:pointer">← Đổi bài / Về chọn bài</button>
-    </p>
+    <p id="htmlintro-hint" style="text-align:center;color:#B91C1C;font-size:.85rem;min-height:1.2em;margin:8px 0 0"></p>
   </div>
-  <div class="blog-table-wrap htmlintro-card" style="max-width:900px;width:100%;margin:0 auto;background:#fff;border-radius:16px;padding:18px;box-shadow:0 8px 28px rgba(15,23,42,.08);box-sizing:border-box">
-    <h3 style="margin:0 0 10px;color:#1E3A8A">Bảng sản phẩm đã nộp — Trang giới thiệu HTML cá nhân</h3>
-    <p style="font-size:.82rem;color:#64748B;margin:0 0 8px">Điểm &amp; nhận xét AI theo Rubric TX3 · Công bố từ 23/11/2026 · Cờ đỏ = nghi sao chép mã nguồn</p>
+
+  <div style="max-width:1100px;margin:0 auto;box-sizing:border-box">
+    <div class="hi-checklist">
+      <b>HTML – yêu cầu bắt buộc</b><br>
+      1. <code>&lt;!-- Bài thi của: [Họ tên em] - Lớp: [Lớp em] --&gt;</code><br>
+      2. Thẻ tiêu đề: <code>&lt;title&gt;Tên em - Lớp&lt;/title&gt;</code><br>
+      3. Ảnh đại diện có <code>alt="Image [Tên em]"</code><br>
+      4. Màu chữ/nền «Họ và tên» theo tháng sinh (chẵn = xanh, lẻ = đỏ/cam)
+    </div>
+    <div class="hi-split">
+      <div>
+        <div style="font-size:.8rem;font-weight:800;color:#334155;margin-bottom:6px">HTML / CSS — soạn thảo</div>
+        <div class="cm-wrap"><textarea id="htmlintro-editor"></textarea></div>
+      </div>
+      <div>
+        <div class="hi-preview-box">
+          <div class="hi-preview-hd"><span>LIVE PREVIEW</span><span style="color:#16A34A">Xem trực tiếp</span></div>
+          <iframe id="htmlintro-preview" sandbox="allow-scripts allow-same-origin" title="preview"></iframe>
+        </div>
+      </div>
+    </div>
+    <div class="hi-actions">
+      <button type="button" class="btn-run" id="btn-htmlintro-run">CHẠY THỬ</button>
+      <button type="button" class="btn-save" id="btn-htmlintro-save">LƯU BÀI</button>
+      <button type="button" class="btn-submit-hi" id="btn-htmlintro-submit">NỘP BÀI</button>
+    </div>
+  </div>
+
+  <div style="max-width:1100px;margin:18px auto 0;background:#fff;border-radius:16px;padding:16px;box-shadow:0 8px 28px rgba(15,23,42,.08);box-sizing:border-box">
+    <h3 style="margin:0 0 8px;color:#1E3A8A;font-size:1rem">Bảng sản phẩm đã nộp</h3>
+    <p style="margin:0 0 8px;font-size:.8rem;color:#64748B">Mỗi bài = một bản mã nguồn độc lập · Hàng đỏ = nghi sao chép · Điểm/nhận xét AI theo Rubric TX3</p>
     <div style="overflow:auto">
-    <table class="blog-table" style="width:100%;border-collapse:collapse;font-size:.82rem">
-      <thead>
-        <tr style="background:#EEF2FF">
+      <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+        <thead><tr style="background:#EEF2FF">
           <th style="padding:8px;text-align:left">Thời gian</th>
           <th style="padding:8px;text-align:left">Lớp</th>
           <th style="padding:8px;text-align:left">Họ và tên</th>
-          <th style="padding:8px;text-align:left">JSBin</th>
           <th style="padding:8px;text-align:center">Tổng</th>
           <th style="padding:8px;text-align:left">Nhận xét</th>
-        </tr>
-      </thead>
-      <tbody id="htmlintro-result-body">
-        <tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>
-      </tbody>
-    </table>
+        </tr></thead>
+        <tbody id="htmlintro-result-body">
+          <tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 </div>
+
 <div id="screen-blog">
   <div class="blog-card">
     <h2>NỘP SẢN PHẨM WEBSITE – TIN HỌC 12</h2>
@@ -3948,339 +3985,6 @@ function tidyBlogComment_(s) {
 </script>
 <script>
 
-/* ===== B11 – Trang giới thiệu HTML cá nhân (PIN + snapshot + plagiarism + AI) ===== */
-window.htmlIntroSubmissions = window.htmlIntroSubmissions || [];
-window.htmlIntroPins = window.htmlIntroPins || {}; // name|class -> pin
-
-function normalizePin_(v) {
-  return String(v == null ? "" : v).trim();
-}
-
-function buildHtmlIntroPinsFromStudents() {
-  window.htmlIntroPins = {};
-  var map = studentsByClass || {};
-  Object.keys(map).forEach(function (lop) {
-    (map[lop] || []).forEach(function (s) {
-      var name = s.name || s.hoTen || "";
-      var pin = s.pin != null ? s.pin : (s.maPIN != null ? s.maPIN : (s.code != null ? s.code : (s.maHS != null ? s.maHS : "")));
-      if (name) window.htmlIntroPins[lop + "|" + name] = normalizePin_(pin);
-    });
-  });
-}
-
-function initHtmlIntroUI() {
-  buildHtmlIntroPinsFromStudents();
-  var classSel = document.getElementById("htmlintro-class");
-  var stuSel = document.getElementById("htmlintro-student");
-  var btn = document.getElementById("btn-htmlintro-submit");
-  var back = document.getElementById("btn-htmlintro-back");
-  if (!classSel) return;
-
-  var classes = Object.keys(studentsByClass || {}).sort();
-  classSel.innerHTML = '<option value="">-- Chọn lớp --</option>';
-  classes.forEach(function (lop) {
-    var o = document.createElement("option");
-    o.value = lop;
-    o.textContent = lop + " (" + ((studentsByClass[lop] || []).length) + " HS)";
-    classSel.appendChild(o);
-  });
-  if (stuSel) {
-    stuSel.innerHTML = '<option value="">-- Chọn lớp trước --</option>';
-    stuSel.disabled = true;
-  }
-  var pinInp = document.getElementById("htmlintro-pin");
-  if (pinInp) pinInp.value = "";
-
-  classSel.onchange = function () {
-    var lop = classSel.value;
-    stuSel.innerHTML = '<option value="">-- Chọn học sinh --</option>';
-    if (!lop || !studentsByClass[lop]) { stuSel.disabled = true; return; }
-    studentsByClass[lop].forEach(function (s) {
-      var name = s.name || s;
-      var o = document.createElement("option");
-      o.value = name;
-      o.textContent = name;
-      stuSel.appendChild(o);
-    });
-    stuSel.disabled = false;
-    checkHtmlIntroDup();
-  };
-  if (stuSel) stuSel.onchange = checkHtmlIntroDup;
-
-  function checkHtmlIntroDup() {
-    var hint = document.getElementById("htmlintro-hint");
-    var lop = classSel.value;
-    var name = stuSel.value;
-    if (!lop || !name) { if (hint) hint.textContent = ""; if (btn) btn.disabled = false; return; }
-    try {
-      var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
-      var existed = all.find(function (x) { return x.class === lop && x.name === name && x.link; });
-      if (existed) {
-        if (hint) hint.textContent = "Bạn đã nộp bài rồi (" + (existed.score !== "" && existed.score != null ? "điểm " + existed.score : "chờ chấm") + "). Không được nộp lại / sửa bài.";
-        if (btn) { btn.disabled = true; btn.textContent = "ĐÃ NỘP"; }
-        var linkInp = document.getElementById("htmlintro-link");
-        if (linkInp) { linkInp.value = existed.link || ""; linkInp.readOnly = true; }
-        if (pinInp) pinInp.readOnly = true;
-      } else {
-        if (hint) hint.textContent = "";
-        if (btn) { btn.disabled = false; btn.textContent = "NỘP BÀI"; }
-        var linkInp2 = document.getElementById("htmlintro-link");
-        if (linkInp2) linkInp2.readOnly = false;
-        if (pinInp) pinInp.readOnly = false;
-      }
-    } catch (e) {}
-  }
-
-  if (btn) {
-    btn.onclick = function () {
-      var lop = classSel.value;
-      var name = stuSel.value;
-      var pin = normalizePin_(document.getElementById("htmlintro-pin") && document.getElementById("htmlintro-pin").value);
-      var link = (document.getElementById("htmlintro-link").value || "").trim();
-      if (!lop || !name) { alert("Chọn lớp và họ tên"); return; }
-      if (!pin) { alert("Nhập Mã PIN theo danh sách lớp"); return; }
-      var expect = window.htmlIntroPins[lop + "|" + name];
-      if (expect !== undefined && expect !== "" && String(expect) !== String(pin)) {
-        alert("Mã PIN không khớp với học sinh đã chọn.");
-        return;
-      }
-      if (!/^https?:\/\//i.test(link)) { alert("Link JSBin phải bắt đầu bằng http:// hoặc https://"); return; }
-      try {
-        var all0 = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
-        if (all0.find(function (x) { return x.class === lop && x.name === name && x.link; })) {
-          alert("Bạn đã nộp bài rồi. Không thể nộp lại hoặc sửa bài.");
-          return;
-        }
-      } catch (eDup) {}
-
-      btn.disabled = true;
-      btn.textContent = "Đang lưu mã nguồn...";
-
-      fetchHtmlSnapshot_(link).then(function (snap) {
-        var timeStr = new Date().toLocaleString("vi-VN");
-        var code = (snap.html || "") + "\n/*CSS*/\n" + (snap.css || "");
-        var plag = detectHtmlPlagiarism_(code, lop, name);
-        var rec = {
-          time: timeStr,
-          class: lop,
-          name: name,
-          pin: pin,
-          link: link,
-          html: snap.html || "",
-          css: snap.css || "",
-          codeHash: simpleHash_(code),
-          score: plag.flag ? 0 : "",
-          note: plag.flag ? ("⚠ Trùng mã với " + plag.with + " → 0 điểm") : "Chờ AI/GV chấm theo Rubric TX3",
-          plagFlag: plag.flag,
-          plagWith: plag.with || "",
-          at: Date.now(),
-          examId: "b11"
-        };
-        window.htmlIntroSubmissions.unshift(rec);
-        try {
-          var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
-          all = all.filter(function (x) { return !(x.class === lop && x.name === name); });
-          all.unshift(rec);
-          localStorage.setItem("webh2t_htmlintro11", JSON.stringify(all.slice(0, 500)));
-        } catch (e) {}
-        try {
-          if (typeof pushScoreToCloud === "function") {
-            pushScoreToCloud({
-              name: name,
-              class: lop,
-              score: rec.score === "" ? "" : rec.score,
-              correct: 0, wrong: 0, skip: 0, elapsed: 0,
-              time: timeStr,
-              pattern: "HTML_INTRO|" + link + "|PIN:" + pin + (plag.flag ? "|PLAG:" + plag.with : ""),
-              maDe: "B11-HTML",
-              examId: "b11",
-              review: [{ type: "link", text: "JSBin", user: link }, { type: "html", text: (snap.html || "").slice(0, 4000) }],
-              note: rec.note,
-              htmlSnapshot: (snap.html || "").slice(0, 50000),
-              cssSnapshot: (snap.css || "").slice(0, 20000)
-            });
-          }
-        } catch (eC) { console.warn(eC); }
-        // Goi AI cham neu khong plagiarism
-        if (!plag.flag) {
-          try { requestHtmlIntroGrade_(rec); } catch (eG) { console.warn(eG); }
-        }
-        renderHtmlIntroTable();
-        btn.textContent = "ĐÃ NỘP";
-        var hint = document.getElementById("htmlintro-hint");
-        if (hint) hint.textContent = plag.flag ? rec.note : ("Đã nộp lúc " + timeStr + ". Hệ thống đã lưu HTML/CSS. Điểm AI sẽ cập nhật trên bảng.");
-        var linkInp = document.getElementById("htmlintro-link");
-        if (linkInp) linkInp.readOnly = true;
-        if (pinInp) pinInp.readOnly = true;
-        if (plag.flag) alert("Phát hiện mã nguồn giống " + plag.with + ". Điểm 0.");
-        else alert("Đã nộp bài Trang giới thiệu HTML cá nhân!\nĐã lưu mã HTML/CSS tại thời điểm nộp.\nKhông thể sửa sau khi nộp.");
-      }).catch(function (err) {
-        console.warn(err);
-        btn.disabled = false;
-        btn.textContent = "NỘP BÀI";
-        alert("Không lấy được mã nguồn từ link. Hãy kiểm tra URL JSBin (public) và thử lại.\n" + (err && err.message ? err.message : ""));
-      });
-    };
-  }
-
-  if (back) {
-    back.onclick = function () {
-      var el = document.getElementById("screen-htmlintro");
-      if (el) el.style.display = "none";
-      var sel = document.getElementById("screen-select");
-      if (sel) sel.style.display = "flex";
-      if (typeof clearExamSelection === "function") clearExamSelection();
-      else {
-        var picker = document.getElementById("exam-picker");
-        if (picker) picker.style.display = "grid";
-        currentExam = null;
-      }
-    };
-  }
-
-  renderHtmlIntroTable();
-}
-
-function simpleHash_(s) {
-  var h = 0, i, t = String(s || "");
-  for (i = 0; i < t.length; i++) { h = ((h << 5) - h) + t.charCodeAt(i); h |= 0; }
-  return String(h);
-}
-
-function normalizeCode_(s) {
-  return String(s || "").toLowerCase().replace(/\s+/g, " ").replace(/<!--.*?-->/g, "").trim();
-}
-
-function codeSimilarity_(a, b) {
-  a = normalizeCode_(a); b = normalizeCode_(b);
-  if (!a || !b) return 0;
-  if (a === b) return 1;
-  var n = Math.min(a.length, b.length, 4000);
-  a = a.slice(0, n); b = b.slice(0, n);
-  var same = 0;
-  var step = Math.max(1, Math.floor(n / 200));
-  for (var i = 0; i < n; i += step) if (a[i] === b[i]) same++;
-  var total = Math.ceil(n / step) || 1;
-  // also check includes chunk
-  var chunk = a.slice(0, Math.min(120, a.length));
-  var bonus = (chunk.length > 40 && b.indexOf(chunk) >= 0) ? 0.35 : 0;
-  return Math.min(1, same / total + bonus);
-}
-
-function detectHtmlPlagiarism_(code, lop, name) {
-  try {
-    var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
-    var best = { flag: false, with: "", score: 0 };
-    all.forEach(function (x) {
-      if (!x || (x.class === lop && x.name === name)) return;
-      var other = (x.html || "") + "\n" + (x.css || "");
-      if (!other || other.length < 40) return;
-      var sim = codeSimilarity_(code, other);
-      if (sim >= 0.82 && sim > best.score) {
-        best = { flag: true, with: (x.name || "") + " · " + (x.class || ""), score: sim };
-      }
-    });
-    return best;
-  } catch (e) { return { flag: false, with: "" }; }
-}
-
-function fetchHtmlSnapshot_(url) {
-  // JSBin: thu nhieu endpoint; fallback de trong neu CORS chan
-  var u = String(url || "").trim();
-  var candidates = [];
-  // https://jsbin.com/xxx/edit?html,output -> https://jsbin.com/xxx
-  var m = u.match(/jsbin\.com\/([^\/\?#]+)/i);
-  if (m) {
-    var id = m[1];
-    candidates.push("https://jsbin.com/api/" + id);
-    candidates.push("https://output.jsbin.com/" + id + ".html");
-    candidates.push("https://jsbin.com/" + id);
-  }
-  candidates.push(u);
-
-  function tryFetch(i) {
-    if (i >= candidates.length) {
-      return Promise.resolve({ html: "/* Không lấy được HTML do CORS/JSBin. Link: " + u + " */", css: "" });
-    }
-    return fetch(candidates[i], { method: "GET", mode: "cors", cache: "no-store" })
-      .then(function (r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        var ct = (r.headers.get("content-type") || "").toLowerCase();
-        return r.text().then(function (t) {
-          if (ct.indexOf("json") >= 0 || (t && t.trim().charAt(0) === "{")) {
-            try {
-              var j = JSON.parse(t);
-              return {
-                html: j.html || j["html"] || j.source || "",
-                css: j.css || j["css"] || ""
-              };
-            } catch (e) { return { html: t, css: "" }; }
-          }
-          // tach style
-          var css = "";
-          var htmlPart = t;
-          var sm = t.match(/<style[^>]*>([\s\S]*?)<\/style>/i);
-          if (sm) css = sm[1] || "";
-          return { html: htmlPart, css: css };
-        });
-      })
-      .catch(function () { return tryFetch(i + 1); });
-  }
-  return tryFetch(0);
-}
-
-function requestHtmlIntroGrade_(rec) {
-  // Goi webhook cham AI (neu GV da cau hinh) — action html_intro_grade
-  var url = "";
-  try {
-    if (typeof getTnWebhook === "function") url = getTnWebhook();
-    if (!url) url = localStorage.getItem("webh2t_cloud_webhook") || localStorage.getItem("webh2t_tn_webhook") || "";
-  } catch (e) {}
-  if (!url) return;
-  var payload = {
-    action: "html_intro_grade",
-    examId: "b11",
-    name: rec.name,
-    class: rec.class,
-    pin: rec.pin,
-    link: rec.link,
-    html: (rec.html || "").slice(0, 60000),
-    css: (rec.css || "").slice(0, 20000),
-    rubric: "TX3 HTML ca nhan: anh 1.5; thong tin 1.5; so thich 1; thong diep 1; bay1 comment 1; bay2 title 1; bay3 alt 1.5; bay4 mau thang sinh 1.5; tong 10"
-  };
-  fetch(url, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify(payload)
-  }).catch(function () {});
-}
-
-function renderHtmlIntroTable() {
-  var body = document.getElementById("htmlintro-result-body");
-  if (!body) return;
-  var all = [];
-  try { all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]"); } catch (e) {}
-  if (!all.length) {
-    body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>';
-    return;
-  }
-  all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
-  body.innerHTML = all.map(function (r) {
-    var link = r.link ? ('<a href="' + String(r.link).replace(/"/g, "&quot;") + '" target="_blank" rel="noopener">Mở JSBin</a>') : "—";
-    var score = (r.score !== "" && r.score != null) ? r.score : "—";
-    var note = r.note || "";
-    var rowStyle = r.plagFlag ? "background:#FEF2F2;" : "";
-    return '<tr style="' + rowStyle + '">'
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;white-space:nowrap">' + (r.time || "") + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.class || "") + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.name || "") + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + link + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700;color:#1D4ED8">' + score + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;font-size:.78rem;color:#475569">' + note + "</td>"
-      + "</tr>";
-  }).join("");
-}
 
 // Parse PIN from HocSinh when workbook loads — patch parseWorkbook lightly via hook
 (function patchParseForPin() {
@@ -4316,6 +4020,413 @@ try {
   else renderHtmlIntroTable();
 } catch (e0) {}
 
+</script>
+<script>
+
+/* ===== B11 HTML cá nhân – editor + preview (no JSBin) ===== */
+window.htmlIntroSubmissions = window.htmlIntroSubmissions || [];
+window.htmlIntroPins = window.htmlIntroPins || {};
+window.htmlIntroEditor = null;
+
+function normalizePin_(v) { return String(v == null ? "" : v).trim(); }
+
+function buildHtmlIntroPinsFromStudents() {
+  window.htmlIntroPins = {};
+  var map = studentsByClass || {};
+  Object.keys(map).forEach(function (lop) {
+    (map[lop] || []).forEach(function (s) {
+      var name = s.name || s.hoTen || "";
+      var pin = s.pin != null ? s.pin : (s.maPIN != null ? s.maPIN : (s.code != null ? s.code : ""));
+      if (name) window.htmlIntroPins[lop + "|" + name] = normalizePin_(pin);
+    });
+  });
+}
+
+function getHtmlIntroCode() {
+  if (window.htmlIntroEditor) return window.htmlIntroEditor.getValue();
+  var ta = document.getElementById("htmlintro-editor");
+  return ta ? ta.value : "";
+}
+
+function setHtmlIntroCode(code) {
+  if (window.htmlIntroEditor) window.htmlIntroEditor.setValue(code || "");
+  else {
+    var ta = document.getElementById("htmlintro-editor");
+    if (ta) ta.value = code || "";
+  }
+}
+
+function runHtmlIntroPreview() {
+  var code = getHtmlIntroCode();
+  var iframe = document.getElementById("htmlintro-preview");
+  if (!iframe) return;
+  var doc = iframe.contentDocument || iframe.contentWindow.document;
+  doc.open();
+  doc.write(code || "<p>Chưa có nội dung</p>");
+  doc.close();
+}
+
+function ensureHtmlIntroEditor() {
+  var ta = document.getElementById("htmlintro-editor");
+  if (!ta) return;
+  if (window.htmlIntroEditor) {
+    window.htmlIntroEditor.refresh();
+    return;
+  }
+  if (typeof CodeMirror !== "undefined") {
+    window.htmlIntroEditor = CodeMirror.fromTextArea(ta, {
+      mode: "htmlmixed",
+      theme: "material-darker",
+      lineNumbers: true,
+      lineWrapping: true,
+      tabSize: 2,
+      indentUnit: 2
+    });
+    window.htmlIntroEditor.on("change", function () {
+      /* live optional - only on CHAY THU to avoid lag */
+    });
+  } else {
+    ta.style.width = "100%";
+    ta.style.height = "400px";
+    ta.style.fontFamily = "monospace";
+  }
+}
+
+var HTMLINTRO_DEFAULT = "<!DOCTYPE html>\n<html lang=\"vi\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>T\u00ean em - L\u1edbp</title>\n  <style>\n    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; color: #0f172a; }\n    h1 { /* \u0111\u1ed5i m\u00e0u theo th\u00e1ng sinh: ch\u1eb5n=xanh, l\u1ebb=\u0111\u1ecf/cam */ color: #2563eb; }\n    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }\n    img { max-width: 160px; border-radius: 12px; }\n  </style>\n</head>\n<body>\n  <!-- B\u00e0i thi c\u1ee7a: [H\u1ecd t\u00ean em] - L\u1edbp: [L\u1edbp em] -->\n  <div class=\"card\">\n    <h1>GI\u1edaI THI\u1ec6U B\u1ea2N TH\u00c2N</h1>\n    <img src=\"\" alt=\"Image [T\u00ean em]\" width=\"160\" height=\"160\">\n    <p><b>H\u1ecd v\u00e0 t\u00ean:</b> ...</p>\n    <p><b>Ng\u00e0y sinh:</b> ...</p>\n    <p><b>L\u1edbp:</b> ...</p>\n    <p><b>\u0110\u1ecba ch\u1ec9:</b> ...</p>\n    <p><b>S\u1edf th\u00edch:</b> ...</p>\n    <p><b>\u01af\u1edbc m\u01a1:</b> ...</p>\n    <p><b>Th\u00f4ng \u0111i\u1ec7p cho t\u01b0\u01a1ng lai:</b> ...</p>\n  </div>\n<script>
+(function bootHtmlIntroWebhook(){
+  try {
+    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) {
+      localStorage.setItem("webh2t_cloud_webhook", HTML_INTRO_WEBHOOK);
+      localStorage.setItem("webh2t_htmlintro_webhook", HTML_INTRO_WEBHOOK);
+    }
+  } catch (e) {}
+})();
+</script>
+</body>\n</html>\n";
+
+function initHtmlIntroUI() {
+  buildHtmlIntroPinsFromStudents();
+  ensureHtmlIntroEditor();
+  var classSel = document.getElementById("htmlintro-class");
+  var stuSel = document.getElementById("htmlintro-student");
+  var btn = document.getElementById("btn-htmlintro-submit");
+  var btnRun = document.getElementById("btn-htmlintro-run");
+  var btnSave = document.getElementById("btn-htmlintro-save");
+  var back = document.getElementById("btn-htmlintro-back");
+  var pinInp = document.getElementById("htmlintro-pin");
+  if (!classSel) return;
+
+  if (!getHtmlIntroCode() || getHtmlIntroCode().length < 40) {
+    setHtmlIntroCode(HTMLINTRO_DEFAULT);
+  }
+  setTimeout(function () {
+    try { ensureHtmlIntroEditor(); runHtmlIntroPreview(); } catch (e) {}
+  }, 80);
+
+  var classes = Object.keys(studentsByClass || {}).sort();
+  classSel.innerHTML = '<option value="">-- Chọn lớp --</option>';
+  classes.forEach(function (lop) {
+    var o = document.createElement("option");
+    o.value = lop;
+    o.textContent = lop + " (" + ((studentsByClass[lop] || []).length) + " HS)";
+    classSel.appendChild(o);
+  });
+  if (stuSel) {
+    stuSel.innerHTML = '<option value="">-- Chọn lớp trước --</option>';
+    stuSel.disabled = true;
+  }
+  if (pinInp) pinInp.value = "";
+
+  classSel.onchange = function () {
+    var lop = classSel.value;
+    stuSel.innerHTML = '<option value="">-- Chọn học sinh --</option>';
+    if (!lop || !studentsByClass[lop]) { stuSel.disabled = true; return; }
+    studentsByClass[lop].forEach(function (s) {
+      var name = s.name || s;
+      var o = document.createElement("option");
+      o.value = name;
+      o.textContent = name;
+      stuSel.appendChild(o);
+    });
+    stuSel.disabled = false;
+    checkHtmlIntroDup();
+  };
+  if (stuSel) stuSel.onchange = checkHtmlIntroDup;
+
+  function lockEditor(locked) {
+    if (window.htmlIntroEditor) window.htmlIntroEditor.setOption("readOnly", locked ? "nocursor" : false);
+    var ta = document.getElementById("htmlintro-editor");
+    if (ta) ta.readOnly = !!locked;
+    if (pinInp) pinInp.readOnly = !!locked;
+    if (btn) {
+      btn.disabled = !!locked;
+      btn.textContent = locked ? "ĐÃ NỘP" : "NỘP BÀI";
+    }
+  }
+
+  function checkHtmlIntroDup() {
+    var hint = document.getElementById("htmlintro-hint");
+    var lop = classSel.value;
+    var name = stuSel.value;
+    if (!lop || !name) { if (hint) hint.textContent = ""; lockEditor(false); return; }
+    try {
+      var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+      var existed = all.find(function (x) { return x.class === lop && x.name === name && (x.html || x.link); });
+      if (existed) {
+        if (hint) hint.textContent = "Bạn đã nộp bài rồi (" + (existed.score !== "" && existed.score != null ? "điểm " + existed.score : "chờ chấm") + "). Không sửa / nộp lại.";
+        if (existed.html) setHtmlIntroCode(existed.html);
+        runHtmlIntroPreview();
+        lockEditor(true);
+      } else {
+        if (hint) hint.textContent = "";
+        lockEditor(false);
+      }
+    } catch (e) {}
+  }
+
+  if (btnRun) btnRun.onclick = function () { runHtmlIntroPreview(); };
+  if (btnSave) btnSave.onclick = function () {
+    var code = getHtmlIntroCode();
+    var name = (stuSel && stuSel.value) || "baithi";
+    var blob = new Blob([code], { type: "text/html;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (name.replace(/\s+/g, "_") || "gioi_thieu") + ".html";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  };
+
+  if (btn) {
+    btn.onclick = function () {
+      var lop = classSel.value;
+      var name = stuSel.value;
+      var pin = normalizePin_(pinInp && pinInp.value);
+      var code = getHtmlIntroCode();
+      if (!lop || !name) { alert("Chọn lớp và họ tên"); return; }
+      if (!pin) { alert("Nhập Mã PIN"); return; }
+      var expect = window.htmlIntroPins[lop + "|" + name];
+      if (expect !== undefined && expect !== "" && String(expect) !== String(pin)) {
+        alert("Mã PIN không khớp với học sinh đã chọn.");
+        return;
+      }
+      if (!code || code.replace(/\s/g, "").length < 80) {
+        alert("Bài làm quá ngắn. Hãy hoàn thiện HTML trước khi nộp.");
+        return;
+      }
+      try {
+        var all0 = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+        if (all0.find(function (x) { return x.class === lop && x.name === name && x.html; })) {
+          alert("Bạn đã nộp bài rồi. Không thể nộp lại.");
+          return;
+        }
+      } catch (eDup) {}
+
+      runHtmlIntroPreview();
+      btn.disabled = true;
+      btn.textContent = "Đang nộp...";
+
+      var timeStr = new Date().toLocaleString("vi-VN");
+      var plag = detectHtmlPlagiarism_(code, lop, name);
+      var rec = {
+        time: timeStr,
+        class: lop,
+        name: name,
+        pin: pin,
+        link: "",
+        html: code,
+        css: "",
+        codeHash: simpleHash_(code),
+        score: plag.flag ? 0 : "",
+        note: plag.flag ? ("⚠ Trùng mã với " + plag.with + " → 0 điểm") : "Chờ AI/GV chấm theo Rubric TX3",
+        plagFlag: plag.flag,
+        plagWith: plag.with || "",
+        at: Date.now(),
+        examId: "b11"
+      };
+      window.htmlIntroSubmissions.unshift(rec);
+      try {
+        var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+        all = all.filter(function (x) { return !(x.class === lop && x.name === name); });
+        // khong luu html qua dai trong localStorage neu can — cat 200kb
+        var store = Object.assign({}, rec);
+        if (store.html && store.html.length > 180000) store.html = store.html.slice(0, 180000);
+        all.unshift(store);
+        localStorage.setItem("webh2t_htmlintro11", JSON.stringify(all.slice(0, 300)));
+      } catch (e) { console.warn(e); }
+
+      try {
+        if (typeof pushScoreToCloud === "function") {
+          pushScoreToCloud({
+            name: name,
+            class: lop,
+            score: rec.score === "" ? "" : rec.score,
+            correct: 0, wrong: 0, skip: 0, elapsed: 0,
+            time: timeStr,
+            pattern: "HTML_INTRO|SOURCE" + (plag.flag ? "|PLAG:" + plag.with : "") + "|PIN:" + pin,
+            maDe: "B11-HTML",
+            examId: "b11",
+            review: [{ type: "html", text: code.slice(0, 8000) }],
+            note: rec.note,
+            htmlSnapshot: code.slice(0, 90000),
+            cssSnapshot: ""
+          });
+        }
+      } catch (eC) {}
+
+      if (!plag.flag) {
+        try { requestHtmlIntroGrade_(rec); } catch (eG) {}
+      }
+      renderHtmlIntroTable();
+      lockEditor(true);
+      var hint = document.getElementById("htmlintro-hint");
+      if (hint) hint.textContent = plag.flag ? rec.note : ("Đã nộp " + timeStr + ". Mã nguồn đã lưu độc lập. Không thể sửa.");
+      alert(plag.flag ? ("Phát hiện trùng mã với " + plag.with + ". Điểm 0.") : "Nộp bài thành công!\nMã HTML đã lưu độc lập trên hệ thống.\nKhông còn dùng JSBin / không sửa sau nộp.");
+    };
+  }
+
+  if (back) {
+    back.onclick = function () {
+      var el = document.getElementById("screen-htmlintro");
+      if (el) el.style.display = "none";
+      var sel = document.getElementById("screen-select");
+      if (sel) sel.style.display = "flex";
+      if (typeof clearExamSelection === "function") clearExamSelection();
+      else {
+        var picker = document.getElementById("exam-picker");
+        if (picker) picker.style.display = "grid";
+        currentExam = null;
+      }
+    };
+  }
+
+  renderHtmlIntroTable();
+}
+
+function simpleHash_(s) {
+  var h = 0, t = String(s || "");
+  for (var i = 0; i < t.length; i++) { h = ((h << 5) - h) + t.charCodeAt(i); h |= 0; }
+  return String(h);
+}
+function normalizeCode_(s) {
+  return String(s || "").toLowerCase().replace(/\s+/g, " ").replace(/<!--.*?-->/g, "").trim();
+}
+function codeSimilarity_(a, b) {
+  a = normalizeCode_(a); b = normalizeCode_(b);
+  if (!a || !b) return 0;
+  if (a === b) return 1;
+  var n = Math.min(a.length, b.length, 5000);
+  a = a.slice(0, n); b = b.slice(0, n);
+  var same = 0, step = Math.max(1, Math.floor(n / 250));
+  for (var i = 0; i < n; i += step) if (a[i] === b[i]) same++;
+  var total = Math.ceil(n / step) || 1;
+  var chunk = a.slice(80, Math.min(220, a.length));
+  var bonus = (chunk.length > 40 && b.indexOf(chunk) >= 0) ? 0.4 : 0;
+  return Math.min(1, same / total + bonus);
+}
+function detectHtmlPlagiarism_(code, lop, name) {
+  try {
+    var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+    var best = { flag: false, with: "", score: 0 };
+    all.forEach(function (x) {
+      if (!x || (x.class === lop && x.name === name)) return;
+      var other = x.html || "";
+      if (!other || other.length < 60) return;
+      var sim = codeSimilarity_(code, other);
+      if (sim >= 0.82 && sim > best.score) best = { flag: true, with: (x.name || "") + " · " + (x.class || ""), score: sim };
+    });
+    return best;
+  } catch (e) { return { flag: false, with: "" }; }
+}
+function requestHtmlIntroGrade_(rec) {
+  var url = "";
+  try {
+    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) url = HTML_INTRO_WEBHOOK;
+    if (!url && typeof getTnWebhook === "function") url = getTnWebhook();
+    if (!url) url = localStorage.getItem("webh2t_cloud_webhook") || localStorage.getItem("webh2t_tn_webhook") || "";
+  } catch (e) {}
+  if (!url) return;
+  fetch(url, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({
+      action: "html_intro_grade",
+      examId: "b11",
+      name: rec.name,
+      class: rec.class,
+      pin: rec.pin,
+      html: (rec.html || "").slice(0, 90000),
+      rubric: "TX3: anh 1.5; thong tin 1.5; so thich 1; thong diep 1; bay1 comment 1; bay2 title 1; bay3 alt 1.5; bay4 mau thang sinh 1.5"
+    })
+  }).catch(function () {});
+}
+function renderHtmlIntroTable() {
+  var body = document.getElementById("htmlintro-result-body");
+  if (!body) return;
+  var all = [];
+  try { all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]"); } catch (e) {}
+  if (!all.length) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>';
+    return;
+  }
+  all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
+  body.innerHTML = all.map(function (r) {
+    var score = (r.score !== "" && r.score != null) ? r.score : "—";
+    var rowStyle = r.plagFlag ? "background:#FEF2F2;" : "";
+    return '<tr style="' + rowStyle + '">'
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;white-space:nowrap">' + (r.time || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.class || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.name || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700;color:#1D4ED8">' + score + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;font-size:.78rem;color:#475569">' + (r.note || "") + "</td>"
+      + "</tr>";
+  }).join("");
+}
+
+(function patchParseForPin() {
+  if (typeof parseWorkbook !== "function") return;
+  var _orig = parseWorkbook;
+  window.parseWorkbook = function (wb) {
+    var ret = _orig.apply(this, arguments);
+    try {
+      var sheet = wb.Sheets && (wb.Sheets["HocSinh"] || wb.Sheets["Hocsinh"]);
+      if (sheet && typeof XLSX !== "undefined") {
+        var rows = XLSX.utils.sheet_to_json(sheet, { defval: "" });
+        rows.forEach(function (r) {
+          var lop = r["Lớp"] || r["Lop"] || "";
+          var name = r["Họ và tên"] || r["Ho va ten"] || r["Họ tên"] || r["Name"] || "";
+          var pin = r["Mã PIN"] || r["Ma PIN"] || r["PIN"] || r["Mã"] || "";
+          if (lop && name) {
+            if (!studentsByClass[lop]) studentsByClass[lop] = [];
+            var found = studentsByClass[lop].find(function (s) { return s.name === name; });
+            if (found) found.pin = String(pin);
+            else studentsByClass[lop].push({ name: name, pin: String(pin), score: "" });
+          }
+        });
+        buildHtmlIntroPinsFromStudents();
+      }
+    } catch (e) {}
+    return ret;
+  };
+})();
+
+try {
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", function () { try { renderHtmlIntroTable(); } catch (e) {} });
+  else renderHtmlIntroTable();
+} catch (e0) {}
+
+</script>
+<script>
+(function bootHtmlIntroWebhook(){
+  try {
+    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) {
+      localStorage.setItem("webh2t_cloud_webhook", HTML_INTRO_WEBHOOK);
+      localStorage.setItem("webh2t_htmlintro_webhook", HTML_INTRO_WEBHOOK);
+    }
+  } catch (e) {}
+})();
 </script>
 </body>
 </html>
