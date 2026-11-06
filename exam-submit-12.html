@@ -4054,22 +4054,28 @@ try {
 
 </script>
 
-(function bootHtmlIntroWebhook(){
-  try {
-    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) {
-      localStorage.setItem("webh2t_cloud_webhook", HTML_INTRO_WEBHOOK);
-      localStorage.setItem("webh2t_htmlintro_webhook", HTML_INTRO_WEBHOOK);
-    }
-  } catch (e) {}
-})();
 </script>
 
+
+
+
 <script>
-/* B11 HTML editor – fixed syntax */
+/* B11 HTML editor v2 – PIN auto, sync Sheet, strict grade display */
 window.htmlIntroSubmissions = window.htmlIntroSubmissions || [];
 window.htmlIntroPins = window.htmlIntroPins || {};
 window.htmlIntroEditor = null;
 var HTMLINTRO_DEFAULT = "\x3C!DOCTYPE html>\n\x3Chtml lang=\"vi\">\n\x3Chead>\n  \x3Cmeta charset=\"UTF-8\">\n  \x3Ctitle>Ten em - Lop\x3C/title>\n  \x3Cstyle>\n    body { font-family: system-ui, sans-serif; max-width: 640px; margin: 24px auto; padding: 0 16px; color: #0f172a; }\n    h1 { color: #2563eb; }\n    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; }\n    img { max-width: 160px; border-radius: 12px; }\n  \x3C/style>\n\x3C/head>\n\x3Cbody>\n  \x3C!-- Bai thi cua: [Ho ten em] - Lop: [Lop em] -->\n  \x3Cdiv class=\"card\">\n    \x3Ch1>GIOI THIEU BAN THAN\x3C/h1>\n    \x3Cimg src=\"\" alt=\"Image [Ten em]\" width=\"160\" height=\"160\">\n    \x3Cp>\x3Cb>Ho va ten:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Ngay sinh:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Lop:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Dia chi:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>So thich:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Uoc mo:\x3C/b> ...\x3C/p>\n    \x3Cp>\x3Cb>Thong diep cho tuong lai:\x3C/b> ...\x3C/p>\n  \x3C/div>\n\x3C/body>\n\x3C/html>";
+var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
+
+(function bootHtmlIntroWebhook(){
+  try {
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec";
+    if (w) {
+      localStorage.setItem("webh2t_cloud_webhook", w);
+      localStorage.setItem("webh2t_htmlintro_webhook", w);
+    }
+  } catch (e) {}
+})();
 
 function normalizePin_(v) { return String(v == null ? "" : v).trim(); }
 
@@ -4090,7 +4096,6 @@ function getHtmlIntroCode() {
   var ta = document.getElementById("htmlintro-editor");
   return ta ? ta.value : "";
 }
-
 function setHtmlIntroCode(code) {
   if (window.htmlIntroEditor) window.htmlIntroEditor.setValue(code || "");
   else {
@@ -4098,7 +4103,6 @@ function setHtmlIntroCode(code) {
     if (ta) ta.value = code || "";
   }
 }
-
 function runHtmlIntroPreview() {
   var code = getHtmlIntroCode();
   var iframe = document.getElementById("htmlintro-preview");
@@ -4109,35 +4113,43 @@ function runHtmlIntroPreview() {
     doc.open();
     doc.write(code || "<p style='padding:12px;color:#64748b'>Chua co noi dung</p>");
     doc.close();
-  } catch (e) {
-    console.warn("preview", e);
-  }
+  } catch (e) { console.warn(e); }
 }
-
 function ensureHtmlIntroEditor() {
   var ta = document.getElementById("htmlintro-editor");
   if (!ta) return;
-  if (window.htmlIntroEditor) {
-    try { window.htmlIntroEditor.refresh(); } catch (e) {}
-    return;
-  }
+  if (window.htmlIntroEditor) { try { window.htmlIntroEditor.refresh(); } catch (e) {} return; }
   if (typeof CodeMirror !== "undefined") {
     window.htmlIntroEditor = CodeMirror.fromTextArea(ta, {
-      mode: "htmlmixed",
-      theme: "material-darker",
-      lineNumbers: true,
-      lineWrapping: true,
-      tabSize: 2,
-      indentUnit: 2
+      mode: "htmlmixed", theme: "material-darker", lineNumbers: true, lineWrapping: true, tabSize: 2, indentUnit: 2
     });
   } else {
-    ta.style.width = "100%";
-    ta.style.height = "100%";
-    ta.style.minHeight = "420px";
-    ta.style.fontFamily = "ui-monospace, Menlo, Consolas, monospace";
-    ta.style.fontSize = "13.5px";
-    ta.style.boxSizing = "border-box";
+    ta.style.cssText = "width:100%;height:100%;min-height:420px;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px";
   }
+}
+
+function fillPinFromSelection() {
+  var classSel = document.getElementById("htmlintro-class");
+  var stuSel = document.getElementById("htmlintro-student");
+  var pinInp = document.getElementById("htmlintro-pin");
+  if (!classSel || !stuSel || !pinInp) return;
+  var lop = classSel.value;
+  var name = stuSel.value;
+  if (!lop || !name) { pinInp.value = ""; return; }
+  var pin = window.htmlIntroPins[lop + "|" + name];
+  if (pin === undefined || pin === "") {
+    // fallback scan studentsByClass
+    var list = (studentsByClass && studentsByClass[lop]) || [];
+    for (var i = 0; i < list.length; i++) {
+      if ((list[i].name || list[i]) === name) {
+        pin = list[i].pin != null ? list[i].pin : "";
+        break;
+      }
+    }
+  }
+  pinInp.value = pin != null ? String(pin) : "";
+  pinInp.readOnly = true;
+  pinInp.title = "PIN tu dong theo danh sach HocSinh";
 }
 
 function initHtmlIntroUI() {
@@ -4152,12 +4164,8 @@ function initHtmlIntroUI() {
   var pinInp = document.getElementById("htmlintro-pin");
   if (!classSel) return;
 
-  if (!getHtmlIntroCode() || getHtmlIntroCode().length < 40) {
-    setHtmlIntroCode(HTMLINTRO_DEFAULT);
-  }
-  setTimeout(function () {
-    try { ensureHtmlIntroEditor(); runHtmlIntroPreview(); } catch (e) {}
-  }, 120);
+  if (!getHtmlIntroCode() || getHtmlIntroCode().length < 40) setHtmlIntroCode(HTMLINTRO_DEFAULT);
+  setTimeout(function () { try { ensureHtmlIntroEditor(); runHtmlIntroPreview(); } catch (e) {} }, 120);
 
   var classes = Object.keys(studentsByClass || {}).sort();
   classSel.innerHTML = '<option value="">-- Chon lop --</option>';
@@ -4171,12 +4179,12 @@ function initHtmlIntroUI() {
     stuSel.innerHTML = '<option value="">-- Chon lop truoc --</option>';
     stuSel.disabled = true;
   }
-  if (pinInp) { pinInp.value = ""; pinInp.readOnly = false; }
+  if (pinInp) { pinInp.value = ""; pinInp.readOnly = true; pinInp.placeholder = "Tu dong"; }
 
   classSel.onchange = function () {
     var lop = classSel.value;
     stuSel.innerHTML = '<option value="">-- Chon hoc sinh --</option>';
-    if (!lop || !studentsByClass[lop]) { stuSel.disabled = true; return; }
+    if (!lop || !studentsByClass[lop]) { stuSel.disabled = true; fillPinFromSelection(); return; }
     studentsByClass[lop].forEach(function (s) {
       var name = typeof s === "string" ? s : (s.name || "");
       if (!name) return;
@@ -4186,19 +4194,19 @@ function initHtmlIntroUI() {
       stuSel.appendChild(o);
     });
     stuSel.disabled = false;
+    fillPinFromSelection();
     checkHtmlIntroDup();
   };
-  if (stuSel) stuSel.onchange = checkHtmlIntroDup;
+  if (stuSel) stuSel.onchange = function () {
+    fillPinFromSelection();
+    checkHtmlIntroDup();
+  };
 
   function lockEditor(locked) {
     if (window.htmlIntroEditor) window.htmlIntroEditor.setOption("readOnly", locked ? "nocursor" : false);
     var ta = document.getElementById("htmlintro-editor");
     if (ta) ta.readOnly = !!locked;
-    if (pinInp) pinInp.readOnly = !!locked;
-    if (btn) {
-      btn.disabled = !!locked;
-      btn.textContent = locked ? "DA NOP" : "NOP BAI";
-    }
+    if (btn) { btn.disabled = !!locked; btn.textContent = locked ? "DA NOP" : "NOP BAI"; }
   }
 
   function checkHtmlIntroDup() {
@@ -4207,10 +4215,10 @@ function initHtmlIntroUI() {
     var name = stuSel.value;
     if (!lop || !name) { if (hint) hint.textContent = ""; lockEditor(false); return; }
     try {
-      var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+      var all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
       var existed = all.find(function (x) { return x.class === lop && x.name === name && x.html; });
       if (existed) {
-        if (hint) hint.textContent = "Ban da nop bai roi. Khong sua / nop lai.";
+        if (hint) hint.textContent = "Ban da nop bai roi" + (existed.score !== "" && existed.score != null ? (" · Diem: " + existed.score) : "") + ". Khong sua / nop lai.";
         if (existed.html) setHtmlIntroCode(existed.html);
         runHtmlIntroPreview();
         lockEditor(true);
@@ -4229,8 +4237,7 @@ function initHtmlIntroUI() {
     var a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = (name.replace(/\s+/g, "_") || "gioi_thieu") + ".html";
-    document.body.appendChild(a);
-    a.click();
+    document.body.appendChild(a); a.click();
     setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 400);
   };
 
@@ -4241,24 +4248,17 @@ function initHtmlIntroUI() {
       var pin = normalizePin_(pinInp && pinInp.value);
       var code = getHtmlIntroCode();
       if (!lop || !name) { alert("Chon lop va ho ten"); return; }
-      if (!pin) { alert("Nhap Ma PIN"); return; }
-      var expect = window.htmlIntroPins[lop + "|" + name];
-      if (expect !== undefined && expect !== "" && String(expect) !== String(pin)) {
-        alert("Ma PIN khong khop.");
-        return;
-      }
-      if (!code || code.replace(/\s/g, "").length < 80) {
-        alert("Bai lam qua ngan.");
-        return;
-      }
+      if (!pin) { alert("Khong co Ma PIN trong danh sach. Lien he GV."); return; }
+      if (!code || code.replace(/\s/g, "").length < 80) { alert("Bai lam qua ngan."); return; }
       try {
-        var all0 = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+        var all0 = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
         if (all0.find(function (x) { return x.class === lop && x.name === name && x.html; })) {
-          alert("Ban da nop bai roi.");
-          return;
+          alert("Ban da nop bai roi."); return;
         }
       } catch (eDup) {}
 
+      // Cham rule-based local (chat) truoc khi gui
+      var localGrade = gradeHtmlIntroLocal_(code, name, lop);
       runHtmlIntroPreview();
       btn.disabled = true;
       btn.textContent = "Dang nop...";
@@ -4268,40 +4268,43 @@ function initHtmlIntroUI() {
       var rec = {
         time: timeStr, class: lop, name: name, pin: pin, link: "",
         html: code, css: "", codeHash: simpleHash_(code),
-        score: plag.flag ? 0 : "",
-        note: plag.flag ? ("Trung ma voi " + plag.with + " -> 0 diem") : "Cho AI/GV cham theo Rubric TX3",
-        plagFlag: plag.flag, plagWith: plag.with || "", at: Date.now(), examId: "b11"
+        score: plag.flag ? 0 : localGrade.total,
+        note: plag.flag ? ("Trung ma voi " + plag.with + " -> 0 diem") : localGrade.note,
+        plagFlag: plag.flag, plagWith: plag.with || "", at: Date.now(), examId: "b11",
+        breakdown: localGrade.breakdown
       };
       try {
-        var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+        var all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
         all = all.filter(function (x) { return !(x.class === lop && x.name === name); });
         var store = Object.assign({}, rec);
         if (store.html && store.html.length > 180000) store.html = store.html.slice(0, 180000);
         all.unshift(store);
-        localStorage.setItem("webh2t_htmlintro11", JSON.stringify(all.slice(0, 300)));
+        localStorage.setItem(HTMLINTRO_SYNC_KEY, JSON.stringify(all.slice(0, 300)));
       } catch (e) {}
 
       try {
         if (typeof pushScoreToCloud === "function") {
           pushScoreToCloud({
-            name: name, class: lop, score: rec.score === "" ? "" : rec.score,
+            name: name, class: lop, score: rec.score,
             correct: 0, wrong: 0, skip: 0, elapsed: 0, time: timeStr,
-            pattern: "HTML_INTRO|SOURCE" + (plag.flag ? "|PLAG:" + plag.with : "") + "|PIN:" + pin,
+            pattern: "HTML_INTRO|SOURCE|PIN:" + pin + (plag.flag ? "|PLAG:" + plag.with : ""),
             maDe: "B11-HTML", examId: "b11",
             review: [{ type: "html", text: code.slice(0, 8000) }],
-            note: rec.note, htmlSnapshot: code.slice(0, 90000), cssSnapshot: ""
+            note: rec.note, htmlSnapshot: code.slice(0, 90000), cssSnapshot: "",
+            pin: pin, html: code, action: "html_intro_grade"
           });
         }
       } catch (eC) {}
+      if (!plag.flag) { try { requestHtmlIntroGrade_(rec); } catch (eG) {} }
 
-      if (!plag.flag) {
-        try { requestHtmlIntroGrade_(rec); } catch (eG) {}
-      }
+      // dong bo lai sau 2s
+      setTimeout(function () { try { syncHtmlIntroFromCloud(); } catch (e) {} }, 2500);
+
       renderHtmlIntroTable();
       lockEditor(true);
       var hint = document.getElementById("htmlintro-hint");
-      if (hint) hint.textContent = plag.flag ? rec.note : ("Da nop " + timeStr + ". Ma nguon da luu. Khong the sua.");
-      alert(plag.flag ? ("Phat hien trung ma. Diem 0.") : "Nop bai thanh cong!");
+      if (hint) hint.textContent = "Da nop · Diem tam: " + rec.score + "/10. " + (plag.flag ? rec.note : "Dang dong bo AI/Sheet...");
+      alert(plag.flag ? "Phat hien trung ma. Diem 0." : ("Nop thanh cong!\nDiem tam (rule): " + rec.score + "/10"));
     };
   }
 
@@ -4320,7 +4323,75 @@ function initHtmlIntroUI() {
     };
   }
 
+  try { syncHtmlIntroFromCloud(); } catch (e) {}
   renderHtmlIntroTable();
+}
+
+/** Cham chat tai client – khong cho diem cao khi thieu tieu chi */
+function gradeHtmlIntroLocal_(source, name, lop) {
+  var src = String(source || "");
+  var bd = [];
+  var total = 0;
+  function add(label, max, pts, why) {
+    bd.push({ label: label, max: max, pts: pts, why: why });
+    total += pts;
+  }
+  // Anh 1.5 – bat buoc co img va src khong rong
+  var imgM = src.match(/<img\b[^>]*>/i);
+  var hasSrc = imgM && /src\s*=\s*["'][^"']+["']/i.test(imgM[0]) && !/src\s*=\s*["']\s*["']/i.test(imgM[0]);
+  add("Anh dai dien", 1.5, hasSrc ? 1.5 : (imgM ? 0.3 : 0), hasSrc ? "Co img+src" : "Thieu anh that");
+
+  // Thong tin 1.5 – 4 muc, moi muc can co noi dung sau nhan (khong chi dau ...)
+  function filled(labelRe) {
+    var re = new RegExp(labelRe + "[^<]{0,40}([\\s\\S]{0,80}?)</", "i");
+    var m = src.match(re);
+    if (!m) return false;
+    var t = String(m[1] || "").replace(/<[^>]+>/g, "").replace(/\.{2,}|…/g, "").trim();
+    return t.length >= 2;
+  }
+  var hits = 0;
+  if (filled("h[oọ]\\\\s*v[aà]\\\\s*t[eê]n|ho\\\\s*va\\\\s*ten") || (name && src.toLowerCase().indexOf(String(name).toLowerCase().split(/\s+/).pop()) >= 0 && /h[oọ].*t[eê]n/i.test(src))) hits++;
+  if (/ng[aà]y\\\\s*sinh|ngay\\\\s*sinh/i.test(src) && filled("sinh")) hits++;
+  else if (/ng[aà]y\\\\s*sinh[^<]{0,30}[0-9]{1,2}/i.test(src)) hits++;
+  if (new RegExp("l[oớ]p[^<]{0,20}" + (lop || ""), "i").test(src) || filled("l[oớ]p")) hits++;
+  if (/[đd][iị]a\\\\s*ch[iỉ]/i.test(src) && !/[đd][iị]a\\\\s*ch[iỉ][^<]{0,20}\\.{2,}/i.test(src)) hits++;
+  // simpler content checks
+  hits = 0;
+  var plain = src.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ");
+  plain = plain.replace(/\.{2,}|…/g, " ").replace(/\s+/g, " ");
+  if (/h[oọ]\s*v[aà]\s*t[eê]n/i.test(src) && name && plain.toLowerCase().indexOf(String(name).toLowerCase().split(/\s+/).slice(-1)[0]) >= 0) hits++;
+  else if (/h[oọ]\s*v[aà]\s*t[eê]n\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plain)) hits++;
+  if (/ng[aà]y\s*sinh\s*[:：]?\s*\d/i.test(plain)) hits++;
+  if (new RegExp("l[oớ]p\\s*[:：]?\\s*" + (lop || "12"), "i").test(plain)) hits++;
+  if (/[đd][iị]a\s*ch[iỉ]\s*[:：]?\s*[A-Za-zÀ-ỹ0-9]{2,}/i.test(plain)) hits++;
+  var infoPts = [0, 0.35, 0.7, 1.1, 1.5][Math.min(4, hits)];
+  add("Thong tin ca nhan", 1.5, infoPts, "Du " + hits + "/4 muc co noi dung");
+
+  var so = /s[oở]\s*th[ií]ch\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plain);
+  var uoc = /(u[oớ]c\s*m[oơ]|ngh[eề]\s*nghi[eệ]p)\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plain);
+  add("So thich & uoc mo", 1.0, (so ? 0.5 : 0) + (uoc ? 0.5 : 0), (so?"+so thich ":"") + (uoc?"+uoc mo":"thieu"));
+
+  var msg = /th[oô]ng\s*[đd]i[eệ]p/i.test(src) && /th[oô]ng\s*[đd]i[eệ]p[^A-Za-zÀ-ỹ]{0,20}[A-Za-zÀ-ỹ]{3,}/i.test(plain);
+  add("Thong diep", 1.0, msg ? 1.0 : 0, msg ? "Co" : "Thieu");
+
+  var cmt = /<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:/i.test(src);
+  add("Bay 1 comment", 1.0, cmt ? 1.0 : 0, cmt ? "Co" : "Thieu comment");
+
+  var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  var tOk = tm && /-|–/.test(tm[1]) && String(tm[1]).trim().length > 3;
+  add("Bay 2 title", 1.0, tOk ? 1.0 : (tm ? 0.3 : 0), tOk ? "Title dang Ten - Lop" : "Title chua du");
+
+  var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
+  var altOk = altM && /^image\b/i.test(String(altM[1] || "").trim());
+  add("Bay 3 alt", 1.5, altOk ? 1.5 : (altM ? 0.4 : 0), altOk ? "alt Image ..." : "alt chua dung");
+
+  var color = /color\s*:\s*(#(?:[0-9a-f]{3}|[0-9a-f]{6})|rgb|blue|green|red|orange)/i.test(src);
+  add("Bay 4 mau", 1.5, color ? 1.0 : 0, color ? "Co mau (GV doi chieu thang sinh)" : "Thieu mau");
+
+  total = Math.round(total * 100) / 100;
+  var miss = bd.filter(function (b) { return b.pts < b.max; }).map(function (b) { return b.label + " " + b.pts + "/" + b.max; });
+  var note = "Rule " + total + "/10" + (miss.length ? (" · Thieu: " + miss.join("; ")) : " · Du tieu chi co ban");
+  return { total: total, note: note, breakdown: bd };
 }
 
 function simpleHash_(s) {
@@ -4339,32 +4410,34 @@ function codeSimilarity_(a, b) {
   a = a.slice(0, n); b = b.slice(0, n);
   var same = 0, step = Math.max(1, Math.floor(n / 250));
   for (var i = 0; i < n; i += step) if (a[i] === b[i]) same++;
-  var total = Math.ceil(n / step) || 1;
   var chunk = a.slice(80, Math.min(220, a.length));
   var bonus = (chunk.length > 40 && b.indexOf(chunk) >= 0) ? 0.4 : 0;
-  return Math.min(1, same / total + bonus);
+  return Math.min(1, same / (Math.ceil(n / step) || 1) + bonus);
 }
 function detectHtmlPlagiarism_(code, lop, name) {
   try {
-    var all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]");
+    var all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
     var best = { flag: false, with: "", score: 0 };
     all.forEach(function (x) {
       if (!x || (x.class === lop && x.name === name)) return;
       var other = x.html || "";
-      if (!other || other.length < 60) return;
+      if (other.length < 60) return;
       var sim = codeSimilarity_(code, other);
       if (sim >= 0.82 && sim > best.score) best = { flag: true, with: (x.name || "") + " · " + (x.class || ""), score: sim };
     });
     return best;
   } catch (e) { return { flag: false, with: "" }; }
 }
-function requestHtmlIntroGrade_(rec) {
-  var url = "";
+
+function getHtmlIntroWebhook_() {
   try {
-    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) url = HTML_INTRO_WEBHOOK;
-    if (!url && typeof getTnWebhook === "function") url = getTnWebhook();
-    if (!url) url = localStorage.getItem("webh2t_cloud_webhook") || localStorage.getItem("webh2t_tn_webhook") || "";
-  } catch (e) {}
+    if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbxwl6rxW-G1XyCH2GCVrIjAiEQoEAxk5lRiMOloJYW6D963JM7Pzpke5cYw2dXcq2UA/exec"; }
+}
+
+function requestHtmlIntroGrade_(rec) {
+  var url = getHtmlIntroWebhook_();
   if (!url) return;
   fetch(url, {
     method: "POST",
@@ -4377,15 +4450,73 @@ function requestHtmlIntroGrade_(rec) {
       class: rec.class,
       pin: rec.pin,
       html: (rec.html || "").slice(0, 90000),
-      rubric: "TX3 HTML"
+      scoreHint: rec.score,
+      rubric: "TX3 strict"
     })
   }).catch(function () {});
 }
+
+/** Dong bo tu Google Sheet: ghi de local theo cloud; xoa local neu cloud khong con */
+function syncHtmlIntroFromCloud() {
+  var url = getHtmlIntroWebhook_();
+  if (!url) return Promise.resolve();
+  var sep = url.indexOf("?") >= 0 ? "&" : "?";
+  return fetch(url + sep + "action=list&_=" + Date.now(), { method: "GET", cache: "no-store" })
+    .then(function (r) { return r.json(); })
+    .then(function (data) {
+      var rows = [];
+      if (Array.isArray(data)) rows = data;
+      else if (data && Array.isArray(data.rows)) rows = data.rows;
+      else if (data && Array.isArray(data.attempts)) rows = data.attempts;
+
+      // Map cloud -> local shape
+      var cloud = rows.map(function (r) {
+        return {
+          time: r.time || "",
+          class: r.class || r.lop || "",
+          name: r.name || r.hoTen || "",
+          pin: r.pin || "",
+          link: r.link || "",
+          html: r.html || "",
+          score: r.score != null ? r.score : (r.tong != null ? r.tong : ""),
+          note: r.note || r.nhanXet || "",
+          plagFlag: !!(r.plagFlag && String(r.plagFlag).toUpperCase() !== "NO" && r.plagFlag !== ""),
+          at: r.at || Date.now(),
+          examId: "b11",
+          fromCloud: true
+        };
+      }).filter(function (x) { return x.name && x.class; });
+
+      // Cloud la nguon su that: thay the local bang cloud (giu html local neu cloud khong co snapshot)
+      var local = [];
+      try { local = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]"); } catch (e) {}
+      var byKey = {};
+      local.forEach(function (x) { byKey[(x.class || "") + "|" + (x.name || "")] = x; });
+
+      var merged = cloud.map(function (c) {
+        var k = c.class + "|" + c.name;
+        var old = byKey[k];
+        if (old && old.html && !c.html) c.html = old.html;
+        if (c.score === "" && old && old.score !== "" && old.score != null) {
+          /* prefer cloud even empty if explicitly cleared — if cloud has score use it */
+        }
+        return c;
+      });
+
+      // Neu cloud tra ve danh sach (ke ca rong sau khi GV xoa), dung cloud
+      // Chi merge local-only khi cloud request fail — o day success nen tin cloud
+      try { localStorage.setItem(HTMLINTRO_SYNC_KEY, JSON.stringify(merged.slice(0, 400))); } catch (e2) {}
+      renderHtmlIntroTable();
+      return merged;
+    })
+    .catch(function (e) { console.warn("syncHtmlIntro", e); });
+}
+
 function renderHtmlIntroTable() {
   var body = document.getElementById("htmlintro-result-body");
   if (!body) return;
   var all = [];
-  try { all = JSON.parse(localStorage.getItem("webh2t_htmlintro11") || "[]"); } catch (e) {}
+  try { all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]"); } catch (e) {}
   if (!all.length) {
     body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chua co du lieu</td></tr>';
     return;
@@ -4399,7 +4530,7 @@ function renderHtmlIntroTable() {
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.class || "") + "</td>"
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.name || "") + "</td>"
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700;color:#1D4ED8">' + score + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;font-size:.78rem;color:#475569">' + (r.note || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;font-size:.78rem;color:#475569;white-space:pre-wrap">' + (r.note || "") + "</td>"
       + "</tr>";
   }).join("");
 }
@@ -4433,8 +4564,14 @@ function renderHtmlIntroTable() {
 
 try {
   if (document.readyState === "loading")
-    document.addEventListener("DOMContentLoaded", function () { try { renderHtmlIntroTable(); } catch (e) {} });
-  else renderHtmlIntroTable();
+    document.addEventListener("DOMContentLoaded", function () {
+      try { renderHtmlIntroTable(); } catch (e) {}
+      try { syncHtmlIntroFromCloud(); } catch (e2) {}
+    });
+  else {
+    try { renderHtmlIntroTable(); } catch (e) {}
+    try { syncHtmlIntroFromCloud(); } catch (e2) {}
+  }
 } catch (e0) {}
 </script>
 
