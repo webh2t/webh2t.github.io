@@ -3450,11 +3450,13 @@ if (_cancelExam) {
 
   <div style="max-width:1100px;margin:0 auto;box-sizing:border-box">
     <div class="hi-checklist">
-      <b>HTML – yêu cầu bắt buộc</b><br>
-      1. <code>&lt;!-- Bài thi của: [Họ tên em] - Lớp: [Lớp em] --&gt;</code><br>
-      2. Thẻ tiêu đề: <code>&lt;title&gt;Tên em - Lớp&lt;/title&gt;</code><br>
-      3. Ảnh đại diện có <code>alt="Image [Tên em]"</code><br>
-      4. Màu chữ/nền «Họ và tên» theo tháng sinh (chẵn = xanh, lẻ = đỏ/cam)
+      <b>HTML – yêu cầu bắt buộc (chấm theo Rubric TX3 / 10 điểm)</b><br>
+      1. Ảnh đại diện (src không rỗng)<br>
+      2. Thông tin: Họ và tên, Ngày sinh, Lớp, Địa chỉ, Sở thích, Ước mơ, Thông điệp cho tương lai<br>
+      3. Bẫy 1: <code>&lt;!-- Bài thi của: [Họ tên em] - Lớp: [Lớp em] --&gt;</code><br>
+      4. Bẫy 2: <code>&lt;title&gt;Tên em - Lớp&lt;/title&gt;</code> ·
+         Bẫy 3: <code>alt="Image [Tên em]"</code> ·
+         Bẫy 4: màu Họ và tên theo tháng sinh (chẵn=xanh, lẻ=đỏ/cam)
     </div>
     <div class="hi-split">
       <div>
@@ -4076,7 +4078,7 @@ try {
 window.htmlIntroSubmissions = window.htmlIntroSubmissions || [];
 window.htmlIntroPins = window.htmlIntroPins || {};
 window.htmlIntroEditor = null;
-var HTMLINTRO_DEFAULT = "\u003c!DOCTYPE html>\n\u003chtml>\n\u003chead>\n\u003ctitle>Ten em - Lop\u003c/title>\n\u003cstyle>\nbody{font-family:system-ui,sans-serif;max-width:640px;margin:24px auto;padding:0 16px}\nh1{color:#2563eb}\nimg{max-width:160px;border-radius:12px}\n\u003c/style>\n\u003c/head>\n\u003cbody>\n\u003c!-- B\u00e0i thi c\u1ee7a: [H\u1ecd t\u00ean em] - L\u1edbp: [L\u1edbp em] -->\n\u003ch1>H\u1ecd v\u00e0 t\u00ean: ...\u003c/h1>\n\u003cimg src=\"\" alt=\"Image [T\u00ean em]\" width=\"160\">\n\u003cp>Ng\u00e0y sinh: ...\u003c/p>\n\u003cp>L\u1edbp: ...\u003c/p>\n\u003cp>\u0110\u1ecba ch\u1ec9: ...\u003c/p>\n\u003cp>S\u1edf th\u00edch: ...\u003c/p>\n\u003cp>\u01af\u1edbc m\u01a1: ...\u003c/p>\n\u003cp>Th\u00f4ng \u0111i\u1ec7p cho t\u01b0\u01a1ng lai: ...\u003c/p>\n\u003c/body>\n\u003c/html>";
+var HTMLINTRO_DEFAULT = "\u003c!DOCTYPE html>\n\u003chtml>\n\u003chead>\n\u003ctitle>\u003c/title>\n\u003c/head>\n\u003cbody>\n\u003c!-- -->\n\u003ch1>\u003c/h1>\n\u003cimg src=\"\" alt=\"\">\n\u003cp>\u003c/p>\n\u003cp>\u003c/p>\n\u003cp>\u003c/p>\n\u003c/body>\n\u003c/html>";
 var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
@@ -4165,23 +4167,24 @@ function fillPinFromSelection() {
 }
 
 function enableHtmlIntroAntiCheat() {
-  var root = document.getElementById("screen-htmlintro");
-  if (!root || root.dataset.anti === "1") return;
-  root.dataset.anti = "1";
-  function block(e) {
-    if (root.style.display === "none") return;
-    e.preventDefault();
-    return false;
-  }
-  root.addEventListener("copy", block);
-  root.addEventListener("cut", block);
-  root.addEventListener("contextmenu", block);
+  /* Cho phep copy trong editor + preview. Chi han che phim nguy hiem toan trang khi dang o man HTML. */
+  if (window.__hiAntiKey) return;
+  window.__hiAntiKey = true;
   document.addEventListener("keydown", function (e) {
+    var root = document.getElementById("screen-htmlintro");
     if (!root || root.style.display === "none") return;
     var key = (e.key || "").toLowerCase();
     var ctrl = e.ctrlKey || e.metaKey;
-    if (ctrl && (key === "c" || key === "u" || key === "s" || key === "p")) { e.preventDefault(); return false; }
-    if (e.key === "F12" || (ctrl && e.shiftKey && (key === "i" || key === "j" || key === "c"))) { e.preventDefault(); return false; }
+    // Cho phep Ctrl+C / Ctrl+V / Ctrl+X trong editor
+    if (ctrl && (key === "c" || key === "v" || key === "x" || key === "a")) return;
+    if (e.key === "F12" || (ctrl && e.shiftKey && (key === "i" || key === "j" || key === "c"))) {
+      e.preventDefault();
+      return false;
+    }
+    if (ctrl && (key === "u" || key === "s" || key === "p")) {
+      e.preventDefault();
+      return false;
+    }
   }, true);
 }
 function initHtmlIntroUI() {
@@ -4338,8 +4341,7 @@ function initHtmlIntroUI() {
       lockEditor(true);
       var hint = document.getElementById("htmlintro-hint");
       if (hint) hint.textContent = "Da nop · Diem tam: " + rec.score + "/10. " + (plag.flag ? rec.note : "Dang dong bo AI/Sheet...");
-      alert(plag.flag ? "Phat hien trung ma. Diem 0." : ("Nop thanh cong!\nDiem tam (rule): " + rec.score + "/10"));
-    };
+      };
   }
 
   if (back) {
