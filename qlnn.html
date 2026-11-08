@@ -11980,9 +11980,18 @@ function seatRoleBadge(role) {
   var m = SEAT_ROLE_META[role];
   return '<span class="seat-badge" title="' + m.title + '" style="display:inline-block;min-width:14px;height:14px;line-height:14px;text-align:center;border-radius:50%;font-size:9px;font-weight:800;color:#fff;background:' + m.color + ';margin-right:2px;vertical-align:middle">' + m.icon + "</span>";
 }
+/** Hiển thị ngắn trên sơ đồ: lấy 2 từ cuối (YẾN NGỌC, GIA AN, BÍCH TRÂN) */
+function seatShortName(full) {
+  var s = String(full || "").trim().replace(/\s+/g, " ");
+  if (!s) return "TÊN…";
+  var parts = s.split(" ");
+  if (parts.length <= 2) return s;
+  return parts.slice(-2).join(" ");
+}
 function seatCellHtml(num, data) {
   var s = (data.seats && data.seats[num]) || { stt: num, name: "", role: "" };
-  var name = String(s.name || "").trim() || "TÊN…";
+  var full = String(s.name || "").trim();
+  var short = seatShortName(full);
   var badge = seatRoleBadge(s.role);
   return (
     '<div class="seat-cell" data-seat="' + num + '" draggable="true" ' +
@@ -11990,8 +11999,8 @@ function seatCellHtml(num, data) {
     'onclick="seatEditClick(event)" ' +
     'style="border:1.5px solid #93c5fd;border-radius:10px;background:#fff;padding:4px 3px;min-height:44px;cursor:grab;text-align:center;box-shadow:0 1px 2px rgba(15,23,42,.06)">' +
     '<div style="font-size:10px;font-weight:700;color:#64748b;line-height:1">' + (s.stt || num) + "</div>" +
-    '<div style="font-size:11px;font-weight:700;color:#0f172a;line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + name.replace(/"/g, "&quot;") + '">' +
-    badge + name + "</div></div>"
+    '<div style="font-size:11px;font-weight:700;color:#0f172a;line-height:1.25;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (full || short).replace(/"/g, "&quot;") + '">' +
+    badge + short + "</div></div>"
   );
 }
 function seatBlockHtml(nums, data, cols) {
