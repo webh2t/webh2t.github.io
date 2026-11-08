@@ -11989,17 +11989,19 @@ function seatShortName(full) {
   return parts.slice(-2).join(" ");
 }
 function seatCellHtml(num, data) {
-  var s = (data.seats && data.seats[num]) || { stt: num, name: "", role: "" };
+  var s = (data.seats && data.seats[num]) || { stt: "", name: "", role: "" };
   var full = String(s.name || "").trim();
   var short = seatShortName(full);
   var badge = seatRoleBadge(s.role);
+  // Số trên ô = STT trong danh sách lớp (đi theo HS khi kéo thả), không phải số ô
+  var sttShow = (s.stt != null && String(s.stt).trim() !== "") ? s.stt : "—";
   return (
     '<div class="seat-cell" data-seat="' + num + '" draggable="true" ' +
     'ondragstart="seatDragStart(event)" ondragover="event.preventDefault()" ondrop="seatDrop(event)" ' +
     'onclick="seatEditClick(event)" ' +
-    'style="border:1.5px solid #93c5fd;border-radius:10px;background:#fff;padding:4px 3px;min-height:44px;cursor:grab;text-align:center;box-shadow:0 1px 2px rgba(15,23,42,.06)">' +
-    '<div style="font-size:10px;font-weight:700;color:#64748b;line-height:1">' + (s.stt || num) + "</div>" +
-    '<div style="font-size:11px;font-weight:700;color:#0f172a;line-height:1.25;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (full || short).replace(/"/g, "&quot;") + '">' +
+    'style="border:1.5px solid #93c5fd;border-radius:10px;background:#fff;padding:3px 2px;min-height:40px;cursor:grab;text-align:center;box-shadow:0 1px 2px rgba(15,23,42,.06)">' +
+    '<div style="font-size:9px;font-weight:700;color:#64748b;line-height:1">' + sttShow + "</div>" +
+    '<div style="font-size:10.5px;font-weight:700;color:#0f172a;line-height:1.2;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (full || short).replace(/"/g, "&quot;") + '">' +
     badge + short + "</div></div>"
   );
 }
@@ -12036,7 +12038,7 @@ function renderSeatMap() {
   h += '<div id="seatMapCapture" style="background:#eef2ff;border:2px solid #6366f1;border-radius:16px;padding:14px 16px;max-width:1100px;margin:0 auto">';
   // Header
   h += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">';
-  h += '<img src="' + logo + '" alt="11B9" crossorigin="anonymous" style="width:56px;height:56px;object-fit:contain" onerror="this.style.display=\'none\'">';
+  h += '<img src="' + logo + '" alt="11B9" crossorigin="anonymous" class="seat-logo" style="width:56px;height:56px;object-fit:contain;background:transparent;mix-blend-mode:multiply" onerror="this.style.display=\'none\'">';
   h += '<div style="flex:1;text-align:center">';
   h += '<div style="font-size:13px;font-weight:800;color:#1e3a8a;letter-spacing:.04em">' + (data.school || "TRƯỜNG THPT HÀ HUY TẬP") + "</div>";
   h += '<div style="display:inline-block;margin-top:4px;background:#1d4ed8;color:#fff;font-weight:900;font-size:18px;padding:6px 18px;border-radius:999px">SƠ ĐỒ LỚP ' + (data.className || "11B9") + "</div>";
@@ -12119,13 +12121,18 @@ function seatMapFillFromClass() {
     return String(a.id || "").localeCompare(String(b.id || ""), "vi", { numeric: true });
   });
   if (!list.length) { alert("Chưa có danh sách lớp ở Tổng quan — hoặc dùng 📄 Mẫu Excel / 📤 Upload Excel"); return; }
+  // Nạp theo thứ tự danh sách lớp: STT = vị trí trong DS (1..n), gắn vào ghế i ban đầu
   for (var i = 1; i <= 48; i++) {
     var st = list[i - 1];
-    data.seats[i] = data.seats[i] || { stt: i, name: "", studentId: "", role: "" };
+    data.seats[i] = data.seats[i] || { stt: "", name: "", studentId: "", role: "" };
     if (st) {
       data.seats[i].name = String(st.name || "").trim();
       data.seats[i].studentId = String(st.id || "");
-      data.seats[i].stt = i;
+      data.seats[i].stt = i; // STT danh sách lớp — sẽ đi theo HS khi kéo thả
+    } else {
+      data.seats[i].name = "";
+      data.seats[i].studentId = "";
+      data.seats[i].stt = "";
     }
   }
   saveSeatMapData(data);
@@ -12221,11 +12228,11 @@ function seatDrop(ev) {
   var to = Number(cell && cell.getAttribute("data-seat"));
   if (!from || !to || from === to) return;
   var data = window._seatMapData || loadSeatMapData();
-  var a = data.seats[from] || { stt: from, name: "", studentId: "", role: "" };
-  var b = data.seats[to] || { stt: to, name: "", studentId: "", role: "" };
-  // Hoán đổi người, giữ số ghế (stt = số ghế)
-  data.seats[from] = { stt: from, name: b.name, studentId: b.studentId, role: b.role };
-  data.seats[to] = { stt: to, name: a.name, studentId: a.studentId, role: a.role };
+  var a = data.seats[from] || { stt: "", name: "", studentId: "", role: "" };
+  var b = data.seats[to] || { stt: "", name: "", studentId: "", role: "" };
+  // Hoán đổi cả người + STT danh sách lớp (STT đi theo học sinh, không gắn cố định ô)
+  data.seats[from] = { stt: b.stt, name: b.name, studentId: b.studentId, role: b.role };
+  data.seats[to] = { stt: a.stt, name: a.name, studentId: a.studentId, role: a.role };
   saveSeatMapData(data);
   renderSeatMap();
 }
@@ -12295,8 +12302,29 @@ function seatMapExportWord() {
   if (!el) { alert("Chưa có sơ đồ"); return; }
   var clone = el.cloneNode(true);
   clone.querySelectorAll(".seat-legend, .no-print").forEach(function(n) { try { n.remove(); } catch (e) {} });
-  var html = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>So do lop</title>" +
-    "<style>@page{size:A4 landscape;margin:10mm}body{font-family:Arial,Helvetica,sans-serif}</style></head><body>" +
+  // Ép gọn 1 trang A4 ngang
+  clone.style.maxWidth = "100%";
+  clone.style.width = "277mm";
+  clone.style.padding = "6px 8px";
+  clone.style.boxSizing = "border-box";
+  clone.querySelectorAll(".seat-cell").forEach(function(c) {
+    c.style.minHeight = "28px";
+    c.style.padding = "2px 1px";
+  });
+  clone.querySelectorAll(".seat-logo").forEach(function(img) {
+    img.style.background = "transparent";
+    img.style.mixBlendMode = "multiply";
+  });
+  var html = "<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'>" +
+    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->" +
+    "<title>So do lop</title>" +
+    "<style>" +
+    "@page { size: A4 landscape; margin: 8mm; }" +
+    "body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; }" +
+    "#seatMapCapture { width: 277mm !important; max-width: 277mm !important; box-sizing: border-box; }" +
+    ".seat-cell { min-height: 26px !important; padding: 2px 1px !important; }" +
+    ".seat-logo { background: transparent !important; mix-blend-mode: multiply; }" +
+    "</style></head><body>" +
     clone.outerHTML + "</body></html>";
   var blob = new Blob(["\ufeff", html], { type: "application/msword" });
   var a = document.createElement("a");
