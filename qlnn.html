@@ -12038,33 +12038,39 @@ function renderSeatMap() {
   h += '<div id="seatMapCapture" style="background:#eef2ff;border:2px solid #6366f1;border-radius:16px;padding:14px 16px;max-width:1100px;margin:0 auto">';
   // Header
   h += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">';
-  h += '<img src="' + logo + '" alt="11B9" crossorigin="anonymous" class="seat-logo" style="width:56px;height:56px;object-fit:contain;background:transparent;mix-blend-mode:multiply" onerror="this.style.display=\'none\'">';
-  h += '<div style="flex:1;text-align:center">';
-  h += '<div style="font-size:13px;font-weight:800;color:#1e3a8a;letter-spacing:.04em">' + (data.school || "TRƯỜNG THPT HÀ HUY TẬP") + "</div>";
-  h += '<div style="display:inline-block;margin-top:4px;background:#1d4ed8;color:#fff;font-weight:900;font-size:18px;padding:6px 18px;border-radius:999px">SƠ ĐỒ LỚP ' + (data.className || "11B9") + "</div>";
-  h += '<div style="margin-top:6px"><span style="display:inline-block;background:#fff;border:1.5px solid #fbbf24;color:#b45309;font-weight:700;font-size:12px;padding:3px 12px;border-radius:999px">Năm học: ' + (data.year || "2026 – 2027") + "</span></div>";
+  // Logo: khung cùng màu nền sơ đồ + multiply → hết lộ nền trắng
+  h += '<div class="seat-logo-wrap" style="width:58px;height:58px;border-radius:12px;background:#eef2ff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0">';
+  h += '<img src="' + logo + '" alt="11B9" crossorigin="anonymous" class="seat-logo" style="width:56px;height:56px;object-fit:contain;background:#eef2ff;mix-blend-mode:multiply;display:block" onerror="this.style.display=\'none\'">';
   h += "</div>";
-  h += '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:6px 10px;text-align:center;min-width:90px"><div style="font-size:10px;color:#92400e">Áp dụng từ</div><div style="font-weight:800;color:#b45309;font-size:13px">' + (data.fromDate || "…") + "</div></div>";
+  h += '<div style="flex:1;text-align:center">';
+  h += '<div style="font-size:13px;font-weight:800;color:#1e3a8a;letter-spacing:.04em;text-align:center">' + (data.school || "TRƯỜNG THPT HÀ HUY TẬP") + "</div>";
+  h += '<div style="display:inline-flex;align-items:center;justify-content:center;text-align:center;margin-top:4px;background:#1d4ed8;color:#fff;font-weight:900;font-size:18px;padding:6px 20px;border-radius:999px;line-height:1.2;min-height:34px">SƠ ĐỒ LỚP ' + (data.className || "11B9") + "</div>";
+  h += '<div style="margin-top:6px;text-align:center"><span style="display:inline-flex;align-items:center;justify-content:center;text-align:center;background:#fff;border:1.5px solid #fbbf24;color:#b45309;font-weight:700;font-size:12px;padding:4px 14px;border-radius:999px;line-height:1.2;min-height:26px">Năm học: ' + (data.year || "2026 – 2027") + "</span></div>";
+  h += "</div>";
+  h += '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:6px 10px;text-align:center;min-width:90px;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:10px;color:#92400e;text-align:center">Áp dụng từ</div><div style="font-weight:800;color:#b45309;font-size:13px;text-align:center">' + (data.fromDate || "…") + "</div></div>";
   h += "</div>";
 
+  var teamPill = function(label) {
+    return '<div style="text-align:center;display:flex;justify-content:center"><span style="display:inline-flex;align-items:center;justify-content:center;text-align:center;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:4px 16px;border-radius:999px;line-height:1.2;min-height:26px;min-width:64px">' + label + "</span></div>";
+  };
   // Grid: left | aisle | right
   h += '<div style="display:grid;grid-template-columns:1fr 36px 1fr;gap:10px;align-items:stretch">';
   // LEFT
   h += '<div style="display:flex;flex-direction:column;gap:10px">';
   h += seatBlockHtml(SEAT_LAYOUT.leftTop, data, 4);
-  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 4</span></div>';
+  h += teamPill("TỔ 4");
   h += seatBlockHtml(SEAT_LAYOUT.leftBot, data, 4);
-  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 3</span></div>';
+  h += teamPill("TỔ 3");
   h += "</div>";
   // AISLE
   h += '<div style="background:linear-gradient(180deg,#e0e7ff,#f1f5f9);border:1.5px dashed #94a3b8;border-radius:10px;display:flex;align-items:center;justify-content:center">';
-  h += '<div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:800;color:#64748b;letter-spacing:.2em">LỐI ĐI</div></div>';
+  h += '<div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:800;color:#64748b;letter-spacing:.2em;text-align:center">LỐI ĐI</div></div>';
   // RIGHT
   h += '<div style="display:flex;flex-direction:column;gap:10px">';
   h += seatBlockHtml(SEAT_LAYOUT.rightTop, data, 4);
-  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 2</span></div>';
+  h += teamPill("TỔ 2");
   h += seatBlockHtml(SEAT_LAYOUT.rightBot, data, 4);
-  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 1</span></div>';
+  h += teamPill("TỔ 1");
   h += "</div></div>";
 
   // Front of class
@@ -12409,10 +12415,23 @@ function seatMapExportJpg() {
             n.style.fontWeight = "700";
             n.style.color = "#0f172a";
           });
-          // Logo: blend nền
+          // Logo: nền cùng màu sơ đồ + multiply (không lộ khối trắng)
+          cap.querySelectorAll(".seat-logo-wrap").forEach(function(w) {
+            w.style.background = "#eef2ff";
+          });
           cap.querySelectorAll("img.seat-logo, img").forEach(function(img) {
-            img.style.background = "transparent";
+            img.style.background = "#eef2ff";
             img.style.mixBlendMode = "multiply";
+          });
+          // Căn giữa chữ trong badge/pill
+          cap.querySelectorAll("span, div").forEach(function(n) {
+            var t = (n.textContent || "").trim();
+            if (/^SƠ ĐỒ LỚP|^Năm học:|^TỔ\s*\d/i.test(t) && n.children.length === 0) {
+              n.style.textAlign = "center";
+              n.style.display = "inline-flex";
+              n.style.alignItems = "center";
+              n.style.justifyContent = "center";
+            }
           });
         } catch (e) {}
       }
