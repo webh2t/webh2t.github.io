@@ -157,13 +157,15 @@ button, input, select, textarea { font-family: inherit; }
 }
 .stat span { color: var(--primary-mid); font-weight: 800; }
 
-/* Seat map */
+/* Seat map — A4 landscape, 4 tổ, lối đi giữa, chân trang như mẫu SDL B9 */
 .sheet-wrap { overflow: auto; background: #e8eef5; border-radius: var(--radius); padding: 12px; }
 .sheet {
-  min-width: 920px; margin: 0 auto; background: #fffef9; border: 3px solid #3b82f6;
-  border-radius: 20px; padding: 18px 22px 22px; position: relative;
+  width: 100%; max-width: 1100px; min-width: 900px; margin: 0 auto;
+  background: linear-gradient(180deg, #f0f9ff 0%, #fffef9 30%, #fff 100%);
+  border: 3px solid #3b82f6; border-radius: 20px; padding: 14px 18px 16px;
+  position: relative; box-sizing: border-box;
 }
-.sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.sheet-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
 .sheet-logo {
   width: 64px; height: 64px; border-radius: 50%; border: 2px solid #60a5fa;
   display: flex; align-items: center; justify-content: center; font-size: 28px;
@@ -171,7 +173,7 @@ button, input, select, textarea { font-family: inherit; }
 }
 .sheet-logo img { width: 100%; height: 100%; object-fit: cover; }
 .sheet-title {
-  flex: 1; text-align: center; padding: 8px 14px;
+  flex: 1; text-align: center; padding: 6px 12px;
   background: linear-gradient(180deg, #e0f2fe, #f8fafc);
   border-radius: 16px; border: 1px solid #93c5fd;
 }
@@ -181,23 +183,38 @@ button, input, select, textarea { font-family: inherit; }
 .sheet-title .slogan { font-size: 12px; font-style: italic; color: #0369a1; }
 .gvcn-box {
   border: 2px solid #f97316; border-radius: 12px; padding: 6px 12px; text-align: center;
-  min-width: 140px; background: #fff7ed; flex-shrink: 0;
+  min-width: 130px; background: #fff7ed; flex-shrink: 0;
 }
 .gvcn-box .lbl { font-size: 10px; font-weight: 800; color: #c2410c; }
 .gvcn-box .nm { font-size: 13px; font-weight: 800; color: #9a3412; }
 .gvcn-box .dt { font-size: 10px; color: #9a3412; font-style: italic; }
 
-.seat-area { display: flex; align-items: stretch; gap: 0; }
-.seat-col { flex: 1; display: flex; flex-direction: column; gap: 6px; }
-.desk-row {
-  display: flex; border: 1.5px solid #7eb6e8; border-radius: 10px; overflow: hidden; background: #fff;
+.seat-area { display: flex; align-items: stretch; gap: 0; margin: 4px 0 8px; }
+.seat-col { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+.aisle-col {
+  width: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(180deg, #dbeafe, #eff6ff); margin: 0 4px;
+  border-radius: 8px; border: 1px dashed #93c5fd;
 }
+.aisle-label {
+  writing-mode: vertical-rl; text-orientation: mixed;
+  font-size: 11px; font-weight: 800; color: #1d4ed8; letter-spacing: 3px;
+}
+.desk-row {
+  display: flex; border: 1.5px solid #7eb6e8; border-radius: 12px; overflow: hidden; background: #fff;
+  min-height: 48px;
+}
+.desk-row.zone-1 { border-color: #3b82f6; background: linear-gradient(180deg, #eff6ff, #fff); }
+.desk-row.zone-2 { border-color: #10b981; background: linear-gradient(180deg, #ecfdf5, #fff); }
+.desk-row.zone-3 { border-color: #ec4899; background: linear-gradient(180deg, #fdf2f8, #fff); }
+.desk-row.zone-4 { border-color: #f59e0b; background: linear-gradient(180deg, #fffbeb, #fff); }
+
 .desk-cell {
   flex: 1; min-width: 0; text-align: center; padding: 3px 2px;
-  font-size: 11px; font-weight: 700; color: #1e3a5f; line-height: 1.2;
-  border-right: 1px solid #bfdbfe; position: relative; cursor: grab;
+  font-size: 11px; font-weight: 700; color: #1e3a5f; line-height: 1.15;
+  border-right: 1px solid rgba(0,0,0,.06); position: relative; cursor: grab;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  min-height: 42px; word-break: break-word;
+  min-height: 46px; word-break: break-word;
 }
 .desk-cell .stt-line { font-size: 10px; font-weight: 800; color: #1e40af; line-height: 1.1; }
 .desk-cell .name-line { font-size: 10px; font-weight: 700; color: #1e3a5f; line-height: 1.15; text-transform: uppercase; }
@@ -211,26 +228,70 @@ button, input, select, textarea { font-family: inherit; }
 .desk-cell.priority:not(.locked) { background: #f0fdfa; }
 .desk-cell.dragging { opacity: .5; }
 .desk-cell.drag-over { outline: 2px dashed var(--primary-mid); background: #dbeafe; }
-.desk-cell.small { font-size: 10px; }
-.desk-cell.tiny { font-size: 8.5px; }
-.to-label-row { display: flex; justify-content: center; padding: 2px 0; }
-.to-badge {
-  font-size: 11px; font-weight: 800; padding: 1px 8px; border: 1.5px solid #64748b;
-  border-radius: 5px; background: #fff; color: #334155;
+.desk-cell.role-badge-cell { font-weight: 800; }
+.desk-cell .role-tag {
+  display: inline-block; font-size: 8px; font-weight: 800; padding: 1px 5px;
+  border-radius: 999px; margin-top: 1px; line-height: 1.2;
 }
-.to-badge.to1 { border-color: var(--to1); color: var(--to1); }
-.to-badge.to2 { border-color: var(--to2); color: var(--to2); }
-.to-badge.to3 { border-color: var(--to3); color: var(--to3); }
-.to-badge.to4 { border-color: var(--to4); color: var(--to4); }
-.aisle-col { flex: 0 0 32px; display: flex; align-items: center; justify-content: center; margin: 0 6px; }
-.aisle-label { writing-mode: vertical-rl; font-weight: 800; font-size: 11px; color: #64748b; letter-spacing: 2px; }
+.desk-cell .role-tag.rt-lt { background: #16a34a; color: #fff; }
+.desk-cell .role-tag.rt-to { background: #2563eb; color: #fff; }
+.desk-cell .role-tag.rt-bt { background: #db2777; color: #fff; }
+.desk-cell .role-tag.rt-ph { background: #ea580c; color: #fff; }
+.desk-cell .role-tag.rt-kt { background: #7c3aed; color: #fff; }
+
+.to-label-row { text-align: center; padding: 2px 0 4px; }
+.to-badge {
+  display: inline-block; font-size: 12px; font-weight: 900; padding: 3px 16px;
+  border-radius: 999px; border: 2px solid; letter-spacing: .5px;
+  background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+}
+.to-badge.to1 { border-color: #3b82f6; color: #1d4ed8; background: #eff6ff; }
+.to-badge.to2 { border-color: #10b981; color: #047857; background: #ecfdf5; }
+.to-badge.to3 { border-color: #ec4899; color: #be185d; background: #fdf2f8; }
+.to-badge.to4 { border-color: #f59e0b; color: #b45309; background: #fffbeb; }
 
 .room-footer {
-  display: flex; justify-content: space-between; align-items: flex-end; gap: 12px;
-  margin-top: 16px; flex-wrap: wrap; padding: 0 4px;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 10px; margin-top: 10px; padding: 8px 4px 4px; flex-wrap: wrap;
 }
-.rf-item { text-align: center; font-size: 12px; font-weight: 700; color: #1e40af; }
-.rf-board { background: #1e293b; color: #fff; font-weight: 900; letter-spacing: 2px; padding: 12px 28px; border-radius: 6px; font-size: 13px; }
+.rf-item, .rf-board, .rf-teacher {
+  text-align: center; font-size: 12px; font-weight: 800;
+  border-radius: 10px; padding: 8px 14px; min-width: 120px;
+}
+.rf-item {
+  color: #1e40af; background: linear-gradient(180deg, #dbeafe, #eff6ff);
+  border: 1.5px solid #60a5fa;
+}
+.rf-board {
+  color: #fff; background: linear-gradient(180deg, #0f766e, #115e59);
+  border: 2px solid #134e4a; flex: 1; max-width: 320px; margin: 0 auto;
+  letter-spacing: 1px;
+}
+.rf-teacher {
+  color: #1e3a8a; background: linear-gradient(180deg, #fef3c7, #fde68a);
+  border: 1.5px solid #f59e0b;
+}
+.sheet-tagline {
+  text-align: center; font-size: 11px; font-style: italic; color: #64748b;
+  margin-top: 8px; font-weight: 600;
+}
+
+@media print {
+  @page { size: A4 landscape; margin: 8mm; }
+  body { background: #fff !important; }
+  .app-header, .sidebar, .site-footer, .bottom-section, .stats-bar,
+  .toast, .fx-overlay, .app-meta-bar { display: none !important; }
+  .app-body { display: block !important; }
+  .main-panel { width: 100% !important; padding: 0 !important; }
+  .sheet-wrap { padding: 0 !important; background: #fff !important; overflow: visible !important; }
+  .sheet {
+    min-width: 0 !important; max-width: none !important; width: 100% !important;
+    border: 2px solid #3b82f6; box-shadow: none; page-break-inside: avoid;
+  }
+  .desk-cell { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .desk-row { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
 .sheet-tagline { text-align: center; margin-top: 12px; font-style: italic; font-weight: 600; color: #be185d; font-size: 12px; }
 
 /* Student table */
@@ -643,8 +704,8 @@ body.present .sheet { transform: scale(1.05); }
         <div class="seat-area" id="seatArea"></div>
         <div class="room-footer">
           <div class="rf-item">🚪 LỐI VÀO</div>
-          <div class="rf-board">BẢNG ĐEN</div>
-          <div class="rf-item">🪑 BÀN GIÁO VIÊN</div>
+          <div class="rf-board">📖 BẢNG ĐEN</div>
+          <div class="rf-teacher">🪑 BÀN GIÁO VIÊN</div>
         </div>
         <div class="sheet-tagline">Một lớp học – Một gia đình – Một mục tiêu – Một tương lai rực rỡ</div>
       </div>
@@ -1303,17 +1364,36 @@ function deskCellHTML(idx) {
   if (shortN && shortN.length > 14) cls += " tiny";
   else if (shortN && shortN.length > 10) cls += " small";
   const stt = st && st.stt != null ? st.stt : "";
-  const title = name ? (escapeHTML(name) + (st && isPriorityStudent(st) ? " · Ưu tiên: " + escapeHTML(st.doiTuong || "") : "")) : "";
+  const title = name ? (escapeHTML(name) + (st && isPriorityStudent(st) ? " · Ưu tiên" : "")) : "";
+  let roleHtml = "";
+  if (name && window.lastRolePicks) {
+    const roles = lastRolePicks;
+    if (roles["Lớp trưởng"] === name) roleHtml = '<span class="role-tag rt-lt">LỚP TRƯỞNG</span>';
+    else if (roles["Lớp phó học tập"] === name) roleHtml = '<span class="role-tag rt-ph">LỚP PHÓ HT</span>';
+    else if (roles["Bí thư Đoàn"] === name) roleHtml = '<span class="role-tag rt-bt">BÍ THƯ</span>';
+    else if (roles["Phó bí thư Đoàn"] === name) roleHtml = '<span class="role-tag rt-bt">PHÓ BÍ THƯ</span>';
+  }
+  if (!roleHtml && name && lastToRoleResult) {
+    for (const z of [1, 2, 3, 4]) {
+      const g = lastToRoleResult[z];
+      if (!g) continue;
+      if (g.truong === name) { roleHtml = '<span class="role-tag rt-to">TỔ TRƯỞNG ' + z + '</span>'; break; }
+      if (g.pho && g.pho.indexOf(name) >= 0) { roleHtml = '<span class="role-tag rt-to">TỔ PHÓ ' + z + '</span>'; break; }
+    }
+  }
+  if (st && isPriorityStudent(st) && !roleHtml) roleHtml = '<span class="role-tag rt-kt">HSKT</span>';
+  if (roleHtml) cls += " role-badge-cell";
   let inner = "";
   if (name) {
-    inner = '<span class="stt-line">' + escapeHTML(String(stt !== "" ? stt : (idx + 1))) + '</span>' +
-      '<span class="name-line">' + escapeHTML(shortN) + '</span>';
+    inner = '<span class="stt-line">' + escapeHTML(String(stt !== "" ? stt : "")) + '</span>' +
+      '<span class="name-line">' + escapeHTML(shortN) + '</span>' + roleHtml;
   }
   return '<div class="' + cls + '" draggable="' + (name ? "true" : "false") + '" data-seat="' + idx + '" title="' + title + '">' +
     inner + "</div>";
 }
 function deskRowHTML(indices) {
-  return '<div class="desk-row">' + indices.map(deskCellHTML).join("") + "</div>";
+  const z = indices.length ? getZone(indices[0]) : 1;
+  return '<div class="desk-row zone-' + z + '">' + indices.map(deskCellHTML).join("") + "</div>";
 }
 function renderPlan() {
   syncFormToState();
