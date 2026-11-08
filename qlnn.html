@@ -1557,6 +1557,7 @@ Hướng dẫn nhập nhanh
 <button type="button" data-nb="hk" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700" onclick="switchNotebook('hk')">Báo cáo học kỳ</button>
 <button type="button" data-nb="finance" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-slate-700" onclick="switchNotebook('finance')">Thu chi tháng</button>
 <button type="button" data-nb="duty" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-amber-100 text-amber-900 border border-amber-300" onclick="switchNotebook('duty')">TRỰC NHẬT</button>
+<button type="button" data-nb="seatmap" class="nb-tab px-4 py-2 rounded-lg text-sm font-semibold bg-indigo-100 text-indigo-900 border border-indigo-300" onclick="switchNotebook('seatmap')">🪑 Sơ đồ lớp</button>
 </div>
 <div id="notebookContent"></div>
 </div>
@@ -11906,20 +11907,313 @@ window.dutyDrop = function(ev) {
   renderDutyRoster();
 };
 
+/* ========== SƠ ĐỒ LỚP (48 chỗ · 4 tổ · kéo thả · xuất A4 ngang) ========== */
+var SEAT_ROLE_META = {
+  loptruong: { icon: "★", title: "Lớp trưởng", color: "#b45309" },
+  lophoc: { icon: "◆", title: "Lớp phó học tập", color: "#1d4ed8" },
+  lopnene: { icon: "●", title: "Lớp phó nề nếp", color: "#7c3aed" },
+  bithu: { icon: "▲", title: "Bí thư", color: "#be123c" },
+  totruong: { icon: "■", title: "Tổ trưởng", color: "#0f766e" },
+  topho: { icon: "▪", title: "Tổ phó", color: "#0369a1" },
+  hskt: { icon: "♥", title: "HS khuyết tật", color: "#c026d3" },
+  other: { icon: "✦", title: "Chức vụ khác", color: "#475569" }
+};
+/** Vị trí ghế 1–48 theo sơ đồ mẫu (nhìn về bảng): trái Tổ4/Tổ3 · phải Tổ2/Tổ1 */
+var SEAT_LAYOUT = {
+  // [hàng từ bảng ra] mỗi hàng 4 ghế, số ghế
+  leftTop: [48, 47, 46, 45, 44, 43, 42, 41, 40, 39, 38, 37], // Tổ 4
+  leftBot: [36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25], // Tổ 3
+  rightTop: [24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13], // Tổ 2
+  rightBot: [12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1] // Tổ 1
+};
+function seatMapStorageKey() {
+  var cid = (currentUser && currentUser.classId) || "default";
+  return "qlnn_seatmap_" + cid;
+}
+function defaultSeatMapData() {
+  var seats = {};
+  for (var i = 1; i <= 48; i++) seats[i] = { stt: i, name: "", studentId: "", role: "" };
+  // Gán sẵn từ danh sách lớp theo ID tăng dần nếu có
+  try {
+    var list = (students || []).slice().sort(function(a, b) {
+      return String(a.id || "").localeCompare(String(b.id || ""), "vi", { numeric: true });
+    });
+    list.forEach(function(st, idx) {
+      if (idx >= 48) return;
+      var n = idx + 1;
+      seats[n] = {
+        stt: n,
+        name: String(st.name || "").trim(),
+        studentId: String(st.id || ""),
+        role: ""
+      };
+    });
+  } catch (e) {}
+  return {
+    school: (currentUser && (currentUser.school || currentUser.truong)) || "TRƯỜNG THPT HÀ HUY TẬP",
+    className: (currentUser && (currentUser.className || currentUser.lop)) || "11B9",
+    year: (currentUser && currentUser.year) || "2026 – 2027",
+    fromDate: "28/09/2026",
+    seats: seats
+  };
+}
+function loadSeatMapData() {
+  try {
+    var raw = localStorage.getItem(seatMapStorageKey());
+    if (raw) {
+      var d = JSON.parse(raw);
+      if (d && d.seats) return d;
+    }
+  } catch (e) {}
+  return defaultSeatMapData();
+}
+function saveSeatMapData(data) {
+  try {
+    localStorage.setItem(seatMapStorageKey(), JSON.stringify(data));
+  } catch (e) {
+    console.warn("[QLNN] save seatmap", e);
+  }
+  window._seatMapData = data;
+}
+function seatRoleBadge(role) {
+  if (!role || !SEAT_ROLE_META[role]) return "";
+  var m = SEAT_ROLE_META[role];
+  return '<span class="seat-badge" title="' + m.title + '" style="display:inline-block;min-width:14px;height:14px;line-height:14px;text-align:center;border-radius:50%;font-size:9px;font-weight:800;color:#fff;background:' + m.color + ';margin-right:2px;vertical-align:middle">' + m.icon + "</span>";
+}
+function seatCellHtml(num, data) {
+  var s = (data.seats && data.seats[num]) || { stt: num, name: "", role: "" };
+  var name = String(s.name || "").trim() || "TÊN…";
+  var badge = seatRoleBadge(s.role);
+  return (
+    '<div class="seat-cell" data-seat="' + num + '" draggable="true" ' +
+    'ondragstart="seatDragStart(event)" ondragover="event.preventDefault()" ondrop="seatDrop(event)" ' +
+    'onclick="seatEditClick(event)" ' +
+    'style="border:1.5px solid #93c5fd;border-radius:10px;background:#fff;padding:4px 3px;min-height:44px;cursor:grab;text-align:center;box-shadow:0 1px 2px rgba(15,23,42,.06)">' +
+    '<div style="font-size:10px;font-weight:700;color:#64748b;line-height:1">' + (s.stt || num) + "</div>" +
+    '<div style="font-size:11px;font-weight:700;color:#0f172a;line-height:1.2;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + name.replace(/"/g, "&quot;") + '">' +
+    badge + name + "</div></div>"
+  );
+}
+function seatBlockHtml(nums, data, cols) {
+  cols = cols || 4;
+  var html = '<div style="display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:6px">';
+  for (var i = 0; i < nums.length; i++) html += seatCellHtml(nums[i], data);
+  html += "</div>";
+  return html;
+}
+function renderSeatMap() {
+  var box = document.getElementById("notebookContent");
+  if (!box) return;
+  var data = window._seatMapData || loadSeatMapData();
+  window._seatMapData = data;
+  var logo = "https://webh2t.github.io/assets/11b9.png";
+  var h = "";
+  h += '<div class="no-print mb-3 flex flex-wrap gap-2 items-end" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px">';
+  h += '<div><label class="text-xs text-slate-500">Trường</label><input id="smSchool" class="input-field text-sm" value="' + (data.school || "").replace(/"/g, "&quot;") + '" style="min-width:180px"></div>';
+  h += '<div><label class="text-xs text-slate-500">Lớp</label><input id="smClass" class="input-field text-sm" value="' + (data.className || "").replace(/"/g, "&quot;") + '" style="width:80px"></div>';
+  h += '<div><label class="text-xs text-slate-500">Năm học</label><input id="smYear" class="input-field text-sm" value="' + (data.year || "").replace(/"/g, "&quot;") + '" style="width:110px"></div>';
+  h += '<div><label class="text-xs text-slate-500">Áp dụng từ</label><input id="smFrom" class="input-field text-sm" value="' + (data.fromDate || "").replace(/"/g, "&quot;") + '" style="width:110px"></div>';
+  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#0d9488" onclick="seatMapApplyMeta()">Cập nhật</button>';
+  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#64748b" onclick="seatMapClearNames()">Xóa tên</button>';
+  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#d97706" onclick="seatMapExportJpg()">Xuất JPG A4</button>';
+  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#2563eb" onclick="seatMapExportWord()">Xuất Word</button>';
+  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#7c3aed" onclick="seatMapFillFromClass()">Nạp DS lớp</button>';
+  h += "</div>";
+  h += '<p class="no-print text-xs text-slate-500 mb-2">Bấm ô để nhập tên · Kéo thả để đổi chỗ · 48 chỗ · Không tô màu theo tổ · In: Ctrl+P ngang</p>';
+
+  h += '<div id="seatMapCapture" style="background:#eef2ff;border:2px solid #6366f1;border-radius:16px;padding:14px 16px;max-width:1100px;margin:0 auto">';
+  // Header
+  h += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px">';
+  h += '<img src="' + logo + '" alt="11B9" crossorigin="anonymous" style="width:56px;height:56px;object-fit:contain" onerror="this.style.display=\'none\'">';
+  h += '<div style="flex:1;text-align:center">';
+  h += '<div style="font-size:13px;font-weight:800;color:#1e3a8a;letter-spacing:.04em">' + (data.school || "TRƯỜNG THPT HÀ HUY TẬP") + "</div>";
+  h += '<div style="display:inline-block;margin-top:4px;background:#1d4ed8;color:#fff;font-weight:900;font-size:18px;padding:6px 18px;border-radius:999px">SƠ ĐỒ LỚP ' + (data.className || "11B9") + "</div>";
+  h += '<div style="margin-top:6px"><span style="display:inline-block;background:#fff;border:1.5px solid #fbbf24;color:#b45309;font-weight:700;font-size:12px;padding:3px 12px;border-radius:999px">Năm học: ' + (data.year || "2026 – 2027") + "</span></div>";
+  h += "</div>";
+  h += '<div style="background:#fef3c7;border:1px solid #f59e0b;border-radius:10px;padding:6px 10px;text-align:center;min-width:90px"><div style="font-size:10px;color:#92400e">Áp dụng từ</div><div style="font-weight:800;color:#b45309;font-size:13px">' + (data.fromDate || "…") + "</div></div>";
+  h += "</div>";
+
+  // Grid: left | aisle | right
+  h += '<div style="display:grid;grid-template-columns:1fr 36px 1fr;gap:10px;align-items:stretch">';
+  // LEFT
+  h += '<div style="display:flex;flex-direction:column;gap:10px">';
+  h += seatBlockHtml(SEAT_LAYOUT.leftTop, data, 4);
+  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 4</span></div>';
+  h += seatBlockHtml(SEAT_LAYOUT.leftBot, data, 4);
+  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 3</span></div>';
+  h += "</div>";
+  // AISLE
+  h += '<div style="background:linear-gradient(180deg,#e0e7ff,#f1f5f9);border:1.5px dashed #94a3b8;border-radius:10px;display:flex;align-items:center;justify-content:center">';
+  h += '<div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;font-weight:800;color:#64748b;letter-spacing:.2em">LỐI ĐI</div></div>';
+  // RIGHT
+  h += '<div style="display:flex;flex-direction:column;gap:10px">';
+  h += seatBlockHtml(SEAT_LAYOUT.rightTop, data, 4);
+  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 2</span></div>';
+  h += seatBlockHtml(SEAT_LAYOUT.rightBot, data, 4);
+  h += '<div style="text-align:center"><span style="display:inline-block;border:1.5px solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:12px;padding:3px 14px;border-radius:999px">TỔ 1</span></div>';
+  h += "</div></div>";
+
+  // Front of class
+  h += '<div style="display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:10px;margin-top:14px;align-items:center">';
+  h += '<div style="text-align:center;border:1.5px solid #cbd5e1;background:#f8fafc;border-radius:10px;padding:8px;font-weight:700;color:#475569;font-size:12px">🚪 LỐI VÀO</div>';
+  h += '<div style="text-align:center;border:0;background:#0f766e;border-radius:12px;padding:10px;font-weight:900;color:#fff;font-size:13px;letter-spacing:.06em">⬛ BẢNG ĐEN</div>';
+  h += '<div style="text-align:center;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:10px;padding:8px;font-weight:700;color:#b45309;font-size:12px">🪑 BÀN GIÁO VIÊN</div>';
+  h += "</div>";
+
+  // Legend roles
+  h += '<div class="no-print" style="margin-top:12px;padding-top:10px;border-top:1px dashed #c7d2fe;font-size:11px;color:#334155;display:flex;flex-wrap:wrap;gap:8px 14px">';
+  h += "<b>Huy hiệu:</b> ";
+  Object.keys(SEAT_ROLE_META).forEach(function(k) {
+    var m = SEAT_ROLE_META[k];
+    h += '<span title="' + m.title + '">' + seatRoleBadge(k) + " " + m.title + "</span>";
+  });
+  h += "</div></div>";
+
+  box.innerHTML = h;
+}
+function seatMapReadMetaInto(data) {
+  var el = function(id) { return document.getElementById(id); };
+  if (el("smSchool")) data.school = el("smSchool").value.trim();
+  if (el("smClass")) data.className = el("smClass").value.trim();
+  if (el("smYear")) data.year = el("smYear").value.trim();
+  if (el("smFrom")) data.fromDate = el("smFrom").value.trim();
+  return data;
+}
+function seatMapApplyMeta() {
+  var data = window._seatMapData || loadSeatMapData();
+  seatMapReadMetaInto(data);
+  saveSeatMapData(data);
+  renderSeatMap();
+}
+function seatMapClearNames() {
+  if (!confirm("Xóa toàn bộ tên trên sơ đồ?")) return;
+  var data = window._seatMapData || loadSeatMapData();
+  for (var i = 1; i <= 48; i++) {
+    if (!data.seats[i]) data.seats[i] = { stt: i, name: "", studentId: "", role: "" };
+    data.seats[i].name = "";
+    data.seats[i].studentId = "";
+    data.seats[i].role = "";
+  }
+  saveSeatMapData(data);
+  renderSeatMap();
+}
+function seatMapFillFromClass() {
+  var data = window._seatMapData || loadSeatMapData();
+  seatMapReadMetaInto(data);
+  var list = (students || []).slice().sort(function(a, b) {
+    return String(a.id || "").localeCompare(String(b.id || ""), "vi", { numeric: true });
+  });
+  if (!list.length) { alert("Chưa có danh sách lớp ở Tổng quan"); return; }
+  for (var i = 1; i <= 48; i++) {
+    var st = list[i - 1];
+    data.seats[i] = data.seats[i] || { stt: i, name: "", studentId: "", role: "" };
+    if (st) {
+      data.seats[i].name = String(st.name || "").trim();
+      data.seats[i].studentId = String(st.id || "");
+      data.seats[i].stt = i;
+    }
+  }
+  saveSeatMapData(data);
+  renderSeatMap();
+}
+function seatDragStart(ev) {
+  var cell = ev.currentTarget;
+  var n = cell && cell.getAttribute("data-seat");
+  if (!n) return;
+  ev.dataTransfer.setData("text/plain", String(n));
+  ev.dataTransfer.effectAllowed = "move";
+}
+function seatDrop(ev) {
+  ev.preventDefault();
+  var from = Number(ev.dataTransfer.getData("text/plain"));
+  var cell = ev.currentTarget;
+  var to = Number(cell && cell.getAttribute("data-seat"));
+  if (!from || !to || from === to) return;
+  var data = window._seatMapData || loadSeatMapData();
+  var a = data.seats[from] || { stt: from, name: "", studentId: "", role: "" };
+  var b = data.seats[to] || { stt: to, name: "", studentId: "", role: "" };
+  // Hoán đổi người, giữ số ghế (stt = số ghế)
+  data.seats[from] = { stt: from, name: b.name, studentId: b.studentId, role: b.role };
+  data.seats[to] = { stt: to, name: a.name, studentId: a.studentId, role: a.role };
+  saveSeatMapData(data);
+  renderSeatMap();
+}
+function seatEditClick(ev) {
+  var cell = ev.currentTarget;
+  if (!cell) return;
+  var num = Number(cell.getAttribute("data-seat"));
+  if (!num) return;
+  var data = window._seatMapData || loadSeatMapData();
+  var s = data.seats[num] || { stt: num, name: "", studentId: "", role: "" };
+  var name = prompt("Họ tên học sinh (ghế " + num + "):", s.name || "");
+  if (name === null) return;
+  s.name = String(name).trim();
+  var roleKeys = Object.keys(SEAT_ROLE_META);
+  var roleHint = roleKeys.map(function(k, i) { return (i + 1) + "=" + SEAT_ROLE_META[k].title; }).join(" · ");
+  var roleIn = prompt("Chức vụ (Enter = giữ / 0 = xóa):\n" + roleHint + "\nHoặc mã: " + roleKeys.join(", "), s.role || "");
+  if (roleIn !== null) {
+    roleIn = String(roleIn).trim();
+    if (roleIn === "0" || roleIn === "") s.role = "";
+    else if (/^\d+$/.test(roleIn)) {
+      var idx = Number(roleIn) - 1;
+      s.role = roleKeys[idx] || s.role;
+    } else if (SEAT_ROLE_META[roleIn]) s.role = roleIn;
+  }
+  // Gắn studentId nếu trùng tên trong DS lớp
+  try {
+    var st = (students || []).find(function(x) {
+      return String(x.name || "").trim().toLowerCase() === s.name.toLowerCase();
+    });
+    if (st) s.studentId = String(st.id);
+  } catch (e) {}
+  data.seats[num] = s;
+  saveSeatMapData(data);
+  renderSeatMap();
+}
+function seatMapExportJpg() {
+  var el = document.getElementById("seatMapCapture");
+  if (!el) { alert("Chưa có sơ đồ"); return; }
+  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
+  html2canvas(el, { scale: 2.5, backgroundColor: "#eef2ff", useCORS: true, logging: false }).then(function(canvas) {
+    var a = document.createElement("a");
+    a.download = "SoDo_Lop_" + ((window._seatMapData && window._seatMapData.className) || "11B9") + ".jpg";
+    a.href = canvas.toDataURL("image/jpeg", 0.94);
+    a.click();
+  }).catch(function(e) { alert("Lỗi JPG: " + (e.message || e)); });
+}
+function seatMapExportWord() {
+  var el = document.getElementById("seatMapCapture");
+  if (!el) { alert("Chưa có sơ đồ"); return; }
+  var html = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>So do lop</title>" +
+    "<style>@page{size:A4 landscape;margin:10mm}body{font-family:Arial,Helvetica,sans-serif}</style></head><body>" +
+    el.outerHTML + "</body></html>";
+  var blob = new Blob(["\ufeff", html], { type: "application/msword" });
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "SoDo_Lop_" + ((window._seatMapData && window._seatMapData.className) || "11B9") + ".doc";
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
 
 function switchNotebook(scope) {
   window._nbScope = scope || "week";
-  document.querySelectorAll(".nb-tab").forEach(b => {
-    if (b.dataset.nb === window._nbScope) {
-      b.classList.add("bg-sky-600", "text-white");
-      b.classList.remove("bg-slate-700");
+  document.querySelectorAll(".nb-tab").forEach(function(b) {
+    var on = b.dataset.nb === window._nbScope;
+    b.classList.remove("bg-sky-600", "text-white", "bg-slate-700", "bg-amber-100", "text-amber-900", "border", "border-amber-300", "bg-indigo-100", "text-indigo-900", "border-indigo-300");
+    if (on) {
+      if (b.dataset.nb === "duty") b.classList.add("bg-amber-100", "text-amber-900", "border", "border-amber-300");
+      else if (b.dataset.nb === "seatmap") b.classList.add("bg-indigo-600", "text-white");
+      else b.classList.add("bg-sky-600", "text-white");
     } else {
-      b.classList.remove("bg-sky-600", "text-white");
-      b.classList.add("bg-slate-700");
+      if (b.dataset.nb === "duty") b.classList.add("bg-amber-100", "text-amber-900", "border", "border-amber-300");
+      else if (b.dataset.nb === "seatmap") b.classList.add("bg-indigo-100", "text-indigo-900", "border", "border-indigo-300");
+      else b.classList.add("bg-slate-700");
     }
   });
   if (window._nbScope === "finance") renderFinancePanel();
   else if (window._nbScope === "duty") renderDutyRoster();
+  else if (window._nbScope === "seatmap") renderSeatMap();
   else renderNotebook();
 }
 function notebookContext() {
