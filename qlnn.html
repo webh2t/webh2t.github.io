@@ -12017,18 +12017,21 @@ function renderSeatMap() {
   window._seatMapData = data;
   var logo = "https://webh2t.github.io/assets/11b9.png";
   var h = "";
-  h += '<div class="no-print mb-3 flex flex-wrap gap-2 items-end" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px">';
-  h += '<div><label class="text-xs text-slate-500">Trường</label><input id="smSchool" class="input-field text-sm" value="' + (data.school || "").replace(/"/g, "&quot;") + '" style="min-width:180px"></div>';
-  h += '<div><label class="text-xs text-slate-500">Lớp</label><input id="smClass" class="input-field text-sm" value="' + (data.className || "").replace(/"/g, "&quot;") + '" style="width:80px"></div>';
-  h += '<div><label class="text-xs text-slate-500">Năm học</label><input id="smYear" class="input-field text-sm" value="' + (data.year || "").replace(/"/g, "&quot;") + '" style="width:110px"></div>';
-  h += '<div><label class="text-xs text-slate-500">Áp dụng từ</label><input id="smFrom" class="input-field text-sm" value="' + (data.fromDate || "").replace(/"/g, "&quot;") + '" style="width:110px"></div>';
-  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#0d9488" onclick="seatMapApplyMeta()">Cập nhật</button>';
-  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#64748b" onclick="seatMapClearNames()">Xóa tên</button>';
-  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#d97706" onclick="seatMapExportJpg()">Xuất JPG A4</button>';
-  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#2563eb" onclick="seatMapExportWord()">Xuất Word</button>';
-  h += '<button type="button" class="px-3 py-2 rounded-lg text-sm font-bold text-white" style="background:#7c3aed" onclick="seatMapFillFromClass()">Nạp DS lớp</button>';
+  var btnSoft = "px-3 py-2 rounded-lg text-sm font-bold border-2 bg-white/80 backdrop-blur";
+  h += '<div class="no-print mb-3 flex flex-wrap gap-2 items-end" style="background:rgba(248,250,252,.85);border:1px solid #e2e8f0;border-radius:12px;padding:10px 12px">';
+  h += '<div><label class="text-xs text-slate-500">Trường</label><input id="smSchool" class="input-field text-sm" value="' + (data.school || "").replace(/"/g, "&quot;") + '" style="min-width:180px;background:rgba(255,255,255,.7)"></div>';
+  h += '<div><label class="text-xs text-slate-500">Lớp</label><input id="smClass" class="input-field text-sm" value="' + (data.className || "").replace(/"/g, "&quot;") + '" style="width:80px;background:rgba(255,255,255,.7)"></div>';
+  h += '<div><label class="text-xs text-slate-500">Năm học</label><input id="smYear" class="input-field text-sm" value="' + (data.year || "").replace(/"/g, "&quot;") + '" style="width:110px;background:rgba(255,255,255,.7)"></div>';
+  h += '<div><label class="text-xs text-slate-500">Áp dụng từ</label><input id="smFrom" class="input-field text-sm" value="' + (data.fromDate || "").replace(/"/g, "&quot;") + '" style="width:110px;background:rgba(255,255,255,.7)"></div>';
+  h += '<button type="button" class="' + btnSoft + '" style="color:#0f766e;border-color:#5eead4" onclick="seatMapApplyMeta()">Cập nhật</button>';
+  h += '<button type="button" class="' + btnSoft + '" style="color:#475569;border-color:#cbd5e1" onclick="seatMapClearNames()">Xóa tên</button>';
+  h += '<button type="button" class="' + btnSoft + '" style="color:#b45309;border-color:#fbbf24" onclick="seatMapExportJpg()">Xuất JPG A4</button>';
+  h += '<button type="button" class="' + btnSoft + '" style="color:#1d4ed8;border-color:#93c5fd" onclick="seatMapExportWord()">Xuất Word</button>';
+  h += '<button type="button" class="' + btnSoft + '" style="color:#6d28d9;border-color:#c4b5fd" onclick="seatMapFillFromClass()">Nạp DS lớp</button>';
+  h += '<button type="button" class="' + btnSoft + '" style="color:#0369a1;border-color:#7dd3fc" onclick="seatMapDownloadTemplate()">📄 Mẫu Excel</button>';
+  h += '<label class="' + btnSoft + '" style="color:#9f1239;border-color:#fda4af;cursor:pointer;margin:0">📤 Upload Excel<input type="file" accept=".xlsx,.xls,.csv" class="hidden" onchange="seatMapUploadExcel(event)"></label>';
   h += "</div>";
-  h += '<p class="no-print text-xs text-slate-500 mb-2">Bấm ô để nhập tên · Kéo thả để đổi chỗ · 48 chỗ · Không tô màu theo tổ · In: Ctrl+P ngang</p>';
+  h += '<p class="no-print text-xs text-slate-500 mb-2">Bấm ô để nhập tên · Kéo thả đổi chỗ · Upload Excel: <b>STT | Họ tên | Huy hiệu</b> · In: Ctrl+P ngang</p>';
 
   h += '<div id="seatMapCapture" style="background:#eef2ff;border:2px solid #6366f1;border-radius:16px;padding:14px 16px;max-width:1100px;margin:0 auto">';
   // Header
@@ -12069,14 +12072,17 @@ function renderSeatMap() {
   h += '<div style="text-align:center;border:1.5px solid #fcd34d;background:#fffbeb;border-radius:10px;padding:8px;font-weight:700;color:#b45309;font-size:12px">🪑 BÀN GIÁO VIÊN</div>';
   h += "</div>";
 
-  // Legend roles
-  h += '<div class="no-print" style="margin-top:12px;padding-top:10px;border-top:1px dashed #c7d2fe;font-size:11px;color:#334155;display:flex;flex-wrap:wrap;gap:8px 14px">';
-  h += "<b>Huy hiệu:</b> ";
+  // Kết thúc khối capture (không đưa chú thích huy hiệu vào ảnh xuất)
+  h += "</div>";
+
+  // Legend — chỉ trên màn hình, không xuất JPG/Word
+  h += '<div class="no-print seat-legend" style="max-width:1100px;margin:10px auto 0;padding:8px 12px;border:1px dashed #c7d2fe;border-radius:10px;background:rgba(255,255,255,.7);font-size:11px;color:#334155;display:flex;flex-wrap:wrap;gap:8px 14px">';
+  h += "<b>Huy hiệu (chỉ xem trên màn hình):</b> ";
   Object.keys(SEAT_ROLE_META).forEach(function(k) {
     var m = SEAT_ROLE_META[k];
     h += '<span title="' + m.title + '">' + seatRoleBadge(k) + " " + m.title + "</span>";
   });
-  h += "</div></div>";
+  h += "</div>";
 
   box.innerHTML = h;
 }
@@ -12112,7 +12118,7 @@ function seatMapFillFromClass() {
   var list = (students || []).slice().sort(function(a, b) {
     return String(a.id || "").localeCompare(String(b.id || ""), "vi", { numeric: true });
   });
-  if (!list.length) { alert("Chưa có danh sách lớp ở Tổng quan"); return; }
+  if (!list.length) { alert("Chưa có danh sách lớp ở Tổng quan — hoặc dùng 📄 Mẫu Excel / 📤 Upload Excel"); return; }
   for (var i = 1; i <= 48; i++) {
     var st = list[i - 1];
     data.seats[i] = data.seats[i] || { stt: i, name: "", studentId: "", role: "" };
@@ -12124,6 +12130,82 @@ function seatMapFillFromClass() {
   }
   saveSeatMapData(data);
   renderSeatMap();
+}
+function seatMapNormalizeRole(raw) {
+  var s = String(raw || "").trim().toLowerCase();
+  if (!s) return "";
+  if (SEAT_ROLE_META[s]) return s;
+  if (/lớp\s*trưởng|lop\s*truong|^lt$/.test(s)) return "loptruong";
+  if (/học\s*tập|hoc\s*tap|phó\s*ht|pho\s*ht/.test(s)) return "lophoc";
+  if (/nề\s*nếp|ne\s*nep|phó\s*nn|pho\s*nn/.test(s)) return "lopnene";
+  if (/bí\s*thư|bi\s*thu|^bt$/.test(s)) return "bithu";
+  if (/tổ\s*trưởng|to\s*truong|^tt$/.test(s)) return "totruong";
+  if (/tổ\s*phó|to\s*pho|^tp$/.test(s)) return "topho";
+  if (/khuyết\s*tật|khuyet|hskt/.test(s)) return "hskt";
+  if (/khác|khac|other/.test(s)) return "other";
+  return "";
+}
+function seatMapDownloadTemplate() {
+  if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
+  var rows = [["STT", "Họ tên học sinh", "Huy hiệu"]];
+  var data = window._seatMapData || loadSeatMapData();
+  for (var i = 1; i <= 48; i++) {
+    var s = (data.seats && data.seats[i]) || {};
+    var roleLabel = (s.role && SEAT_ROLE_META[s.role]) ? SEAT_ROLE_META[s.role].title : (s.role || "");
+    rows.push([i, s.name || "", roleLabel]);
+  }
+  rows.push([]);
+  rows.push(["Ghi chú huy hiệu (cột C):", "Lớp trưởng | Lớp phó học tập | Lớp phó nề nếp | Bí thư | Tổ trưởng | Tổ phó | HS khuyết tật | Chức vụ khác"]);
+  var ws = XLSX.utils.aoa_to_sheet(rows);
+  ws["!cols"] = [{ wch: 6 }, { wch: 28 }, { wch: 18 }];
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "SoDo");
+  XLSX.writeFile(wb, "QLNN_Mau_SoDo_Lop.xlsx");
+}
+function seatMapUploadExcel(ev) {
+  var file = ev && ev.target && ev.target.files && ev.target.files[0];
+  if (!file) return;
+  if (typeof XLSX === "undefined") { alert("Chưa tải thư viện Excel"); return; }
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, { type: "array" });
+      var sheet = wb.Sheets[wb.SheetNames[0]];
+      var aoa = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+      if (!aoa || !aoa.length) { alert("File trống"); return; }
+      var data = window._seatMapData || loadSeatMapData();
+      seatMapReadMetaInto(data);
+      var start = 0;
+      var h0 = String(aoa[0][0] || "").toLowerCase();
+      if (/stt|số|so/.test(h0)) start = 1;
+      var filled = 0;
+      for (var r = start; r < aoa.length; r++) {
+        var row = aoa[r] || [];
+        var stt = parseInt(String(row[0]).replace(/\D/g, ""), 10);
+        if (!stt || stt < 1 || stt > 48) continue;
+        var name = String(row[1] || "").trim();
+        var role = seatMapNormalizeRole(row[2]);
+        data.seats[stt] = data.seats[stt] || { stt: stt, name: "", studentId: "", role: "" };
+        data.seats[stt].stt = stt;
+        if (name) data.seats[stt].name = name;
+        data.seats[stt].role = role;
+        try {
+          var st = (students || []).find(function(x) {
+            return String(x.name || "").trim().toLowerCase() === name.toLowerCase();
+          });
+          if (st) data.seats[stt].studentId = String(st.id);
+        } catch (errF) {}
+        filled++;
+      }
+      saveSeatMapData(data);
+      renderSeatMap();
+      alert("Đã nạp " + filled + " dòng từ Excel vào sơ đồ.");
+    } catch (err) {
+      alert("Lỗi đọc Excel: " + (err.message || err));
+    }
+    try { ev.target.value = ""; } catch (e2) {}
+  };
+  reader.readAsArrayBuffer(file);
 }
 function seatDragStart(ev) {
   var cell = ev.currentTarget;
@@ -12183,7 +12265,25 @@ function seatMapExportJpg() {
   var el = document.getElementById("seatMapCapture");
   if (!el) { alert("Chưa có sơ đồ"); return; }
   if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
-  html2canvas(el, { scale: 2.5, backgroundColor: "#eef2ff", useCORS: true, logging: false }).then(function(canvas) {
+  html2canvas(el, {
+    scale: 2.5,
+    backgroundColor: "#eef2ff",
+    useCORS: true,
+    logging: false,
+    onclone: function(doc) {
+      try {
+        doc.querySelectorAll(".seat-legend, .no-print").forEach(function(n) {
+          if (n.id === "seatMapCapture") return;
+          if (n.closest && n.closest("#seatMapCapture") && n.classList.contains("seat-legend")) n.style.display = "none";
+        });
+        var cap = doc.getElementById("seatMapCapture");
+        if (cap) {
+          cap.style.maxWidth = "none";
+          cap.style.width = "1100px";
+        }
+      } catch (e) {}
+    }
+  }).then(function(canvas) {
     var a = document.createElement("a");
     a.download = "SoDo_Lop_" + ((window._seatMapData && window._seatMapData.className) || "11B9") + ".jpg";
     a.href = canvas.toDataURL("image/jpeg", 0.94);
@@ -12193,9 +12293,11 @@ function seatMapExportJpg() {
 function seatMapExportWord() {
   var el = document.getElementById("seatMapCapture");
   if (!el) { alert("Chưa có sơ đồ"); return; }
+  var clone = el.cloneNode(true);
+  clone.querySelectorAll(".seat-legend, .no-print").forEach(function(n) { try { n.remove(); } catch (e) {} });
   var html = "<!DOCTYPE html><html><head><meta charset='utf-8'><title>So do lop</title>" +
     "<style>@page{size:A4 landscape;margin:10mm}body{font-family:Arial,Helvetica,sans-serif}</style></head><body>" +
-    el.outerHTML + "</body></html>";
+    clone.outerHTML + "</body></html>";
   var blob = new Blob(["\ufeff", html], { type: "application/msword" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
