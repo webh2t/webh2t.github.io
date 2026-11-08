@@ -12268,71 +12268,175 @@ function seatEditClick(ev) {
   saveSeatMapData(data);
   renderSeatMap();
 }
-function seatMapExportJpg() {
-  var el = document.getElementById("seatMapCapture");
-  if (!el) { alert("Chưa có sơ đồ"); return; }
-  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
-  html2canvas(el, {
-    scale: 2.5,
-    backgroundColor: "#eef2ff",
-    useCORS: true,
-    logging: false,
-    onclone: function(doc) {
-      try {
-        doc.querySelectorAll(".seat-legend, .no-print").forEach(function(n) {
-          if (n.id === "seatMapCapture") return;
-          if (n.closest && n.closest("#seatMapCapture") && n.classList.contains("seat-legend")) n.style.display = "none";
-        });
-        var cap = doc.getElementById("seatMapCapture");
-        if (cap) {
-          cap.style.maxWidth = "none";
-          cap.style.width = "1100px";
-        }
-      } catch (e) {}
+/** Ô ghế dạng HTML table (Word/JPG export ổn định, chữ Việt rõ) */
+function seatExportCellHtml(num, data) {
+  var s = (data.seats && data.seats[num]) || {};
+  var full = String(s.name || "").trim();
+  var short = seatShortName(full);
+  var sttShow = (s.stt != null && String(s.stt).trim() !== "") ? s.stt : "—";
+  var badge = "";
+  if (s.role && SEAT_ROLE_META[s.role]) {
+    var m = SEAT_ROLE_META[s.role];
+    badge = '<span style="color:' + m.color + ';font-size:9pt;font-weight:800">' + m.icon + "</span> ";
+  }
+  return '<td width="12%" align="center" valign="middle" style="border:1pt solid #93c5fd;border-radius:6pt;background:#ffffff;padding:3pt 2pt;font-family:Arial,Helvetica,sans-serif">' +
+    '<div style="font-size:8pt;color:#64748b;font-weight:700;font-family:Arial,Helvetica,sans-serif">' + sttShow + "</div>" +
+    '<div style="font-size:9.5pt;color:#0f172a;font-weight:700;line-height:1.2;font-family:Arial,Helvetica,sans-serif">' + badge + short + "</div></td>";
+}
+function seatExportBlockRows(nums, data, cols) {
+  cols = cols || 4;
+  var html = "";
+  for (var r = 0; r < nums.length; r += cols) {
+    html += "<tr>";
+    for (var c = 0; c < cols; c++) {
+      var n = nums[r + c];
+      html += n ? seatExportCellHtml(n, data) : "<td></td>";
     }
+    html += "</tr>";
+  }
+  return html;
+}
+/** HTML sơ đồ dạng bảng — dùng chung cho Word + canvas JPG */
+function buildSeatMapExportHtml(data, opts) {
+  opts = opts || {};
+  var forWord = !!opts.forWord;
+  var logo = "https://webh2t.github.io/assets/11b9.png";
+  var school = data.school || "TRƯỜNG THPT HÀ HUY TẬP";
+  var cls = data.className || "11B9";
+  var year = data.year || "2026 – 2027";
+  var from = data.fromDate || "";
+  var w = forWord ? "100%" : "1050px";
+  var h = "";
+  h += '<div id="seatExportRoot" style="width:' + w + ';max-width:' + w + ';margin:0 auto;background:#eef2ff;border:2pt solid #6366f1;padding:8pt 10pt;box-sizing:border-box;font-family:Arial,Helvetica,sans-serif">';
+  // Header table
+  h += '<table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:6pt"><tr>';
+  h += '<td width="70" align="left" valign="middle"><img src="' + logo + '" width="52" height="52" style="width:52px;height:52px;object-fit:contain;background:transparent" crossorigin="anonymous"></td>';
+  h += '<td align="center" valign="middle">';
+  h += '<div style="font-size:11pt;font-weight:800;color:#1e3a8a;font-family:Arial,Helvetica,sans-serif">' + school + "</div>";
+  h += '<div style="display:inline-block;margin-top:3pt;background:#1d4ed8;color:#fff;font-weight:900;font-size:14pt;padding:4pt 14pt;border-radius:20pt;font-family:Arial,Helvetica,sans-serif">SƠ ĐỒ LỚP ' + cls + "</div>";
+  h += '<div style="margin-top:4pt"><span style="border:1.2pt solid #fbbf24;background:#fff;color:#b45309;font-weight:700;font-size:9pt;padding:2pt 10pt;border-radius:12pt;font-family:Arial,Helvetica,sans-serif">Năm học: ' + year + "</span></div>";
+  h += "</td>";
+  h += '<td width="90" align="center" valign="middle" style="background:#fef3c7;border:1pt solid #f59e0b;border-radius:8pt;padding:4pt"><div style="font-size:8pt;color:#92400e">Áp dụng từ</div><div style="font-weight:800;color:#b45309;font-size:10pt;font-family:Arial,Helvetica,sans-serif">' + from + "</div></td>";
+  h += "</tr></table>";
+
+  // Main 3-col: left | aisle | right
+  h += '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>';
+  // LEFT
+  h += '<td width="47%" valign="top">';
+  h += '<table width="100%" cellpadding="2" cellspacing="3" border="0">' + seatExportBlockRows(SEAT_LAYOUT.leftTop, data, 4) + "</table>";
+  h += '<div style="text-align:center;margin:4pt 0"><span style="border:1.2pt solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:9pt;padding:2pt 12pt;border-radius:12pt;font-family:Arial,Helvetica,sans-serif">TỔ 4</span></div>';
+  h += '<table width="100%" cellpadding="2" cellspacing="3" border="0">' + seatExportBlockRows(SEAT_LAYOUT.leftBot, data, 4) + "</table>";
+  h += '<div style="text-align:center;margin:4pt 0"><span style="border:1.2pt solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:9pt;padding:2pt 12pt;border-radius:12pt;font-family:Arial,Helvetica,sans-serif">TỔ 3</span></div>';
+  h += "</td>";
+  // AISLE
+  h += '<td width="6%" align="center" valign="middle" style="border-left:1.5pt dashed #94a3b8;border-right:1.5pt dashed #94a3b8;background:#f1f5f9">';
+  h += '<div style="font-size:9pt;font-weight:800;color:#64748b;letter-spacing:2pt;font-family:Arial,Helvetica,sans-serif;writing-mode:vertical-rl;transform:rotate(180deg)">LỐI ĐI</div></td>';
+  // RIGHT
+  h += '<td width="47%" valign="top">';
+  h += '<table width="100%" cellpadding="2" cellspacing="3" border="0">' + seatExportBlockRows(SEAT_LAYOUT.rightTop, data, 4) + "</table>";
+  h += '<div style="text-align:center;margin:4pt 0"><span style="border:1.2pt solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:9pt;padding:2pt 12pt;border-radius:12pt;font-family:Arial,Helvetica,sans-serif">TỔ 2</span></div>';
+  h += '<table width="100%" cellpadding="2" cellspacing="3" border="0">' + seatExportBlockRows(SEAT_LAYOUT.rightBot, data, 4) + "</table>";
+  h += '<div style="text-align:center;margin:4pt 0"><span style="border:1.2pt solid #c4b5fd;background:#f5f3ff;color:#5b21b6;font-weight:800;font-size:9pt;padding:2pt 12pt;border-radius:12pt;font-family:Arial,Helvetica,sans-serif">TỔ 1</span></div>';
+  h += "</td></tr></table>";
+
+  // Front
+  h += '<table width="100%" cellpadding="0" cellspacing="6" border="0" style="margin-top:8pt"><tr>';
+  h += '<td width="28%" align="center" style="border:1pt solid #cbd5e1;background:#f8fafc;border-radius:8pt;padding:6pt;font-weight:700;color:#475569;font-size:9pt;font-family:Arial,Helvetica,sans-serif">LỐI VÀO</td>';
+  h += '<td width="44%" align="center" style="background:#0f766e;border-radius:8pt;padding:7pt;font-weight:900;color:#fff;font-size:10pt;font-family:Arial,Helvetica,sans-serif">BẢNG ĐEN</td>';
+  h += '<td width="28%" align="center" style="border:1pt solid #fcd34d;background:#fffbeb;border-radius:8pt;padding:6pt;font-weight:700;color:#b45309;font-size:9pt;font-family:Arial,Helvetica,sans-serif">BÀN GIÁO VIÊN</td>';
+  h += "</tr></table></div>";
+  return h;
+}
+function seatMapWhitenLogo(canvas) {
+  try {
+    var ctx = canvas.getContext("2d");
+    var img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    var d = img.data;
+    for (var i = 0; i < d.length; i += 4) {
+      // nền trắng/xám rất nhạt → trong suốt
+      if (d[i] > 240 && d[i + 1] > 240 && d[i + 2] > 240) d[i + 3] = 0;
+      else if (d[i] > 220 && d[i + 1] > 220 && d[i + 2] > 220 && Math.abs(d[i] - d[i + 1]) < 12) d[i + 3] = Math.max(0, d[i + 3] - 180);
+    }
+    ctx.putImageData(img, 0, 0);
+  } catch (e) {}
+  return canvas;
+}
+function seatMapExportJpg() {
+  if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
+  var data = window._seatMapData || loadSeatMapData();
+  var host = document.createElement("div");
+  host.style.cssText = "position:fixed;left:-9999px;top:0;width:1050px;background:#eef2ff;z-index:-1";
+  host.innerHTML = buildSeatMapExportHtml(data, { forWord: false });
+  document.body.appendChild(host);
+  var root = host.querySelector("#seatExportRoot") || host;
+  // chờ logo load
+  var imgs = host.querySelectorAll("img");
+  var wait = Promise.all(Array.prototype.map.call(imgs, function(img) {
+    return img.complete ? Promise.resolve() : new Promise(function(res) {
+      img.onload = img.onerror = function() { res(); };
+      setTimeout(res, 1500);
+    });
+  }));
+  wait.then(function() {
+    return html2canvas(root, {
+      scale: 3,
+      backgroundColor: "#eef2ff",
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+      width: 1050,
+      onclone: function(doc) {
+        try {
+          doc.querySelectorAll("#seatExportRoot, #seatExportRoot *").forEach(function(n) {
+            if (n.style) {
+              n.style.fontFamily = "Arial, Helvetica, sans-serif";
+            }
+          });
+          doc.querySelectorAll("#seatExportRoot div, #seatExportRoot td, #seatExportRoot span").forEach(function(n) {
+            n.style.overflow = "visible";
+            n.style.textOverflow = "clip";
+            n.style.whiteSpace = "normal";
+          });
+        } catch (e) {}
+      }
+    });
   }).then(function(canvas) {
+    // xóa nền trắng logo nếu có
+    try {
+      var ctx = canvas.getContext("2d");
+      // không đụng cả canvas — logo đã blend trên nền #eef2ff
+    } catch (e2) {}
     var a = document.createElement("a");
-    a.download = "SoDo_Lop_" + ((window._seatMapData && window._seatMapData.className) || "11B9") + ".jpg";
-    a.href = canvas.toDataURL("image/jpeg", 0.94);
+    a.download = "SoDo_Lop_" + (data.className || "11B9") + ".jpg";
+    a.href = canvas.toDataURL("image/jpeg", 0.95);
     a.click();
-  }).catch(function(e) { alert("Lỗi JPG: " + (e.message || e)); });
+  }).catch(function(e) {
+    alert("Lỗi JPG: " + (e.message || e));
+  }).then(function() {
+    try { host.remove(); } catch (e3) {}
+  });
 }
 function seatMapExportWord() {
-  var el = document.getElementById("seatMapCapture");
-  if (!el) { alert("Chưa có sơ đồ"); return; }
-  var clone = el.cloneNode(true);
-  clone.querySelectorAll(".seat-legend, .no-print").forEach(function(n) { try { n.remove(); } catch (e) {} });
-  // Ép gọn 1 trang A4 ngang
-  clone.style.maxWidth = "100%";
-  clone.style.width = "277mm";
-  clone.style.padding = "6px 8px";
-  clone.style.boxSizing = "border-box";
-  clone.querySelectorAll(".seat-cell").forEach(function(c) {
-    c.style.minHeight = "28px";
-    c.style.padding = "2px 1px";
-  });
-  clone.querySelectorAll(".seat-logo").forEach(function(img) {
-    img.style.background = "transparent";
-    img.style.mixBlendMode = "multiply";
-  });
+  var data = window._seatMapData || loadSeatMapData();
+  var body = buildSeatMapExportHtml(data, { forWord: true });
   var html = "<!DOCTYPE html><html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'>" +
-    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->" +
-    "<title>So do lop</title>" +
-    "<style>" +
-    "@page { size: A4 landscape; margin: 8mm; }" +
-    "body { font-family: Arial, Helvetica, sans-serif; margin: 0; padding: 0; }" +
-    "#seatMapCapture { width: 277mm !important; max-width: 277mm !important; box-sizing: border-box; }" +
-    ".seat-cell { min-height: 26px !important; padding: 2px 1px !important; }" +
-    ".seat-logo { background: transparent !important; mix-blend-mode: multiply; }" +
-    "</style></head><body>" +
-    clone.outerHTML + "</body></html>";
+    "<!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom>" +
+    "<w:DoNotOptimizeForBrowser/></w:WordDocument></xml><![endif]-->" +
+    "<title>So do lop " + (data.className || "") + "</title>" +
+    "<style type='text/css'>" +
+    "@page Section1 { size: 842pt 595pt; margin: 12mm 10mm 12mm 10mm; mso-page-orientation: landscape; }" +
+    "div.Section1 { page: Section1; }" +
+    "body { font-family: Arial, Helvetica, sans-serif; margin: 0; }" +
+    "table { border-collapse: collapse; }" +
+    "td { font-family: Arial, Helvetica, sans-serif; }" +
+    "</style></head><body><div class='Section1'>" + body + "</div></body></html>";
   var blob = new Blob(["\ufeff", html], { type: "application/msword" });
   var a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "SoDo_Lop_" + ((window._seatMapData && window._seatMapData.className) || "11B9") + ".doc";
+  a.download = "SoDo_Lop_" + (data.className || "11B9") + ".doc";
   document.body.appendChild(a);
   a.click();
-  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  setTimeout(function() { URL.revokeObjectURL(a.href); a.remove(); }, 800);
 }
 
 function switchNotebook(scope) {
