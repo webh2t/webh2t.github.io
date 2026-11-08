@@ -11999,9 +11999,9 @@ function seatCellHtml(num, data) {
     '<div class="seat-cell" data-seat="' + num + '" draggable="true" ' +
     'ondragstart="seatDragStart(event)" ondragover="event.preventDefault()" ondrop="seatDrop(event)" ' +
     'onclick="seatEditClick(event)" ' +
-    'style="border:1.5px solid #93c5fd;border-radius:10px;background:#fff;padding:3px 2px;min-height:40px;cursor:grab;text-align:center;box-shadow:0 1px 2px rgba(15,23,42,.06)">' +
-    '<div style="font-size:9px;font-weight:700;color:#64748b;line-height:1">' + sttShow + "</div>" +
-    '<div style="font-size:10.5px;font-weight:700;color:#0f172a;line-height:1.2;margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + (full || short).replace(/"/g, "&quot;") + '">' +
+    'style="border:1.5px solid #93c5fd;border-radius:10px;background:#fff;padding:4px 3px;min-height:42px;cursor:grab;text-align:center;box-shadow:0 1px 2px rgba(15,23,42,.06);font-family:Arial,\'Segoe UI\',Helvetica,sans-serif">' +
+    '<div style="font-size:10px;font-weight:700;color:#64748b;line-height:1;font-family:Arial,\'Segoe UI\',Helvetica,sans-serif">' + sttShow + "</div>" +
+    '<div style="font-size:12px;font-weight:700;color:#0f172a;line-height:1.25;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:Arial,\'Segoe UI\',Helvetica,sans-serif" title="' + (full || short).replace(/"/g, "&quot;") + '">' +
     badge + short + "</div></div>"
   );
 }
@@ -12363,49 +12363,61 @@ function seatMapWhitenLogo(canvas) {
 }
 function seatMapExportJpg() {
   if (typeof html2canvas === "undefined") { alert("Chưa tải html2canvas"); return; }
+  var el = document.getElementById("seatMapCapture");
+  if (!el) { alert("Chưa mở sơ đồ lớp — vào tab Sơ đồ lớp trước"); return; }
   var data = window._seatMapData || loadSeatMapData();
-  var host = document.createElement("div");
-  host.style.cssText = "position:fixed;left:-9999px;top:0;width:1050px;background:#eef2ff;z-index:-1";
-  host.innerHTML = buildSeatMapExportHtml(data, { forWord: false });
-  document.body.appendChild(host);
-  var root = host.querySelector("#seatExportRoot") || host;
-  // chờ logo load
-  var imgs = host.querySelectorAll("img");
+  // Chụp đúng giao diện web đang hiển thị → khớp 1:1 với màn hình
+  var prevMax = el.style.maxWidth;
+  var prevWidth = el.style.width;
+  el.style.maxWidth = "none";
+  el.style.width = Math.max(el.scrollWidth, 1000) + "px";
+  var imgs = el.querySelectorAll("img");
   var wait = Promise.all(Array.prototype.map.call(imgs, function(img) {
     return img.complete ? Promise.resolve() : new Promise(function(res) {
       img.onload = img.onerror = function() { res(); };
-      setTimeout(res, 1500);
+      setTimeout(res, 1200);
     });
   }));
   wait.then(function() {
-    return html2canvas(root, {
-      scale: 3,
+    return html2canvas(el, {
+      scale: 2.5,
       backgroundColor: "#eef2ff",
       useCORS: true,
       allowTaint: true,
       logging: false,
-      width: 1050,
-      onclone: function(doc) {
+      scrollX: 0,
+      scrollY: 0,
+      onclone: function(doc, node) {
         try {
-          doc.querySelectorAll("#seatExportRoot, #seatExportRoot *").forEach(function(n) {
-            if (n.style) {
-              n.style.fontFamily = "Arial, Helvetica, sans-serif";
-            }
-          });
-          doc.querySelectorAll("#seatExportRoot div, #seatExportRoot td, #seatExportRoot span").forEach(function(n) {
+          var cap = doc.getElementById("seatMapCapture") || node;
+          if (cap) {
+            cap.style.maxWidth = "none";
+            cap.style.width = el.style.width;
+            cap.style.fontFamily = "Arial, 'Segoe UI', Helvetica, sans-serif";
+          }
+          // Ẩn chú thích huy hiệu nếu lọt vào
+          doc.querySelectorAll(".seat-legend").forEach(function(n) { n.style.display = "none"; });
+          // Ép font + không cắt chữ — giữ nguyên dấu tiếng Việt
+          cap.querySelectorAll(".seat-cell, .seat-cell *").forEach(function(n) {
+            n.style.fontFamily = "Arial, 'Segoe UI', Helvetica, sans-serif";
             n.style.overflow = "visible";
             n.style.textOverflow = "clip";
-            n.style.whiteSpace = "normal";
+          });
+          cap.querySelectorAll(".seat-cell > div:last-child").forEach(function(n) {
+            n.style.whiteSpace = "nowrap";
+            n.style.fontSize = "12px";
+            n.style.fontWeight = "700";
+            n.style.color = "#0f172a";
+          });
+          // Logo: blend nền
+          cap.querySelectorAll("img.seat-logo, img").forEach(function(img) {
+            img.style.background = "transparent";
+            img.style.mixBlendMode = "multiply";
           });
         } catch (e) {}
       }
     });
   }).then(function(canvas) {
-    // xóa nền trắng logo nếu có
-    try {
-      var ctx = canvas.getContext("2d");
-      // không đụng cả canvas — logo đã blend trên nền #eef2ff
-    } catch (e2) {}
     var a = document.createElement("a");
     a.download = "SoDo_Lop_" + (data.className || "11B9") + ".jpg";
     a.href = canvas.toDataURL("image/jpeg", 0.95);
@@ -12413,7 +12425,8 @@ function seatMapExportJpg() {
   }).catch(function(e) {
     alert("Lỗi JPG: " + (e.message || e));
   }).then(function() {
-    try { host.remove(); } catch (e3) {}
+    el.style.maxWidth = prevMax;
+    el.style.width = prevWidth;
   });
 }
 function seatMapExportWord() {
