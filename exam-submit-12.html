@@ -4335,7 +4335,7 @@ function initHtmlIntroUI() {
       var code = getHtmlIntroCode();
       if (!lop || !name) { alert("Chon lop va ho ten"); return; }
       if (!pin) { alert("Khong co Ma PIN trong danh sach. Lien he GV."); return; }
-      if (!code || code.replace(/\s/g, "").length < 80) { alert("Bai lam qua ngan."); return; }
+      if (!code || code.replace(/\s/g, "").length < 30) { alert("Bai lam qua ngan."); return; }
       try {
         var all0 = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
         if (all0.find(function (x) { return x.class === lop && x.name === name && x.html; })) {
@@ -4343,21 +4343,32 @@ function initHtmlIntroUI() {
         }
       } catch (eDup) {}
 
-      // Cham rule-based local (chat) truoc khi gui
-      var localGrade = gradeHtmlIntroLocal_(code, name, lop);
-      runHtmlIntroPreview();
+      // Cham rule-based local ngay khi nop
+      var localGrade = { total: 0, note: "Khong cham duoc", breakdown: [] };
+      try {
+        if (typeof gradeHtmlIntroLocal_ === "function") {
+          localGrade = gradeHtmlIntroLocal_(code, name, lop) || localGrade;
+        }
+      } catch (eG0) {
+        console.warn("grade local", eG0);
+        localGrade = { total: 0, note: "Loi cham: " + String(eG0), breakdown: [] };
+      }
+      if (localGrade.total == null || isNaN(Number(localGrade.total))) localGrade.total = 0;
+      localGrade.total = Math.round(Number(localGrade.total) * 10) / 10;
+      try { runHtmlIntroPreview(); } catch (eP) {}
       btn.disabled = true;
       btn.textContent = "Dang nop...";
 
       var timeStr = new Date().toLocaleString("vi-VN");
-      var plag = detectHtmlPlagiarism_(code, lop, name);
+      var plag = { flag: false, with: "" };
+      try { plag = detectHtmlPlagiarism_(code, lop, name) || plag; } catch (ePl) {}
       var rec = {
         time: timeStr, class: lop, name: name, pin: pin, link: "",
-        html: code, css: "", codeHash: simpleHash_(code),
+        html: code, css: "", codeHash: (typeof simpleHash_ === "function" ? simpleHash_(code) : ""),
         score: plag.flag ? 0 : localGrade.total,
-        note: plag.flag ? ("Trung ma voi " + plag.with + " -> 0 diem") : localGrade.note,
-        plagFlag: plag.flag, plagWith: plag.with || "", at: Date.now(), examId: "b11",
-        breakdown: localGrade.breakdown
+        note: plag.flag ? ("Trung ma voi " + plag.with + " -> 0 diem") : (localGrade.note || ""),
+        plagFlag: !!plag.flag, plagWith: plag.with || "", at: Date.now(), examId: "b11",
+        breakdown: localGrade.breakdown || []
       };
       try {
         var all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
@@ -4384,7 +4395,8 @@ function initHtmlIntroUI() {
       if (!plag.flag) { try { requestHtmlIntroGrade_(rec); } catch (eG) {} }
 
       // dong bo lai sau 2s
-      setTimeout(function () { try { syncHtmlIntroFromCloud(); } catch (e) {} }, 2500);
+      renderHtmlIntroTable();
+      setTimeout(function () { try { syncHtmlIntroFromCloud(); } catch (e) {} }, 4000);
 
       renderHtmlIntroTable();
       lockEditor(true);
@@ -4554,7 +4566,9 @@ function requestHtmlIntroGrade_(rec) {
       class: rec.class,
       pin: rec.pin,
       html: (rec.html || "").slice(0, 90000),
+      score: rec.score,
       scoreHint: rec.score,
+      note: rec.note,
       rubric: "TX3 strict"
     })
   }).catch(function () {});
@@ -4573,42 +4587,63 @@ function syncHtmlIntroFromCloud() {
       else if (data && Array.isArray(data.rows)) rows = data.rows;
       else if (data && Array.isArray(data.attempts)) rows = data.attempts;
 
-      // Map cloud -> local shape
-      var cloud = rows.map(function (r) {
-        return {
-          time: r.time || "",
-          class: r.class || r.lop || "",
-          name: r.name || r.hoTen || "",
-          pin: r.pin || "",
-          link: r.link || "",
-          html: r.html || "",
-          score: r.score != null ? r.score : (r.tong != null ? r.tong : ""),
-          note: r.note || r.nhanXet || "",
-          plagFlag: !!(r.plagFlag && String(r.plagFlag).toUpperCase() !== "NO" && r.plagFlag !== ""),
-          at: r.at || Date.now(),
-          examId: "b11",
-          fromCloud: true
-        };
-      }).filter(function (x) { return x.name && x.class; });
-
-      // Cloud la nguon su that: thay the local bang cloud (giu html local neu cloud khong co snapshot)
       var local = [];
       try { local = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]"); } catch (e) {}
       var byKey = {};
-      local.forEach(function (x) { byKey[(x.class || "") + "|" + (x.name || "")] = x; });
-
-      var merged = cloud.map(function (c) {
-        var k = c.class + "|" + c.name;
-        var old = byKey[k];
-        if (old && old.html && !c.html) c.html = old.html;
-        if (c.score === "" && old && old.score !== "" && old.score != null) {
-          /* prefer cloud even empty if explicitly cleared — if cloud has score use it */
-        }
-        return c;
+      local.forEach(function (x) {
+        if (x && x.class && x.name) byKey[String(x.class) + "|" + String(x.name)] = x;
       });
 
-      // Neu cloud tra ve danh sach (ke ca rong sau khi GV xoa), dung cloud
-      // Chi merge local-only khi cloud request fail — o day success nen tin cloud
+      var cloudKeys = {};
+      (rows || []).forEach(function (r) {
+        var name = r.name || r.hoTen || "";
+        var lop = r.class || r.lop || "";
+        if (!name || !lop) return;
+        var k = String(lop) + "|" + String(name);
+        cloudKeys[k] = true;
+        var score = r.score != null && r.score !== "" ? r.score : (r.tong != null && r.tong !== "" ? r.tong : "");
+        var note = r.note || r.nhanXet || "";
+        var old = byKey[k];
+        // Uu tien diem cloud neu co; neu cloud trong thi giu diem local
+        if (old) {
+          if (score === "" || score == null) score = old.score;
+          if (!note) note = old.note || "";
+          byKey[k] = {
+            time: r.time || old.time || "",
+            class: lop,
+            name: name,
+            pin: r.pin || old.pin || "",
+            link: r.link || old.link || "",
+            html: old.html || r.html || "",
+            score: score,
+            note: note,
+            plagFlag: !!(r.plagFlag && String(r.plagFlag).toUpperCase() !== "NO" && r.plagFlag !== "") || !!old.plagFlag,
+            at: old.at || Date.now(),
+            examId: "b11",
+            breakdown: old.breakdown || null,
+            fromCloud: true
+          };
+        } else {
+          byKey[k] = {
+            time: r.time || "",
+            class: lop,
+            name: name,
+            pin: r.pin || "",
+            link: r.link || "",
+            html: r.html || "",
+            score: score,
+            note: note,
+            plagFlag: !!(r.plagFlag && String(r.plagFlag).toUpperCase() !== "NO" && r.plagFlag !== ""),
+            at: Date.now(),
+            examId: "b11",
+            fromCloud: true
+          };
+        }
+      });
+
+      // Giữ bài local mới nộp (chua co tren cloud)
+      var merged = Object.keys(byKey).map(function (k) { return byKey[k]; });
+      merged.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
       try { localStorage.setItem(HTMLINTRO_SYNC_KEY, JSON.stringify(merged.slice(0, 400))); } catch (e2) {}
       renderHtmlIntroTable();
       return merged;
