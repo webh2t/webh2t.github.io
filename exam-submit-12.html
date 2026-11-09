@@ -664,9 +664,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1348,7 +1348,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2493,7 +2493,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2510,7 +2510,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+  const WH = "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2590,7 +2590,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3733,7 +3733,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+    WH = "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4090,7 +4090,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4577,22 +4577,30 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   if (hasCss && hasLayout && hasColorCss) ui = 1.5;
   else if (hasCss && (hasLayout || hasColorCss)) ui = 1.0;
   else if (hasCss || hasLayout) ui = 0.5;
+  else ui = 0.5; // HS có nộp bài → giao diện tối thiểu 0.5
   total += ui;
-  lines.push("Giao diện đẹp: " + ui + "/1.5" + (ui >= 1.5 ? "" : " — cần CSS bố cục + màu sắc rõ"));
 
   total = Math.round(Math.min(10, total) * 10) / 10;
-  if (total === 0 && pInfo > 0) total = pInfo;
+
+  // Nhận xét gọn theo thang điểm 10
+  var note =
+    "Thông tin (" + pInfo + "/ 3,5 điểm). " +
+    "Bẫy 1 (" + p1 + "/ 1,0 điểm). " +
+    "Bẫy 2 (" + p2 + "/ 1,0 điểm). " +
+    "Bẫy 3 (" + p3 + "/ 2 điểm). " +
+    "Bẫy 4 (" + p4 + "/ 1,0 điểm). " +
+    "Giao diện đẹp (" + ui + "/ 1,5 điểm) >> TỔNG: " + total + " điểm";
 
   return {
     total: total,
-    note: lines.join("\n"),
+    note: note,
     breakdown: [
       { label: "Thông tin", max: 3.5, pts: pInfo },
       { label: "Bẫy 1", max: 1, pts: p1 },
       { label: "Bẫy 2", max: 1, pts: p2 },
       { label: "Bẫy 3", max: 2, pts: p3 },
       { label: "Bẫy 4", max: 1, pts: p4 },
-      { label: "Giao diện", max: 1.5, pts: ui }
+      { label: "Giao diện đẹp", max: 1.5, pts: ui }
     ]
   };
 }
@@ -4635,8 +4643,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycby6GuiS9PGhBC06EpkhP7T1vUBYpgwUndCIxTibyy7rFFQYeRhfZFGVJ1TZ6umuYkIf/exec"; }
 }
 
 function requestHtmlIntroGrade_(rec) {
@@ -4716,6 +4724,8 @@ function syncHtmlIntroFromCloud() {
         cloudKeys[k] = true;
         var old = localByKey[k];
         var score = r.score != null && r.score !== "" ? r.score : (r.tong != null && r.tong !== "" ? r.tong : "");
+        if (typeof score === "string" && /T\d{2}:\d{2}/.test(score)) score = "";
+        if (score instanceof Date) score = "";
         var note = r.note || r.nhanXet || "";
         if ((score === "" || score == null) && old && old.score !== "" && old.score != null) score = old.score;
         if (!note && old && old.note) note = old.note;
@@ -4765,7 +4775,15 @@ function renderHtmlIntroTable() {
   }
   all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
   body.innerHTML = all.map(function (r) {
-    var score = (r.score !== "" && r.score != null) ? r.score : "—";
+    var score = r.score;
+    if (score instanceof Date || (typeof score === "string" && /T\d{2}:\d{2}/.test(score))) {
+      // diem bi nham thanh date
+      if (r.breakdown && r.breakdown.length) {
+        score = r.breakdown.reduce(function (s, b) { return s + (Number(b.pts) || 0); }, 0);
+        score = Math.round(score * 10) / 10;
+      } else score = "—";
+    }
+    if (score === "" || score == null) score = "—";
     var rowStyle = r.plagFlag ? "background:#FEF2F2;" : "";
     return '<tr style="' + rowStyle + '">'
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;white-space:nowrap">' + (r.time || "") + "</td>"
