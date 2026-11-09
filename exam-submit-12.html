@@ -664,9 +664,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1348,7 +1348,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2493,7 +2493,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2510,7 +2510,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2590,7 +2590,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3457,13 +3457,13 @@ if (_cancelExam) {
 
   <div style="max-width:1100px;margin:0 auto;box-sizing:border-box">
     <div class="hi-checklist">
-      <b>HTML – yêu cầu bắt buộc (chấm theo Rubric TX3 / 10 điểm)</b><br>
-      1. Ảnh đại diện (src không rỗng)<br>
-      2. Thông tin: Họ và tên, Ngày sinh, Lớp, Địa chỉ, Sở thích, Ước mơ, Thông điệp cho tương lai<br>
-      3. Bẫy 1: <code>&lt;!-- Bài thi của: [Họ tên em] - Lớp: [Lớp em] --&gt;</code><br>
-      4. Bẫy 2: <code>&lt;title&gt;Tên em - Lớp&lt;/title&gt;</code> ·
-         Bẫy 3: <code>alt="Image [Tên em]"</code> ·
-         Bẫy 4: màu Họ và tên theo tháng sinh (chẵn=xanh, lẻ=đỏ/cam)
+      <b>HTML – yêu cầu bắt buộc (Rubric / 10 điểm)</b><br>
+      1. Thông tin (3,5đ): Họ tên · Ngày sinh · Lớp · Địa chỉ · Sở thích · Ước mơ · Thông điệp (mỗi mục 0,5đ)<br>
+      2. Bẫy 1 (1đ): <code>&lt;!-- Bài thi của: [Họ tên] - Lớp: [Lớp] --&gt;</code><br>
+      3. Bẫy 2 (1đ): <code>&lt;title&gt;Tên - Lớp&lt;/title&gt;</code><br>
+      4. Bẫy 3 (2đ): Ảnh đại diện + <code>alt="Image [Ten]"</code> (Tên không dấu)<br>
+      5. Bẫy 4 (1đ): Màu Họ và tên theo tháng sinh (chẵn=xanh, lẻ=đỏ/cam)<br>
+      6. Giao diện đẹp (1,5đ): CSS bố cục, màu sắc, trình bày rõ
     </div>
     <div class="hi-split">
       <div>
@@ -3733,7 +3733,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+    WH = "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4090,7 +4090,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4443,17 +4443,12 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   var last = name ? String(name).trim().split(/\s+/).pop() : "";
   var nameTokens = String(name || "").trim().split(/\s+/).filter(function (t) { return t.length > 1; });
 
-  // 1. Anh dai dien 1.5 — co src that
-  var hasSrc = /<img\b[^>]*src\s*=\s*["'][^"'\s]+["']/i.test(src);
-  var pAnh = hasSrc ? 1.5 : 0;
-  total += pAnh;
-  lines.push("Ảnh đại diện: " + pAnh + "/1.5" + (hasSrc ? "" : " — thiếu src ảnh"));
-
-  // 2. Thong tin 3.5 — nhan dien NOI DUNG that, khong bat buoc nhan "Ngày sinh:"
+  function stripVN(s) {
+    return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
+  }
   function hasName() {
     if (!nameTokens.length) return false;
     var low = plainOne.toLowerCase();
-    // it nhat 2 token ten xuat hien, hoac ten cuoi
     var hit = 0;
     nameTokens.forEach(function (t) {
       if (low.indexOf(String(t).toLowerCase()) >= 0) hit++;
@@ -4461,68 +4456,72 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     return hit >= Math.min(2, nameTokens.length) || (last && low.indexOf(last.toLowerCase()) >= 0);
   }
   function hasDob() {
-    // 12/1/2012, 12-01-2012, 12.1.2012
     return /\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(plainOne) ||
-           /ng[aà]y\s*sinh/i.test(src) && /\d{1,2}/.test(plainOne);
+           (/ng[aà]y\s*sinh/i.test(src) && /\d{1,2}/.test(plainOne));
   }
   function hasClass() {
     if (lop && new RegExp("\\b" + String(lop).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(plainOne)) return true;
     return /\b12A\d{1,2}\b/i.test(plainOne);
   }
   function hasAddress() {
-    // dong chu co y, khong trung ten/lop/ngay
     var parts = plain.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean);
     for (var i = 0; i < parts.length; i++) {
       var t = parts[i];
       if (t.length < 3) continue;
       if (/\b12A\d{1,2}\b/i.test(t)) continue;
       if (/\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(t)) continue;
-      if (last && t.toLowerCase().indexOf(last.toLowerCase()) >= 0 && t.length < last.length + 6) continue;
-      if (/^(ho|họ|ten|tên|lop|lớp|dia|địa|so|sở|uoc|ước|thong|thông)/i.test(t) && t.length < 12) continue;
-      // co chu cai viet
+      if (last && t.toLowerCase().indexOf(last.toLowerCase()) >= 0 && t.length < last.length + 8) continue;
+      if (/^(ho|họ|ten|tên|lop|lớp|dia|địa|so|sở|uoc|ước|thong|thông)/i.test(t) && t.length < 14) continue;
       if (/[A-Za-zÀ-ỹ]{3,}/.test(t)) return true;
     }
-    return /[đd][iị]a\s*ch[iỉ]/i.test(src) && /[A-Za-zÀ-ỹ]{3,}/.test(plainOne);
+    return false;
   }
   function hasHobby() {
     return /s[oở]\s*th[ií]ch\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
   }
   function hasDream() {
-    return /u[oớ]c\s*m[oơ]\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
+    return /u[oớ]c\s*m[oơ]/i.test(plainOne) && /u[oớ]c\s*m[oơ][\s\S]{0,40}[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
   }
   function hasMessage() {
-    return /th[oô]ng\s*[đd]i[eệ]p[^A-Za-zÀ-ỹ]{0,20}[A-Za-zÀ-ỹ]{4,}/i.test(plainOne);
+    return /th[oô]ng\s*[đd]i[eệ]p/i.test(plainOne) && /th[oô]ng\s*[đd]i[eệ]p[\s\S]{0,60}[A-Za-zÀ-ỹ]{3,}/i.test(plainOne);
   }
 
-  var checks = [
-    { k: "Họ và tên", ok: hasName() },
-    { k: "Ngày sinh", ok: hasDob() },
-    { k: "Lớp", ok: hasClass() },
-    { k: "Địa chỉ", ok: hasAddress() },
-    { k: "Sở thích", ok: hasHobby() },
-    { k: "Ước mơ", ok: hasDream() },
-    { k: "Thông điệp", ok: hasMessage() }
+  // ===== 1. Thông tin 3.5 (7 x 0.5) =====
+  var infoItems = [
+    { k: "Họ tên", ok: hasName(), pts: 0.5 },
+    { k: "Ngày sinh", ok: hasDob(), pts: 0.5 },
+    { k: "Lớp", ok: hasClass(), pts: 0.5 },
+    { k: "Địa chỉ", ok: hasAddress(), pts: 0.5 },
+    { k: "Sở thích", ok: hasHobby(), pts: 0.5 },
+    { k: "Ước mơ", ok: hasDream(), pts: 0.5 },
+    { k: "Thông điệp", ok: hasMessage(), pts: 0.5 }
   ];
-  var okN = checks.filter(function (x) { return x.ok; }).length;
-  // 7 muc * ~0.5 = 3.5
-  var pInfo = Math.round((okN / 7) * 3.5 * 10) / 10;
-  if (okN >= 1 && pInfo < 0.5) pInfo = 0.5;
+  var pInfo = 0;
+  var infoDetail = [];
+  infoItems.forEach(function (it) {
+    if (it.ok) {
+      pInfo += it.pts;
+      infoDetail.push(it.k + " 0.5");
+    } else {
+      infoDetail.push(it.k + " 0");
+    }
+  });
+  pInfo = Math.round(pInfo * 10) / 10;
   total += pInfo;
-  var missInfo = checks.filter(function (x) { return !x.ok; }).map(function (x) { return x.k; });
-  lines.push("Thông tin cá nhân: " + pInfo + "/3.5 (" + okN + "/7 mục)" + (missInfo.length ? " — thiếu: " + missInfo.join(", ") : ""));
+  lines.push("Thông tin: " + pInfo + "/3.5 (" + infoDetail.join(", ") + ")");
 
-  // 3. Bay 1 comment 1.0
-  var cmtM = src.match(/<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:([^>]*)-->/i) || src.match(/<!--([\s\S]*?)-->/i);
+  // ===== 2. Bẫy 1 — comment 1.0 =====
+  var cmtM = src.match(/<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:([^>]*)-->/i);
   var p1 = 0;
   if (cmtM) {
     var cmt = String(cmtM[1] || "");
-    if (/b[aà]i\s*thi/i.test(src) && last && cmt.toLowerCase().indexOf(last.toLowerCase()) >= 0 && !/\[|Ho ten em|Họ tên em/i.test(cmt)) p1 = 1;
-    else if (/b[aà]i\s*thi\s*c[uủ]a/i.test(src) && !/\[|Ho ten em|Họ tên em/i.test(cmt) && cmt.trim().length > 3) p1 = 0.5;
+    if (!/\[|Ho ten em|Họ tên em|Lớp em|Lop em/i.test(cmt) && last && cmt.toLowerCase().indexOf(last.toLowerCase()) >= 0) p1 = 1;
+    else if (!/\[|placeholder/i.test(cmt) && /b[aà]i\s*thi/i.test(src) && cmt.trim().length > 3) p1 = 0.5;
   }
   total += p1;
   lines.push("Bẫy 1 (comment): " + p1 + "/1" + (p1 >= 1 ? "" : " — <!-- Bài thi của: Họ tên - Lớp: Lớp -->"));
 
-  // 4. Bay 2 title 1.0
+  // ===== 3. Bẫy 2 — title 1.0 =====
   var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   var p2 = 0;
   if (tm) {
@@ -4531,40 +4530,69 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     else if (tt && tt.length > 1 && !/ten em|tên em/i.test(tt)) p2 = 0.5;
   }
   total += p2;
-  lines.push("Bẫy 2 (title): " + p2 + "/1" + (p2 >= 1 ? "" : " — <title>Tên em - Lớp</title>"));
+  lines.push("Bẫy 2 (title): " + p2 + "/1" + (p2 >= 1 ? "" : " — <title>Tên - Lớp</title>"));
 
-  // 5. Bay 3 alt 1.5
+  // ===== 4. Bẫy 3 — ảnh + alt Image [Ten khong dau] 2.0 =====
+  var hasSrc = /<img\b[^>]*src\s*=\s*["'][^"'\s]+["']/i.test(src);
   var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
   var p3 = 0;
-  if (altM) {
+  var bay3why = "";
+  if (hasSrc && altM) {
     var al = String(altM[1] || "").trim();
-    if (/^image\b/i.test(al) && !/\[|Ten em|Tên em/i.test(al) && al.length > 6) p3 = 1.5;
-    else if (al && !/\[|Ten em|Tên em/i.test(al)) p3 = 0.5;
+    var alNorm = stripVN(al);
+    var lastNo = stripVN(last);
+    // alt="Image Ten" hoặc "Image [Ten]" với Ten không dấu
+    if (/^image\b/i.test(al) && lastNo && alNorm.indexOf(lastNo) >= 0 && !/\[ten em\]|ten em/i.test(alNorm)) {
+      p3 = 2;
+    } else if (/^image\b/i.test(al) && al.length > 6 && !/\[|ten em/i.test(alNorm)) {
+      p3 = 1.5;
+    } else if (al) {
+      p3 = 0.5;
+      bay3why = " — alt chưa đúng Image [Ten không dấu]";
+    }
+  } else if (hasSrc) {
+    p3 = 0.5;
+    bay3why = " — có ảnh nhưng thiếu alt đúng";
+  } else if (altM && String(altM[1] || "").trim()) {
+    p3 = 0.3;
+    bay3why = " — có alt nhưng thiếu src ảnh";
+  } else {
+    bay3why = " — thiếu ảnh src + alt=\"Image [Ten]\"";
   }
   total += p3;
-  lines.push("Bẫy 3 (alt): " + p3 + "/1.5" + (p3 >= 1.5 ? "" : " — alt=\"Image [Tên em]\""));
+  lines.push("Bẫy 3 (ảnh+alt): " + p3 + "/2" + (p3 >= 2 ? "" : bay3why));
 
-  // 6. Bay 4 mau 1.5
-  var color = /color\s*:\s*(#(?:[0-9a-f]{3}|[0-9a-f]{6})|rgb|hsl|blue|green|red|orange|#[0-9a-f]+)/i.test(src) ||
+  // ===== 5. Bẫy 4 — màu tháng sinh 1.0 =====
+  var color = /color\s*:\s*(#(?:[0-9a-f]{3}|[0-9a-f]{6})|rgb|hsl|blue|green|red|orange)/i.test(src) ||
               /style\s*=\s*["'][^"']*color\s*:/i.test(src);
-  var p4 = color ? 1.5 : 0;
+  var p4 = color ? 1.0 : 0;
   total += p4;
-  lines.push("Bẫy 4 (màu tháng sinh): " + p4 + "/1.5" + (p4 ? "" : " — chẵn=xanh, lẻ=đỏ/cam"));
+  lines.push("Bẫy 4 (màu tháng sinh): " + p4 + "/1" + (p4 ? "" : " — chẵn=xanh, lẻ=đỏ/cam"));
+
+  // ===== 6. Giao diện đẹp 1.5 =====
+  var ui = 0;
+  var hasCss = /<style[\s\S]*?<\/style>/i.test(src) || /style\s*=\s*["'][^"']+["']/i.test(src);
+  var hasLayout = /max-width|margin\s*:\s*[^;]*auto|padding|border-radius|flex|grid|text-align/i.test(src);
+  var hasColorCss = /color\s*:|background/i.test(src);
+  if (hasCss && hasLayout && hasColorCss) ui = 1.5;
+  else if (hasCss && (hasLayout || hasColorCss)) ui = 1.0;
+  else if (hasCss || hasLayout) ui = 0.5;
+  total += ui;
+  lines.push("Giao diện đẹp: " + ui + "/1.5" + (ui >= 1.5 ? "" : " — cần CSS bố cục + màu sắc rõ"));
 
   total = Math.round(Math.min(10, total) * 10) / 10;
-  // Han che 0 diem neu co bat ky noi dung that
-  if (total === 0 && (okN >= 1 || hasSrc || color)) total = 0.5;
+  if (total === 0 && pInfo > 0) total = pInfo;
 
   return {
     total: total,
     note: lines.join("\n"),
     breakdown: [
-      { label: "Ảnh đại diện", max: 1.5, pts: pAnh },
-      { label: "Thông tin cá nhân", max: 3.5, pts: pInfo },
+      { label: "Thông tin", max: 3.5, pts: pInfo },
       { label: "Bẫy 1", max: 1, pts: p1 },
       { label: "Bẫy 2", max: 1, pts: p2 },
-      { label: "Bẫy 3", max: 1.5, pts: p3 },
-      { label: "Bẫy 4", max: 1.5, pts: p4 }
+      { label: "Bẫy 3", max: 2, pts: p3 },
+      { label: "Bẫy 4", max: 1, pts: p4 },
+      { label: "Giao diện", max: 1.5, pts: ui }
     ]
   };
 }
@@ -4607,8 +4635,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbzM-jcxJ1Ip4_cMoZg8AwyepB871Nnr-T-ZOjC8xP23Ld6hidCQFwCYP7RWm6IhJq_r/exec"; }
 }
 
 function requestHtmlIntroGrade_(rec) {
