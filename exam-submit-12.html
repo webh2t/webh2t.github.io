@@ -4401,7 +4401,7 @@ function initHtmlIntroUI() {
       renderHtmlIntroTable();
       lockEditor(true);
       var hint = document.getElementById("htmlintro-hint");
-      if (hint) hint.textContent = "Da nop · Diem tam: " + rec.score + "/10. " + (plag.flag ? rec.note : "Dang dong bo AI/Sheet...");
+      if (hint) hint.textContent = "Đã nộp: " + name + " · " + lop + " · Điểm: " + rec.score + "/10";
       };
   }
 
@@ -4427,81 +4427,139 @@ function initHtmlIntroUI() {
 /** Cham chat tai client – khong cho diem cao khi thieu tieu chi */
 function gradeHtmlIntroLocal_(source, name, lop) {
   var src = String(source || "");
-  var plain = src.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\.{2,}|…/g, " ").replace(/\s+/g, " ");
-  var last = name ? String(name).trim().split(/\s+/).pop() : "";
+  var plain = src
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, "\n")
+    .replace(/\.{2,}|…/g, " ")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n+/g, "\n")
+    .trim();
+  var plainOne = plain.replace(/\n/g, " ");
   var lines = [];
   var total = 0;
+  var last = name ? String(name).trim().split(/\s+/).pop() : "";
+  var nameTokens = String(name || "").trim().split(/\s+/).filter(function (t) { return t.length > 1; });
 
-  // 1. Anh 1.5
+  // 1. Anh dai dien 1.5 — co src that
   var hasSrc = /<img\b[^>]*src\s*=\s*["'][^"'\s]+["']/i.test(src);
   var pAnh = hasSrc ? 1.5 : 0;
   total += pAnh;
   lines.push("Ảnh đại diện: " + pAnh + "/1.5" + (hasSrc ? "" : " — thiếu src ảnh"));
 
-  // 2. Thong tin 3.5 — 7 muc, moi muc ~0.5
-  var items = [
-    { k: "Họ và tên", ok: !!(last && plain.toLowerCase().indexOf(last.toLowerCase()) >= 0) },
-    { k: "Ngày sinh", ok: /ng[aà]y\s*sinh\s*[:：]?\s*\d/i.test(plain) },
-    { k: "Lớp", ok: !!(lop && new RegExp("l[oớ]p\\s*[:：]?\\s*" + String(lop).replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i").test(plain)) },
-    { k: "Địa chỉ", ok: /[đd][iị]a\s*ch[iỉ]\s*[:：]?\s*[A-Za-zÀ-ỹ0-9]{2,}/i.test(plain) },
-    { k: "Sở thích", ok: /s[oở]\s*th[ií]ch\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plain) },
-    { k: "Ước mơ", ok: /u[oớ]c\s*m[oơ]\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plain) },
-    { k: "Thông điệp", ok: /th[oô]ng\s*[đd]i[eệ]p[^A-Za-zÀ-ỹ]{0,15}[A-Za-zÀ-ỹ]{4,}/i.test(plain) }
+  // 2. Thong tin 3.5 — nhan dien NOI DUNG that, khong bat buoc nhan "Ngày sinh:"
+  function hasName() {
+    if (!nameTokens.length) return false;
+    var low = plainOne.toLowerCase();
+    // it nhat 2 token ten xuat hien, hoac ten cuoi
+    var hit = 0;
+    nameTokens.forEach(function (t) {
+      if (low.indexOf(String(t).toLowerCase()) >= 0) hit++;
+    });
+    return hit >= Math.min(2, nameTokens.length) || (last && low.indexOf(last.toLowerCase()) >= 0);
+  }
+  function hasDob() {
+    // 12/1/2012, 12-01-2012, 12.1.2012
+    return /\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(plainOne) ||
+           /ng[aà]y\s*sinh/i.test(src) && /\d{1,2}/.test(plainOne);
+  }
+  function hasClass() {
+    if (lop && new RegExp("\\b" + String(lop).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(plainOne)) return true;
+    return /\b12A\d{1,2}\b/i.test(plainOne);
+  }
+  function hasAddress() {
+    // dong chu co y, khong trung ten/lop/ngay
+    var parts = plain.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    for (var i = 0; i < parts.length; i++) {
+      var t = parts[i];
+      if (t.length < 3) continue;
+      if (/\b12A\d{1,2}\b/i.test(t)) continue;
+      if (/\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(t)) continue;
+      if (last && t.toLowerCase().indexOf(last.toLowerCase()) >= 0 && t.length < last.length + 6) continue;
+      if (/^(ho|họ|ten|tên|lop|lớp|dia|địa|so|sở|uoc|ước|thong|thông)/i.test(t) && t.length < 12) continue;
+      // co chu cai viet
+      if (/[A-Za-zÀ-ỹ]{3,}/.test(t)) return true;
+    }
+    return /[đd][iị]a\s*ch[iỉ]/i.test(src) && /[A-Za-zÀ-ỹ]{3,}/.test(plainOne);
+  }
+  function hasHobby() {
+    return /s[oở]\s*th[ií]ch\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
+  }
+  function hasDream() {
+    return /u[oớ]c\s*m[oơ]\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
+  }
+  function hasMessage() {
+    return /th[oô]ng\s*[đd]i[eệ]p[^A-Za-zÀ-ỹ]{0,20}[A-Za-zÀ-ỹ]{4,}/i.test(plainOne);
+  }
+
+  var checks = [
+    { k: "Họ và tên", ok: hasName() },
+    { k: "Ngày sinh", ok: hasDob() },
+    { k: "Lớp", ok: hasClass() },
+    { k: "Địa chỉ", ok: hasAddress() },
+    { k: "Sở thích", ok: hasHobby() },
+    { k: "Ước mơ", ok: hasDream() },
+    { k: "Thông điệp", ok: hasMessage() }
   ];
-  var okN = items.filter(function (x) { return x.ok; }).length;
-  var pInfo = okN <= 0 ? 0 : Math.round((okN / 7) * 3.5 * 10) / 10;
+  var okN = checks.filter(function (x) { return x.ok; }).length;
+  // 7 muc * ~0.5 = 3.5
+  var pInfo = Math.round((okN / 7) * 3.5 * 10) / 10;
   if (okN >= 1 && pInfo < 0.5) pInfo = 0.5;
   total += pInfo;
-  var missInfo = items.filter(function (x) { return !x.ok; }).map(function (x) { return x.k; });
-  lines.push("Thông tin cá nhân: " + pInfo + "/3.5" + (missInfo.length ? (" — thiếu: " + missInfo.join(", ")) : ""));
+  var missInfo = checks.filter(function (x) { return !x.ok; }).map(function (x) { return x.k; });
+  lines.push("Thông tin cá nhân: " + pInfo + "/3.5 (" + okN + "/7 mục)" + (missInfo.length ? " — thiếu: " + missInfo.join(", ") : ""));
 
-  // 3. Bay 1 — 1.0
-  var cmtM = src.match(/<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:([^>]*)-->/i);
+  // 3. Bay 1 comment 1.0
+  var cmtM = src.match(/<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:([^>]*)-->/i) || src.match(/<!--([\s\S]*?)-->/i);
   var p1 = 0;
   if (cmtM) {
     var cmt = String(cmtM[1] || "");
-    if (!/\[|Ho ten em|Họ tên em|Lớp em|Lop em/i.test(cmt) && last && cmt.toLowerCase().indexOf(last.toLowerCase()) >= 0) p1 = 1;
-    else if (!/\[|placeholder/i.test(cmt) && cmt.trim().length > 3) p1 = 0.5;
+    if (/b[aà]i\s*thi/i.test(src) && last && cmt.toLowerCase().indexOf(last.toLowerCase()) >= 0 && !/\[|Ho ten em|Họ tên em/i.test(cmt)) p1 = 1;
+    else if (/b[aà]i\s*thi\s*c[uủ]a/i.test(src) && !/\[|Ho ten em|Họ tên em/i.test(cmt) && cmt.trim().length > 3) p1 = 0.5;
   }
   total += p1;
   lines.push("Bẫy 1 (comment): " + p1 + "/1" + (p1 >= 1 ? "" : " — <!-- Bài thi của: Họ tên - Lớp: Lớp -->"));
 
-  // 4. Bay 2 — 1.0
+  // 4. Bay 2 title 1.0
   var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   var p2 = 0;
   if (tm) {
-    var tt = String(tm[1] || "").trim();
+    var tt = String(tm[1] || "").replace(/\s+/g, " ").trim();
     if (tt && !/ten em|tên em|^\s*$/i.test(tt) && /-|–/.test(tt)) p2 = 1;
-    else if (tt && tt.length > 1) p2 = 0.3;
+    else if (tt && tt.length > 1 && !/ten em|tên em/i.test(tt)) p2 = 0.5;
   }
   total += p2;
   lines.push("Bẫy 2 (title): " + p2 + "/1" + (p2 >= 1 ? "" : " — <title>Tên em - Lớp</title>"));
 
-  // 5. Bay 3 — 1.5
+  // 5. Bay 3 alt 1.5
   var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
   var p3 = 0;
   if (altM) {
     var al = String(altM[1] || "").trim();
     if (/^image\b/i.test(al) && !/\[|Ten em|Tên em/i.test(al) && al.length > 6) p3 = 1.5;
-    else if (al) p3 = 0.3;
+    else if (al && !/\[|Ten em|Tên em/i.test(al)) p3 = 0.5;
   }
   total += p3;
   lines.push("Bẫy 3 (alt): " + p3 + "/1.5" + (p3 >= 1.5 ? "" : " — alt=\"Image [Tên em]\""));
 
-  // 6. Bay 4 — 1.5
-  var color = /color\s*:\s*(#(?:[0-9a-f]{3}|[0-9a-f]{6})|rgb|hsl|blue|green|red|orange)/i.test(src);
+  // 6. Bay 4 mau 1.5
+  var color = /color\s*:\s*(#(?:[0-9a-f]{3}|[0-9a-f]{6})|rgb|hsl|blue|green|red|orange|#[0-9a-f]+)/i.test(src) ||
+              /style\s*=\s*["'][^"']*color\s*:/i.test(src);
   var p4 = color ? 1.5 : 0;
   total += p4;
   lines.push("Bẫy 4 (màu tháng sinh): " + p4 + "/1.5" + (p4 ? "" : " — chẵn=xanh, lẻ=đỏ/cam"));
 
-  total = Math.round(Math.min(10, total) * 10) / 10; // 1 chu so thap phan
-  var note = lines.join("\n");
+  total = Math.round(Math.min(10, total) * 10) / 10;
+  // Han che 0 diem neu co bat ky noi dung that
+  if (total === 0 && (okN >= 1 || hasSrc || color)) total = 0.5;
+
   return {
     total: total,
-    note: note,
+    note: lines.join("\n"),
     breakdown: [
-      { label: "Ảnh", max: 1.5, pts: pAnh },
-      { label: "Thông tin", max: 3.5, pts: pInfo },
+      { label: "Ảnh đại diện", max: 1.5, pts: pAnh },
+      { label: "Thông tin cá nhân", max: 3.5, pts: pInfo },
       { label: "Bẫy 1", max: 1, pts: p1 },
       { label: "Bẫy 2", max: 1, pts: p2 },
       { label: "Bẫy 3", max: 1.5, pts: p3 },
