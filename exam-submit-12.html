@@ -336,6 +336,7 @@
 #screen-htmlintro, #screen-htmlintro * { -webkit-user-select: none !important; user-select: none !important; }
 #screen-htmlintro .CodeMirror, #screen-htmlintro .CodeMirror * { -webkit-user-select: text !important; user-select: text !important; }
 /* van chan copy bang JS; cho phep go chu trong editor */
+#exam-picker .eb-file{display:none!important}
 </style>
 
 
@@ -663,9 +664,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1347,7 +1348,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -1383,7 +1384,7 @@ function exitAdminHint() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "exam-btn" + (currentExam && currentExam.id === ex.id ? " active" : "");
-      btn.innerHTML = '<span class="eb-code">' + ex.code + '</span><span class="eb-title">' + ex.title + '</span><span class="eb-file">' + ex.file + '</span>';
+      btn.innerHTML = '<span class="eb-code">' + ex.code + '</span><span class="eb-title">' + ex.title + '</span>';
       btn.addEventListener("click", function () { selectExam(ex); });
       box.appendChild(btn);
     });
@@ -2492,7 +2493,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2509,7 +2510,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2589,7 +2590,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3732,7 +3733,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
+    WH = "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4089,7 +4090,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4606,33 +4607,58 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbxZIf4jm4X935IdpDm6CMw7igNwUxbkgRh-3qNyVkTVuzshkX0Ft8csoaBMD5nG1hYM/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbxoMzLpGAoJ2QiYYGSuGKy2ScED0lRDU-5iNakmuzC8DGbQLVCumB2M00ytmF8A4rTU/exec"; }
 }
 
 function requestHtmlIntroGrade_(rec) {
   var url = getHtmlIntroWebhook_();
-  if (!url) return;
-  fetch(url, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: JSON.stringify({
-      action: "html_intro_grade",
-      examId: "b11",
-      name: rec.name,
-      class: rec.class,
-      pin: rec.pin,
-      html: (rec.html || "").slice(0, 90000),
-      score: rec.score,
-      scoreHint: rec.score,
-      note: rec.note,
-      rubric: "TX3 strict"
-    })
-  }).catch(function () {});
+  if (!url) { console.warn("No HTML intro webhook"); return; }
+  var payload = {
+    action: "html_intro_grade",
+    examId: "b11",
+    name: rec.name,
+    class: rec.class,
+    pin: rec.pin,
+    html: (rec.html || "").slice(0, 90000),
+    score: rec.score,
+    scoreHint: rec.score,
+    note: rec.note || "",
+    time: rec.time || new Date().toLocaleString("vi-VN"),
+    rubric: "TX3"
+  };
+  var body = JSON.stringify(payload);
+  // 1) sendBeacon (tin cay khi doi trang)
+  try {
+    if (navigator.sendBeacon) {
+      var blob = new Blob([body], { type: "text/plain;charset=utf-8" });
+      navigator.sendBeacon(url, blob);
+    }
+  } catch (eB) {}
+  // 2) fetch no-cors
+  try {
+    fetch(url, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: body
+    }).catch(function () {});
+  } catch (eF) {}
+  // 3) Image GET fallback ngan (khong gui html day du)
+  try {
+    var q = url + (url.indexOf("?") >= 0 ? "&" : "?") +
+      "action=html_intro_submit&name=" + encodeURIComponent(rec.name || "") +
+      "&class=" + encodeURIComponent(rec.class || "") +
+      "&pin=" + encodeURIComponent(rec.pin || "") +
+      "&score=" + encodeURIComponent(rec.score != null ? rec.score : "") +
+      "&note=" + encodeURIComponent(String(rec.note || "").slice(0, 400)) +
+      "&time=" + encodeURIComponent(rec.time || "");
+    var img = new Image();
+    img.src = q;
+  } catch (eI) {}
 }
 
-/** Dong bo tu Google Sheet: ghi de local theo cloud; xoa local neu cloud khong con */
+
 function syncHtmlIntroFromCloud() {
   var url = getHtmlIntroWebhook_();
   if (!url) return Promise.resolve();
@@ -4647,60 +4673,51 @@ function syncHtmlIntroFromCloud() {
 
       var local = [];
       try { local = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]"); } catch (e) {}
-      var byKey = {};
+      var localByKey = {};
       local.forEach(function (x) {
-        if (x && x.class && x.name) byKey[String(x.class) + "|" + String(x.name)] = x;
+        if (x && x.class && x.name) localByKey[String(x.class) + "|" + String(x.name)] = x;
       });
 
       var cloudKeys = {};
+      var merged = [];
       (rows || []).forEach(function (r) {
         var name = r.name || r.hoTen || "";
         var lop = r.class || r.lop || "";
         if (!name || !lop) return;
         var k = String(lop) + "|" + String(name);
         cloudKeys[k] = true;
+        var old = localByKey[k];
         var score = r.score != null && r.score !== "" ? r.score : (r.tong != null && r.tong !== "" ? r.tong : "");
         var note = r.note || r.nhanXet || "";
-        var old = byKey[k];
-        // Uu tien diem cloud neu co; neu cloud trong thi giu diem local
-        if (old) {
-          if (score === "" || score == null) score = old.score;
-          if (!note) note = old.note || "";
-          byKey[k] = {
-            time: r.time || old.time || "",
-            class: lop,
-            name: name,
-            pin: r.pin || old.pin || "",
-            link: r.link || old.link || "",
-            html: old.html || r.html || "",
-            score: score,
-            note: note,
-            plagFlag: !!(r.plagFlag && String(r.plagFlag).toUpperCase() !== "NO" && r.plagFlag !== "") || !!old.plagFlag,
-            at: old.at || Date.now(),
-            examId: "b11",
-            breakdown: old.breakdown || null,
-            fromCloud: true
-          };
-        } else {
-          byKey[k] = {
-            time: r.time || "",
-            class: lop,
-            name: name,
-            pin: r.pin || "",
-            link: r.link || "",
-            html: r.html || "",
-            score: score,
-            note: note,
-            plagFlag: !!(r.plagFlag && String(r.plagFlag).toUpperCase() !== "NO" && r.plagFlag !== ""),
-            at: Date.now(),
-            examId: "b11",
-            fromCloud: true
-          };
-        }
+        if ((score === "" || score == null) && old && old.score !== "" && old.score != null) score = old.score;
+        if (!note && old && old.note) note = old.note;
+        merged.push({
+          time: r.time || (old && old.time) || "",
+          class: lop,
+          name: name,
+          pin: r.pin || (old && old.pin) || "",
+          link: r.link || (old && old.link) || "",
+          html: (old && old.html) || r.html || "",
+          score: score,
+          note: note,
+          plagFlag: !!(r.plagFlag && String(r.plagFlag).toUpperCase() !== "NO" && r.plagFlag !== ""),
+          at: (old && old.at) || Date.now(),
+          examId: "b11",
+          breakdown: (old && old.breakdown) || null,
+          fromCloud: true
+        });
       });
 
-      // Giữ bài local mới nộp (chua co tren cloud)
-      var merged = Object.keys(byKey).map(function (k) { return byKey[k]; });
+      // Chi giu local moi nop < 3 phut va chua co tren cloud (tranh mat diem vua cham)
+      var now = Date.now();
+      local.forEach(function (x) {
+        if (!x || !x.class || !x.name) return;
+        var k = String(x.class) + "|" + String(x.name);
+        if (cloudKeys[k]) return;
+        var age = now - (Number(x.at) || 0);
+        if (age >= 0 && age < 3 * 60 * 1000) merged.push(x);
+      });
+
       merged.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
       try { localStorage.setItem(HTMLINTRO_SYNC_KEY, JSON.stringify(merged.slice(0, 400))); } catch (e2) {}
       renderHtmlIntroTable();
