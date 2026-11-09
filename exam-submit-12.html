@@ -331,7 +331,13 @@
 #screen-htmlintro .hi-checklist{background:#f8fafc!important;color:#334155!important;border:1px solid #e2e8f0!important}
 #screen-htmlintro .hi-checklist b{color:#1d4ed8!important}
 #screen-htmlintro .hi-checklist code{background:#eef2ff;padding:1px 4px;border-radius:4px;font-size:.8em}
+
+/* HI-NOSELECT */
+#screen-htmlintro, #screen-htmlintro * { -webkit-user-select: none !important; user-select: none !important; }
+#screen-htmlintro .CodeMirror, #screen-htmlintro .CodeMirror * { -webkit-user-select: text !important; user-select: text !important; }
+/* van chan copy bang JS; cho phep go chu trong editor */
 </style>
+
 
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
@@ -3430,7 +3436,7 @@ if (_cancelExam) {
 
   <div style="max-width:1100px;margin:0 auto 14px;background:#fff;border-radius:16px;padding:18px 18px 14px;box-shadow:0 10px 32px rgba(39,82,214,.1);box-sizing:border-box">
     <h2 style="margin:0 0 4px;color:#1E3A8A;font-size:1.2rem;text-align:center">NỘP BÀI – TRANG GIỚI THIỆU HTML CÁ NHÂN</h2>
-    <p style="margin:0 0 12px;text-align:center;color:#B91C1C;font-weight:700;font-size:.9rem">TX3 · Hạn nộp 20h thứ 7 21/11/2026 · Công bố điểm 23/11/2026 · Mỗi HS 1 lần · Lưu mã nguồn độc lập</p>
+    <p style="margin:0 0 12px;text-align:center;color:#B91C1C;font-weight:700;font-size:.9rem">TX3 · Hạn nộp 20h thứ 7 21/11/2026 · Mỗi HS 1 lần · Lưu mã nguồn độc lập</p>
     <div style="display:grid;grid-template-columns:1fr 1fr 120px;gap:10px">
       <div>
         <label style="font-weight:700;font-size:.82rem">Lớp</label>
@@ -4169,8 +4175,9 @@ function fillPinFromSelection() {
 function enableHtmlIntroAntiCheat() {
   var root = document.getElementById("screen-htmlintro");
   if (!root) return;
-  if (root.dataset.anti === "2") return;
-  root.dataset.anti = "2";
+  root.dataset.anti = "3";
+  root.style.userSelect = "none";
+  root.style.webkitUserSelect = "none";
   function inHi() {
     var r = document.getElementById("screen-htmlintro");
     return r && r.style.display !== "none";
@@ -4181,9 +4188,12 @@ function enableHtmlIntroAntiCheat() {
     e.stopPropagation();
     return false;
   }
-  // Chan copy/cut/paste tren toan man hinh HTML (editor + preview)
-  ["copy", "cut", "paste", "contextmenu"].forEach(function (ev) {
+  ["copy", "cut", "paste", "contextmenu", "dragstart", "selectstart"].forEach(function (ev) {
     root.addEventListener(ev, block, true);
+    document.addEventListener(ev, function (e2) {
+      if (!inHi()) return;
+      block(e2);
+    }, true);
   });
   document.addEventListener("keydown", function (e) {
     if (!inHi()) return;
@@ -4198,21 +4208,18 @@ function enableHtmlIntroAntiCheat() {
       return false;
     }
   }, true);
-  // Chan keo chuot chon text de copy trong preview
-  var prev = document.getElementById("htmlintro-preview");
-  if (prev) {
-    try {
-      prev.addEventListener("load", function () {
-        try {
-          var d = prev.contentDocument;
-          if (d && d.body) {
-            d.body.style.userSelect = "none";
-            d.body.oncopy = function (e) { e.preventDefault(); return false; };
-          }
-        } catch (e2) {}
+  // CodeMirror: chan copy bang lenh
+  try {
+    if (window.htmlIntroEditor) {
+      window.htmlIntroEditor.on("keydown", function (cm, e) {
+        var key = (e.key || "").toLowerCase();
+        var ctrl = e.ctrlKey || e.metaKey;
+        if (ctrl && (key === "c" || key === "v" || key === "x" || key === "a")) {
+          e.preventDefault();
+        }
       });
-    } catch (e3) {}
-  }
+    }
+  } catch (eCM) {}
 }
 function initHtmlIntroUI() {
   try { enableHtmlIntroAntiCheat(); } catch (eAC) {}
@@ -4233,12 +4240,27 @@ function initHtmlIntroUI() {
 
   var classes = Object.keys(studentsByClass || {}).sort();
   classSel.innerHTML = '<option value="">-- Chon lop --</option>';
+  var openCount = 0;
   classes.forEach(function (lop) {
+    var open = true;
+    try {
+      if (typeof isClassAlwaysOpen === "function" && isClassAlwaysOpen(lop)) open = true;
+      else if (typeof isClassOpenNow === "function") open = isClassOpenNow(lop);
+      else open = true;
+    } catch (eO) { open = true; }
+    if (!open) return;
+    openCount++;
     var o = document.createElement("option");
     o.value = lop;
     o.textContent = lop + " (" + ((studentsByClass[lop] || []).length) + " HS)";
     classSel.appendChild(o);
   });
+  if (!openCount) {
+    var o0 = document.createElement("option");
+    o0.value = "";
+    o0.textContent = "Khong co lop nao trong lich thi";
+    classSel.appendChild(o0);
+  }
   if (stuSel) {
     stuSel.innerHTML = '<option value="">-- Chon lop truoc --</option>';
     stuSel.disabled = true;
@@ -4282,7 +4304,7 @@ function initHtmlIntroUI() {
       var all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
       var existed = all.find(function (x) { return x.class === lop && x.name === name && x.html; });
       if (existed) {
-        if (hint) hint.textContent = "Ban da nop bai roi" + (existed.score !== "" && existed.score != null ? (" · Diem: " + existed.score) : "") + ". Khong sua / nop lai.";
+        if (hint) hint.textContent = "Bạn đã nộp bài" + (existed.score !== "" && existed.score != null ? (" · Diem: " + existed.score) : "") + ". Khong sua / nop lai.";
         if (existed.html) setHtmlIntroCode(existed.html);
         runHtmlIntroPreview();
         lockEditor(true);
@@ -4317,7 +4339,7 @@ function initHtmlIntroUI() {
       try {
         var all0 = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
         if (all0.find(function (x) { return x.class === lop && x.name === name && x.html; })) {
-          alert("Ban da nop bai roi."); return;
+          alert("Bạn đã nộp bài"); return;
         }
       } catch (eDup) {}
 
@@ -4415,7 +4437,8 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     { k: "Thông điệp", ok: /th[oô]ng\s*[đd]i[eệ]p[^A-Za-zÀ-ỹ]{0,15}[A-Za-zÀ-ỹ]{4,}/i.test(plain) }
   ];
   var okN = items.filter(function (x) { return x.ok; }).length;
-  var pInfo = Math.round((okN / 7) * 3.5 * 100) / 100;
+  var pInfo = okN <= 0 ? 0 : Math.round((okN / 7) * 3.5 * 10) / 10;
+  if (okN >= 1 && pInfo < 0.5) pInfo = 0.5;
   total += pInfo;
   var missInfo = items.filter(function (x) { return !x.ok; }).map(function (x) { return x.k; });
   lines.push("Thông tin cá nhân: " + pInfo + "/3.5" + (missInfo.length ? (" — thiếu: " + missInfo.join(", ")) : ""));
@@ -4459,7 +4482,7 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   total += p4;
   lines.push("Bẫy 4 (màu tháng sinh): " + p4 + "/1.5" + (p4 ? "" : " — chẵn=xanh, lẻ=đỏ/cam"));
 
-  total = Math.round(Math.min(10, total) * 100) / 100;
+  total = Math.round(Math.min(10, total) * 10) / 10; // 1 chu so thap phan
   var note = lines.join("\n");
   return {
     total: total,
