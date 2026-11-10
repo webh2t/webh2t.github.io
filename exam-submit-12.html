@@ -337,7 +337,21 @@
 #screen-htmlintro .CodeMirror, #screen-htmlintro .CodeMirror * { -webkit-user-select: text !important; user-select: text !important; }
 /* van chan copy bang JS; cho phep go chu trong editor */
 #exam-picker .eb-file{display:none!important}
+
+/* HI-TABLE-COLS */
+#htmlintro-result-table { width: 100%; table-layout: auto; }
+#htmlintro-result-table th:nth-child(1) { width: 16%; }
+#htmlintro-result-table th:nth-child(2) { width: 8%; }
+#htmlintro-result-table th:nth-child(3) { width: 22%; min-width: 160px; }
+#htmlintro-result-table th:nth-child(4) { width: 8%; }
+#htmlintro-result-table th:nth-child(5) { width: 46%; }
+#htmlintro-result-table td:nth-child(3) {
+  white-space: nowrap !important;
+  min-width: 160px;
+  font-weight: 600;
+}
 </style>
+
 
 
 <!-- Google Analytics 4 – Measurement ID G-JG88ZZBKGC -->
@@ -3488,11 +3502,11 @@ if (_cancelExam) {
     <h3 style="margin:0 0 8px;color:#1E3A8A;font-size:1rem">Bảng sản phẩm đã nộp</h3>
     
     <div style="overflow:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:.8rem">
+      <table id="htmlintro-result-table" class="hi-result-table" style="width:100%;border-collapse:collapse;font-size:.85rem">
         <thead><tr style="background:#EEF2FF">
           <th style="padding:8px;text-align:left">Thời gian</th>
           <th style="padding:8px;text-align:left">Lớp</th>
-          <th style="padding:8px;text-align:left">Họ và tên</th>
+          <th style="padding:8px;text-align:left;min-width:180px">Họ và tên</th>
           <th style="padding:8px;text-align:center">Tổng</th>
           <th style="padding:8px;text-align:left">Nhận xét</th>
         </tr></thead>
@@ -4873,7 +4887,10 @@ function syncHtmlIntroFromCloud() {
         if ((score === "" || score == null) && old && old.score !== "" && old.score != null) score = old.score;
         if (!note && old && old.note) note = old.note;
         // Nếu cloud có điểm/note thì luôn dùng cloud
-        if (r.score != null && r.score !== "") score = r.score;
+        if (r.score != null && r.score !== "") {
+          score = Number(String(r.score).replace(",", "."));
+          if (isNaN(score)) score = r.score;
+        }
         if (r.note || r.nhanXet) note = r.note || r.nhanXet;
         merged.push({
           time: r.time || (old && old.time) || "",
@@ -4949,23 +4966,29 @@ function renderHtmlIntroTable() {
   }
   all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
   body.innerHTML = all.map(function (r) {
+    // ƯU TIÊN điểm cột G từ Google Sheet (r.score) — GV sửa thủ công phải hiện đúng
     var score = r.score;
     if (score instanceof Date || (typeof score === "string" && /T\d{2}:\d{2}/.test(score))) score = "";
-    // Ưu tiên tổng từ breakdown hoặc từ chuỗi TỔNG trong note
-    if (r.breakdown && r.breakdown.length) {
-      var sumBd = r.breakdown.reduce(function (s, b) { return s + (Number(b.pts) || 0); }, 0);
-      sumBd = Math.round(sumBd * 10) / 10;
-      if (score === "" || score == null || Math.abs(Number(score) - sumBd) > 0.05) score = sumBd;
-    } else if (r.note && /TỔNG:\s*([\d.]+)/i.test(r.note)) {
-      var mt = r.note.match(/TỔNG:\s*([\d.]+)/i);
-      if (mt) score = Math.round(parseFloat(mt[1]) * 10) / 10;
+    if (typeof score === "string") score = score.replace(",", ".");
+    if (score !== "" && score != null && !isNaN(Number(score))) {
+      score = Math.round(Number(score) * 10) / 10;
+    } else {
+      // Chỉ khi Sheet không có điểm mới suy từ note/breakdown
+      score = "";
+      if (r.note && /TỔNG:\s*([\d.,]+)/i.test(r.note)) {
+        var mt = r.note.match(/TỔNG:\s*([\d.,]+)/i);
+        if (mt) score = Math.round(parseFloat(String(mt[1]).replace(",", ".")) * 10) / 10;
+      } else if (r.breakdown && r.breakdown.length) {
+        var sumBd = r.breakdown.reduce(function (s, b) { return s + (Number(b.pts) || 0); }, 0);
+        score = Math.round(sumBd * 10) / 10;
+      }
     }
-    if (score === "" || score == null) score = "—";
+    if (score === "" || score == null || (typeof score === "number" && isNaN(score))) score = "—";
     var rowStyle = r.plagFlag ? "background:#FEF2F2;" : "";
     return '<tr style="' + rowStyle + '">'
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;white-space:nowrap">' + (r.time || "") + "</td>"
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.class || "") + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.name || "") + "</td>"
+      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;min-width:180px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + (r.name || '').replace(/"/g,'&quot;') + '">' + (r.name || "") + "</td>"
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700;color:#1D4ED8">' + score + "</td>"
       + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;font-size:.78rem;color:#475569;white-space:pre-wrap">' + (r.note || "") + "</td>"
       + "</tr>";
