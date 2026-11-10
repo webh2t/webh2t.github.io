@@ -350,6 +350,39 @@
   min-width: 160px;
   font-weight: 600;
 }
+
+/* HI-WRAP-LONG-BASE64 */
+#screen-htmlintro .hi-split { overflow: hidden; }
+#screen-htmlintro .hi-editor-wrap,
+#screen-htmlintro .hi-code-pane,
+#screen-htmlintro .CodeMirror {
+  max-width: 100%;
+  overflow-x: hidden !important;
+}
+#screen-htmlintro .CodeMirror {
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
+}
+#screen-htmlintro .CodeMirror-scroll {
+  overflow-x: hidden !important;
+}
+#screen-htmlintro .CodeMirror-sizer {
+  min-width: 0 !important;
+}
+#screen-htmlintro .CodeMirror pre,
+#screen-htmlintro .CodeMirror-line,
+#screen-htmlintro .CodeMirror-line span {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
+}
+#htmlintro-editor {
+  white-space: pre-wrap !important;
+  word-break: break-all !important;
+  overflow-wrap: anywhere !important;
+  max-width: 100%;
+}
+
 </style>
 
 
@@ -4158,7 +4191,7 @@ function ensureHtmlIntroEditor() {
   if (window.htmlIntroEditor) { try { window.htmlIntroEditor.refresh(); } catch (e) {} return; }
   if (typeof CodeMirror !== "undefined") {
     window.htmlIntroEditor = CodeMirror.fromTextArea(ta, {
-      mode: "htmlmixed", theme: "default", lineNumbers: true, lineWrapping: true, tabSize: 2, indentUnit: 2
+      mode: "htmlmixed", theme: "default", lineNumbers: true, lineWrapping: true, tabSize: 2, indentUnit: 2, viewportMargin: Infinity
     });
   } else {
     ta.style.cssText = "width:100%;height:100%;min-height:420px;box-sizing:border-box;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13.5px";
@@ -4277,6 +4310,12 @@ function insertHtmlIntroImageFromFile_(file) {
       else code += "\n" + imgTag;
     }
     setHtmlIntroCode(code);
+    try {
+      if (window.htmlIntroEditor) {
+        window.htmlIntroEditor.setOption("lineWrapping", true);
+        window.htmlIntroEditor.refresh();
+      }
+    } catch (eR) {}
     try { runHtmlIntroPreview(); } catch (eP) {}
     var hint = document.getElementById("htmlintro-hint");
     if (hint) hint.textContent = "Đã chèn ảnh từ máy vào thẻ <img> (không cần link ngoài).";
