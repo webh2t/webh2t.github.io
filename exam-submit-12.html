@@ -3475,7 +3475,7 @@ if (_cancelExam) {
       1. Thông tin (3,5đ): Họ tên · Ngày sinh · Lớp · Địa chỉ · Sở thích · Ước mơ · Thông điệp (mỗi mục 0,5đ)<br>
       2. Bẫy 1 (1đ): <code>&lt;!-- Bài thi của: [Họ tên] - Lớp: [Lớp] --&gt;</code><br>
       3. Bẫy 2 (1đ): <code>&lt;title&gt;Tên - Lớp&lt;/title&gt;</code><br>
-      4. Bẫy 3 (2đ): Ảnh đại diện + <code>alt="Image [Ten]"</code> (Tên không dấu)<br>
+      4. Bẫy 3 (2đ): Ảnh đại diện + <code>alt="Image [Ten]"</code> (Tên không dấu) — bấm <b>CHÈN ẢNH</b> chọn ảnh từ máy<br>
       5. Bẫy 4 (1đ): Màu Họ và tên theo tháng sinh (chẵn=xanh, lẻ=đỏ/cam)<br>
       6. Giao diện đẹp (1,5đ): CSS bố cục, màu sắc, trình bày rõ
     </div>
@@ -3492,9 +3492,11 @@ if (_cancelExam) {
       </div>
     </div>
     <div class="hi-actions">
+      <input type="file" id="htmlintro-img-file" accept="image/*" style="display:none" />
+      <button type="button" class="btn-save" id="btn-htmlintro-img" title="Chọn ảnh từ máy → chèn vào thẻ img (base64)">CHÈN ẢNH</button>
       <button type="button" class="btn-run" id="btn-htmlintro-run">CHẠY THỬ</button>
       <button type="button" class="btn-save" id="btn-htmlintro-save">LƯU BÀI</button>
-      <button type="button" class="btn-submit-hi" id="btn-htmlintro-refresh-sheet" type="button" style="display:none"></button><button type="button" id="btn-htmlintro-submit">NỘP BÀI</button>
+      <button type="button" id="btn-htmlintro-submit">NỘP BÀI</button>
     </div>
   </div>
 
@@ -4236,6 +4238,53 @@ function enableHtmlIntroAntiCheat() {
     }
   } catch (eCM) {}
 }
+
+function insertHtmlIntroImageFromFile_(file) {
+  if (!file || !/^image\//i.test(file.type)) {
+    alert("Hãy chọn file ảnh (JPG, PNG, GIF, WEBP).");
+    return;
+  }
+  if (file.size > 900000) {
+    alert("Ảnh hơi lớn (>900KB). Nên chọn ảnh nhỏ hơn để nộp mượt.");
+  }
+  var reader = new FileReader();
+  reader.onload = function () {
+    var dataUrl = String(reader.result || "");
+    if (!dataUrl || dataUrl.indexOf("data:image") !== 0) {
+      alert("Không đọc được ảnh.");
+      return;
+    }
+    var code = getHtmlIntroCode() || HTMLINTRO_DEFAULT;
+    var last = "";
+    try {
+      var nameEl = document.getElementById("htmlintro-student");
+      if (nameEl && nameEl.value) last = String(nameEl.value).trim().split(/\s+/).pop() || "";
+    } catch (eN) {}
+    var alt = last ? ('Image ' + last) : "Image";
+    // Thay src của img đầu tiên, hoặc chèn thẻ img mới
+    if (/<img\b[^>]*>/i.test(code)) {
+      code = code.replace(/<img\b[^>]*>/i, function (tag) {
+        var t = tag;
+        if (/\bsrc\s*=/.test(t)) t = t.replace(/\bsrc\s*=\s*(["']).*?\1/i, 'src="' + dataUrl + '"');
+        else t = t.replace(/<img/i, '<img src="' + dataUrl + '"');
+        if (/\balt\s*=/.test(t)) t = t.replace(/\balt\s*=\s*(["']).*?\1/i, 'alt="' + alt + '"');
+        else t = t.replace(/<img/i, '<img alt="' + alt + '"');
+        return t;
+      });
+    } else {
+      var imgTag = '<img src="' + dataUrl + '" alt="' + alt + '" width="200">';
+      if (/<\/body>/i.test(code)) code = code.replace(/<\/body>/i, imgTag + "\n</body>");
+      else code += "\n" + imgTag;
+    }
+    setHtmlIntroCode(code);
+    try { runHtmlIntroPreview(); } catch (eP) {}
+    var hint = document.getElementById("htmlintro-hint");
+    if (hint) hint.textContent = "Đã chèn ảnh từ máy vào thẻ <img> (không cần link ngoài).";
+  };
+  reader.onerror = function () { alert("Lỗi đọc file ảnh."); };
+  reader.readAsDataURL(file);
+}
+
 function initHtmlIntroUI() {
   try { enableHtmlIntroAntiCheat(); } catch (eAC) {}
 
@@ -4246,6 +4295,18 @@ function initHtmlIntroUI() {
   var btn = document.getElementById("btn-htmlintro-submit");
   var btnRun = document.getElementById("btn-htmlintro-run");
   var btnSave = document.getElementById("btn-htmlintro-save");
+
+  var btnImg = document.getElementById("btn-htmlintro-img");
+  var fileImg = document.getElementById("htmlintro-img-file");
+  if (btnImg && fileImg) {
+    btnImg.onclick = function () { fileImg.click(); };
+    fileImg.onchange = function () {
+      var f = fileImg.files && fileImg.files[0];
+      if (f) insertHtmlIntroImageFromFile_(f);
+      fileImg.value = "";
+    };
+  }
+
   var back = document.getElementById("btn-htmlintro-back");
   var pinInp = document.getElementById("htmlintro-pin");
   if (!classSel) return;
