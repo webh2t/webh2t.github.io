@@ -664,9 +664,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1348,7 +1348,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2493,7 +2493,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2510,7 +2510,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2590,7 +2590,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3480,7 +3480,7 @@ if (_cancelExam) {
     <div class="hi-actions">
       <button type="button" class="btn-run" id="btn-htmlintro-run">CHẠY THỬ</button>
       <button type="button" class="btn-save" id="btn-htmlintro-save">LƯU BÀI</button>
-      <button type="button" class="btn-submit-hi" id="btn-htmlintro-submit">NỘP BÀI</button>
+      <button type="button" class="btn-submit-hi" id="btn-htmlintro-refresh-sheet" type="button" style="display:none"></button><button type="button" id="btn-htmlintro-submit">NỘP BÀI</button>
     </div>
   </div>
 
@@ -3733,7 +3733,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
+    WH = "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4090,7 +4090,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4439,7 +4439,8 @@ function initHtmlIntroUI() {
   try { flushHtmlIntroPending_(); } catch (eF) {}
   try { syncHtmlIntroFromCloud(); } catch (e) {}
   renderHtmlIntroTable();
-  setInterval(function () { try { syncHtmlIntroFromCloud(); } catch (eI) {} }, 15000);
+  setInterval(function () { try { syncHtmlIntroFromCloud(); } catch (eI) {} }, 10000);
+  setTimeout(function () { try { syncHtmlIntroFromCloud(); } catch (e2) {} }, 500);
 }
 
 /** Cham chat tai client – khong cho diem cao khi thieu tieu chi */
@@ -4662,8 +4663,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbwPn2cqGnCUt0ocinBhhn5qWknME70ghNqljBWF4Dfxg9lVSTkkAlNW3OdivzQAGouU/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbxGEYlCHYW4ePD_Y9ComiiM0dLUI80VqavCwqsW7snrp1tyr1YZmVnl-nehIZDq_dWb/exec"; }
 }
 
 
@@ -4732,6 +4733,7 @@ function requestHtmlIntroGrade_(rec) {
 
   // GET lưu điểm — nhiều kênh
   var sep = url.indexOf("?") >= 0 ? "&" : "?";
+  var htmlShort = htmlCode.slice(0, 800);
   var qs = "action=html_intro_submit"
     + "&name=" + encodeURIComponent(name)
     + "&lop=" + encodeURIComponent(lop)
@@ -4740,6 +4742,7 @@ function requestHtmlIntroGrade_(rec) {
     + "&score=" + encodeURIComponent(String(score))
     + "&note=" + encodeURIComponent(note)
     + "&time=" + encodeURIComponent(time)
+    + "&html=" + encodeURIComponent(htmlShort)
     + "&_=" + Date.now();
   var getUrl = url + sep + qs;
 
