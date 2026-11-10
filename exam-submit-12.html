@@ -3561,7 +3561,7 @@ if (_cancelExam) {
           <li><strong>Thông tin cá nhân (3,5đ)</strong> — Họ tên · Ngày sinh · Lớp · Địa chỉ · Sở thích · Ước mơ · Thông điệp <em>(mỗi mục 0,5đ)</em></li>
           <li><strong>Chú thích bài thi (1đ)</strong> — <code>&lt;!-- Bài thi của: [Họ tên] - Lớp: [Lớp] --&gt;</code></li>
           <li><strong>Tiêu đề trang (1đ)</strong> — <code>&lt;title&gt;Tên - Lớp&lt;/title&gt;</code></li>
-          <li><strong>Ảnh đại diện (2đ)</strong> — Có ảnh + <code>alt="Image [Ten]"</code> (Tên không dấu). Bấm <b>CHÈN ẢNH</b> (JPG/PNG ≤ 500KB)</li>
+          <li><strong>Ảnh đại diện (2đ)</strong> — Chèn ảnh tập trung khuôn mặt (nên bo tròn bằng CSS), <code>alt="Image [Ten]"</code> (Tên không dấu). Nút <b>CHÈN ẢNH</b>: JPG/PNG ≤ 500KB, khung vuông mặc định</li>
           <li><strong>Màu theo tháng sinh (1đ)</strong> — Họ và tên: tháng <em>chẵn = xanh</em>, tháng <em>lẻ = đỏ/cam</em></li>
           <li><strong>Giao diện đẹp (1,5đ)</strong> — CSS bố cục, màu sắc, trình bày rõ</li>
         </ol>
@@ -3569,9 +3569,10 @@ if (_cancelExam) {
       <div class="hi-rubric-right">
         <div class="hi-avatar-label">Ảnh đại diện (mẫu)</div>
         <div class="hi-avatar-ring" id="hi-avatar-preview">
-          <span class="hi-avatar-placeholder">Chưa có ảnh<br><small>Bấm CHÈN ẢNH</small></span>
+          <img src="assets/tin12/chandung.jpg" alt="Mẫu chân dung" id="hi-sample-avatar"
+               onerror="if(!this.dataset.fb){this.dataset.fb=1;this.src='chandung.jpg';}else if(!this.dataset.fb2){this.dataset.fb2=1;this.src='assets/chandung.jpg';}" />
         </div>
-        <div class="hi-avatar-hint">JPG / PNG · tối đa 500KB · bo tròn khuôn mặt</div>
+        <div class="hi-avatar-hint">Mẫu minh họa · HS tự CHÈN ẢNH JPG/PNG ≤500KB</div>
       </div>
     </div>
     <div class="hi-split">
@@ -3588,7 +3589,7 @@ if (_cancelExam) {
     </div>
     <div class="hi-actions">
       <input type="file" id="htmlintro-img-file" accept="image/jpeg,image/png,.jpg,.jpeg,.png" style="display:none" />
-      <button type="button" class="btn-save" id="btn-htmlintro-img" title="Chỉ JPG/PNG · tối đa 500KB · bo tròn khuôn mặt">CHÈN ẢNH (JPG/PNG ≤500KB)</button>
+      <button type="button" class="btn-save" id="btn-htmlintro-img" title="JPG/PNG · tối đa 500KB · khung vuông 180×180">CHÈN ẢNH</button>
       <button type="button" class="btn-run" id="btn-htmlintro-run">CHẠY THỬ</button>
       <button type="button" class="btn-save" id="btn-htmlintro-save">LƯU BÀI</button>
       <button type="button" id="btn-htmlintro-submit">NỘP BÀI</button>
@@ -4243,7 +4244,7 @@ function runHtmlIntroPreview() {
     var doc = iframe.contentDocument || (iframe.contentWindow && iframe.contentWindow.document);
     if (!doc) return;
     // CSS: ảnh đại diện co giãn, bo tròn, ưu tiên khuôn mặt (object-position center top)
-    var inject = "<style id=\"hi-face-css\">img,img[src]{max-width:220px;max-height:220px;width:160px;height:160px;object-fit:cover;object-position:center 15%;border-radius:50%;display:block;margin:8px auto;border:3px solid #93c5fd;box-shadow:0 4px 12px rgba(0,0,0,.12)}</style>";
+    var inject = "<style id=\"hi-face-css\">img[src^=\"data:image\"]{max-width:200px;max-height:200px;width:180px;height:180px;object-fit:cover;object-position:center 20%;display:block;margin:8px auto;border:1px solid #cbd5e1}</style>";
     var out = code || "<p style='padding:12px;color:#64748b'>Chua co noi dung</p>";
     if (/<\/head>/i.test(out)) out = out.replace(/<\/head>/i, inject + "</head>");
     else if (/<body[^>]*>/i.test(out)) out = out.replace(/<body[^>]*>/i, function (m) { return m + inject; });
@@ -4374,14 +4375,14 @@ function insertHtmlIntroImageFromFile_(file) {
         if (/\balt\s*=/.test(t)) t = t.replace(/\balt\s*=\s*(["']).*?\1/i, 'alt="' + alt + '"');
         else t = t.replace(/<img/i, '<img alt="' + alt + '"');
         if (/\bstyle\s*=/.test(t)) {
-          t = t.replace(/\bstyle\s*=\s*(["'])(.*?)\1/i, 'style="width:160px;height:160px;object-fit:cover;object-position:center 15%;border-radius:50%"');
+          t = t.replace(/\bstyle\s*=\s*(["'])(.*?)\1/i, 'style="width:180px;height:180px;object-fit:cover;object-position:center 20%"');
         } else {
-          t = t.replace(/<img/i, '<img style="width:160px;height:160px;object-fit:cover;object-position:center 15%;border-radius:50%"');
+          t = t.replace(/<img/i, '<img width="180" height="180" style="width:180px;height:180px;object-fit:cover;object-position:center 20%"');
         }
         return t;
       });
     } else {
-      var imgTag = '<img src="' + dataUrl + '" alt="' + alt + '" style="width:160px;height:160px;object-fit:cover;object-position:center 15%;border-radius:50%">';
+      var imgTag = '<img src="' + dataUrl + '" alt="' + alt + '" width="180" height="180" style="width:180px;height:180px;object-fit:cover;object-position:center 20%">';
       if (/<\/body>/i.test(code)) code = code.replace(/<\/body>/i, imgTag + "\n</body>");
       else code += "\n" + imgTag;
     }
@@ -4392,20 +4393,9 @@ function insertHtmlIntroImageFromFile_(file) {
         window.htmlIntroEditor.refresh();
       }
     } catch (eR) {}
-    // Ảnh đại diện bo tròn trên rubric
-    try {
-      var box = document.getElementById("hi-avatar-preview");
-      if (box) {
-        box.innerHTML = "";
-        var im = document.createElement("img");
-        im.src = dataUrl;
-        im.alt = "avatar";
-        box.appendChild(im);
-      }
-    } catch (eAv) {}
     try { runHtmlIntroPreview(); } catch (eP) {}
     var hint = document.getElementById("htmlintro-hint");
-    if (hint) hint.textContent = "Đã chèn ảnh JPG/PNG (≤500KB) — hiển thị bo tròn khuôn mặt.";
+    if (hint) hint.textContent = "Đã chèn ảnh JPG/PNG (≤500KB) — khung vuông; HS có thể tự thêm border-radius:50% trong CSS.";
   };
   reader.onerror = function () { alert("Lỗi đọc file ảnh."); };
   reader.readAsDataURL(file);
