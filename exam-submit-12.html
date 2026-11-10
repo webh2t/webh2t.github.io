@@ -4396,9 +4396,18 @@ function initHtmlIntroUI() {
       try {
         rec.html = code;
         enqueueHtmlIntroCloud_(rec);
-        requestHtmlIntroGrade_(rec);
-        setTimeout(function () { try { requestHtmlIntroGrade_(rec); } catch (eR) {} }, 1500);
-        setTimeout(function () { try { requestHtmlIntroGrade_(rec); } catch (eR2) {} }, 4000);
+        if (hint) hint.textContent = "Đã nộp: " + name + " · " + lop + " · Điểm: " + rec.score + "/10 · Đang gửi Sheet…";
+        requestHtmlIntroGrade_(rec).then(function (ok) {
+          if (hint) {
+            hint.textContent = ok
+              ? ("Đã nộp: " + name + " · " + lop + " · Điểm: " + rec.score + "/10 · Đã lên Google Sheet")
+              : ("Đã nộp: " + name + " · " + lop + " · Điểm: " + rec.score + "/10 · Chưa lên Sheet — đang thử lại…");
+          }
+          if (!ok) {
+            setTimeout(function () { requestHtmlIntroGrade_(rec); }, 2000);
+          }
+          try { syncHtmlIntroFromCloud(); } catch (eS) {}
+        });
       } catch (eG) { console.warn(eG); }
 
       // dong bo lai sau 2s
@@ -4703,7 +4712,7 @@ function flushHtmlIntroPending_() {
 
 function requestHtmlIntroGrade_(rec) {
   var url = getHtmlIntroWebhook_();
-  if (!url) { console.warn("No HTML intro webhook"); return; }
+  if (!url) { console.warn("No HTML intro webhook"); return Promise.resolve(false); }
 
   var htmlCode = rec.html || rec.htmlSnapshot || "";
   if (!htmlCode) {
@@ -4717,61 +4726,109 @@ function requestHtmlIntroGrade_(rec) {
   var score = Number(rec.score);
   if (isNaN(score) || score < 0 || score > 10) score = 0;
   score = Math.round(score * 10) / 10;
-  var note = String(rec.note || "").slice(0, 500);
+  var note = String(rec.note || "").slice(0, 400);
   var time = rec.time || new Date().toLocaleString("vi-VN");
 
-  // ===== 1) GET ngay — lưu điểm lên Sheet (URL ngắn, rất ổn định) =====
-  try {
-    var sep = url.indexOf("?") >= 0 ? "&" : "?";
-    var qs = sep + "action=html_intro_submit"
-      + "&name=" + encodeURIComponent(name)
-      + "&class=" + encodeURIComponent(lop) + "&lop=" + encodeURIComponent(lop)
-      + "&pin=" + encodeURIComponent(pin)
-      + "&score=" + encodeURIComponent(String(score))
-      + "&note=" + encodeURIComponent(note)
-      + "&time=" + encodeURIComponent(time)
-      + "&_=" + Date.now();
-    // Image pixel + fetch
-    var img = new Image();
-    img.src = url + qs;
-    fetch(url + qs, { method: "GET", mode: "no-cors", cache: "no-store", keepalive: true }).catch(function () {});
-  } catch (eGet) { console.warn("GET submit", eGet); }
+  // GET lưu điểm — nhiều kênh
+  var sep = url.indexOf("?") >= 0 ? "&" : "?";
+  var qs = "action=html_intro_submit"
+    + "&name=" + encodeURIComponent(name)
+    + "&lop=" + encodeURIComponent(lop)
+    + "&class=" + encodeURIComponent(lop)
+    + "&pin=" + encodeURIComponent(pin)
+    + "&score=" + encodeURIComponent(String(score))
+    + "&note=" + encodeURIComponent(note)
+    + "&time=" + encodeURIComponent(time)
+    + "&_=" + Date.now();
+  var getUrl = url + sep + qs;
 
-  // ===== 2) POST đầy đủ HTML (cập nhật cột F) =====
+  function fireGet() {
+    try {
+      var img = new Image();
+      img.referrerPolicy = "no-referrer";
+      img.src = getUrl;
+    } catch (e1) {}
+    try {
+      fetch(getUrl, { method: "GET", mode: "no-cors", cache: "no-store", keepalive: true, credentials: "omit" }).catch(function () {});
+    } catch (e2) {}
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open("GET", getUrl, true);
+      xhr.send();
+    } catch (e3) {}
+    try {
+      var ifr = document.getElementById("hi-get-iframe");
+      if (!ifr) {
+        ifr = document.createElement("iframe");
+        ifr.id = "hi-get-iframe";
+        ifr.style.cssText = "display:none;width:0;height:0;border:0";
+        document.body.appendChild(ifr);
+      }
+      ifr.src = getUrl;
+    } catch (e4) {}
+  }
+  fireGet();
+  setTimeout(fireGet, 800);
+  setTimeout(fireGet, 2500);
+
+  // POST HTML snapshot
   if (htmlCode.replace(/\s/g, "").length >= 15) {
     var b64 = "";
-    try { b64 = btoa(unescape(encodeURIComponent(htmlCode.slice(0, 45000)))); } catch (e64) {}
-    var payload = {
+    try { b64 = btoa(unescape(encodeURIComponent(htmlCode.slice(0, 40000)))); } catch (e64) {}
+    var payload = JSON.stringify({
       action: "html_intro_grade",
       examId: "b11",
       name: name,
       class: lop,
       pin: pin,
-      html: htmlCode.slice(0, 45000),
-      htmlSnapshot: htmlCode.slice(0, 45000),
+      html: htmlCode.slice(0, 40000),
+      htmlSnapshot: htmlCode.slice(0, 40000),
       htmlBase64: b64,
       score: score,
       scoreHint: score,
       note: note,
-      time: time,
-      rubric: "TX3"
-    };
-    var body = JSON.stringify(payload);
+      time: time
+    });
     try {
-      fetch(url, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: body,
-        keepalive: true
-      }).catch(function () {});
-    } catch (eF) {}
+      fetch(url, { method: "POST", mode: "no-cors", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: payload, keepalive: true }).catch(function () {});
+    } catch (eP) {}
     try {
-      if (navigator.sendBeacon) {
-        navigator.sendBeacon(url, new Blob([body], { type: "text/plain;charset=utf-8" }));
-      }
+      if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([payload], { type: "text/plain;charset=utf-8" }));
     } catch (eB) {}
   }
+
+  // Xác nhận đã có trên Sheet (list)
+  return new Promise(function (resolve) {
+    var tries = 0;
+    function check() {
+      tries++;
+      var listUrl = url + sep + "action=list&_=" + Date.now();
+      fetch(listUrl, { method: "GET", cache: "no-store" })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var rows = (data && data.rows) || (Array.isArray(data) ? data : []);
+          var found = rows.some(function (r) {
+            return String(r.name || "").trim().toLowerCase() === String(name).trim().toLowerCase()
+              && String(r.class || r.lop || "").trim().toLowerCase() === String(lop).trim().toLowerCase();
+          });
+          if (found) {
+            resolve(true);
+            return;
+          }
+          if (tries < 5) {
+            fireGet();
+            setTimeout(check, 1500);
+          } else {
+            resolve(false);
+          }
+        })
+        .catch(function () {
+          if (tries < 5) setTimeout(check, 1500);
+          else resolve(false);
+        });
+    }
+    setTimeout(check, 1200);
+  });
 }
 
 
