@@ -664,9 +664,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1348,7 +1348,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2493,7 +2493,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2510,7 +2510,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2590,7 +2590,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3733,7 +3733,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
+    WH = "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4090,7 +4090,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4393,7 +4393,13 @@ function initHtmlIntroUI() {
           });
         }
       } catch (eC) {}
-      try { rec.html = code; requestHtmlIntroGrade_(rec); } catch (eG) { console.warn(eG); }
+      try {
+        rec.html = code;
+        enqueueHtmlIntroCloud_(rec);
+        requestHtmlIntroGrade_(rec);
+        setTimeout(function () { try { requestHtmlIntroGrade_(rec); } catch (eR) {} }, 1500);
+        setTimeout(function () { try { requestHtmlIntroGrade_(rec); } catch (eR2) {} }, 4000);
+      } catch (eG) { console.warn(eG); }
 
       // dong bo lai sau 2s
       renderHtmlIntroTable();
@@ -4421,6 +4427,7 @@ function initHtmlIntroUI() {
     };
   }
 
+  try { flushHtmlIntroPending_(); } catch (eF) {}
   try { syncHtmlIntroFromCloud(); } catch (e) {}
   renderHtmlIntroTable();
 }
@@ -4645,52 +4652,126 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycby3yI0_jgh47Dng6WCIbI2x6z2GcRBBZ5q4yhKjzvwnTA2doZzjFczMegPt39CHjyI-/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbz8fwjNf-ONdHyHntJyqishgvr9ZQVrYYv9mjAk3Eit81zrGk5H7cuijOUSa3GcvJ85/exec"; }
+}
+
+
+var HTMLINTRO_PENDING_KEY = "webh2t_htmlintro_pending";
+
+function enqueueHtmlIntroCloud_(rec) {
+  try {
+    var q = JSON.parse(localStorage.getItem(HTMLINTRO_PENDING_KEY) || "[]");
+    q = q.filter(function (x) {
+      return !(x.class === rec.class && x.name === rec.name);
+    });
+    q.push({
+      name: rec.name,
+      class: rec.class,
+      pin: rec.pin,
+      html: (rec.html || "").slice(0, 45000),
+      score: rec.score,
+      note: rec.note || "",
+      time: rec.time || new Date().toLocaleString("vi-VN"),
+      at: Date.now()
+    });
+    localStorage.setItem(HTMLINTRO_PENDING_KEY, JSON.stringify(q.slice(-50)));
+  } catch (e) {}
+}
+
+function flushHtmlIntroPending_() {
+  var url = getHtmlIntroWebhook_();
+  if (!url) return;
+  var q = [];
+  try { q = JSON.parse(localStorage.getItem(HTMLINTRO_PENDING_KEY) || "[]"); } catch (e) { q = []; }
+  if (!q.length) return;
+  var left = [];
+  q.forEach(function (rec) {
+    try {
+      requestHtmlIntroGrade_(rec);
+    } catch (e2) {
+      left.push(rec);
+    }
+  });
+  // giữ lại hàng đợi 10 phút rồi xóa (tránh lặp vô hạn); sync list sẽ xác nhận
+  try {
+    var now = Date.now();
+    left = q.filter(function (x) { return now - (x.at || 0) < 10 * 60 * 1000; });
+    localStorage.setItem(HTMLINTRO_PENDING_KEY, JSON.stringify(left));
+  } catch (e3) {}
 }
 
 function requestHtmlIntroGrade_(rec) {
   var url = getHtmlIntroWebhook_();
   if (!url) { console.warn("No HTML intro webhook"); return; }
+
   var htmlCode = rec.html || rec.htmlSnapshot || "";
   if (!htmlCode) {
     try { htmlCode = getHtmlIntroCode() || ""; } catch (e0) {}
   }
   htmlCode = String(htmlCode || "");
-  var b64 = "";
+
+  var name = rec.name || "";
+  var lop = rec.class || "";
+  var pin = String(rec.pin || "");
+  var score = Number(rec.score);
+  if (isNaN(score) || score < 0 || score > 10) score = 0;
+  score = Math.round(score * 10) / 10;
+  var note = String(rec.note || "").slice(0, 500);
+  var time = rec.time || new Date().toLocaleString("vi-VN");
+
+  // ===== 1) GET ngay — lưu điểm lên Sheet (URL ngắn, rất ổn định) =====
   try {
-    b64 = btoa(unescape(encodeURIComponent(htmlCode.slice(0, 45000))));
-  } catch (e64) { b64 = ""; }
-  var payload = {
-    action: "html_intro_grade",
-    examId: "b11",
-    name: rec.name,
-    class: rec.class,
-    pin: String(rec.pin || ""),
-    html: htmlCode.slice(0, 45000),
-    htmlSnapshot: htmlCode.slice(0, 45000),
-    htmlBase64: b64,
-    score: Number(rec.score),
-    scoreHint: Number(rec.score),
-    note: String(rec.note || ""),
-    time: rec.time || new Date().toLocaleString("vi-VN"),
-    rubric: "TX3"
-  };
-  var body = JSON.stringify(payload);
-  try {
-    fetch(url, {
-      method: "POST",
-      mode: "no-cors",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: body,
-      keepalive: true
-    }).catch(function () {});
-  } catch (eF) {}
-  try {
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon(url, new Blob([body], { type: "text/plain;charset=utf-8" }));
-    }
-  } catch (eB) {}
+    var sep = url.indexOf("?") >= 0 ? "&" : "?";
+    var qs = sep + "action=html_intro_submit"
+      + "&name=" + encodeURIComponent(name)
+      + "&class=" + encodeURIComponent(lop) + "&lop=" + encodeURIComponent(lop)
+      + "&pin=" + encodeURIComponent(pin)
+      + "&score=" + encodeURIComponent(String(score))
+      + "&note=" + encodeURIComponent(note)
+      + "&time=" + encodeURIComponent(time)
+      + "&_=" + Date.now();
+    // Image pixel + fetch
+    var img = new Image();
+    img.src = url + qs;
+    fetch(url + qs, { method: "GET", mode: "no-cors", cache: "no-store", keepalive: true }).catch(function () {});
+  } catch (eGet) { console.warn("GET submit", eGet); }
+
+  // ===== 2) POST đầy đủ HTML (cập nhật cột F) =====
+  if (htmlCode.replace(/\s/g, "").length >= 15) {
+    var b64 = "";
+    try { b64 = btoa(unescape(encodeURIComponent(htmlCode.slice(0, 45000)))); } catch (e64) {}
+    var payload = {
+      action: "html_intro_grade",
+      examId: "b11",
+      name: name,
+      class: lop,
+      pin: pin,
+      html: htmlCode.slice(0, 45000),
+      htmlSnapshot: htmlCode.slice(0, 45000),
+      htmlBase64: b64,
+      score: score,
+      scoreHint: score,
+      note: note,
+      time: time,
+      rubric: "TX3"
+    };
+    var body = JSON.stringify(payload);
+    try {
+      fetch(url, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: body,
+        keepalive: true
+      }).catch(function () {});
+    } catch (eF) {}
+    try {
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon(url, new Blob([body], { type: "text/plain;charset=utf-8" }));
+      }
+    } catch (eB) {}
+  }
 }
 
 
@@ -4757,11 +4838,39 @@ function syncHtmlIntroFromCloud() {
 
       merged.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
       try { localStorage.setItem(HTMLINTRO_SYNC_KEY, JSON.stringify(merged.slice(0, 400))); } catch (e2) {}
+
+      // Xóa pending đã có trên cloud; gửi lại bài local chưa có trên Sheet
+      try {
+        var pending = JSON.parse(localStorage.getItem(HTMLINTRO_PENDING_KEY) || "[]");
+        var cloudSet = {};
+        merged.forEach(function (x) {
+          if (x.fromCloud) cloudSet[String(x.class) + "|" + String(x.name)] = true;
+        });
+        pending = pending.filter(function (p) {
+          var k = String(p.class) + "|" + String(p.name);
+          if (cloudSet[k]) return false; // đã lên sheet
+          return true;
+        });
+        localStorage.setItem(HTMLINTRO_PENDING_KEY, JSON.stringify(pending));
+        // Đẩy lại các bài local chưa có trên cloud
+        var localAll = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
+        localAll.forEach(function (x) {
+          if (!x || !x.name || !x.class) return;
+          var k = String(x.class) + "|" + String(x.name);
+          if (cloudSet[k]) return;
+          if (x.html && String(x.html).length > 20) {
+            enqueueHtmlIntroCloud_(x);
+            try { requestHtmlIntroGrade_(x); } catch (eP) {}
+          }
+        });
+      } catch (ePend) {}
+
       renderHtmlIntroTable();
       return merged;
     })
     .catch(function (e) { console.warn("syncHtmlIntro", e); });
 }
+
 
 function renderHtmlIntroTable() {
   var body = document.getElementById("htmlintro-result-body");
