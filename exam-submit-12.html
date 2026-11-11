@@ -4341,6 +4341,57 @@ function enableHtmlIntroAntiCheat() {
   } catch (eCM) {}
 }
 
+
+/** Upload ảnh đã nén lên Apps Script → Google Drive, trả URL */
+function uploadHtmlIntroImageCloud_(dataUrl, cb) {
+  var url = getHtmlIntroWebhook_();
+  if (!url) { cb(null, "Chưa cấu hình webhook"); return; }
+  var name = "";
+  var lop = "";
+  try {
+    var n = document.getElementById("htmlintro-student");
+    var c = document.getElementById("htmlintro-class");
+    if (n) name = n.value || "";
+    if (c) lop = c.value || "";
+  } catch (e) {}
+  var payload = JSON.stringify({
+    action: "upload_image",
+    imageBase64: dataUrl,
+    name: name,
+    class: lop,
+    lop: lop
+  });
+  // Dùng fetch mode cors để đọc JSON trả về (Apps Script hỗ trợ GET JSON; POST có thể opaque)
+  // Thử no-cors không đọc được body → dùng iframe form + fallback base64
+  // Cách ổn định: gửi POST text/plain và expect redirect; thay bằng JSONP không có.
+  // Dùng fetch CORS: web app "Anyone" thường trả CORS *
+  var ctrl = null;
+  try { ctrl = new AbortController(); setTimeout(function () { try { ctrl.abort(); } catch (eA) {} }, 25000); } catch (eC) {}
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: payload,
+    redirect: "follow",
+    signal: ctrl ? ctrl.signal : undefined
+  })
+    .then(function (r) { return r.text(); })
+    .then(function (text) {
+      var data = null;
+      try { data = JSON.parse(text); } catch (eJ) {
+        // đôi khi GAS bọc HTML — tìm JSON trong text
+        var m = String(text).match(/\{[\s\S]*\}/);
+        if (m) try { data = JSON.parse(m[0]); } catch (e2) {}
+      }
+      var u = data && (data.url || data.urlAlt || data.urlThumb);
+      if (u) cb(u, null, data);
+      else cb(null, (data && data.error) || "Upload thất bại");
+    })
+    .catch(function (err) {
+      console.warn("upload image", err);
+      cb(null, String(err || "network"));
+    });
+}
+
 function insertHtmlIntroImageFromFile_(file) {
   var okType = file && (/^image\/jpeg$/i.test(file.type) || /^image\/png$/i.test(file.type) || /\.(jpe?g|png)$/i.test(file.name || ""));
   if (!okType) {
@@ -4354,52 +4405,101 @@ function insertHtmlIntroImageFromFile_(file) {
   }
   var reader = new FileReader();
   reader.onload = function () {
-    var dataUrl = String(reader.result || "");
-    if (!dataUrl || dataUrl.indexOf("data:image") !== 0) {
+    var rawUrl = String(reader.result || "");
+    if (!rawUrl || rawUrl.indexOf("data:image") !== 0) {
       alert("Không đọc được ảnh.");
       return;
     }
-    var code = getHtmlIntroCode() || HTMLINTRO_DEFAULT;
-    var last = "";
-    try {
-      var nameEl = document.getElementById("htmlintro-student");
-      if (nameEl && nameEl.value) last = String(nameEl.value).trim().split(/\s+/).pop() || "";
-    } catch (eN) {}
-    var alt = last ? ('Image ' + last) : "Image";
-    // Thay src của img đầu tiên, hoặc chèn thẻ img mới
-    if (/<img\b[^>]*>/i.test(code)) {
-      code = code.replace(/<img\b[^>]*>/i, function (tag) {
-        var t = tag;
-        if (/\bsrc\s*=/.test(t)) t = t.replace(/\bsrc\s*=\s*(["']).*?\1/i, 'src="' + dataUrl + '"');
-        else t = t.replace(/<img/i, '<img src="' + dataUrl + '"');
-        if (/\balt\s*=/.test(t)) t = t.replace(/\balt\s*=\s*(["']).*?\1/i, 'alt="' + alt + '"');
-        else t = t.replace(/<img/i, '<img alt="' + alt + '"');
-        if (/\bstyle\s*=/.test(t)) {
-          t = t.replace(/\bstyle\s*=\s*(["'])(.*?)\1/i, 'style="width:180px;height:180px;object-fit:cover;object-position:center 20%"');
-        } else {
-          t = t.replace(/<img/i, '<img width="180" height="180" style="width:180px;height:180px;object-fit:cover;object-position:center 20%"');
-        }
-        return t;
-      });
-    } else {
-      var imgTag = '<img src="' + dataUrl + '" alt="' + alt + '" width="180" height="180" style="width:180px;height:180px;object-fit:cover;object-position:center 20%">';
-      if (/<\/body>/i.test(code)) code = code.replace(/<\/body>/i, imgTag + "\n</body>");
-      else code += "\n" + imgTag;
-    }
-    setHtmlIntroCode(code);
-    try {
-      if (window.htmlIntroEditor) {
-        window.htmlIntroEditor.setOption("lineWrapping", true);
-        window.htmlIntroEditor.refresh();
-      }
-    } catch (eR) {}
-    try { runHtmlIntroPreview(); } catch (eP) {}
+    // Nén ảnh → base64 ngắn (max cạnh 200px, JPEG q=0.72) để lưu Sheet đủ mã nguồn
+    compressHtmlIntroImage_(rawUrl, function (dataUrl) {
+    if (!dataUrl) dataUrl = rawUrl;
     var hint = document.getElementById("htmlintro-hint");
-    if (hint) hint.textContent = "Đã chèn ảnh JPG/PNG (≤500KB) — khung vuông; HS có thể tự thêm border-radius:50% trong CSS.";
+    if (hint) hint.textContent = "Đang tải ảnh lên Google Drive…";
+    function applySrc(finalSrc, fromDrive) {
+      var code = getHtmlIntroCode() || HTMLINTRO_DEFAULT;
+      var last = "";
+      try {
+        var nameEl = document.getElementById("htmlintro-student");
+        if (nameEl && nameEl.value) last = String(nameEl.value).trim().split(/\s+/).pop() || "";
+      } catch (eN) {}
+      // alt: Image + ten khong dau
+      var altName = last.replace(/[àáạảãâầấậẩẫăằắặẳẵ]/gi,"a").replace(/[èéẹẻẽêềếệểễ]/gi,"e")
+        .replace(/[ìíịỉĩ]/gi,"i").replace(/[òóọỏõôồốộổỗơờớợởỡ]/gi,"o")
+        .replace(/[ùúụủũưừứựửữ]/gi,"u").replace(/[ỳýỵỷỹ]/gi,"y").replace(/đ/gi,"d");
+      var alt = last ? ("Image " + altName) : "Image";
+      var styleSq = 'width:180px;height:180px;object-fit:cover;object-position:center 20%;border-radius:50%';
+      if (/<img\b[^>]*>/i.test(code)) {
+        code = code.replace(/<img\b[^>]*>/i, function (tag) {
+          var t = tag;
+          if (/\bsrc\s*=/.test(t)) t = t.replace(/\bsrc\s*=\s*(["']).*?\1/i, 'src="' + finalSrc + '"');
+          else t = t.replace(/<img/i, '<img src="' + finalSrc + '"');
+          if (/\balt\s*=/.test(t)) t = t.replace(/\balt\s*=\s*(["']).*?\1/i, 'alt="' + alt + '"');
+          else t = t.replace(/<img/i, '<img alt="' + alt + '"');
+          if (/\bstyle\s*=/.test(t)) t = t.replace(/\bstyle\s*=\s*(["'])(.*?)\1/i, 'style="' + styleSq + '"');
+          else t = t.replace(/<img/i, '<img style="' + styleSq + '"');
+          return t;
+        });
+      } else {
+        var imgTag = '<img src="' + finalSrc + '" alt="' + alt + '" width="180" height="180" style="' + styleSq + '">';
+        if (/<\/body>/i.test(code)) code = code.replace(/<\/body>/i, imgTag + "\n</body>");
+        else code += "\n" + imgTag;
+      }
+      setHtmlIntroCode(code);
+      try {
+        if (window.htmlIntroEditor) {
+          window.htmlIntroEditor.setOption("lineWrapping", true);
+          window.htmlIntroEditor.refresh();
+        }
+      } catch (eR) {}
+      try { runHtmlIntroPreview(); } catch (eP) {}
+      if (hint) {
+        hint.textContent = fromDrive
+          ? ("Đã chèn ảnh Google Drive (link ngắn). Có thể copy sang OneCompiler.")
+          : ("Không upload được Drive — tạm dùng ảnh nhúng. Thử lại CHÈN ẢNH.");
+      }
+    }
+    uploadHtmlIntroImageCloud_(dataUrl, function (driveUrl, err) {
+      if (driveUrl) applySrc(driveUrl, true);
+      else applySrc(dataUrl, false);
+    });
+    }); // end compressHtmlIntroImage_
   };
   reader.onerror = function () { alert("Lỗi đọc file ảnh."); };
   reader.readAsDataURL(file);
 }
+
+/** Nén ảnh client-side trước khi nhúng base64 */
+function compressHtmlIntroImage_(dataUrl, cb) {
+  try {
+    var img = new Image();
+    img.onload = function () {
+      try {
+        var maxSide = 200;
+        var w = img.naturalWidth || img.width;
+        var h = img.naturalHeight || img.height;
+        if (!w || !h) { cb(dataUrl); return; }
+        var scale = Math.min(1, maxSide / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement("canvas");
+        canvas.width = cw;
+        canvas.height = ch;
+        var ctx = canvas.getContext("2d");
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.drawImage(img, 0, 0, cw, ch);
+        var out = canvas.toDataURL("image/jpeg", 0.72);
+        // Nếu vẫn quá dài (>25k ký tự) hạ quality
+        if (out.length > 25000) out = canvas.toDataURL("image/jpeg", 0.55);
+        if (out.length > 25000) out = canvas.toDataURL("image/jpeg", 0.4);
+        cb(out);
+      } catch (e1) { cb(dataUrl); }
+    };
+    img.onerror = function () { cb(dataUrl); };
+    img.src = dataUrl;
+  } catch (e) { cb(dataUrl); }
+}
+
 
 function initHtmlIntroUI() {
   try { enableHtmlIntroAntiCheat(); } catch (eAC) {}
@@ -4647,171 +4747,166 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     .replace(/\n+/g, "\n")
     .trim();
   var plainOne = plain.replace(/\n/g, " ");
-  var lines = [];
-  var total = 0;
   var last = name ? String(name).trim().split(/\s+/).pop() : "";
   var nameTokens = String(name || "").trim().split(/\s+/).filter(function (t) { return t.length > 1; });
 
   function stripVN(s) {
     return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
   }
-  function hasName() {
+  function hasToken(hay, tok) {
+    return hay.indexOf(String(tok).toLowerCase()) >= 0;
+  }
+  function nameInText(text) {
+    var low = String(text || "").toLowerCase();
     if (!nameTokens.length) return false;
-    var low = plainOne.toLowerCase();
     var hit = 0;
-    nameTokens.forEach(function (t) {
-      if (low.indexOf(String(t).toLowerCase()) >= 0) hit++;
-    });
-    return hit >= Math.min(2, nameTokens.length) || (last && low.indexOf(last.toLowerCase()) >= 0);
+    nameTokens.forEach(function (t) { if (hasToken(low, t)) hit++; });
+    return hit >= Math.min(2, nameTokens.length) || (last && hasToken(low, last));
   }
-  function hasDob() {
-    return /\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(plainOne) ||
-           (/ng[aà]y\s*sinh/i.test(src) && /\d{1,2}/.test(plainOne));
+  function classInText(text) {
+    if (!lop) return /\b12A\d{1,2}\b/i.test(text);
+    return new RegExp("\\b" + String(lop).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(text);
   }
-  function hasClass() {
-    if (lop && new RegExp("\\b" + String(lop).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(plainOne)) return true;
-    return /\b12A\d{1,2}\b/i.test(plainOne);
+  function extractDobMonth() {
+    var m = plainOne.match(/\b(\d{1,2})[\/\-.\s](\d{1,2})[\/\-.\s](\d{2,4})\b/);
+    if (!m) return 0;
+    var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
+    // Ưu tiên tháng kiểu dd/mm/yyyy (tháng = số thứ 2 nếu ≤12)
+    if (b >= 1 && b <= 12) return b;
+    if (a >= 1 && a <= 12) return a;
+    return 0;
   }
-  function hasAddress() {
+
+  // ===== 1. Thông tin 3.5 — đúng thứ tự 7 mục × 0.5 =====
+  var hasNameOk = nameInText(plainOne);
+  var hasDobOk = /\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(plainOne);
+  var hasClassOk = classInText(plainOne);
+  var hasAddrOk = (function () {
+    if (/địa\s*chỉ|dia\s*chi/i.test(src) && /[A-Za-zÀ-ỹ]{3,}/.test(plainOne)) return true;
     var parts = plain.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean);
     for (var i = 0; i < parts.length; i++) {
       var t = parts[i];
-      if (t.length < 3) continue;
+      if (t.length < 4) continue;
       if (/\b12A\d{1,2}\b/i.test(t)) continue;
       if (/\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(t)) continue;
-      if (last && t.toLowerCase().indexOf(last.toLowerCase()) >= 0 && t.length < last.length + 8) continue;
-      if (/^(ho|họ|ten|tên|lop|lớp|dia|địa|so|sở|uoc|ước|thong|thông)/i.test(t) && t.length < 14) continue;
+      if (last && t.toLowerCase().indexOf(last.toLowerCase()) >= 0 && t.length < last.length + 10) continue;
+      if (/^(ho|họ|ten|tên|lop|lớp|so|sở|uoc|ước|thong|thông)/i.test(t) && t.length < 16) continue;
       if (/[A-Za-zÀ-ỹ]{3,}/.test(t)) return true;
     }
     return false;
-  }
-  function hasHobby() {
-    return /s[oở]\s*th[ií]ch\s*[:：]?\s*[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
-  }
-  function hasDream() {
-    return /u[oớ]c\s*m[oơ]/i.test(plainOne) && /u[oớ]c\s*m[oơ][\s\S]{0,40}[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
-  }
-  function hasMessage() {
-    return /th[oô]ng\s*[đd]i[eệ]p/i.test(plainOne) && /th[oô]ng\s*[đd]i[eệ]p[\s\S]{0,60}[A-Za-zÀ-ỹ]{3,}/i.test(plainOne);
-  }
+  })();
+  var hasHobbyOk = /s[oở]\s*th[ií]ch/i.test(plainOne) && /s[oở]\s*th[ií]ch[\s\S]{0,40}[A-Za-zÀ-ỹ0-9]{2,}/i.test(plainOne);
+  var hasDreamOk = /u[oớ]c\s*m[oơ]/i.test(plainOne) && /u[oớ]c\s*m[oơ][\s\S]{0,40}[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
+  var hasMsgOk = /th[oô]ng\s*[đd]i[eệ]p/i.test(plainOne) && /th[oô]ng\s*[đd]i[eệ]p[\s\S]{0,60}[A-Za-zÀ-ỹ]{3,}/i.test(plainOne);
 
-  // ===== 1. Thông tin 3.5 (7 x 0.5) =====
   var infoItems = [
-    { k: "Họ tên", ok: hasName(), pts: 0.5 },
-    { k: "Ngày sinh", ok: hasDob(), pts: 0.5 },
-    { k: "Lớp", ok: hasClass(), pts: 0.5 },
-    { k: "Địa chỉ", ok: hasAddress(), pts: 0.5 },
-    { k: "Sở thích", ok: hasHobby(), pts: 0.5 },
-    { k: "Ước mơ", ok: hasDream(), pts: 0.5 },
-    { k: "Thông điệp", ok: hasMessage(), pts: 0.5 }
+    { k: "1.Họ tên", ok: hasNameOk },
+    { k: "2.Ngày sinh", ok: hasDobOk },
+    { k: "3.Lớp", ok: hasClassOk },
+    { k: "4.Địa chỉ", ok: hasAddrOk },
+    { k: "5.Sở thích", ok: hasHobbyOk },
+    { k: "6.Ước mơ", ok: hasDreamOk },
+    { k: "7.Thông điệp", ok: hasMsgOk }
   ];
   var pInfo = 0;
-  var infoDetail = [];
+  var missInfo = [];
   infoItems.forEach(function (it) {
-    if (it.ok) {
-      pInfo += it.pts;
-      infoDetail.push(it.k + " 0.5");
-    } else {
-      infoDetail.push(it.k + " 0");
-    }
+    if (it.ok) pInfo += 0.5;
+    else missInfo.push(it.k);
   });
   pInfo = Math.round(pInfo * 10) / 10;
-  total += pInfo;
-  lines.push("Thông tin: " + pInfo + "/3.5 (" + infoDetail.join(", ") + ")");
 
-  // ===== 2. Bẫy 1 — comment 1.0 =====
-  var cmtM = src.match(/<!--\s*b[aà]i\s*thi\s*c[uủ]a\s*:([^>]*)-->/i);
+  // ===== 2. Chú thích 1.0 — đúng thẻ + đúng tên/lớp theo HocSinh =====
   var p1 = 0;
+  var cmtM = src.match(/<!--[\s\S]*?b[aà]i\s*thi\s*c[uủ]a[\s\S]*?-->/i);
   if (cmtM) {
-    var cmt = String(cmtM[1] || "");
-    if (!/\[|Ho ten em|Họ tên em|Lớp em|Lop em/i.test(cmt) && last && cmt.toLowerCase().indexOf(last.toLowerCase()) >= 0) p1 = 1;
-    else if (!/\[|placeholder/i.test(cmt) && /b[aà]i\s*thi/i.test(src) && cmt.trim().length > 3) p1 = 0.5;
+    var cmt = String(cmtM[0] || "");
+    var nameOk = nameInText(cmt);
+    var classOk = classInText(cmt);
+    if (nameOk && classOk && !/\[|h[oọ]\s*t[eê]n\s*em|l[oớ]p\s*em/i.test(cmt)) p1 = 1;
+    else if (nameOk || classOk) p1 = 0.5;
+    else if (cmt.replace(/<!--|-->/g, "").trim().length > 5) p1 = 0.25;
   }
-  total += p1;
-  lines.push("Bẫy 1 (comment): " + p1 + "/1" + (p1 >= 1 ? "" : " — <!-- Bài thi của: Họ tên - Lớp: Lớp -->"));
 
-  // ===== 3. Bẫy 2 — title 1.0 =====
-  var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  // ===== 3. Tiêu đề 1.0 — <title> đúng tên - lớp =====
   var p2 = 0;
+  var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   if (tm) {
     var tt = String(tm[1] || "").replace(/\s+/g, " ").trim();
-    if (tt && !/ten em|tên em|^\s*$/i.test(tt) && /-|–/.test(tt)) p2 = 1;
-    else if (tt && tt.length > 1 && !/ten em|tên em/i.test(tt)) p2 = 0.5;
+    var tn = nameInText(tt);
+    var tc = classInText(tt);
+    if (tn && tc && !/t[eê]n\s*em/i.test(tt)) p2 = 1;
+    else if (tn || tc) p2 = 0.5;
+    else if (tt.length > 1) p2 = 0.25;
   }
-  total += p2;
-  lines.push("Bẫy 2 (title): " + p2 + "/1" + (p2 >= 1 ? "" : " — <title>Tên - Lớp</title>"));
 
-  // ===== 4. Bẫy 3 — ảnh + alt Image [Ten khong dau] 2.0 =====
+  // ===== 4. Ảnh đại diện 2.0 — định dạng + kích thước + bo tròn =====
+  var p3 = 0;
   var hasSrc = /<img\b[^>]*src\s*=\s*["'][^"'\s]+["']/i.test(src);
   var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
-  var p3 = 0;
-  var bay3why = "";
-  if (hasSrc && altM) {
-    var al = String(altM[1] || "").trim();
-    var alNorm = stripVN(al);
+  var imgTagM = src.match(/<img\b[^>]*>/i);
+  var imgTag = imgTagM ? String(imgTagM[0]) : "";
+  var hasRound = /border-radius\s*:\s*(50%|[5-9]\d%|[1-9]\d{2,}px)/i.test(src) ||
+                 /border-radius\s*:\s*50%/i.test(imgTag);
+  var hasSize = /width\s*=\s*["']?\d{2,3}|height\s*=\s*["']?\d{2,3}|width\s*:\s*\d{2,3}px|height\s*:\s*\d{2,3}px|object-fit\s*:\s*cover/i.test(imgTag) ||
+                /object-fit\s*:\s*cover/i.test(src);
+  var altOk = false;
+  if (altM) {
+    var alNorm = stripVN(altM[1] || "");
     var lastNo = stripVN(last);
-    // alt="Image Ten" hoặc "Image [Ten]" với Ten không dấu
-    if (/^image\b/i.test(al) && lastNo && alNorm.indexOf(lastNo) >= 0 && !/\[ten em\]|ten em/i.test(alNorm)) {
-      p3 = 2;
-    } else if (/^image\b/i.test(al) && al.length > 6 && !/\[|ten em/i.test(alNorm)) {
-      p3 = 1.5;
-    } else if (al) {
-      p3 = 0.5;
-      bay3why = " — alt chưa đúng Image [Ten không dấu]";
-    }
-  } else if (hasSrc) {
-    p3 = 0.5;
-    bay3why = " — có ảnh nhưng thiếu alt đúng";
-  } else if (altM && String(altM[1] || "").trim()) {
-    p3 = 0.3;
-    bay3why = " — có alt nhưng thiếu src ảnh";
-  } else {
-    bay3why = " — thiếu ảnh src + alt=\"Image [Ten]\"";
+    if (/^image\b/i.test(String(altM[1] || "").trim()) && lastNo && alNorm.indexOf(lastNo) >= 0 && !/\[ten\]|ten em/i.test(alNorm)) altOk = true;
+    else if (/^image\b/i.test(String(altM[1] || "").trim()) && alNorm.length > 6) altOk = true;
   }
-  total += p3;
-  lines.push("Bẫy 3 (ảnh+alt): " + p3 + "/2" + (p3 >= 2 ? "" : bay3why));
+  if (hasSrc && altOk && hasRound) p3 = 2;
+  else if (hasSrc && (altOk || hasRound) && hasSize) p3 = 1;
+  else if (hasSrc && altOk) p3 = 1;
+  else if (hasSrc) p3 = 0.5;
+  else if (altM) p3 = 0.25;
 
-  // ===== 5. Bẫy 4 — màu tháng sinh 1.0 =====
-  var color = /color\s*:\s*(#(?:[0-9a-f]{3}|[0-9a-f]{6})|rgb|hsl|blue|green|red|orange)/i.test(src) ||
-              /style\s*=\s*["'][^"']*color\s*:/i.test(src);
-  var p4 = color ? 1.0 : 0;
-  total += p4;
-  lines.push("Bẫy 4 (màu tháng sinh): " + p4 + "/1" + (p4 ? "" : " — chẵn=xanh, lẻ=đỏ/cam"));
+  // ===== 5. Màu tháng sinh 1.0 — màu trên Họ và tên =====
+  var p4 = 0;
+  var month = extractDobMonth();
+  var evenMonth = month > 0 ? (month % 2 === 0) : null;
+  var hasBlue = /color\s*:\s*(#0*[0-3][0-9a-f]{2}[a-f0-9]{0,3}|blue|navy|green|teal|#[0-4][0-9a-f]{5}|rgb\s*\(\s*0*[0-8]?\d\s*,)/i.test(src);
+  var hasRed = /color\s*:\s*(#?[fF][0-9a-fA-F]{2}|red|orange|tomato|coral|crimson|#[eEfF][0-9a-fA-F]{5}|rgb\s*\(\s*2\d{2}\s*,)/i.test(src);
+  var hasAnyColorOnName = /color\s*:/i.test(src) && (nameInText(src) || /h1|h2|\.name|ho-ten|hoten/i.test(src));
+  if (evenMonth === true && hasBlue) p4 = 1;
+  else if (evenMonth === false && hasRed) p4 = 1;
+  else if (evenMonth == null && (hasBlue || hasRed) && hasAnyColorOnName) p4 = 0.5;
+  else if (hasAnyColorOnName) p4 = 0.5;
 
-  // ===== 6. Giao diện đẹp 1.5 =====
+  // ===== 6. Giao diện 1.5 — nền, trang trí, bố cục, màu chữ =====
   var ui = 0;
-  var hasCss = /<style[\s\S]*?<\/style>/i.test(src) || /style\s*=\s*["'][^"']+["']/i.test(src);
-  var hasLayout = /max-width|margin\s*:\s*[^;]*auto|padding|border-radius|flex|grid|text-align/i.test(src);
-  var hasColorCss = /color\s*:|background/i.test(src);
-  if (hasCss && hasLayout && hasColorCss) ui = 1.5;
-  else if (hasCss && (hasLayout || hasColorCss)) ui = 1.0;
-  else if (hasCss || hasLayout) ui = 0.5;
-  else ui = 0.5; // HS có nộp bài → giao diện tối thiểu 0.5
-  total += ui;
+  var hasBg = /background(\s*|-color)\s*:/i.test(src);
+  var hasDecor = /border|box-shadow|border-radius|gradient/i.test(src);
+  var hasLayout = /max-width|margin\s*:\s*[^;]*auto|padding|flex|grid|text-align/i.test(src);
+  var hasTextColor = /color\s*:/i.test(src);
+  var uiScore = (hasBg ? 0.4 : 0) + (hasDecor ? 0.4 : 0) + (hasLayout ? 0.4 : 0) + (hasTextColor ? 0.3 : 0);
+  ui = Math.min(1.5, Math.round(uiScore * 10) / 10);
+  if (ui < 0.5 && src.length > 80) ui = 0.5;
 
-  // Tổng = cộng đúng các mục (tránh lệch 2.9 vs 3)
   function r1(x) { return Math.round(Number(x) * 10) / 10; }
   pInfo = r1(pInfo); p1 = r1(p1); p2 = r1(p2); p3 = r1(p3); p4 = r1(p4); ui = r1(ui);
-  total = r1(Math.min(10, pInfo + p1 + p2 + p3 + p4 + ui));
+  var total = r1(Math.min(10, pInfo + p1 + p2 + p3 + p4 + ui));
 
   var note =
-    "Thông tin (" + pInfo + "/ 3,5 điểm). " +
-    "Bẫy 1 (" + p1 + "/ 1,0 điểm). " +
-    "Bẫy 2 (" + p2 + "/ 1,0 điểm). " +
-    "Bẫy 3 (" + p3 + "/ 2 điểm). " +
-    "Bẫy 4 (" + p4 + "/ 1,0 điểm). " +
-    "Giao diện đẹp (" + ui + "/ 1,5 điểm). TỔNG: " + total + " điểm";
+    "1. Thông tin (" + pInfo + "/ 3,5 điểm)" + (missInfo.length ? " [thiếu: " + missInfo.join(", ") + "]" : "") + ". " +
+    "2. Chú thích (" + p1 + "/ 1,0 điểm). " +
+    "3. Tiêu đề (" + p2 + "/ 1,0 điểm). " +
+    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + (p3 >= 2 ? "" : (hasSrc && !hasRound ? " [chưa bo tròn rõ → tối đa 1đ]" : "")) + ". " +
+    "5. Màu tháng sinh (" + p4 + "/ 1,0 điểm). " +
+    "6. Giao diện (" + ui + "/ 1,5 điểm). TỔNG: " + total + " điểm";
 
   return {
     total: total,
     note: note,
     breakdown: [
-      { label: "Thông tin", max: 3.5, pts: pInfo },
-      { label: "Bẫy 1", max: 1, pts: p1 },
-      { label: "Bẫy 2", max: 1, pts: p2 },
-      { label: "Bẫy 3", max: 2, pts: p3 },
-      { label: "Bẫy 4", max: 1, pts: p4 },
-      { label: "Giao diện đẹp", max: 1.5, pts: ui }
+      { label: "1. Thông tin", max: 3.5, pts: pInfo },
+      { label: "2. Chú thích", max: 1, pts: p1 },
+      { label: "3. Tiêu đề", max: 1, pts: p2 },
+      { label: "4. Ảnh đại diện", max: 2, pts: p3 },
+      { label: "5. Màu tháng sinh", max: 1, pts: p4 },
+      { label: "6. Giao diện", max: 1.5, pts: ui }
     ]
   };
 }
