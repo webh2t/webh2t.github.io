@@ -762,9 +762,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1446,7 +1446,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2591,7 +2591,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2608,7 +2608,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2688,7 +2688,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3845,7 +3845,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
+    WH = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4202,7 +4202,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4318,13 +4318,34 @@ function enableHtmlIntroAntiCheat() {
     if (!inHi()) return;
     var key = (e.key || "").toLowerCase();
     var ctrl = e.ctrlKey || e.metaKey;
+    // Chặn copy/paste/print/save + chụp màn hình (PrintScreen)
     if (ctrl && (key === "c" || key === "v" || key === "x" || key === "a" || key === "u" || key === "s" || key === "p")) {
+      e.preventDefault();
+      e.stopPropagation();
+      return false;
+    }
+    // Ctrl+Shift+S / Cmd+Shift+3/4 (mac) / PrintScreen
+    if (e.key === "PrintScreen" || e.keyCode === 44 || key === "printscreen") {
+      e.preventDefault();
+      e.stopPropagation();
+      try { navigator.clipboard && navigator.clipboard.writeText(" "); } catch (eC) {}
+      return false;
+    }
+    if (ctrl && e.shiftKey && (key === "s" || key === "3" || key === "4" || key === "5")) {
       e.preventDefault();
       return false;
     }
     if (e.key === "F12" || (ctrl && e.shiftKey && (key === "i" || key === "j" || key === "c"))) {
       e.preventDefault();
       return false;
+    }
+  }, true);
+  // keyup PrintScreen (một số trình duyệt chỉ bắt ở keyup)
+  document.addEventListener("keyup", function (e) {
+    if (!inHi()) return;
+    if (e.key === "PrintScreen" || e.keyCode === 44) {
+      e.preventDefault();
+      try { navigator.clipboard && navigator.clipboard.writeText(" "); } catch (eC2) {}
     }
   }, true);
   // CodeMirror: chan copy bang lenh
@@ -4951,8 +4972,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbwub0s_Aqwei1QjxOEuqvitP3AIBSY_RYmWIVcr_MxtCQYhnpzdSSZywC34Nr993bgs/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec"; }
 }
 
 
@@ -5166,6 +5187,13 @@ function syncHtmlIntroFromCloud() {
           if (isNaN(score)) score = r.score;
         }
         if (r.note || r.nhanXet) note = r.note || r.nhanXet;
+        if ((score === 0 || score === "0" || score === "" || score == null) && note) {
+          var mtN = String(note).match(/TỔNG:\s*([\d.,]+)/i);
+          if (mtN) {
+            var nt = parseFloat(String(mtN[1]).replace(",", "."));
+            if (!isNaN(nt) && nt > 0) score = Math.round(nt * 10) / 10;
+          }
+        }
         merged.push({
           time: r.time || (old && old.time) || "",
           class: lop,
@@ -5240,22 +5268,25 @@ function renderHtmlIntroTable() {
   }
   all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
   body.innerHTML = all.map(function (r) {
-    // ƯU TIÊN điểm cột G từ Google Sheet (r.score) — GV sửa thủ công phải hiện đúng
+    // Điểm: score cloud; nếu =0 mà note có TỔNG>0 → lấy TỔNG (tránh Tổng=0 / nhận xét=5)
     var score = r.score;
     if (score instanceof Date || (typeof score === "string" && /T\d{2}:\d{2}/.test(score))) score = "";
     if (typeof score === "string") score = score.replace(",", ".");
+    var noteTong = null;
+    if (r.note && /TỔNG:\s*([\d.,]+)/i.test(r.note)) {
+      var mt0 = r.note.match(/TỔNG:\s*([\d.,]+)/i);
+      if (mt0) noteTong = Math.round(parseFloat(String(mt0[1]).replace(",", ".")) * 10) / 10;
+    }
     if (score !== "" && score != null && !isNaN(Number(score))) {
       score = Math.round(Number(score) * 10) / 10;
+      if (score === 0 && noteTong != null && noteTong > 0) score = noteTong;
+    } else if (noteTong != null) {
+      score = noteTong;
+    } else if (r.breakdown && r.breakdown.length) {
+      var sumBd = r.breakdown.reduce(function (s, b) { return s + (Number(b.pts) || 0); }, 0);
+      score = Math.round(sumBd * 10) / 10;
     } else {
-      // Chỉ khi Sheet không có điểm mới suy từ note/breakdown
-      score = "";
-      if (r.note && /TỔNG:\s*([\d.,]+)/i.test(r.note)) {
-        var mt = r.note.match(/TỔNG:\s*([\d.,]+)/i);
-        if (mt) score = Math.round(parseFloat(String(mt[1]).replace(",", ".")) * 10) / 10;
-      } else if (r.breakdown && r.breakdown.length) {
-        var sumBd = r.breakdown.reduce(function (s, b) { return s + (Number(b.pts) || 0); }, 0);
-        score = Math.round(sumBd * 10) / 10;
-      }
+      score = "—";
     }
     if (score === "" || score == null || (typeof score === "number" && isNaN(score))) score = "—";
     var rowStyle = r.plagFlag ? "background:#FEF2F2;" : "";
