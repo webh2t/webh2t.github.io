@@ -4774,15 +4774,15 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   function stripVN(s) {
     return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
   }
-  function hasToken(hay, tok) {
-    return hay.indexOf(String(tok).toLowerCase()) >= 0;
-  }
   function nameInText(text) {
-    var low = String(text || "").toLowerCase();
+    var low = stripVN(text);
     if (!nameTokens.length) return false;
     var hit = 0;
-    nameTokens.forEach(function (t) { if (hasToken(low, t)) hit++; });
-    return hit >= Math.min(2, nameTokens.length) || (last && hasToken(low, last));
+    nameTokens.forEach(function (t) {
+      if (low.indexOf(stripVN(t)) >= 0) hit++;
+    });
+    // Cần ≥2 token hoặc đúng tên cuối (độ dài ≥3)
+    return hit >= Math.min(2, nameTokens.length) || (last && last.length >= 2 && low.indexOf(stripVN(last)) >= 0);
   }
   function classInText(text) {
     if (!lop) return /\b12A\d{1,2}\b/i.test(text);
@@ -4792,13 +4792,12 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     var m = plainOne.match(/\b(\d{1,2})[\/\-.\s](\d{1,2})[\/\-.\s](\d{2,4})\b/);
     if (!m) return 0;
     var a = parseInt(m[1], 10), b = parseInt(m[2], 10);
-    // Ưu tiên tháng kiểu dd/mm/yyyy (tháng = số thứ 2 nếu ≤12)
     if (b >= 1 && b <= 12) return b;
     if (a >= 1 && a <= 12) return a;
     return 0;
   }
 
-  // ===== 1. Thông tin 3.5 — đúng thứ tự 7 mục × 0.5 =====
+  // ===== 1. Thông tin 3.5 — 7 mục × 0.5; Họ tên phải khớp HS đã chọn =====
   var hasNameOk = nameInText(plainOne);
   var hasDobOk = /\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(plainOne);
   var hasClassOk = classInText(plainOne);
@@ -4810,7 +4809,7 @@ function gradeHtmlIntroLocal_(source, name, lop) {
       if (t.length < 4) continue;
       if (/\b12A\d{1,2}\b/i.test(t)) continue;
       if (/\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(t)) continue;
-      if (last && t.toLowerCase().indexOf(last.toLowerCase()) >= 0 && t.length < last.length + 10) continue;
+      if (last && stripVN(t).indexOf(stripVN(last)) >= 0 && t.length < last.length + 12) continue;
       if (/^(ho|họ|ten|tên|lop|lớp|so|sở|uoc|ước|thong|thông)/i.test(t) && t.length < 16) continue;
       if (/[A-Za-zÀ-ỹ]{3,}/.test(t)) return true;
     }
@@ -4837,31 +4836,28 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   });
   pInfo = Math.round(pInfo * 10) / 10;
 
-  // ===== 2. Chú thích 1.0 — đúng thẻ + đúng tên/lớp theo HocSinh =====
+  // ===== 2. Chú thích 1.0 — bắt buộc đúng tên + lớp HS đã chọn =====
   var p1 = 0;
   var cmtM = src.match(/<!--[\s\S]*?b[aà]i\s*thi\s*c[uủ]a[\s\S]*?-->/i);
   if (cmtM) {
     var cmt = String(cmtM[0] || "");
-    var nameOk = nameInText(cmt);
-    var classOk = classInText(cmt);
-    if (nameOk && classOk && !/\[|h[oọ]\s*t[eê]n\s*em|l[oớ]p\s*em/i.test(cmt)) p1 = 1;
-    else if (nameOk || classOk) p1 = 0.5;
-    else if (cmt.replace(/<!--|-->/g, "").trim().length > 5) p1 = 0.25;
+    if (nameInText(cmt) && classInText(cmt) && !/\[|h[oọ]\s*t[eê]n\s*em|l[oớ]p\s*em/i.test(cmt)) p1 = 1;
+    else if (nameInText(cmt) && classInText(cmt)) p1 = 0.5;
+    // không cho điểm nếu comment không khớp tên HS chọn
   }
 
-  // ===== 3. Tiêu đề 1.0 — <title> đúng tên - lớp =====
+  // ===== 3. Tiêu đề 1.0 — <title> phải có tên HS chọn + lớp =====
   var p2 = 0;
   var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   if (tm) {
     var tt = String(tm[1] || "").replace(/\s+/g, " ").trim();
-    var tn = nameInText(tt);
-    var tc = classInText(tt);
-    if (tn && tc && !/t[eê]n\s*em/i.test(tt)) p2 = 1;
-    else if (tn || tc) p2 = 0.5;
-    else if (tt.length > 1) p2 = 0.25;
+    if (nameInText(tt) && classInText(tt) && !/t[eê]n\s*em/i.test(tt)) p2 = 1;
+    else if (nameInText(tt) && classInText(tt)) p2 = 0.5;
+    else if (nameInText(tt) || (classInText(tt) && nameInText(plainOne))) p2 = 0.25;
+    // title "toan an" / không khớp Mỹ Trinh → 0
   }
 
-  // ===== 4. Ảnh đại diện 2.0 — định dạng + kích thước + bo tròn =====
+  // ===== 4. Ảnh 2.0 — alt Image [Ten HS chọn]; bo tròn = 2, không = max 1 =====
   var p3 = 0;
   var hasSrc = /<img\b[^>]*src\s*=\s*["'][^"'\s]+["']/i.test(src);
   var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
@@ -4869,36 +4865,36 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   var imgTag = imgTagM ? String(imgTagM[0]) : "";
   var hasRound = /border-radius\s*:\s*(50%|[5-9]\d%|[1-9]\d{2,}px)/i.test(src) ||
                  /border-radius\s*:\s*50%/i.test(imgTag);
-  var hasSize = /width\s*=\s*["']?\d{2,3}|height\s*=\s*["']?\d{2,3}|width\s*:\s*\d{2,3}px|height\s*:\s*\d{2,3}px|object-fit\s*:\s*cover/i.test(imgTag) ||
-                /object-fit\s*:\s*cover/i.test(src);
   var altOk = false;
   if (altM) {
     var alNorm = stripVN(altM[1] || "");
     var lastNo = stripVN(last);
-    if (/^image\b/i.test(String(altM[1] || "").trim()) && lastNo && alNorm.indexOf(lastNo) >= 0 && !/\[ten\]|ten em/i.test(alNorm)) altOk = true;
-    else if (/^image\b/i.test(String(altM[1] || "").trim()) && alNorm.length > 6) altOk = true;
+    // alt phải chứa tên cuối của HS ĐÃ CHỌN (không dấu)
+    if (/^image\b/i.test(String(altM[1] || "").trim()) && lastNo && lastNo.length >= 2 && alNorm.indexOf(lastNo) >= 0 && !/\[ten\]|ten em/i.test(alNorm)) {
+      altOk = true;
+    }
   }
-  // 2đ chỉ khi có ảnh + alt đúng + bo tròn rõ (border-radius 50% hoặc tương đương)
-  // Chưa bo tròn khuôn mặt → tối đa 1đ
   if (hasSrc && altOk && hasRound) p3 = 2;
   else if (hasSrc && altOk) p3 = 1;
-  else if (hasSrc && hasSize) p3 = 0.75;
-  else if (hasSrc) p3 = 0.5;
-  else if (altM) p3 = 0.25;
+  else if (hasSrc) p3 = 0.5; // có ảnh nhưng alt không khớp tên HS chọn
+  else if (altM) p3 = 0;
 
-  // ===== 5. Màu tháng sinh 1.0 — màu trên Họ và tên =====
+  // ===== 5. Màu tháng sinh 1.0 =====
   var p4 = 0;
   var month = extractDobMonth();
   var evenMonth = month > 0 ? (month % 2 === 0) : null;
   var hasBlue = /color\s*:\s*(#0*[0-3][0-9a-f]{2}[a-f0-9]{0,3}|blue|navy|green|teal|#[0-4][0-9a-f]{5}|rgb\s*\(\s*0*[0-8]?\d\s*,)/i.test(src);
   var hasRed = /color\s*:\s*(#?[fF][0-9a-fA-F]{2}|red|orange|tomato|coral|crimson|#[eEfF][0-9a-fA-F]{5}|rgb\s*\(\s*2\d{2}\s*,)/i.test(src);
-  var hasAnyColorOnName = /color\s*:/i.test(src) && (nameInText(src) || /h1|h2|\.name|ho-ten|hoten/i.test(src));
-  if (evenMonth === true && hasBlue) p4 = 1;
-  else if (evenMonth === false && hasRed) p4 = 1;
-  else if (evenMonth == null && (hasBlue || hasRed) && hasAnyColorOnName) p4 = 0.5;
-  else if (hasAnyColorOnName) p4 = 0.5;
+  var hasAnyColorOnName = /color\s*:/i.test(src);
+  // Chỉ cho điểm màu nếu đã có đúng Họ tên HS trên trang
+  if (hasNameOk) {
+    if (evenMonth === true && hasBlue) p4 = 1;
+    else if (evenMonth === false && hasRed) p4 = 1;
+    else if (evenMonth == null && (hasBlue || hasRed)) p4 = 0.5;
+    else if (hasAnyColorOnName) p4 = 0.5;
+  }
 
-  // ===== 6. Giao diện 1.5 — nền, trang trí, bố cục, màu chữ =====
+  // ===== 6. Giao diện 1.5 =====
   var ui = 0;
   var hasBg = /background(\s*|-color)\s*:/i.test(src);
   var hasDecor = /border|box-shadow|border-radius|gradient/i.test(src);
@@ -4912,11 +4908,12 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   pInfo = r1(pInfo); p1 = r1(p1); p2 = r1(p2); p3 = r1(p3); p4 = r1(p4); ui = r1(ui);
   var total = r1(Math.min(10, pInfo + p1 + p2 + p3 + p4 + ui));
 
+  var warnName = hasNameOk ? "" : " [Sai/thiếu Họ tên theo danh sách: " + (name || "?") + "]";
   var note =
-    "1. Thông tin (" + pInfo + "/ 3,5 điểm)" + (missInfo.length ? " [thiếu: " + missInfo.join(", ") + "]" : "") + ". " +
+    "1. Thông tin (" + pInfo + "/ 3,5 điểm)" + (missInfo.length ? " [thiếu: " + missInfo.join(", ") + "]" : "") + warnName + ". " +
     "2. Chú thích (" + p1 + "/ 1,0 điểm). " +
     "3. Tiêu đề (" + p2 + "/ 1,0 điểm). " +
-    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + (p3 >= 2 ? "" : (hasSrc && !hasRound ? " [chưa bo tròn rõ → tối đa 1đ]" : "")) + ". " +
+    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + (p3 >= 2 ? "" : (hasSrc && !hasRound ? " [chưa bo tròn → tối đa 1đ]" : "")) + ". " +
     "5. Màu tháng sinh (" + p4 + "/ 1,0 điểm). " +
     "6. Giao diện (" + ui + "/ 1,5 điểm). TỔNG: " + total + " điểm";
 
