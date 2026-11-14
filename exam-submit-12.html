@@ -4768,26 +4768,46 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     .replace(/\n+/g, "\n")
     .trim();
   var plainOne = plain.replace(/\n/g, " ");
-  var last = name ? String(name).trim().split(/\s+/).pop() : "";
-  var nameTokens = String(name || "").trim().split(/\s+/).filter(function (t) { return t.length > 1; });
+  var nameFull = String(name || "").trim();
+  var tokens = nameFull.split(/\s+/).filter(function (t) { return t.length > 0; });
+  var last = tokens.length ? tokens[tokens.length - 1] : "";
+  var midTokens = tokens.length >= 3 ? tokens.slice(1, -1) : [];
 
   function stripVN(s) {
-    return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
+    return String(s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").replace(/\s+/g, " ").trim();
   }
+  var nameNorm = stripVN(nameFull);
+  var lastNorm = stripVN(last);
+  var lopNorm = stripVN(String(lop || "")).replace(/\s/g, "");
+
+  /** Họ tên khớp DS: phải có HỌ (từ đầu) + (tên cuối hoặc đệm). Không chấp nhận chỉ "anh thuy" thiếu họ */
   function nameInText(text) {
+    if (!nameNorm || nameNorm.length < 3) return false;
     var low = stripVN(text);
-    if (!nameTokens.length) return false;
-    var hit = 0;
-    nameTokens.forEach(function (t) {
-      if (low.indexOf(stripVN(t)) >= 0) hit++;
-    });
-    // Cần ≥2 token hoặc đúng tên cuối (độ dài ≥3)
-    return hit >= Math.min(2, nameTokens.length) || (last && last.length >= 2 && low.indexOf(stripVN(last)) >= 0);
+    if (!low) return false;
+    if (low.indexOf(nameNorm) >= 0) return true;
+    var ho = tokens.length ? stripVN(tokens[0]) : "";
+    var hasHo = ho.length >= 2 && low.indexOf(ho) >= 0;
+    var hasLast = lastNorm.length >= 2 && low.indexOf(lastNorm) >= 0;
+    var midHit = 0;
+    for (var i = 1; i < tokens.length - 1; i++) {
+      var tn = stripVN(tokens[i]);
+      if (tn.length >= 2 && low.indexOf(tn) >= 0) midHit++;
+    }
+    // Đúng: có họ + tên cuối; hoặc họ + đệm
+    if (hasHo && hasLast) return true;
+    if (hasHo && midHit >= 1) return true;
+    return false;
   }
+
+  /** Lớp phải đúng lớp đã chọn (12A1 ≠ 12A2) */
   function classInText(text) {
-    if (!lop) return /\b12A\d{1,2}\b/i.test(text);
-    return new RegExp("\\b" + String(lop).replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i").test(text);
+    if (!lopNorm) return false;
+    var low = stripVN(text).replace(/\s/g, "");
+    // chuẩn hóa 12a1 / 12A1
+    return low.indexOf(lopNorm) >= 0;
   }
+
   function extractDobMonth() {
     var m = plainOne.match(/\b(\d{1,2})[\/\-.\s](\d{1,2})[\/\-.\s](\d{2,4})\b/);
     if (!m) return 0;
@@ -4797,36 +4817,69 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     return 0;
   }
 
-  // ===== 1. Thông tin 3.5 — 7 mục × 0.5; Họ tên phải khớp HS đã chọn =====
+  /** Địa chỉ = địa danh (không phải sở thích / ước mơ ngắn) */
+  function hasAddressOk() {
+    var reLabel = /địa\s*chỉ|dia\s*chi|address/i;
+    var lines = plain.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean);
+    var candidates = [];
+    // Ưu tiên dòng có nhãn địa chỉ
+    for (var i = 0; i < lines.length; i++) {
+      if (reLabel.test(lines[i])) {
+        var after = lines[i].replace(/địa\s*chỉ|dia\s*chi|address/ig, "").replace(/[:：\-]/g, " ").trim();
+        if (after.length >= 4) candidates.push(after);
+        if (i + 1 < lines.length && lines[i + 1].length >= 4) candidates.push(lines[i + 1]);
+      }
+    }
+    // Các dòng còn lại đủ dài, không phải DOB/lớp/tên/sở thích/ước mơ/thông điệp
+    lines.forEach(function (t) {
+      if (t.length < 6) return;
+      if (/\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(t)) return;
+      if (/\b12A\d{1,2}\b/i.test(t)) return;
+      if (nameInText(t) && t.length < nameFull.length + 15) return;
+      if (/s[oở]\s*th[ií]ch|u[oớ]c\s*m[oơ]|th[oô]ng\s*[đd]i[eệ]p|h[oọ]\s*[vt][eê]n|ng[aà]y\s*sinh|l[oớ]p/i.test(t)) return;
+      candidates.push(t);
+    });
+    var placeHint = /s[oố]|đường|duong|phường|phuong|quận|quan|huyện|huyen|tp\.?|thành\s*phố|tinh|tỉnh|xã|thi\s*trấn|ấp|khóm|ngõ|hẻm|nha\s*trang|hà\s*nội|đà\s*nẵng|sài\s*gòn|hcm|cần\s*thơ|[A-Za-zÀ-ỹ]+(\s+[A-Za-zÀ-ỹ]+){1,}/i;
+    for (var j = 0; j < candidates.length; j++) {
+      var c = candidates[j];
+      var cn = stripVN(c);
+      // loại sở thích ngắn 1–2 từ không giống địa danh
+      if (cn.length < 5) continue;
+      if (/^(code|game|bong|da|doc|sach|hat|nhac|xem|phim|nau|an)$/i.test(cn)) continue;
+      if (placeHint.test(c) || c.length >= 10) return true;
+    }
+    return false;
+  }
+
+  function hasHobbyOk() {
+    var n = stripVN(plainOne);
+    return /so\s*thich\s*[:：]?\s*[a-z0-9]{2,}/i.test(n) || /s[oở]\s*th[ií]ch\s*[:：]?\s*[A-Za-zÀ-ỹ0-9]{2,}/i.test(plainOne);
+  }
+  function hasDreamOk() {
+    var n = stripVN(plainOne);
+    return /uoc\s*mo\s*[:：]?\s*[a-z]{2,}/i.test(n);
+  }
+  function hasMsgOk() {
+    var n = stripVN(plainOne);
+    return /thong\s*diep[^a-z]{0,15}[a-z]{3,}/i.test(n);
+  }
+
   var hasNameOk = nameInText(plainOne);
   var hasDobOk = /\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(plainOne);
   var hasClassOk = classInText(plainOne);
-  var hasAddrOk = (function () {
-    if (/địa\s*chỉ|dia\s*chi/i.test(src) && /[A-Za-zÀ-ỹ]{3,}/.test(plainOne)) return true;
-    var parts = plain.split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean);
-    for (var i = 0; i < parts.length; i++) {
-      var t = parts[i];
-      if (t.length < 4) continue;
-      if (/\b12A\d{1,2}\b/i.test(t)) continue;
-      if (/\b\d{1,2}[\/\-.\s]\d{1,2}[\/\-.\s]\d{2,4}\b/.test(t)) continue;
-      if (last && stripVN(t).indexOf(stripVN(last)) >= 0 && t.length < last.length + 12) continue;
-      if (/^(ho|họ|ten|tên|lop|lớp|so|sở|uoc|ước|thong|thông)/i.test(t) && t.length < 16) continue;
-      if (/[A-Za-zÀ-ỹ]{3,}/.test(t)) return true;
-    }
-    return false;
-  })();
-  var hasHobbyOk = /s[oở]\s*th[ií]ch/i.test(plainOne) && /s[oở]\s*th[ií]ch[\s\S]{0,40}[A-Za-zÀ-ỹ0-9]{2,}/i.test(plainOne);
-  var hasDreamOk = /u[oớ]c\s*m[oơ]/i.test(plainOne) && /u[oớ]c\s*m[oơ][\s\S]{0,40}[A-Za-zÀ-ỹ]{2,}/i.test(plainOne);
-  var hasMsgOk = /th[oô]ng\s*[đd]i[eệ]p/i.test(plainOne) && /th[oô]ng\s*[đd]i[eệ]p[\s\S]{0,60}[A-Za-zÀ-ỹ]{3,}/i.test(plainOne);
+  var hasAddrOk = hasAddressOk();
+  var hobbyOk = hasHobbyOk();
+  var dreamOk = hasDreamOk();
+  var msgOk = hasMsgOk();
 
   var infoItems = [
     { k: "1.Họ tên", ok: hasNameOk },
     { k: "2.Ngày sinh", ok: hasDobOk },
     { k: "3.Lớp", ok: hasClassOk },
     { k: "4.Địa chỉ", ok: hasAddrOk },
-    { k: "5.Sở thích", ok: hasHobbyOk },
-    { k: "6.Ước mơ", ok: hasDreamOk },
-    { k: "7.Thông điệp", ok: hasMsgOk }
+    { k: "5.Sở thích", ok: hobbyOk },
+    { k: "6.Ước mơ", ok: dreamOk },
+    { k: "7.Thông điệp", ok: msgOk }
   ];
   var pInfo = 0;
   var missInfo = [];
@@ -4836,84 +4889,71 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   });
   pInfo = Math.round(pInfo * 10) / 10;
 
-  // ===== 2. Chú thích 1.0 — bắt buộc đúng tên + lớp HS đã chọn =====
+  // 2. Chú thích — đúng tên (≥2 token) + đúng lớp
   var p1 = 0;
   var cmtM = src.match(/<!--[\s\S]*?b[aà]i\s*thi\s*c[uủ]a[\s\S]*?-->/i);
   if (cmtM) {
     var cmt = String(cmtM[0] || "");
     if (nameInText(cmt) && classInText(cmt) && !/\[|h[oọ]\s*t[eê]n\s*em|l[oớ]p\s*em/i.test(cmt)) p1 = 1;
-    else if (nameInText(cmt) && classInText(cmt)) p1 = 0.5;
-    // không cho điểm nếu comment không khớp tên HS chọn
   }
 
-  // ===== 3. Tiêu đề 1.0 — <title> phải có tên HS chọn + lớp =====
+  // 3. Title — đúng tên + đúng lớp (sai lớp / sai tên = 0)
   var p2 = 0;
   var tm = src.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
   if (tm) {
     var tt = String(tm[1] || "").replace(/\s+/g, " ").trim();
     if (nameInText(tt) && classInText(tt) && !/t[eê]n\s*em/i.test(tt)) p2 = 1;
-    else if (nameInText(tt) && classInText(tt)) p2 = 0.5;
-    else if (nameInText(tt) || (classInText(tt) && nameInText(plainOne))) p2 = 0.25;
-    // title "toan an" / không khớp Mỹ Trinh → 0
   }
 
-  // ===== 4. Ảnh 2.0 — alt Image [Ten HS chọn]; bo tròn = 2, không = max 1 =====
+  // 4. Ảnh — alt Image + tên cuối HS (≥2 ký tự); bo tròn = 2 else max 1
   var p3 = 0;
   var hasSrc = /<img\b[^>]*src\s*=\s*["'][^"'\s]+["']/i.test(src);
   var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
-  var imgTagM = src.match(/<img\b[^>]*>/i);
-  var imgTag = imgTagM ? String(imgTagM[0]) : "";
-  var hasRound = /border-radius\s*:\s*(50%|[5-9]\d%|[1-9]\d{2,}px)/i.test(src) ||
-                 /border-radius\s*:\s*50%/i.test(imgTag);
+  var imgTag = (src.match(/<img\b[^>]*>/i) || [""])[0];
+  var hasRound = /border-radius\s*:\s*(50%|[5-9]\d%|[1-9]\d{2,}px)/i.test(src);
   var altOk = false;
-  if (altM) {
+  if (altM && lastNorm.length >= 2) {
     var alNorm = stripVN(altM[1] || "");
-    var lastNo = stripVN(last);
-    // alt phải chứa tên cuối của HS ĐÃ CHỌN (không dấu)
-    if (/^image\b/i.test(String(altM[1] || "").trim()) && lastNo && lastNo.length >= 2 && alNorm.indexOf(lastNo) >= 0 && !/\[ten\]|ten em/i.test(alNorm)) {
-      altOk = true;
-    }
+    if (/^image\b/i.test(String(altM[1] || "").trim()) && alNorm.indexOf(lastNorm) >= 0 && !/\[ten\]|ten em/i.test(alNorm)) altOk = true;
   }
   if (hasSrc && altOk && hasRound) p3 = 2;
   else if (hasSrc && altOk) p3 = 1;
-  else if (hasSrc) p3 = 0.5; // có ảnh nhưng alt không khớp tên HS chọn
-  else if (altM) p3 = 0;
+  else if (hasSrc) p3 = 0.5;
+  else p3 = 0;
 
-  // ===== 5. Màu tháng sinh 1.0 =====
+  // 5. Màu — chỉ khi đúng họ tên
   var p4 = 0;
   var month = extractDobMonth();
   var evenMonth = month > 0 ? (month % 2 === 0) : null;
-  var hasBlue = /color\s*:\s*(#0*[0-3][0-9a-f]{2}[a-f0-9]{0,3}|blue|navy|green|teal|#[0-4][0-9a-f]{5}|rgb\s*\(\s*0*[0-8]?\d\s*,)/i.test(src);
-  var hasRed = /color\s*:\s*(#?[fF][0-9a-fA-F]{2}|red|orange|tomato|coral|crimson|#[eEfF][0-9a-fA-F]{5}|rgb\s*\(\s*2\d{2}\s*,)/i.test(src);
-  var hasAnyColorOnName = /color\s*:/i.test(src);
-  // Chỉ cho điểm màu nếu đã có đúng Họ tên HS trên trang
+  var hasBlue = /color\s*:\s*(#0*[0-3][0-9a-f]{2}[a-f0-9]{0,3}|blue|navy|green|teal|#[0-4][0-9a-f]{5})/i.test(src);
+  var hasRed = /color\s*:\s*(#?[fF][0-9a-fA-F]{2}|red|orange|tomato|coral|crimson|#[eEfF][0-9a-fA-F]{5})/i.test(src);
   if (hasNameOk) {
     if (evenMonth === true && hasBlue) p4 = 1;
     else if (evenMonth === false && hasRed) p4 = 1;
-    else if (evenMonth == null && (hasBlue || hasRed)) p4 = 0.5;
-    else if (hasAnyColorOnName) p4 = 0.5;
+    else if ((hasBlue || hasRed) && evenMonth == null) p4 = 0.5;
+    else if (/color\s*:/i.test(src)) p4 = 0.5;
   }
 
-  // ===== 6. Giao diện 1.5 =====
+  // 6. Giao diện
   var ui = 0;
   var hasBg = /background(\s*|-color)\s*:/i.test(src);
   var hasDecor = /border|box-shadow|border-radius|gradient/i.test(src);
   var hasLayout = /max-width|margin\s*:\s*[^;]*auto|padding|flex|grid|text-align/i.test(src);
   var hasTextColor = /color\s*:/i.test(src);
-  var uiScore = (hasBg ? 0.4 : 0) + (hasDecor ? 0.4 : 0) + (hasLayout ? 0.4 : 0) + (hasTextColor ? 0.3 : 0);
-  ui = Math.min(1.5, Math.round(uiScore * 10) / 10);
+  ui = Math.min(1.5, Math.round(((hasBg ? 0.4 : 0) + (hasDecor ? 0.4 : 0) + (hasLayout ? 0.4 : 0) + (hasTextColor ? 0.3 : 0)) * 10) / 10);
   if (ui < 0.5 && src.length > 80) ui = 0.5;
 
   function r1(x) { return Math.round(Number(x) * 10) / 10; }
   pInfo = r1(pInfo); p1 = r1(p1); p2 = r1(p2); p3 = r1(p3); p4 = r1(p4); ui = r1(ui);
   var total = r1(Math.min(10, pInfo + p1 + p2 + p3 + p4 + ui));
 
-  var warnName = hasNameOk ? "" : " [Sai/thiếu Họ tên theo danh sách: " + (name || "?") + "]";
   var note =
-    "1. Thông tin (" + pInfo + "/ 3,5 điểm)" + (missInfo.length ? " [thiếu: " + missInfo.join(", ") + "]" : "") + warnName + ". " +
+    "1. Thông tin (" + pInfo + "/ 3,5 điểm)" + (missInfo.length ? " [thiếu: " + missInfo.join(", ") + "]" : "") +
+    (!hasNameOk ? " [Sai/thiếu Họ tên theo DS: " + nameFull + "]" : "") +
+    (!hasClassOk ? " [Sai/thiếu Lớp theo DS: " + (lop || "?") + "]" : "") + ". " +
     "2. Chú thích (" + p1 + "/ 1,0 điểm). " +
     "3. Tiêu đề (" + p2 + "/ 1,0 điểm). " +
-    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + (p3 >= 2 ? "" : (hasSrc && !hasRound ? " [chưa bo tròn → tối đa 1đ]" : "")) + ". " +
+    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + (hasSrc && !hasRound && p3 < 2 ? " [chưa bo tròn → tối đa 1đ]" : "") + ". " +
     "5. Màu tháng sinh (" + p4 + "/ 1,0 điểm). " +
     "6. Giao diện (" + ui + "/ 1,5 điểm). TỔNG: " + total + " điểm";
 
