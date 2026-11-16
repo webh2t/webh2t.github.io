@@ -4883,7 +4883,7 @@ function applyHtmlIntroDeadlineLock_() {
   // disable class select options message
   var cls = document.getElementById("htmlintro-class");
   if (cls && locked) {
-    cls.innerHTML = "<option value=\\"\\">— Hết hạn nộp (7h 22/11/2026) —</option>";
+    cls.innerHTML = '<option value="">— Hết hạn nộp (7h 22/11/2026) —</option>';
   }
   return locked;
 }
