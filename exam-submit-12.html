@@ -762,9 +762,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1446,7 +1446,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2591,7 +2591,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2608,7 +2608,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2688,7 +2688,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3561,9 +3561,9 @@ if (_cancelExam) {
           <li><strong>Thông tin cá nhân (3,5đ)</strong> — Họ tên · Ngày sinh · Lớp · Địa chỉ · Sở thích · Ước mơ · Thông điệp <em>(mỗi mục 0,5đ)</em></li>
           <li><strong>Chú thích bài thi (1đ)</strong> — <code>&lt;!-- Bài thi của: [Họ tên] - Lớp: [Lớp] --&gt;</code></li>
           <li><strong>Tiêu đề trang (1đ)</strong> — <code>&lt;title&gt;Tên - Lớp&lt;/title&gt;</code></li>
-          <li><strong>Ảnh đại diện (2đ)</strong> — Nút <b>CHÈN ẢNH</b> chèn khung <em>vuông bên trái</em> (JPG/PNG ≤500KB). HS tự thêm CSS <code>border-radius:50%</code> để bo tròn khuôn mặt = 2đ; <strong>không bo tròn → tối đa 1đ</strong>. Cần <code>alt="Image [Ten]"</code> (Tên không dấu)</li>
+          <li><strong>Ảnh đại diện (2đ)</strong> — Có <em>ảnh người</em> (src thật) + <code>alt="Image [Ten]"</code> + <code>border-radius:50%</code> (bo tròn, object-fit:cover). Thiếu ảnh người hoặc chưa bo tròn → <strong>tối đa 1đ</strong>. Nút CHÈN ẢNH: JPG/PNG ≤500KB, mặc định vuông trái</li>
           <li><strong>Màu theo tháng sinh (1đ)</strong> — Họ và tên: tháng <em>chẵn = xanh</em>, tháng <em>lẻ = đỏ/cam</em></li>
-          <li><strong>Giao diện đẹp (1,5đ)</strong> — CSS bố cục, màu sắc, trình bày rõ</li>
+          <li><strong>Giao diện (1,5đ)</strong> — Nền khác trắng · Box/khung ảnh có bo góc, đổ bóng · Bố cục flex/gap/padding · Màu chữ phân biệt các dòng thông tin</li>
         </ol>
       </div>
       <div class="hi-rubric-right">
@@ -3845,7 +3845,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+    WH = "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4202,7 +4202,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4905,23 +4905,39 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     if (nameInText(tt) && classInText(tt) && !/t[eê]n\s*em/i.test(tt)) p2 = 1;
   }
 
-  // 4. Ảnh — alt Image + tên cuối HS (≥2 ký tự); bo tròn = 2 else max 1
+  // 4. Ảnh đại diện (2đ)
+  // 2đ khi đủ: src ảnh thật + alt="Image [Ten]" + bo tròn 50% + (object-fit cover / căn giữa khuôn mặt)
+  // Thiếu ảnh người (không có src hợp lệ) → tối đa 1đ nếu còn alt/css; không src → 0–0.5
   var p3 = 0;
-  var hasSrc = /<img\b[^>]*src\s*=\s*["'][^"'\s]+["']/i.test(src);
-  var altM = src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
-  var imgTag = (src.match(/<img\b[^>]*>/i) || [""])[0];
-  var hasRound = /border-radius\s*:\s*(50%|[5-9]\d%|[1-9]\d{2,}px)/i.test(src);
+  var imgTagM = src.match(/<img\b[^>]*>/i);
+  var imgTag = imgTagM ? String(imgTagM[0]) : "";
+  var srcM = imgTag.match(/\bsrc\s*=\s*["']([^"']*)["']/i) || src.match(/<img\b[^>]*\bsrc\s*=\s*["']([^"']*)["']/i);
+  var srcVal = srcM ? String(srcM[1] || "").trim() : "";
+  // Ảnh thật: http(s), data:image, //cdn — không rỗng, không placeholder
+  var hasRealImg = !!srcVal && srcVal.length > 8 && !/^(about:blank|#$|void\(0\))$/i.test(srcVal) &&
+    (/^https?:\/\//i.test(srcVal) || /^data:image\//i.test(srcVal) || /^\/\//.test(srcVal) || /\.(jpg|jpeg|png|webp|gif)(\?|$)/i.test(srcVal));
+  var altM = imgTag.match(/\balt\s*=\s*["']([^"']*)["']/i) || src.match(/<img\b[^>]*\balt\s*=\s*["']([^"']*)["']/i);
+  var hasRound = /border-radius\s*:\s*(50%|[5-9]\d%\s*\/\s*50%|[1-9]\d{2,}px)/i.test(src) ||
+                 /border-radius\s*:\s*50%/i.test(imgTag);
+  var hasFaceCrop = /object-fit\s*:\s*cover/i.test(src) || /object-position\s*:/i.test(src);
   var altOk = false;
   if (altM && lastNorm.length >= 2) {
     var alNorm = stripVN(altM[1] || "");
     if (/^image\b/i.test(String(altM[1] || "").trim()) && alNorm.indexOf(lastNorm) >= 0 && !/\[ten\]|ten em/i.test(alNorm)) altOk = true;
   }
-  if (hasSrc && altOk && hasRound) p3 = 2;
-  else if (hasSrc && altOk) p3 = 1;
-  else if (hasSrc) p3 = 0.5;
-  else p3 = 0;
+  if (hasRealImg && altOk && hasRound) {
+    p3 = 2; // đủ 3 điều kiện + có ảnh
+  } else if (hasRealImg && (altOk || hasRound)) {
+    p3 = 1; // có ảnh người nhưng thiếu alt hoặc thiếu bo tròn → tối đa 1đ
+  } else if (hasRealImg) {
+    p3 = 0.5;
+  } else if (altOk || hasRound) {
+    p3 = 0.5; // có css/alt nhưng không có ảnh thật
+  } else {
+    p3 = 0;
+  }
 
-  // 5. Màu — chỉ khi đúng họ tên
+  // 5. Màu tháng sinh 1.0 — chỉ khi đúng họ tên
   var p4 = 0;
   var month = extractDobMonth();
   var evenMonth = month > 0 ? (month % 2 === 0) : null;
@@ -4934,14 +4950,44 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     else if (/color\s*:/i.test(src)) p4 = 0.5;
   }
 
-  // 6. Giao diện
+  // 6. Giao diện 1.5 — kỹ thuật rõ (không cảm tính)
+  // 0.4 nền khác trắng mặc định | 0.4 trang trí box/ảnh | 0.4 bố cục flex/gap/padding | 0.3 màu chữ phân biệt
   var ui = 0;
-  var hasBg = /background(\s*|-color)\s*:/i.test(src);
-  var hasDecor = /border|box-shadow|border-radius|gradient/i.test(src);
-  var hasLayout = /max-width|margin\s*:\s*[^;]*auto|padding|flex|grid|text-align/i.test(src);
-  var hasTextColor = /color\s*:/i.test(src);
-  ui = Math.min(1.5, Math.round(((hasBg ? 0.4 : 0) + (hasDecor ? 0.4 : 0) + (hasLayout ? 0.4 : 0) + (hasTextColor ? 0.3 : 0)) * 10) / 10);
-  if (ui < 0.5 && src.length > 80) ui = 0.5;
+  // Nền khác trắng: background màu/hex không phải #fff/white
+  var hasBgNonWhite = false;
+  var bgMatches = src.match(/background(?:-color)?\s*:\s*([^;}"']+)/gi) || [];
+  bgMatches.forEach(function (bm) {
+    var v = bm.split(":")[1] || "";
+    var vn = String(v).toLowerCase().replace(/\s/g, "");
+    if (!vn) return;
+    if (/#fff(?:fff)?\b|white|transparent|inherit|none/.test(vn) && !/gradient/.test(vn)) return;
+    if (/#([0-9a-f]{3}|[0-9a-f]{6})|rgb|hsl|gradient|[a-z]{3,}/i.test(vn)) hasBgNonWhite = true;
+  });
+  // Trang trí: border-radius + (box-shadow | border | nền box riêng)
+  var hasBoxDecor = (/border-radius/i.test(src) && (/box-shadow/i.test(src) || /border\s*:/i.test(src) || /\.box|class=["'][^"']*card|class=["'][^"']*box/i.test(src))) ||
+                    (/box-shadow/i.test(src) && /border-radius/i.test(src));
+  var hasImgFrame = hasRound || (/img[^>]*(border|box-shadow|border-radius)/i.test(src));
+  var hasDecor = hasBoxDecor || (hasImgFrame && /box-shadow|border\s*:/i.test(src)) || (/border-radius/i.test(src) && /padding/i.test(src));
+  // Bố cục
+  var hasLayout = /display\s*:\s*flex/i.test(src) || /gap\s*:/i.test(src) || (/padding\s*:/i.test(src) && /max-width|margin\s*:\s*[^;]*auto/i.test(src));
+  // Màu chữ khác nhau giữa các phần (nhiều khai báo color khác nhau hoặc h1/p khác màu)
+  var colorVals = [];
+  var cm = src.match(/(?:^|[;{\s])color\s*:\s*([^;}"']+)/gi) || [];
+  cm.forEach(function (c) {
+    var v = String(c.split(":")[1] || "").toLowerCase().replace(/\s/g, "");
+    if (v && colorVals.indexOf(v) < 0) colorVals.push(v);
+  });
+  var hasMultiColor = colorVals.length >= 2;
+
+  if (hasBgNonWhite) ui += 0.4;
+  if (hasDecor) ui += 0.4;
+  else if (/border-radius|box-shadow|border\s*:/i.test(src)) ui += 0.2;
+  if (hasLayout) ui += 0.4;
+  else if (/padding\s*:/i.test(src)) ui += 0.2;
+  if (hasMultiColor) ui += 0.3;
+  else if (colorVals.length === 1) ui += 0.15;
+  ui = Math.round(Math.min(1.5, ui) * 100) / 100;
+  if (ui < 0.5 && src.length > 120) ui = 0.5;
 
   function r1(x) { return Math.round(Number(x) * 10) / 10; }
   pInfo = r1(pInfo); p1 = r1(p1); p2 = r1(p2); p3 = r1(p3); p4 = r1(p4); ui = r1(ui);
@@ -4953,7 +4999,7 @@ function gradeHtmlIntroLocal_(source, name, lop) {
     (!hasClassOk ? " [Sai/thiếu Lớp theo DS: " + (lop || "?") + "]" : "") + ". " +
     "2. Chú thích (" + p1 + "/ 1,0 điểm). " +
     "3. Tiêu đề (" + p2 + "/ 1,0 điểm). " +
-    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + (hasSrc && !hasRound && p3 < 2 ? " [chưa bo tròn → tối đa 1đ]" : "") + ". " +
+    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + (!hasRealImg ? " [thiếu ảnh người]" : (!hasRound ? " [chưa bo tròn → tối đa 1đ]" : (!altOk ? " [alt chưa đúng Image Ten]" : ""))) + ". " +
     "5. Màu tháng sinh (" + p4 + "/ 1,0 điểm). " +
     "6. Giao diện (" + ui + "/ 1,5 điểm). TỔNG: " + total + " điểm";
 
@@ -5009,8 +5055,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbyuZylL82vpmDqrxvblMNcelv_nyxd5ju6jbMwVHTqrfhbTrNWoVJePADkxOgBJjFYk/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbzk703rZGVT9QwCo9p1rNlmSXhjQJqnbfPQOx7hWTJuC3Yc18wbIV-YWUqORqMaN8ZB/exec"; }
 }
 
 
