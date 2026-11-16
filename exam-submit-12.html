@@ -762,9 +762,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1446,7 +1446,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2591,7 +2591,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2608,7 +2608,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2688,7 +2688,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3528,6 +3528,9 @@ if (_cancelExam) {
 
 
 <div id="screen-htmlintro" style="display:none;min-height:100vh;padding:20px 14px 40px;background:linear-gradient(135deg,#EEF2FF,#F0F9FF)">
+    <div id="htmlintro-deadline-static" style="margin:0 0 12px 0;padding:10px 12px;border-radius:10px;background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;font-size:.88rem;font-weight:600;text-align:center">
+      Hạn nộp bài: <b>7h00 ngày 22/11/2026</b> (theo LichThi). Sau thời điểm này hệ thống khóa chọn lớp và nộp bài.
+    </div>
   <div style="max-width:1100px;margin:0 auto 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
     <a href="https://webh2t.github.io/" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #C7D2FE;color:#1E3A8A;font-weight:700;text-decoration:none">🏠 Trang chủ</a>
     <button type="button" id="btn-htmlintro-back" style="padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #E2E8F0;color:#475569;font-weight:700;cursor:pointer">← Đổi bài</button>
@@ -3845,7 +3848,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
+    WH = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4202,7 +4205,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4551,6 +4554,18 @@ function initHtmlIntroUI() {
   if (!getHtmlIntroCode() || getHtmlIntroCode().length < 40) setHtmlIntroCode(HTMLINTRO_DEFAULT);
   setTimeout(function () { try { ensureHtmlIntroEditor(); runHtmlIntroPreview(); } catch (e) {} }, 120);
 
+  // Hạn nộp 7h00 22/11/2026 — khóa chọn lớp
+  if (typeof isHtmlIntroSubmitLocked_ === "function" && isHtmlIntroSubmitLocked_()) {
+    classSel.innerHTML = '<option value="">— Hết hạn nộp bài (7h00 22/11/2026) —</option>';
+    classSel.disabled = true;
+    if (stuSel) {
+      stuSel.innerHTML = '<option value="">— Hết hạn —</option>';
+      stuSel.disabled = true;
+    }
+    try { applyHtmlIntroDeadlineLock_(); } catch (eL) {}
+    var hintL = document.getElementById("htmlintro-hint");
+    if (hintL) hintL.textContent = typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Hết hạn nộp bài.";
+  } else {
   var classes = Object.keys(studentsByClass || {}).sort();
   classSel.innerHTML = '<option value="">-- Chon lop --</option>';
   var openCount = 0;
@@ -4573,6 +4588,7 @@ function initHtmlIntroUI() {
     o0.value = "";
     o0.textContent = "Khong co lop nao trong lich thi";
     classSel.appendChild(o0);
+  }
   }
   if (stuSel) {
     stuSel.innerHTML = '<option value="">-- Chon lop truoc --</option>';
@@ -4706,6 +4722,11 @@ function initHtmlIntroUI() {
         }
       } catch (eC) {}
       try {
+        if (typeof isHtmlIntroSubmitLocked_ === "function" && isHtmlIntroSubmitLocked_()) {
+          alert(typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Đã hết hạn nộp bài (7h00 22/11/2026).");
+          if (hint) hint.textContent = "Hết hạn nộp bài — không thể nộp.";
+          return;
+        }
         rec.html = code;
         enqueueHtmlIntroCloud_(rec);
         if (hint) hint.textContent = "Đã nộp: " + name + " · " + lop + " · Điểm: " + rec.score + "/10 · Đang gửi Sheet…";
@@ -4802,6 +4823,69 @@ function fillHtmlIntroPinFromStudent_() {
     pinEl.readOnly = true;
     pinEl.title = "PIN theo danh sách HocSinh (cột A)";
   } catch (e) {}
+}
+
+
+/** Hạn nộp Trang giới thiệu HTML: 7h00 ngày 22/11/2026 (giờ VN) */
+var HTMLINTRO_DEADLINE = new Date("2026-11-22T07:00:00+07:00");
+function isHtmlIntroSubmitLocked_() {
+  try { return Date.now() >= HTMLINTRO_DEADLINE.getTime(); } catch (e) { return false; }
+}
+function htmlIntroDeadlineText_() {
+  return "Đã hết hạn nộp bài: 7h00 ngày 22/11/2026 (theo lịch LichThi). Không thể chọn lớp / nộp bài.";
+}
+
+(function htmlIntroDeadlineBoot() {
+  function tick() {
+    try { applyHtmlIntroDeadlineLock_(); } catch (e) {}
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tick);
+  else tick();
+  setInterval(tick, 15000);
+  // khi mở màn hình htmlintro
+  var obs = new MutationObserver(tick);
+  try {
+    var root = document.getElementById("screen-htmlintro") || document.body;
+    obs.observe(root, { attributes: true, attributeFilter: ["style", "class"] });
+  } catch (e2) {}
+})();
+
+function applyHtmlIntroDeadlineLock_() {
+  var locked = isHtmlIntroSubmitLocked_();
+  var banner = document.getElementById("htmlintro-deadline-banner");
+  if (!banner) {
+    var root = document.getElementById("screen-htmlintro");
+    if (root) {
+      banner = document.createElement("div");
+      banner.id = "htmlintro-deadline-banner";
+      banner.style.cssText = "display:none;margin:0 0 12px 0;padding:12px 14px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;font-weight:700;font-size:.92rem;text-align:center";
+      root.insertBefore(banner, root.firstChild);
+    }
+  }
+  if (banner) {
+    if (locked) {
+      banner.style.display = "block";
+      banner.textContent = htmlIntroDeadlineText_();
+    } else {
+      banner.style.display = "none";
+    }
+  }
+  var ids = ["htmlintro-class", "htmlintro-student", "htmlintro-pin", "btn-htmlintro-submit", "btn-htmlintro-nop"];
+  ids.forEach(function (id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    if (locked) {
+      el.setAttribute("disabled", "disabled");
+      el.style.opacity = "0.55";
+      el.style.pointerEvents = "none";
+    }
+  });
+  // disable class select options message
+  var cls = document.getElementById("htmlintro-class");
+  if (cls && locked) {
+    cls.innerHTML = "<option value=\\"\\">— Hết hạn nộp (7h 22/11/2026) —</option>";
+  }
+  return locked;
 }
 
 function gradeHtmlIntroLocal_(source, name, lop) {
@@ -5040,7 +5124,7 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   var cssNote = "";
   if (hasCssCode) {
     if (total > 9) total = 9;
-    cssNote = " [code CSS chưa học — tối đa 9 điểm]";
+    cssNote = " [code CSS chưa học]";
   }
 
   var note =
@@ -5105,8 +5189,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbywCDhKj12-FnjlNQZZsPyUhklx3eOJirXJ-c-tSf050wh0C8O1QaDKWJC9XQdkbIs/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec"; }
 }
 
 
