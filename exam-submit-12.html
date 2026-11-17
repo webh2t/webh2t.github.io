@@ -3528,10 +3528,7 @@ if (_cancelExam) {
 
 
 <div id="screen-htmlintro" style="display:none;min-height:100vh;padding:20px 14px 40px;background:linear-gradient(135deg,#EEF2FF,#F0F9FF)">
-    <div id="htmlintro-deadline-static" style="margin:0 0 12px 0;padding:10px 12px;border-radius:10px;background:#FFF7ED;border:1px solid #FED7AA;color:#9A3412;font-size:.88rem;font-weight:600;text-align:center">
-      Hạn nộp bài: <b>7h00 ngày 22/11/2026</b> (theo LichThi). Sau thời điểm này hệ thống khóa chọn lớp và nộp bài.
-    </div>
-  <div style="max-width:1100px;margin:0 auto 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+<div style="max-width:1100px;margin:0 auto 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
     <a href="https://webh2t.github.io/" style="display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #C7D2FE;color:#1E3A8A;font-weight:700;text-decoration:none">🏠 Trang chủ</a>
     <button type="button" id="btn-htmlintro-back" style="padding:8px 14px;border-radius:999px;background:#fff;border:1px solid #E2E8F0;color:#475569;font-weight:700;cursor:pointer">← Đổi bài</button>
   </div>
@@ -4554,9 +4551,9 @@ function initHtmlIntroUI() {
   if (!getHtmlIntroCode() || getHtmlIntroCode().length < 40) setHtmlIntroCode(HTMLINTRO_DEFAULT);
   setTimeout(function () { try { ensureHtmlIntroEditor(); runHtmlIntroPreview(); } catch (e) {} }, 120);
 
-  // Hạn nộp 7h00 22/11/2026 — khóa chọn lớp
+  // Hạn nộp  — khóa chọn lớp
   if (typeof isHtmlIntroSubmitLocked_ === "function" && isHtmlIntroSubmitLocked_()) {
-    classSel.innerHTML = '<option value="">— Hết hạn nộp bài (7h00 22/11/2026) —</option>';
+    classSel.innerHTML = '<option value="">— Không mở nộp (LichThi) —</option>';
     classSel.disabled = true;
     if (stuSel) {
       stuSel.innerHTML = '<option value="">— Hết hạn —</option>';
@@ -4723,8 +4720,8 @@ function initHtmlIntroUI() {
       } catch (eC) {}
       try {
         if (typeof isHtmlIntroSubmitLocked_ === "function" && isHtmlIntroSubmitLocked_()) {
-          alert(typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Đã hết hạn nộp bài (7h00 22/11/2026).");
-          if (hint) hint.textContent = "Hết hạn nộp bài — không thể nộp.";
+          alert(typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Không thể nộp bài theo lịch LichThi.");
+          if (hint) hint.textContent = "Không thể nộp bài (LichThi).";
           return;
         }
         rec.html = code;
@@ -4826,50 +4823,19 @@ function fillHtmlIntroPinFromStudent_() {
 }
 
 
-/** Hạn nộp Trang giới thiệu HTML: 7h00 ngày 22/11/2026 (giờ VN) */
+/** Hạn nộp Trang giới thiệu HTML:  (giờ VN) */
 var HTMLINTRO_DEADLINE = new Date("2026-11-22T07:00:00+07:00");
 function isHtmlIntroSubmitLocked_() {
   try { return Date.now() >= HTMLINTRO_DEADLINE.getTime(); } catch (e) { return false; }
 }
 function htmlIntroDeadlineText_() {
-  return "Đã hết hạn nộp bài: 7h00 ngày 22/11/2026 (theo lịch LichThi). Không thể chọn lớp / nộp bài.";
+  return "Không thể chọn lớp / nộp bài (theo lịch LichThi).";
 }
-
-(function htmlIntroDeadlineBoot() {
-  function tick() {
-    try { applyHtmlIntroDeadlineLock_(); } catch (e) {}
-  }
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tick);
-  else tick();
-  setInterval(tick, 15000);
-  // khi mở màn hình htmlintro
-  var obs = new MutationObserver(tick);
-  try {
-    var root = document.getElementById("screen-htmlintro") || document.body;
-    obs.observe(root, { attributes: true, attributeFilter: ["style", "class"] });
-  } catch (e2) {}
-})();
 
 function applyHtmlIntroDeadlineLock_() {
   var locked = isHtmlIntroSubmitLocked_();
   var banner = document.getElementById("htmlintro-deadline-banner");
-  if (!banner) {
-    var root = document.getElementById("screen-htmlintro");
-    if (root) {
-      banner = document.createElement("div");
-      banner.id = "htmlintro-deadline-banner";
-      banner.style.cssText = "display:none;margin:0 0 12px 0;padding:12px 14px;border-radius:10px;background:#FEF2F2;border:1px solid #FECACA;color:#991B1B;font-weight:700;font-size:.92rem;text-align:center";
-      root.insertBefore(banner, root.firstChild);
-    }
-  }
-  if (banner) {
-    if (locked) {
-      banner.style.display = "block";
-      banner.textContent = htmlIntroDeadlineText_();
-    } else {
-      banner.style.display = "none";
-    }
-  }
+  if (banner) banner.style.display = "none";
   var ids = ["htmlintro-class", "htmlintro-student", "htmlintro-pin", "btn-htmlintro-submit", "btn-htmlintro-nop"];
   ids.forEach(function (id) {
     var el = document.getElementById(id);
@@ -4880,13 +4846,21 @@ function applyHtmlIntroDeadlineLock_() {
       el.style.pointerEvents = "none";
     }
   });
-  // disable class select options message
   var cls = document.getElementById("htmlintro-class");
   if (cls && locked) {
-    cls.innerHTML = '<option value="">— Hết hạn nộp (7h 22/11/2026) —</option>';
+    cls.innerHTML = '<option value="">— Không mở nộp (LichThi) —</option>';
   }
   return locked;
 }
+
+(function htmlIntroDeadlineBoot() {
+  function tick() {
+    try { applyHtmlIntroDeadlineLock_(); } catch (e) {}
+  }
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", tick);
+  else tick();
+  setInterval(tick, 30000);
+})();
 
 function gradeHtmlIntroLocal_(source, name, lop) {
   var src = String(source || "");
