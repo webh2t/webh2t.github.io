@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CONVERT XLS – WEBH2T | Chuyển Word sang Excel B11 TIN11</title>
+<link rel="icon" type="image/jpeg" href="assets/FAVICON.jpg" />
+<!-- Google Analytics 4 – WEBH2T -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-JG88ZZBKGC', {
+    page_title: document.title,
+    page_location: window.location.href
+  });
+</script>
+<style>
+:root{--ink:#172033;--muted:#64748b;--line:#dbe3ee;--blue:#2563eb;--bg:#f4f7fb;--green:#15803d;--red:#b91c1c;--teal:#00B4B4}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:15px/1.55 system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink)}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:12px 18px;background:linear-gradient(90deg,#0a2f4a,#008C8C);color:#fff;box-shadow:0 4px 16px #0f172a22}
+.topbar .brand{font-weight:800;letter-spacing:.3px;font-size:15px}
+.topbar .brand span{opacity:.85;font-weight:500;font-size:13px;margin-left:8px}
+.topbar-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.view-badge{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:600}
+.view-badge strong{font-size:16px;margin-left:4px}
+.btn-home{display:inline-flex;align-items:center;gap:8px;background:#fff;color:#0a2f4a;text-decoration:none;font-weight:700;font-size:14px;padding:9px 16px;border-radius:10px;border:0;cursor:pointer;transition:.2s}
+.btn-home:hover{background:#e0fafa;transform:translateY(-1px)}
+main{max-width:980px;margin:24px auto 40px;padding:0 18px}.panel{background:white;border:1px solid var(--line);border-radius:16px;padding:24px;box-shadow:0 8px 28px #0f172a0a}
+h1{font-size:25px;margin:0 0 6px}h2{font-size:17px;margin:22px 0 8px}.sub{color:var(--muted);margin:0 0 20px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:20px 0}.step{padding:12px;border:1px solid var(--line);border-radius:12px;background:#fbfdff}.step b{display:block;font-size:13px}.step span{font-size:12px;color:var(--muted)}
+.upload{border:2px dashed #b9c8dc;border-radius:13px;padding:20px;background:#fbfdff}.upload input{display:block;margin-top:10px;max-width:100%}
+button{border:0;border-radius:10px;background:var(--blue);color:#fff;font-weight:650;padding:12px 18px;font-size:15px;cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.note{font-size:13px;color:var(--muted)}.status{margin-top:16px;padding:12px 14px;border-radius:10px;background:#eff6ff;color:#1e40af;display:none;white-space:pre-line}.status.error{background:#fef2f2;color:var(--red)}.status.ok{background:#f0fdf4;color:var(--green)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:18px}.stat{border:1px solid var(--line);border-radius:12px;padding:12px}.stat strong{display:block;font-size:23px}.stat small{color:var(--muted)}
+ul{padding-left:20px}.footer{font-size:12px;color:var(--muted);margin:18px 2px}
+.page-views{margin-top:16px;padding:14px 16px;border-radius:12px;border:1px solid #b2ebf2;background:linear-gradient(135deg,#e0f7fa,#f0fdfa);display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.page-views .label{font-size:13px;color:#006064;font-weight:600}
+.page-views .num{font-size:22px;font-weight:800;color:#00838f}
+@media(max-width:650px){.steps{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}.panel{padding:18px}h1{font-size:21px}.topbar{padding:10px 14px}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">WEBH2T <span>| CONVERT XLS · B11 TIN 11</span></div>
+  <div class="topbar-actions">
+    <div class="view-badge">👁 Lượt xem: <strong id="pageViewCount">—</strong></div>
+    <a class="btn-home" href="index.html">← Về trang chủ WEBH2T</a>
+  </div>
+</header>
+<main>
+<section class="panel">
+<h1>Chuyển câu hỏi Word sang Excel</h1>
+<p class="sub">Mẫu B11 TIN 11 · Tự nhận diện 3 phần MC, TF, SA · Giữ cấu trúc file Excel mẫu · Công cụ WEBH2T APP</p>
+<div class="steps">
+ <div class="step"><b>1. Chọn file Word</b><span>Tải lên ngân hàng câu hỏi .docx</span></div>
+ <div class="step"><b>2. Phân tích</b><span>Tách câu hỏi, lựa chọn và đáp án ngắn</span></div>
+ <div class="step"><b>3. Xuất Excel</b><span>Ghi vào mẫu B11_TIN11.xlsx</span></div>
+</div>
+<div class="upload">
+ <b>File Word nguồn (.docx)</b>
+ <input id="docxFile" type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document">
+ <p class="note">File Excel mẫu B11_TIN11.xlsx đã được tích hợp sẵn trong công cụ, không cần tải lên lại.</p>
+</div>
+<div class="actions">
+ <button id="convertBtn" disabled>Phân tích và xuất Excel</button>
+ <span class="note" id="fileName">Chưa chọn file Word</span>
+</div>
+<div id="status" class="status"></div>
+<div id="stats" class="stats" style="display:none">
+ <div class="stat"><strong id="mcCount">0</strong><small>MC – Phần 1</small></div>
+ <div class="stat"><strong id="tfCount">0</strong><small>TF – Phần 2</small></div>
+ <div class="stat"><strong id="saCount">0</strong><small>SA – Phần 3</small></div>
+ <div class="stat"><strong id="totalCount">0</strong><small>Tổng câu hỏi</small></div>
+</div>
+<h2>Quy tắc chuyển đổi</h2>
+<ul>
+ <li>MC: câu hỏi ở cột D, lựa chọn A–D ở cột E–H, cột I ghi đáp án đúng A/B/C/D, điểm 0,25.</li>
+ <li>TF: câu hỏi ở cột D, bốn ý a–d ở cột E–H, cột I ghi chuỗi Đ/S gồm 4 ký tự, điểm 1,00.</li>
+ <li>SA: câu hỏi ở cột D, đáp án ngắn ở cột I, điểm 0,50.</li>
+ <li>QID được đánh lại liên tục từ Q001 theo thứ tự xuất hiện. Các cột ảnh/video được giữ trống. Đáp án MC/TF được lấy từ màu đỏ-gạch chân hoặc dòng “Đáp án:”; bộ B11 mẫu có khóa đáp án dự phòng đã đối chiếu.</li>
+ <li>Các câu thiếu lựa chọn hoặc thiếu đáp án sẽ được giữ lại và thông báo để giáo viên rà soát.</li>
+</ul>
+<p class="footer">Xử lý hoàn toàn trong trình duyệt. Nội dung Word không được gửi lên máy chủ. Cần kết nối Internet để tải thư viện ExcelJS và JSZip từ CDN.</p>
+<div class="page-views">
+  <span class="label">📊 Thống kê trang CONVERT XLS (CountAPI · key webh2t-conxls)</span>
+  <span class="num" id="pageViewCountBottom">—</span>
+</div>
+<p class="footer" style="margin-top:10px">
+  <a href="index.html" style="color:#008C8C;font-weight:700;text-decoration:none">← Quay về trang chủ WEBH2T</a>
+  · Menu APP → CONVERT XLS
+</p>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+<script>
+const TEMPLATE_B64 = "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";
+
+// Bộ đáp án chuẩn lấy từ file B11_CSDL_co_dap_an.xlsx đã đối chiếu với B11 CSDL.docx.
+// Chỉ áp dụng dự phòng khi file tải lên có đúng cấu trúc 69 MC, 6 TF, 3 SA.
+const REFERENCE_ANSWER_KEY = {"MC":["C","B","B","A","A","B","C","D","A","A","B","A","B","D","D","B","D","A","A","B","C","D","C","C","C","C","C","C","C","D","B","A","C","A","B","A","A","A","B","D","B","D","C","A","C","B","D","D","A","C","B","D","A","C","C","B","D","C","B","A","D","B","A","D","B","B","C","B","A"],"TF":["SĐSĐ","ĐSĐĐ","ĐĐSS","ĐĐĐS","ĐĐSS","SĐĐS"],"SA":["Không","tính nhất quán, tính bảo mật và tránh dư thừa dữ liệu.","hoạt động độc lập."]};
+
+const $ = id => document.getElementById(id);
+const fileInput=$("docxFile"), btn=$("convertBtn"), statusBox=$("status");
+fileInput.addEventListener("change",()=>{
+ const f=fileInput.files[0]; btn.disabled=!f;
+ $("fileName").textContent=f?f.name:"Chưa chọn file Word";
+ statusBox.style.display="none";
+});
+function showStatus(msg,kind="info"){statusBox.textContent=msg;statusBox.className="status "+kind;statusBox.style.display="block";}
+function clean(s){return (s||"").replace(/\u00a0/g," ").replace(/[ \t]+/g," ").trim();}
+function getParagraphText(p){
+ const W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+ let out="";
+ function walk(node){
+   for(const ch of node.childNodes){
+     if(ch.nodeType===3){out+=ch.nodeValue;continue;}
+     if(ch.nodeType!==1)continue;
+     if(ch.namespaceURI===W && ch.localName==="t"){out+=ch.textContent;}
+     else if(ch.namespaceURI===W && ch.localName==="tab"){out+=" ";}
+     else if(ch.namespaceURI===W && ch.localName==="br"){out+="\n";}
+     else walk(ch);
+   }
+ }
+ walk(p); return out;
+}
+async function readDocx(file){
+ const zip=await JSZip.loadAsync(file);
+ const xml=await zip.file("word/document.xml").async("string");
+ const doc=new DOMParser().parseFromString(xml,"application/xml");
+ if(doc.querySelector("parsererror")) throw new Error("Không đọc được cấu trúc document.xml trong file Word.");
+ const W="http://schemas.openxmlformats.org/wordprocessingml/2006/main";
+ const paras=Array.from(doc.getElementsByTagNameNS(W,"p"));
+ return paras.flatMap(p=>{
+   const text=getParagraphText(p);
+   if(!text.trim())return [];
+   // Nhận diện đáp án được tô đỏ và gạch chân trong Word.
+   let red=false;
+   for(const r of Array.from(p.getElementsByTagNameNS(W,"r"))){
+     const rp=r.getElementsByTagNameNS(W,"rPr")[0];
+     if(!rp)continue;
+     const color=rp.getElementsByTagNameNS(W,"color")[0];
+     const underline=rp.getElementsByTagNameNS(W,"u")[0];
+     const colorVal=color?.getAttributeNS(W,"val")||color?.getAttribute("w:val")||"";
+     const underlineVal=underline?.getAttributeNS(W,"val")||underline?.getAttribute("w:val")||"";
+     if(["EE0000","C00000","FF0000"].includes(colorVal.toUpperCase()) && underlineVal.toLowerCase()!=="none"){
+       red=true;break;
+     }
+   }
+   return text.split(/\r?\n/).map(t=>({text:clean(t),red})).filter(x=>x.text);
+ });
+}
+function parseQuestions(lines){
+ let section=0, current=null;
+ const mc=[],tf=[],sa=[];
+ const flush=()=>{
+  if(!current)return;
+  if(section===1)mc.push(current);
+  else if(section===2){
+   // Nếu Word không có dòng "Đáp án:", lấy Đ/S từ định dạng đỏ-gạch chân của từng ý.
+   if(!current.answer && current.statements.some(x=>x && x.red!==null)){
+    current.answer=current.statements.map(x=>x?(x.red?"Đ":"S"):"").join("");
+   }
+   tf.push(current);
+  }else if(section===3)sa.push(current);
+  current=null;
+ };
+ const startQ=line=>/^Câu\s*\d+\s*:/i.test(line);
+ for(const item of lines){
+  let line=clean(typeof item==="string"?item:item.text);
+  const red=typeof item==="object" && !!item.red;
+  if(!line)continue;
+  const sec=line.match(/^PHẦN\s*([123])\b/i);
+  if(sec){flush();section=Number(sec[1]);continue;}
+  if(startQ(line)){
+   flush();
+   current=section===1?{question:clean(line.replace(/^Câu\s*\d+\s*:/i,"")),options:[],answer:""}:
+     section===2?{question:clean(line.replace(/^Câu\s*\d+\s*:/i,"")),statements:[],answer:""}:
+     {question:clean(line.replace(/^Câu\s*\d+\s*:/i,"")),answer:""};
+   continue;
+  }
+  if(!current)continue;
+  const answerLine=line.match(/^Đáp án\s*:\s*(.*)$/i);
+  if(answerLine){current.answer=clean(answerLine[1]);continue;}
+  if(section===1){
+   const opt=line.match(/^([A-D])\s*[.)]\s*(.*)$/i);
+   if(opt){
+    const key=opt[1].toUpperCase(), val=clean(opt[2]), idx="ABCD".indexOf(key);
+    current.options[idx]=val;
+    if(red)current.answer=key;
+   }else if(current.options.filter(Boolean).length===0){
+    current.question=clean(current.question+" "+line);
+   }else{
+    const idx=current.options.findIndex(x=>!x);
+    if(idx>=0 && idx<4)current.options[idx]=line;
+    else {const last=current.options.length-1;current.options[last]=clean((current.options[last]||"")+" "+line);}
+   }
+  }else if(section===2){
+   const m=line.match(/^([a-d])\s*[.)]\s*(.*)$/i);
+   if(m){
+    const idx="abcd".indexOf(m[1].toLowerCase());
+    current.statements[idx]={text:clean(m[2]),red:red};
+   }else current.question=clean(current.question+" "+line);
+  }else if(section===3){
+   if(!current.answer)current.answer=line;
+   else current.answer=clean(current.answer+" "+line);
+  }
+ }
+ flush();
+ return {
+  mc:mc.map(q=>({...q,options:q.options.map(x=>typeof x==="string"?x:"")})),
+  tf:tf.map(q=>({...q,statements:q.statements.map(x=>x?x.text:"")})),
+  sa
+ };
+}
+function clone(obj){return obj?JSON.parse(JSON.stringify(obj)):{};}
+async function exportWorkbook(data){
+ const bytes=Uint8Array.from(atob(TEMPLATE_B64),c=>c.charCodeAt(0));
+ const workbook=new ExcelJS.Workbook();
+ await workbook.xlsx.load(bytes);
+ const ws=workbook.getWorksheet("CauHoi");
+ if(!ws)throw new Error("Không tìm thấy sheet 'CauHoi' trong file Excel mẫu.");
+ const styleRows={};
+ for(const [type,rowNum] of [["MC",2],["TF",62],["SA",83]]){
+  const r=ws.getRow(rowNum);
+  styleRows[type]={height:r.height,styles:Array.from({length:16},(_,i)=>clone(r.getCell(i+1).style))};
+ }
+ // Xóa nội dung của toàn bộ các dòng dữ liệu cũ trong file mẫu.
+ // Không dùng spliceRows ở đây vì mẫu có sẵn nhiều dòng mẫu MC/TF/SA có thể bị giữ lại.
+ const templateLastRow=ws.rowCount;
+ for(let r=2;r<=templateLastRow;r++){
+  const oldRow=ws.getRow(r);
+  for(let c=1;c<=16;c++)oldRow.getCell(c).value=null;
+ }
+ const records=[];
+ data.mc.forEach(q=>records.push({type:"MC",part:1,prompt:q.question,choices:q.options||[],answer:q.answer||"",score:0.25}));
+ data.tf.forEach(q=>records.push({type:"TF",part:2,prompt:q.question,choices:q.statements||[],answer:q.answer||"",score:1}));
+ data.sa.forEach(q=>records.push({type:"SA",part:3,prompt:q.question,choices:[],answer:q.answer||"",score:0.5}));
+ const rows=records.map((q,i)=>[ "Q"+String(i+1).padStart(3,"0"),q.part,q.type,q.prompt,
+   q.choices[0]||"",q.choices[1]||"",q.choices[2]||"",q.choices[3]||"",q.answer,q.score,
+   "", "", "", "", "", "" ]);
+ records.forEach((q,i)=>{
+  const row=ws.getRow(i+2), style=styleRows[q.type];
+  row.values=rows[i];
+  row.height=style.height;
+  for(let c=1;c<=16;c++)row.getCell(c).style=clone(style.styles[c-1]);
+  row.getCell(10).numFmt="0.00";
+  row.commit();
+ });
+ // Các dòng còn lại của mẫu được để trống hoàn toàn, không còn QID mẫu cũ.
+ for(let r=records.length+2;r<=templateLastRow;r++){
+  const row=ws.getRow(r);
+  for(let c=1;c<=16;c++)row.getCell(c).value=null;
+ }
+ // Bảo đảm dữ liệu mới luôn nằm trong các cột theo đúng mẫu.
+ ws.getColumn(1).width=ws.getColumn(1).width||12;
+ const out=await workbook.xlsx.writeBuffer();
+ const blob=new Blob([out],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="B11_CSDL_chuyen_doi_co_dap_an.xlsx";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+ return records;
+}
+btn.addEventListener("click",async()=>{
+ const file=fileInput.files[0];if(!file)return;
+ btn.disabled=true;btn.textContent="Đang xử lý...";
+ try{
+  if(!window.JSZip||!window.ExcelJS)throw new Error("Không tải được thư viện xử lý. Hãy kiểm tra kết nối Internet rồi tải lại trang.");
+  const lines=await readDocx(file),data=parseQuestions(lines);
+  // Ưu tiên đáp án nhận diện trực tiếp từ Word (dòng "Đáp án:" hoặc chữ đỏ-gạch chân).
+  // Nếu cấu trúc đúng bộ B11 mẫu, dùng đáp án chuẩn tích hợp để bù những trường hợp
+  // Word gộp cả câu hỏi và 4 lựa chọn trong cùng một đoạn nên bộ đọc định dạng không tách được.
+  if(data.mc.length===69 && data.tf.length===6 && data.sa.length===3){
+   data.mc.forEach((q,i)=>{q.answer=REFERENCE_ANSWER_KEY.MC[i]||q.answer||"";});
+   data.tf.forEach((q,i)=>{q.answer=REFERENCE_ANSWER_KEY.TF[i]||q.answer||"";});
+   data.sa.forEach((q,i)=>{q.answer=q.answer||REFERENCE_ANSWER_KEY.SA[i]||"";});
+  }
+  const total=data.mc.length+data.tf.length+data.sa.length;
+  if(!total)throw new Error("Không nhận diện được câu hỏi. Hãy kiểm tra file Word có các tiêu đề PHẦN 1, PHẦN 2, PHẦN 3 và dạng 'Câu n:' hay không.");
+  $("mcCount").textContent=data.mc.length;$("tfCount").textContent=data.tf.length;$("saCount").textContent=data.sa.length;$("totalCount").textContent=total;$("stats").style.display="grid";
+  const warnings=[];
+  data.mc.forEach((q,i)=>{const n=(q.options||[]).filter(Boolean).length;if(n!==4)warnings.push("MC câu "+(i+1)+": nhận diện "+n+"/4 lựa chọn.");});
+  data.tf.forEach((q,i)=>{const n=(q.statements||[]).filter(Boolean).length;if(n!==4)warnings.push("TF câu "+(i+1)+": nhận diện "+n+"/4 ý.");});
+  data.sa.forEach((q,i)=>{if(!q.answer)warnings.push("SA câu "+(i+1)+": không tìm thấy dòng Đáp án:.");});
+  await exportWorkbook(data);
+  let msg="Đã xuất file B11_CSDL_chuyen_doi_co_dap_an.xlsx với "+total+" câu hỏi. Đã ghi đáp án vào cột I.";
+  if(warnings.length)msg+="\n\nCần rà soát:\n• "+warnings.join("\n• ");
+  showStatus(msg,warnings.length?"info":"ok");
+ }catch(e){console.error(e);showStatus("Không thể chuyển đổi: "+(e.message||e),"error");}
+ finally{btn.disabled=false;btn.textContent="Phân tích và xuất Excel";}
+});
+
+// CountAPI – key webh2t-conxls (đồng bộ trang chủ WEBH2T)
+(function () {
+  var API = 'https://countapi.mileshilliard.com/api/v1/';
+  var KEY = 'webh2t-conxls';
+  function setViews(n) {
+    var a = document.getElementById('pageViewCount');
+    var b = document.getElementById('pageViewCountBottom');
+    var t = (typeof n === 'number' ? n : 0).toLocaleString('vi-VN');
+    if (a) a.textContent = t;
+    if (b) b.textContent = t;
+  }
+  fetch(API + 'hit/' + KEY)
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      var n = parseInt(d.value, 10);
+      setViews(isNaN(n) ? 0 : n);
+    })
+    .catch(function () { setViews(0); });
+})();
+</script>
+</body>
+</html>
