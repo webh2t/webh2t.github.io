@@ -18,22 +18,23 @@
 #screen-exam ::selection{background:transparent;color:inherit}
 #screen-exam ::-moz-selection{background:transparent;color:inherit}
 
-#screen-select{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;background:linear-gradient(135deg,#EEF2FF,#F0F9FF 50%,#F5F3FF)}
-.select-card{background:var(--card);border-radius:20px;box-shadow:0 20px 60px rgba(39,82,214,.15);padding:32px 40px;width:100%;max-width:640px}
+#screen-select{min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:28px 16px 48px;background:linear-gradient(160deg,#EEF2FF 0%,#F0F9FF 40%,#F5F3FF 100%);box-sizing:border-box}
+.select-card{background:var(--card);border-radius:24px;box-shadow:0 20px 60px rgba(39,82,214,.14),0 1px 3px rgba(0,0,0,.04);padding:28px 32px 32px;width:100%;max-width:580px;margin:0 auto;border:1px solid rgba(199,210,254,.5)}
 .select-card.admin-wide{max-width:1100px}
-.select-card h1{font-size:1.25rem;font-weight:800;color:var(--primary);margin-bottom:4px;text-align:center}
-.select-card .sub{text-align:center;color:var(--text-soft);font-size:.85rem;margin-bottom:16px}
-.top-nav{display:flex;gap:10px;justify-content:center;margin-bottom:18px;flex-wrap:wrap}
-.btn-nav-top{padding:10px 18px;border-radius:10px;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;gap:6px;transition:transform .15s}
-.btn-nav-top:hover{transform:translateY(-2px)}
+.select-card h1{font-size:1.35rem;font-weight:800;color:var(--primary);margin-bottom:6px;text-align:center;letter-spacing:-.01em}
+.select-card .sub{text-align:center;color:var(--text-soft);font-size:.88rem;margin-bottom:18px;line-height:1.45}
+.top-nav{display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.btn-nav-top{padding:10px 20px;border-radius:12px;font-weight:700;font-size:.9rem;display:inline-flex;align-items:center;gap:6px;transition:all .18s ease}
+.btn-nav-top:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(39,82,214,.15)}
 .btn-home{background:#EEF2FF;color:#2752D6;border:2px solid #C7D2FE}
-.btn-teacher{background:#FEF3C7;color:#92400E;border:2px solid #FCD34D}
+.btn-teacher{display:none!important}
 .field{margin-bottom:14px}.field label{display:flex;align-items:center;gap:7px;font-weight:600;font-size:.9rem;margin-bottom:6px}
 .field select,.field input[type=text],.field input[type=url]{width:100%;padding:12px 14px;border:2px solid var(--border);border-radius:10px;font-size:.95rem;background:#fff}
 .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%234A5568' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
 .field select:focus,.field input:focus{border-color:var(--primary);outline:none}
-.btn-start{width:100%;padding:14px;background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff;font-size:1.05rem;font-weight:700;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:8px;box-shadow:0 8px 24px rgba(39,82,214,.35)}
-.btn-start:disabled{opacity:.5;cursor:not-allowed}
+.btn-start{width:100%;padding:16px;background:linear-gradient(135deg,var(--primary),var(--purple));color:#fff;font-size:1.1rem;font-weight:800;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:12px;box-shadow:0 8px 28px rgba(39,82,214,.35);transition:transform .15s,box-shadow .15s,opacity .15s}
+.btn-start:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 12px 32px rgba(39,82,214,.4)}
+.btn-start:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:0 4px 12px rgba(39,82,214,.15)}
 .teacher-panel{display:none;margin-top:8px}
 .teacher-panel h3{font-size:1.05rem;color:var(--purple);margin-bottom:14px}
 .btn-t{padding:9px 14px;border-radius:8px;font-weight:600;font-size:.84rem;display:inline-flex;align-items:center;gap:5px}
@@ -158,7 +159,7 @@
 .tf-statement .stmt{font-size:1.05rem!important}
 .short-input{font-size:1.1rem!important;padding:14px!important}
 .q-badge{font-size:.85rem!important}
-.warning-once{background:#FEF2F2;border:2px solid #FECACA;color:#991B1B;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:.88rem;font-weight:600;line-height:1.45}
+.warning-once{background:linear-gradient(135deg,#FEF2F2,#FFF1F2);border:2px solid #FECACA;color:#991B1B;border-radius:14px;padding:14px 16px;margin-bottom:16px;font-size:.88rem;font-weight:600;line-height:1.5;box-shadow:0 2px 8px rgba(220,38,38,.06)}
 .schedule-box{background:#F0F9FF;border:1px solid #BAE6FD;border-radius:10px;padding:12px;margin:12px 0}
 .schedule-box h4{color:#0369A1;margin-bottom:8px;font-size:.92rem}
 .schedule-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;font-size:.85rem}
@@ -211,42 +212,48 @@
 .tf-statement .stmt img.opt-img{margin-top:6px}
 
 
-.exam-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0 8px}
+.exam-picker{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:18px 0 12px}
 @media(max-width:560px){.exam-picker{grid-template-columns:1fr}}
 .exam-btn{
-  display:flex;flex-direction:column;align-items:flex-start;gap:4px;
-  text-align:left;padding:16px 14px;border-radius:14px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:flex-start;gap:6px;
+  text-align:left;padding:18px 16px;border-radius:16px;cursor:pointer;
   border:2px solid #E2E8F0;background:#fff;
-  font-family:inherit;transition:.15s;box-shadow:0 2px 8px rgba(15,23,42,.04);
+  font-family:inherit;transition:all .2s ease;box-shadow:0 2px 10px rgba(15,23,42,.05);
+  position:relative;overflow:hidden;
 }
-.exam-btn:hover{border-color:#818CF8;background:#EEF2FF;transform:translateY(-1px)}
-.exam-btn.active{border-color:#4F46E5;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);box-shadow:0 4px 14px rgba(79,70,229,.15)}
-.exam-btn .eb-code{font-size:.72rem;font-weight:700;color:#6366F1;letter-spacing:.04em;text-transform:uppercase}
-.exam-btn .eb-title{font-size:1rem;font-weight:800;color:#1E293B;line-height:1.3}
-.exam-btn .eb-file{font-size:.75rem;color:#64748B}
+.exam-btn::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(180deg,#6366F1,#8B5CF6);opacity:0;transition:opacity .2s}
+.exam-btn:hover{border-color:#818CF8;background:#F8FAFF;transform:translateY(-3px);box-shadow:0 8px 24px rgba(99,102,241,.15)}
+.exam-btn:hover::before{opacity:1}
+.exam-btn.active{border-color:#4F46E5;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);box-shadow:0 6px 20px rgba(79,70,229,.18)}
+.exam-btn.active::before{opacity:1}
+.exam-btn .eb-code{font-size:.7rem;font-weight:700;color:#6366F1;letter-spacing:.06em;text-transform:uppercase;background:#EEF2FF;padding:3px 8px;border-radius:6px}
+.exam-btn .eb-title{font-size:1.02rem;font-weight:800;color:#1E293B;line-height:1.35}
 .exam-current{
   display:none;align-items:center;justify-content:space-between;gap:10px;
-  margin:0 0 12px;padding:10px 12px;border-radius:10px;
-  background:#EEF2FF;border:1px solid #C7D2FE;font-size:.9rem;color:#3730A3;font-weight:600;
+  margin:0 0 14px;padding:12px 14px;border-radius:12px;
+  background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:1px solid #C7D2FE;font-size:.92rem;color:#3730A3;font-weight:600;
 }
 .exam-current.visible{display:flex}
 .exam-current button{
-  border:none;background:#4F46E5;color:#fff;border-radius:8px;padding:6px 12px;
-  font-size:.8rem;font-weight:700;cursor:pointer;font-family:inherit;
+  border:none;background:linear-gradient(135deg,#4F46E5,#6366F1);color:#fff;border-radius:10px;padding:8px 14px;
+  font-size:.82rem;font-weight:700;cursor:pointer;font-family:inherit;transition:transform .15s,box-shadow .15s;
 }
+.exam-current button:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(79,70,229,.3)}
 
 
 .stats-bar{
-  margin:14px 0 4px;padding:12px 14px;border-radius:12px;
+  margin:16px 0 6px;padding:14px 16px;border-radius:14px;
   background:linear-gradient(135deg,#F8FAFC,#EEF2FF);border:1px solid #E2E8F0;
   font-size:.85rem;color:#334155;
 }
-.stats-bar .st-title{font-weight:800;color:#1E3A8A;margin-bottom:8px;font-size:.9rem}
+.stats-bar .st-title{font-weight:800;color:#1E3A8A;margin-bottom:10px;font-size:.92rem}
 .stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
 @media(max-width:640px){.stats-grid{grid-template-columns:repeat(2,1fr)}}
 .stat-chip{
-  background:#fff;border:1px solid #E2E8F0;border-radius:10px;padding:8px 10px;text-align:center;
+  background:#fff;border:1px solid #E2E8F0;border-radius:12px;padding:10px 8px;text-align:center;
+  transition:transform .15s,box-shadow .15s;
 }
+.stat-chip:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.06)}
 .stat-chip .n{display:block;font-size:1.15rem;font-weight:900;color:#4F46E5}
 .stat-chip .l{font-size:.72rem;color:#64748B;font-weight:600}
 .stat-chip.total .n{color:#0F766E}
@@ -344,14 +351,12 @@ window.addEventListener("error", function (ev) {
     <p class="sub" id="page-sub">Kết nối tri thức – Tin học ứng dụng · Chọn một bài kiểm tra bên dưới</p>
     <div class="top-nav">
       <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Trang chủ</a>
-      <button type="button" class="btn-nav-top btn-teacher" id="btn-teacher-link">👨‍🏫 Giáo viên</button>
     </div>
     <div class="load-bar" id="load-bar" style="display:none"></div>
 
-    
     <div class="warning-once" id="warn-once">
-      ⚠️ <b>Bài thi chỉ làm 1 lần. Thoát màn hình → lưu 0 điểm, không được làm lại.</b><br>
-      Chỉ hiện lớp đang trong khung giờ giáo viên quy định. Sau khi <b>Bắt đầu thi</b>: đóng tab / quay lại / gian lận mà không nộp bài = <b>0 điểm</b> và khóa tên.
+      ⚠️ <b>Bài thi chỉ làm 1 lần.</b> Thoát màn hình / đóng tab / gian lận → <b>0 điểm</b>, không được làm lại.<br>
+      Chỉ hiện lớp đang trong khung giờ được phép làm bài.
     </div>
 
     <div id="exam-picker" class="exam-picker" aria-label="Chọn bài kiểm tra"></div>
@@ -1269,7 +1274,7 @@ function exitAdminHint() {
 
 (function seedCloudDefaults() {
   var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
-  var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
+  var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1w4Xpif6fiFZFZQ2x9K5dx_SdHGlZYpmx4NVIL1Vx0F8/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url_tin11")) localStorage.setItem("webh2t_webhook_url_tin11", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
 })();
@@ -1304,7 +1309,7 @@ function exitAdminHint() {
       const btn = document.createElement("button");
       btn.type = "button";
       btn.className = "exam-btn" + (currentExam && currentExam.id === ex.id ? " active" : "");
-      btn.innerHTML = '<span class="eb-code">' + ex.code + '</span><span class="eb-title">' + ex.title + '</span><span class="eb-file">' + ex.file + '</span>';
+      btn.innerHTML = '<span class="eb-code">' + ex.code + '</span><span class="eb-title">' + ex.title + '</span>';
       btn.addEventListener("click", function () { selectExam(ex); });
       box.appendChild(btn);
     });
@@ -1421,24 +1426,47 @@ function exitAdminHint() {
   }, 30000);
 })();
 
-/* ----- Đăng nhập giáo viên ----- */
-document.getElementById("btn-teacher-link").addEventListener("click", function () {
-  document.getElementById("login-error").style.display = "none";
-  document.getElementById("login-id").value = "";
-  document.getElementById("login-pass").value = "";
-  document.getElementById("login-overlay").style.display = "flex";
-  setTimeout(() => document.getElementById("login-id").focus(), 100);
-});
-document.getElementById("btn-login-cancel").addEventListener("click", function () {
-  document.getElementById("login-overlay").style.display = "none";
-});
-document.getElementById("btn-login-submit").addEventListener("click", tryLogin);
-document.getElementById("login-pass").addEventListener("keydown", function (e) {
-  if (e.key === "Enter") tryLogin();
-});
-document.getElementById("login-id").addEventListener("keydown", function (e) {
-  if (e.key === "Enter") document.getElementById("login-pass").focus();
-});
+/* ----- Đăng nhập giáo viên (nút đã ẩn trên màn hình chính) ----- */
+(function () {
+  const btnTeacher = document.getElementById("btn-teacher-link");
+  if (btnTeacher) {
+    btnTeacher.addEventListener("click", function () {
+      const le = document.getElementById("login-error");
+      if (le) le.style.display = "none";
+      const lid = document.getElementById("login-id");
+      const lpass = document.getElementById("login-pass");
+      if (lid) lid.value = "";
+      if (lpass) lpass.value = "";
+      const overlay = document.getElementById("login-overlay");
+      if (overlay) overlay.style.display = "flex";
+      setTimeout(function () { if (lid) lid.focus(); }, 100);
+    });
+  }
+  const btnCancel = document.getElementById("btn-login-cancel");
+  if (btnCancel) {
+    btnCancel.addEventListener("click", function () {
+      const overlay = document.getElementById("login-overlay");
+      if (overlay) overlay.style.display = "none";
+    });
+  }
+  const btnSubmit = document.getElementById("btn-login-submit");
+  if (btnSubmit) btnSubmit.addEventListener("click", tryLogin);
+  const loginPass = document.getElementById("login-pass");
+  if (loginPass) {
+    loginPass.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") tryLogin();
+    });
+  }
+  const loginId = document.getElementById("login-id");
+  if (loginId) {
+    loginId.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        const p = document.getElementById("login-pass");
+        if (p) p.focus();
+      }
+    });
+  }
+})();
 function tryLogin() {
   const id = (document.getElementById("login-id")?.value || "").trim();
   const pass = document.getElementById("login-pass")?.value || "";
@@ -2386,7 +2414,7 @@ const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
   const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
-  const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
+  const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1w4Xpif6fiFZFZQ2x9K5dx_SdHGlZYpmx4NVIL1Vx0F8/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
   const w = document.getElementById("cloud-webhook");
@@ -2483,7 +2511,7 @@ function pushScoreToCloud(record) {
 
 async function pullScoresFromCloud() {
   const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
-  const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
+  const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1w4Xpif6fiFZFZQ2x9K5dx_SdHGlZYpmx4NVIL1Vx0F8/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url_tin11") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
 
