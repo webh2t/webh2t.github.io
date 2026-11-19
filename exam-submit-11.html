@@ -63,15 +63,19 @@
 .class-stat-list .nums{white-space:nowrap;font-weight:600;color:var(--text-soft);min-width:110px;text-align:right}
 
 #screen-exam{display:none;min-height:100vh;flex-direction:column}
-.exam-header{background:linear-gradient(90deg,#1a2a6c,#2752D6,#6C5CE7);color:#fff;padding:12px 18px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;position:sticky;top:0;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.2)}
-.exam-header .title{font-weight:700;font-size:.9rem;line-height:1.35;justify-self:start}
-.exam-header .student-info{font-size:.95rem;font-weight:700;background:rgba(255,255,255,.2);padding:10px 16px;border-radius:12px;justify-self:end;text-align:right;max-width:100%}
-.timer-box{justify-self:center;background:linear-gradient(135deg,#DC2626,#B91C1C)!important;color:#fff!important;padding:12px 28px!important;border-radius:14px!important;font-size:1.75rem!important;font-weight:900!important;letter-spacing:.04em;box-shadow:0 4px 20px rgba(220,38,38,.55)!important;border:3px solid #FECACA!important;min-width:140px;text-align:center}
-.timer-box .timer-icon{font-size:1.4rem;margin-right:6px}
+.exam-header{background:linear-gradient(90deg,#1a2a6c,#2752D6,#6C5CE7);color:#fff;padding:10px 16px;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px;position:sticky;top:0;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,.2)}
+.exam-header .title{font-weight:700;font-size:.88rem;line-height:1.35;justify-self:start}
+.exam-header .title #exam-title-sub{font-weight:500;font-size:.78rem;opacity:.9}
+.exam-header .student-info{font-size:.9rem;font-weight:700;background:rgba(255,255,255,.2);padding:8px 14px;border-radius:12px;justify-self:end;text-align:right;max-width:100%}
+.header-center{justify-self:center;display:flex;align-items:center;gap:12px}
+.timer-box{background:linear-gradient(135deg,#DC2626,#B91C1C)!important;color:#fff!important;padding:10px 22px!important;border-radius:50px!important;font-size:1.5rem!important;font-weight:900!important;letter-spacing:.04em;box-shadow:0 4px 20px rgba(220,38,38,.55)!important;border:3px solid #FECACA!important;min-width:120px;text-align:center;display:flex;align-items:center;gap:6px;justify-content:center}
+.timer-box .timer-icon{font-size:1.25rem}
 .timer-box.critical,#timer.critical{animation:timerBlink .5s infinite;background:linear-gradient(135deg,#FF0000,#7F1D1D)!important;transform:scale(1.05)}
 @keyframes timerBlink{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,0,0,.6)}50%{opacity:.85;box-shadow:0 0 20px 4px rgba(255,0,0,.5)}}
-@media(max-width:700px){.exam-header{grid-template-columns:1fr;text-align:center}.exam-header .title,.exam-header .student-info{justify-self:center;text-align:center}}
-.timer-box{background:linear-gradient(135deg,#FF6B35,#E74C3C);color:#fff;padding:7px 16px;border-radius:50px;font-weight:800;font-size:1.15rem;display:flex;align-items:center;gap:6px;min-width:95px;justify-content:center}
+.btn-header-submit{background:rgba(255,255,255,.18);color:#fff;border:2px solid rgba(255,255,255,.55);padding:10px 20px;border-radius:50px;font-weight:800;font-size:.95rem;letter-spacing:.02em;cursor:pointer;transition:all .2s ease;backdrop-filter:blur(6px);white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+.btn-header-submit:hover{background:rgba(255,255,255,.32);border-color:#fff;transform:translateY(-1px);box-shadow:0 4px 16px rgba(0,0,0,.25)}
+.btn-header-submit:active{transform:scale(.97)}
+@media(max-width:800px){.exam-header{grid-template-columns:1fr;text-align:center;gap:8px}.exam-header .title,.exam-header .student-info,.header-center{justify-self:center;text-align:center}.btn-header-submit{padding:8px 16px;font-size:.85rem}}
 .timer-box.warning{animation:pulse .8s infinite}
 .timer-box.critical{background:linear-gradient(135deg,#DC2626,#7F1D1D)!important;animation:blink-red .4s infinite;box-shadow:0 0 20px rgba(220,38,38,.8)}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
@@ -79,21 +83,23 @@
 
 .anti-cheat-bar{background:#FEF3C7;color:#92400E;padding:7px 18px;font-size:.82rem;font-weight:600;text-align:center;border-bottom:2px solid #F59E0B}
 .exam-body{display:flex;flex:1;max-width:1600px;margin:0 auto;width:100%;padding:8px 10px 12px 6px;gap:10px}
-.sidebar{width:200px;flex-shrink:0;background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:10px 8px;margin-left:0;height:fit-content;position:sticky;top:95px;border:1px solid #E8EEF7}
-.sidebar h3{font-size:.78rem;font-weight:700;color:#5B4BCC;margin:12px 0 8px;padding:0 2px;letter-spacing:.02em}.sidebar h3:first-child{margin-top:0}
-.q-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:4px}.q-grid.tf-grid{grid-template-columns:1fr;gap:8px}.q-grid.sa-grid{grid-template-columns:repeat(2,1fr);gap:8px}
-.q-btn{width:100%;min-height:44px;border-radius:10px;font-weight:700;font-size:.8rem;line-height:1.25;padding:8px 6px;background:#EEF3FF;color:#3B5BDB;border:1.5px solid #C5D4F7;cursor:pointer;transition:all .15s;text-align:center}
+.sidebar{width:210px;flex-shrink:0;background:var(--card);border-radius:12px;box-shadow:var(--shadow);padding:8px 6px;margin-left:0;height:fit-content;position:sticky;top:90px;border:1px solid #E8EEF7;max-height:calc(100vh - 110px);overflow-y:auto}
+.sidebar h3{font-size:.72rem;font-weight:700;color:#5B4BCC;margin:8px 0 5px;padding:0 2px;letter-spacing:.02em}.sidebar h3:first-child{margin-top:2px}
+.q-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:2px}
+.q-grid.tf-grid{grid-template-columns:repeat(3,1fr);gap:5px}
+.q-grid.sa-grid{grid-template-columns:repeat(2,1fr);gap:5px}
+.q-btn{width:100%;min-height:32px;border-radius:8px;font-weight:700;font-size:.75rem;line-height:1.2;padding:5px 3px;background:#EEF3FF;color:#3B5BDB;border:1.5px solid #C5D4F7;cursor:pointer;transition:all .15s;text-align:center}
 .q-btn:hover{background:#E0EAFF;border-color:#93B4F5}
 .q-btn.answered{background:#E8F0FE;border-color:#7BA3F0;color:#1E3A8A}
-.q-btn.current{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;border-color:#16A34A;box-shadow:0 4px 12px rgba(22,163,74,.35)}
-.q-btn .ans-main{display:block;font-size:.85rem;font-weight:800;letter-spacing:.02em}
-.q-btn .ans-sub{display:block;font-size:.68rem;font-weight:600;opacity:.95;margin-top:3px;line-height:1.3;word-break:break-word}
-.q-btn.tf-btn-side{min-height:56px;padding:8px 10px;text-align:left}
-.q-btn.tf-btn-side .ans-main{font-size:.9rem}
-.q-btn.tf-btn-side .tf-row{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;margin-top:4px}
-.q-btn.tf-btn-side .tf-cell{font-size:.72rem;font-weight:700;color:#1D4ED8;background:rgba(255,255,255,.55);border-radius:4px;padding:2px 4px}
+.q-btn.current{background:linear-gradient(135deg,#22C55E,#16A34A);color:#fff;border-color:#16A34A;box-shadow:0 3px 10px rgba(22,163,74,.3)}
+.q-btn .ans-main{display:block;font-size:.78rem;font-weight:800;letter-spacing:.01em}
+.q-btn .ans-sub{display:block;font-size:.62rem;font-weight:600;opacity:.95;margin-top:1px;line-height:1.2;word-break:break-word}
+.q-btn.tf-btn-side{min-height:38px;padding:5px 6px;text-align:left}
+.q-btn.tf-btn-side .ans-main{font-size:.8rem}
+.q-btn.tf-btn-side .tf-row{display:grid;grid-template-columns:1fr 1fr;gap:1px 4px;margin-top:2px}
+.q-btn.tf-btn-side .tf-cell{font-size:.65rem;font-weight:700;color:#1D4ED8;background:rgba(255,255,255,.55);border-radius:3px;padding:1px 3px}
 .q-btn.current .tf-cell{color:#fff;background:rgba(255,255,255,.2)}
-.q-btn.sa-btn-side .ans-sub{font-size:.75rem;font-style:italic}
+.q-btn.sa-btn-side .ans-sub{font-size:.68rem;font-style:italic}
 
 
 .question-area{flex:1;background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px 22px;min-height:460px;display:flex;flex-direction:column}
@@ -526,16 +532,19 @@ window.addEventListener("error", function (ev) {
 
 <div id="screen-exam" class="no-select">
   <div class="exam-header">
-    <div class="title">Kiểm tra thường xuyên – Tin học 11<br><span style="font-weight:500;font-size:.8rem;opacity:.9">Bài 4: Giao thức mạng</span></div>
-    <div class="timer-box" id="timer"><span class="timer-icon">⏱️</span> <span id="timer-text">15:00</span></div>
+    <div class="title">Kiểm tra thường xuyên – Tin học 11<br><span id="exam-title-sub">—</span></div>
+    <div class="header-center">
+      <div class="timer-box" id="timer"><span class="timer-icon">⏱️</span> <span id="timer-text">15:00</span></div>
+      <button type="button" class="btn-header-submit" id="btn-header-submit" title="Nộp bài ngay">🚀 Nộp bài</button>
+    </div>
     <div class="student-info" id="exam-student-info">Họ tên: — · Lớp: —</div>
   </div>
   <div class="anti-cheat-bar">⚠️ Bài thi chỉ làm 1 lần. Thoát / Reload / đóng tab → lưu 0 điểm, không được làm lại. Cấm copy · đổi tab · F5 · Ctrl+R.</div>
   <div class="exam-body">
     <aside class="sidebar">
-      <h3>Phần 1: Trắc nghiệm <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(6đ · 24×0,25)</span></h3><div class="q-grid" id="q-grid-p1"></div>
-      <h3>Phần 2: Đúng – Sai <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(3đ · 3×1)</span></h3><div class="q-grid" id="q-grid-p2"></div>
-      <h3>Phần 3: Trả lời ngắn <span style="font-weight:600;color:#1D4ED8;font-size:.8rem">(1đ · 2×0,5)</span></h3><div class="q-grid" id="q-grid-p3"></div>
+      <h3>Phần 1: Trắc nghiệm <span style="font-weight:600;color:#1D4ED8;font-size:.72rem">(6đ · 24×0,25)</span></h3><div class="q-grid" id="q-grid-p1"></div>
+      <h3>Phần 2: Đúng – Sai <span style="font-weight:600;color:#1D4ED8;font-size:.72rem">(3đ · 3×1)</span></h3><div class="q-grid" id="q-grid-p2"></div>
+      <h3>Phần 3: Trả lời ngắn <span style="font-weight:600;color:#1D4ED8;font-size:.72rem">(1đ · 2×0,5)</span></h3><div class="q-grid" id="q-grid-p3"></div>
     </aside>
     <main class="question-area" id="question-area"></main>
   </div>
@@ -557,7 +566,7 @@ window.addEventListener("error", function (ev) {
       <div id="res-parts" style="background:#F8FAFC;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:.88rem;line-height:1.55;border:1px solid #E2E8F0">
         <div style="font-weight:800;color:#1E3A8A;margin-bottom:6px">Điểm theo phần</div>
         <div>Phần 1 – Trắc nghiệm (24×0,25): <b id="res-p1">0</b> / 6</div>
-        <div>Phần 2 – Đúng/Sai (3 câu × 4 ý × 0,25): <b id="res-p2">0</b> / 3</div>
+        <div>Phần 2 – Đúng/Sai (1ý=0,1 · 2ý=0,25 · 3ý=0,5 · 4ý=1): <b id="res-p2">0</b> / 3</div>
         <div>Phần 3 – Trả lời ngắn (2×0,5): <b id="res-p3">0</b> / 1</div>
         <div style="margin-top:6px;font-weight:800;color:#1D4ED8">Tổng = Phần1 + Phần2 + Phần3</div>
       </div>
@@ -1830,10 +1839,22 @@ function startExam() {
   if (activeQuestions.length < 3) { alert("Ngân hàng câu hỏi chưa đủ."); return; }
   document.getElementById("screen-select").style.display = "none";
   document.getElementById("screen-exam").style.display = "flex";
+  // Cập nhật tiêu đề bài thi đúng với bài đã chọn
+  const titleSub = document.getElementById("exam-title-sub");
+  if (titleSub) {
+    titleSub.textContent = (currentExam && currentExam.title) ? currentExam.title : "—";
+  }
   document.getElementById("exam-student-info").textContent = "Họ tên: " + selectedStudent + " · Lớp: " + selectedClass + (window._currentMaDe ? " · Mã đề: " + window._currentMaDe : "");
   answers = {}; currentQ = 0; examCancelled = false;
   buildSidebar(); renderQuestion(0); startTimer(); startTime = Date.now();
   enableAntiCheat();
+  // Nút Nộp bài trên header
+  const btnHeaderSubmit = document.getElementById("btn-header-submit");
+  if (btnHeaderSubmit) {
+    btnHeaderSubmit.onclick = function () {
+      if (confirm("Bạn chắc chắn muốn nộp bài?")) submitExam(false);
+    };
+  }
   // Toàn màn hình (giảm thao tác đóng tab); HS có thể thoát fullscreen nhưng vẫn bị beforeunload
   try {
     const el = document.documentElement;
@@ -2125,16 +2146,20 @@ async function submitExam(auto) {
       else { wrongCount++; mcWrong++; }
       scoreP1 += score;
     } else if (q.type === "tf") {
-      // Phần 2: mỗi ý đúng = 0.25 (3 câu × 4 ý → 3đ)
+      // Phần 2: đúng 1 ý = 0.1; 2 ý = 0.25; 3 ý = 0.5; 4 ý = 1.0 (mỗi câu tối đa 1đ, 3 câu → 3đ)
       const ans = answers[key] || [null, null, null, null];
-      let partial = 0, answered = 0, rightSt = 0, wrongSt = 0;
+      let rightSt = 0, wrongSt = 0, answered = 0;
       (q.statements || []).forEach((s, i) => {
         if (ans[i] == null) return;
         answered++;
-        if (ans[i] === s.correct) { partial += 0.25; rightSt++; }
+        if (ans[i] === s.correct) rightSt++;
         else wrongSt++;
       });
-      score = partial;
+      if (rightSt === 0) score = 0;
+      else if (rightSt === 1) score = 0.1;
+      else if (rightSt === 2) score = 0.25;
+      else if (rightSt === 3) score = 0.5;
+      else score = 1.0; // 4 ý đúng
       correctCount += rightSt;
       wrongCount += wrongSt;
       if (answered === 0) skipCount += 4;
@@ -2164,9 +2189,13 @@ async function submitExam(auto) {
     }
     if (q.type === "tf") {
       const ans = answers[key] || [null, null, null, null];
-      let p = 0;
-      (q.statements || []).forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) p += 0.25; });
-      return Math.round(p * 100) / 100;
+      let rightSt = 0;
+      (q.statements || []).forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) rightSt++; });
+      if (rightSt === 0) return 0;
+      if (rightSt === 1) return 0.1;
+      if (rightSt === 2) return 0.25;
+      if (rightSt === 3) return 0.5;
+      return 1.0;
     }
     const user = (answers[key] || "").trim().toLowerCase();
     if (!user) return 0;
@@ -2202,9 +2231,13 @@ async function submitExam(auto) {
       const ans = answers[key] || [null, null, null, null];
       userShow = ans.map((v, i) => ["a","b","c","d"][i] + "." + (v === true ? "Đ" : v === false ? "S" : "-")).join(" ");
       correctShow = q.statements.map((s, i) => ["a","b","c","d"][i] + "." + (s.correct ? "Đ" : "S")).join(" ");
-      let partial = 0;
-      q.statements.forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) partial += 0.25; });
-      pts = partial;
+      let rightSt = 0;
+      q.statements.forEach((s, i) => { if (ans[i] != null && ans[i] === s.correct) rightSt++; });
+      if (rightSt === 0) pts = 0;
+      else if (rightSt === 1) pts = 0.1;
+      else if (rightSt === 2) pts = 0.25;
+      else if (rightSt === 3) pts = 0.5;
+      else pts = 1.0;
       ok = pts >= maxPts;
     } else {
       maxPts = 0.5;
@@ -2306,6 +2339,13 @@ async function submitExam(auto) {
 function renderResultBreakdown(reviewList, partScores, totalScore) {
   const box = document.getElementById("res-breakdown");
   if (!box) return;
+  // Chỉ hiện bảng chi tiết câu hỏi + đáp án khi đạt điểm tuyệt đối 10/10
+  if (Number(totalScore) < 10) {
+    box.innerHTML = '<div style="padding:16px 14px;text-align:center;color:#64748B;font-size:.9rem;line-height:1.5">' +
+      '<p style="margin:0 0 6px;font-weight:700;color:#475569">📋 Bảng chi tiết câu hỏi & đáp án</p>' +
+      '<p style="margin:0">Chỉ hiển thị khi bạn đạt <b style="color:#16A34A">10/10</b>. Hãy cố gắng lần sau nhé!</p></div>';
+    return;
+  }
   if (!reviewList || !reviewList.length) {
     box.innerHTML = "<p style=\"padding:10px;color:#888;font-size:.85rem\">Không có bảng chi tiết câu.</p>";
     return;
@@ -2960,7 +3000,7 @@ function buildReviewFromPattern_(pattern) {
     const labels = ["a", "b", "c", "d"];
     let lines = [], text = "Câu " + id;
     let pts = (detailPts && detailPts[12 + ti] != null) ? detailPts[12 + ti] : null;
-    let calcPts = 0;
+    let rightCount = 0;
     if (q && q.statements) {
       text = q.text || text;
       q.statements.forEach(function (st, si) {
@@ -2968,7 +3008,7 @@ function buildReviewFromPattern_(pattern) {
         const userBool = ch === "Đ" ? true : ch === "S" ? false : null;
         const cor = !!st.correct;
         const ok = userBool !== null && userBool === cor;
-        if (ok) calcPts += 0.25;
+        if (ok) rightCount++;
         lines.push({ label: labels[si], text: st.text || "", user: userBool, correct: cor, ok: ok });
       });
     } else {
@@ -2978,7 +3018,13 @@ function buildReviewFromPattern_(pattern) {
         lines.push({ label: lb, text: "", user: userBool, correct: null, ok: false });
       });
     }
-    if (pts == null) pts = calcPts;
+    if (pts == null) {
+      if (rightCount === 0) pts = 0;
+      else if (rightCount === 1) pts = 0.1;
+      else if (rightCount === 2) pts = 0.25;
+      else if (rightCount === 3) pts = 0.5;
+      else pts = 1.0;
+    }
     rev.push({
       id: id, type: "tf", text: text, lines: lines,
       user: lines.map(function (ln) { return ln.label + "." + (ln.user === true ? "Đ" : ln.user === false ? "S" : "—"); }).join(" "),
