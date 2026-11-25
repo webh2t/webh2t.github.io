@@ -361,7 +361,7 @@ window.addEventListener("error", function (ev) {
     <div class="load-bar" id="load-bar" style="display:none"></div>
 
     <div class="warning-once" id="warn-once">
-      ⚠️ <b>Bài thi chỉ làm 1 lần.</b> Thoát màn hình / đóng tab / gian lận → <b>0 điểm</b>, không được làm lại.<br>
+      ⚠️ Thoát màn hình / đóng tab / gian lận khi đang làm → <b>0 điểm</b> cho lần đó.<br>
       Chỉ hiện lớp đang trong khung giờ được phép làm bài.
     </div>
 
@@ -539,7 +539,7 @@ window.addEventListener("error", function (ev) {
     </div>
     <div class="student-info" id="exam-student-info">Họ tên: — · Lớp: —</div>
   </div>
-  <div class="anti-cheat-bar">⚠️ Bài thi chỉ làm 1 lần. Thoát / Reload / đóng tab → lưu 0 điểm, không được làm lại. Cấm copy · đổi tab · F5 · Ctrl+R.</div>
+  <div class="anti-cheat-bar">⚠️ Thoát / Reload / đóng tab khi đang làm → lưu 0 điểm cho lần đó. Cấm copy · đổi tab · F5 · Ctrl+R.</div>
   <div class="exam-body">
     <aside class="sidebar">
       <h3>Phần 1: Trắc nghiệm <span style="font-weight:600;color:#1D4ED8;font-size:.72rem">(6đ · 24×0,25)</span></h3><div class="q-grid" id="q-grid-p1"></div>
@@ -571,6 +571,35 @@ window.addEventListener("error", function (ev) {
         <div style="margin-top:6px;font-weight:800;color:#1D4ED8">Tổng = Phần1 + Phần2 + Phần3</div>
       </div>
       <div id="res-breakdown" style="margin-bottom:14px;max-height:320px;overflow:auto;border:1px solid #E2E8F0;border-radius:10px"></div>
+
+      <!-- Bảng điểm tổng hợp -->
+      <div id="public-scoreboard" style="margin-top:20px;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;background:#fff">
+        <div style="padding:12px 14px;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+          <h3 style="margin:0;font-size:1rem;font-weight:800;color:#1E3A8A">📊 Bảng điểm tổng hợp</h3>
+          <div style="display:flex;align-items:center;gap:8px">
+            <label style="font-size:.85rem;font-weight:600;color:#475569">Lọc lớp:</label>
+            <select id="sb-filter-class" style="padding:6px 10px;border:1px solid #CBD5E1;border-radius:8px;font-size:.85rem;font-family:inherit">
+              <option value="">Tất cả</option>
+            </select>
+          </div>
+        </div>
+        <div style="overflow:auto;max-height:320px">
+          <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+            <thead>
+              <tr style="background:#F8FAFC;position:sticky;top:0">
+                <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Thời gian nộp</th>
+                <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Lớp</th>
+                <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Họ và tên</th>
+                <th style="padding:10px 8px;text-align:center;color:#1E3A8A;font-weight:700">Tổng điểm</th>
+              </tr>
+            </thead>
+            <tbody id="sb-tbody">
+              <tr><td colspan="4" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <p class="result-note">Cảm ơn bạn đã hoàn thành bài kiểm tra thường xuyên môn Tin học 11!</p>
       <div style="text-align:center;margin-top:16px">
         <a class="btn-nav-top btn-home" href="https://webh2t.github.io/">🏠 Về trang chủ</a>
@@ -622,7 +651,8 @@ window.addEventListener("error", function (ev) {
 
 <script>
 const EXAM_MINUTES = 15;
-const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
+const MAX_ATTEMPTS = 2; // HS được làm tối đa 2 lần, lấy điểm cao nhất
+const STORAGE_KEY_BASE = "webh2t_kttx_tin11";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_tin11_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi_tin11";
@@ -637,6 +667,42 @@ const EXAMS = [
 let currentExam = null;
 const DEFAULT_DATA_URL = DATA_BASE + "B5KETNOIMT_TIN11.xlsx";
 // cache-bust khi tải
+
+/** Key lưu điểm theo từng bài */
+function getStorageKey() {
+  return STORAGE_KEY_BASE + "_" + (currentExam ? currentExam.id : "default");
+}
+/** Chuẩn hóa câu trả lời ngắn: không phân biệt hoa/thường, bỏ dấu tiếng Việt */
+function normalizeAnswer(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+/** Đếm số lần đã nộp của 1 HS */
+function getAttemptCount(cls, name) {
+  try {
+    const list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
+    return list.filter(function (r) { return r.class === cls && r.name === name; }).length;
+  } catch (e) { return 0; }
+}
+/** Lấy điểm cao nhất đã có của HS (null nếu chưa làm) */
+function getBestScore(cls, name) {
+  try {
+    const list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
+    let best = null;
+    list.forEach(function (r) {
+      if (r.class === cls && r.name === name) {
+        const s = Number(r.score);
+        if (!isNaN(s) && (best === null || s > best)) best = s;
+      }
+    });
+    return best;
+  } catch (e) { return null; }
+}
 
 let studentsByClass = {};
 let questionBank = { part1: [], part2: [], part3: [] };
@@ -658,8 +724,24 @@ const loadBar = document.getElementById("load-bar");
 function getTakenMap() {
   const map = {};
   try {
-    JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]").forEach(r => {
-      map[r.class + "|" + r.name] = r.score;
+    // map[class|name] = điểm cao nhất
+    const list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
+    list.forEach(r => {
+      const k = r.class + "|" + r.name;
+      const s = Number(r.score);
+      if (isNaN(s)) return;
+      if (map[k] === undefined || s > map[k]) map[k] = s;
+    });
+  } catch (e) {}
+  return map;
+}
+/** map[class|name] = số lần đã nộp */
+function getAttemptMap() {
+  const map = {};
+  try {
+    JSON.parse(localStorage.getItem(getStorageKey()) || "[]").forEach(r => {
+      const k = r.class + "|" + r.name;
+      map[k] = (map[k] || 0) + 1;
     });
   } catch (e) {}
   return map;
@@ -668,7 +750,7 @@ function getTakenMap() {
 function renderScoreTable() {
   const tbody = document.getElementById("score-tbody");
   if (!tbody) return;
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
   if (!list.length) {
     tbody.innerHTML = '<tr><td colspan="10" style="padding:16px;color:#888">Chưa có dữ liệu điểm</td></tr>';
   } else {
@@ -772,19 +854,17 @@ classSelect.addEventListener("change", function () {
   const cls = this.value;
   studentSelect.innerHTML = '<option value="">-- Chọn học sinh --</option>';
   if (cls && studentsByClass[cls]) {
-    const takenMap = getTakenMap();
+    const attemptMap = getAttemptMap();
     studentsByClass[cls].forEach(s => {
       const opt = document.createElement("option");
       opt.value = s.name;
-      const already = (s.score !== "" && s.score != null) || takenMap[cls + "|" + s.name];
-      const openMode = (typeof isClassAlwaysOpen === "function" && isClassAlwaysOpen(cls));
-      if (openMode) {
-        opt.textContent = already ? (s.name + " (đã làm — làm lại được)") : s.name;
-        opt.disabled = false;
-        opt.style.color = already ? "#166534" : "";
-      } else {
-        opt.textContent = s.name + (already ? " (đã hoàn thành)" : "");
-        if (already) { opt.disabled = true; opt.style.color = "#94A3B8"; }
+      const attempts = attemptMap[cls + "|" + s.name] || 0;
+      // Không hiện thông báo số lần làm trên màn hình chính
+      opt.textContent = s.name;
+      // Chỉ khóa khi đã làm đủ MAX_ATTEMPTS lần
+      if (attempts >= MAX_ATTEMPTS) {
+        opt.disabled = true;
+        opt.style.color = "#94A3B8";
       }
       studentSelect.appendChild(opt);
     });
@@ -1498,7 +1578,7 @@ function tryLogin() {
 function renderRetakeList() {
   const box = document.getElementById("retake-list");
   if (!box) return;
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
   if (!list.length) {
     box.innerHTML = '<div style="padding:12px;color:#888;font-size:.85rem">Chưa có học sinh đã nộp bài</div>';
     return;
@@ -1522,9 +1602,9 @@ function renderRetakeList() {
 
 function allowRetake(cls, name) {
   if (!confirm("Cho phép " + name + " (" + cls + ") làm lại? Điểm cũ sẽ bị xóa.")) return;
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  let list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
   list = list.filter(r => !(r.class === cls && r.name === name));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  localStorage.setItem(getStorageKey(), JSON.stringify(list));
   // Xóa điểm trong memory studentsByClass
   if (studentsByClass[cls]) {
     const st = studentsByClass[cls].find(s => s.name === name);
@@ -1537,7 +1617,7 @@ function allowRetake(cls, name) {
 
 document.getElementById("btn-clear-all-retake")?.addEventListener("click", function () {
   if (!confirm("Xóa TẤT CẢ điểm để cả khối làm lại?")) return;
-  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(getStorageKey());
   Object.keys(studentsByClass).forEach(lop => {
     studentsByClass[lop].forEach(s => { s.score = ""; });
   });
@@ -1559,7 +1639,7 @@ document.getElementById("file-upload").addEventListener("change", function (e) {
 });
 
 document.getElementById("btn-download-scores").addEventListener("click", function () {
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
   if (!list.length) { alert("Chưa có dữ liệu điểm."); return; }
   // Sắp xếp theo lớp + thứ tự danh sách Excel (studentsByClass)
   const orderMap = {};
@@ -1592,7 +1672,7 @@ document.getElementById("btn-download-scores").addEventListener("click", functio
 });
 document.getElementById("btn-clear-scores").addEventListener("click", function () {
   if (confirm("Xóa sạch toàn bộ dữ liệu điểm trên máy này?")) {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(getStorageKey());
     Object.keys(studentsByClass).forEach(lop => {
       (studentsByClass[lop] || []).forEach(s => { s.score = ""; });
     });
@@ -1615,10 +1695,10 @@ document.getElementById("btn-logout")?.addEventListener("click", function () {
 
 /* ----- Lưu đồng bộ cloud & local ----- */
 document.getElementById("btn-sync-cloud")?.addEventListener("click", async function () {
-  const list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  const list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
   const dataBlob = localStorage.getItem(DATA_KEY) || "";
   // 1) Local: đảm bảo đã lưu
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  localStorage.setItem(getStorageKey(), JSON.stringify(list));
   // 2) Tải file điểm + backup JSON
   if (list.length) {
     const data = [["STT","Lớp","Họ và tên","Điểm","Đúng","Sai","Bỏ qua","Bài làm","Thời điểm nộp","Mã đề"]];
@@ -1823,12 +1903,10 @@ function startExam() {
   selectedClass = classSelect.value;
   selectedStudent = studentSelect.value;
   if (!selectedClass || !selectedStudent) return;
-  const takenMap = getTakenMap();
-  const st = (studentsByClass[selectedClass] || []).find(s => s.name === selectedStudent);
-  const alreadyTaken = (st && st.score !== "" && st.score != null) || takenMap[selectedClass + "|" + selectedStudent];
-  const openRetake = typeof isClassAlwaysOpen === "function" && isClassAlwaysOpen(selectedClass);
-  if (alreadyTaken && !openRetake) {
-    alert("Bạn đã hoàn thành bài kiểm tra rồi! Không thể làm lại.\n(Lớp đang LOCK / theo lịch — chỉ 1 lần. Giáo viên bật OPEN để cho làm lại.)");
+  // Cho phép tối đa MAX_ATTEMPTS lần (lấy điểm cao nhất), không hiện thông báo số lần
+  const attempts = getAttemptCount(selectedClass, selectedStudent);
+  if (attempts >= MAX_ATTEMPTS) {
+    alert("Bạn đã hoàn thành bài kiểm tra.");
     return;
   }
   if (!isClassOpenNow(selectedClass)) {
@@ -2167,10 +2245,11 @@ async function submitExam(auto) {
       scoreP2 += score;
     } else {
       // Phần 3: mỗi câu đúng = 0.5 điểm (2 câu → 1đ)
-      const user = (answers[key] || "").trim().toLowerCase();
+      // Không phân biệt hoa/thường, không phân biệt có dấu/không dấu
+      const userNorm = normalizeAnswer(answers[key]);
       const corrects = Array.isArray(q.correct) ? q.correct : [q.correct];
-      if (!user) skipCount++;
-      else if (corrects.some(c => String(c).toLowerCase().trim() === user)) { score = 0.5; correctCount++; }
+      if (!userNorm) skipCount++;
+      else if (corrects.some(function (c) { return normalizeAnswer(c) === userNorm; })) { score = 0.5; correctCount++; }
       else wrongCount++;
       scoreP3 += score;
     }
@@ -2197,10 +2276,10 @@ async function submitExam(auto) {
       if (rightSt === 3) return 0.5;
       return 1.0;
     }
-    const user = (answers[key] || "").trim().toLowerCase();
-    if (!user) return 0;
+    const userNorm = normalizeAnswer(answers[key]);
+    if (!userNorm) return 0;
     const corrects = Array.isArray(q.correct) ? q.correct : [q.correct];
-    return corrects.some(c => String(c).toLowerCase().trim() === user) ? 0.5 : 0;
+    return corrects.some(function (c) { return normalizeAnswer(c) === userNorm; }) ? 0.5 : 0;
   });
   // Ghép điểm từng câu vào pattern để máy khác / Sheet vẫn xem đúng điểm từng câu
   let pattern = buildPattern() + "#S#" + detailPts.join(",");
@@ -2244,8 +2323,8 @@ async function submitExam(auto) {
       userShow = (answers[key] || "").trim() || "(bỏ)";
       const corrects = Array.isArray(q.correct) ? q.correct : [q.correct];
       correctShow = corrects.filter(Boolean).join(" | ");
-      const user = userShow.toLowerCase();
-      ok = user !== "(bỏ)" && corrects.some(c => String(c).toLowerCase().trim() === user);
+      const userNorm = normalizeAnswer(userShow);
+      ok = userShow !== "(bỏ)" && corrects.some(function (c) { return normalizeAnswer(c) === userNorm; });
       pts = ok ? 0.5 : 0;
     }
     let tfLines = undefined;
@@ -2298,25 +2377,28 @@ async function submitExam(auto) {
   const record = {
     name: selectedStudent, class: selectedClass, score: totalScore,
     correct: correctCount, wrong: wrongCount, skip: skipCount,
-    elapsed, time: new Date().toLocaleString("vi-VN"), pattern, maDe: window._currentMaDe || "", examId: window._currentExamId || "", review: reviewList, partScores: window._lastPartScores || null, hasReview: true
+    elapsed, time: new Date().toLocaleString("vi-VN"), pattern, maDe: window._currentMaDe || "", examId: window._currentExamId || "", review: reviewList, partScores: window._lastPartScores || null, hasReview: true,
+    attempt: getAttemptCount(selectedClass, selectedStudent) + 1
   };
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  // Ghi đè nếu đã có điểm cùng HS (làm lại)
-  list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
+  let list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
+  // Giữ tất cả lần làm (tối đa MAX_ATTEMPTS), không xóa lần cũ
   list.push(record);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  // Gửi điểm lên Google Sheet (mọi máy)
+  localStorage.setItem(getStorageKey(), JSON.stringify(list));
+  // Điểm chính thức = điểm cao nhất trong các lần làm
+  const bestScore = getBestScore(selectedClass, selectedStudent);
+  // Gửi điểm lên Google Sheet (mọi máy) — gửi bản ghi lần này
   try {
     pushScoreToCloud(record);
   } catch (e) { console.warn("cloud push", e); }
 
   if (studentsByClass[selectedClass]) {
     const st = studentsByClass[selectedClass].find(s => s.name === selectedStudent);
-    if (st) st.score = totalScore;
+    if (st) st.score = bestScore != null ? bestScore : totalScore;
   }
 
   document.getElementById("screen-exam").style.display = "none";
   document.getElementById("screen-result").style.display = "block";
+  // Hiển thị điểm lần này; nếu có lần trước cao hơn thì ghi chú nhẹ (không lộ số lần)
   document.getElementById("final-score").innerHTML = totalScore + "<span>/10</span>";
   document.getElementById("res-name").textContent = selectedStudent;
   document.getElementById("res-class").textContent = selectedClass;
@@ -2334,6 +2416,63 @@ async function submitExam(auto) {
   try {
     renderResultBreakdown(window._lastReviewList || [], window._lastPartScores || {}, totalScore);
   } catch (e) { console.warn(e); }
+  // Bảng điểm tổng hợp
+  try { renderPublicScoreboard(); } catch (e2) { console.warn(e2); }
+}
+
+/** Bảng điểm tổng hợp: điểm cao nhất mỗi HS, lọc theo lớp, sắp xếp theo tên */
+function renderPublicScoreboard() {
+  const tbody = document.getElementById("sb-tbody");
+  const filterSel = document.getElementById("sb-filter-class");
+  if (!tbody) return;
+  let list = [];
+  try { list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]"); } catch (e) {}
+
+  // Gộp theo HS → lấy điểm cao nhất + thời gian nộp tương ứng lần cao nhất
+  const bestMap = {};
+  list.forEach(function (r) {
+    const k = (r.class || "") + "|" + (r.name || "");
+    const s = Number(r.score);
+    if (isNaN(s) || !r.name) return;
+    if (!bestMap[k] || s > bestMap[k].score) {
+      bestMap[k] = { class: r.class || "", name: r.name || "", score: s, time: r.time || "" };
+    }
+  });
+  let rows = Object.keys(bestMap).map(function (k) { return bestMap[k]; });
+
+  // Điền filter lớp
+  if (filterSel) {
+    const cur = filterSel.value;
+    const classes = Array.from(new Set(rows.map(function (r) { return r.class; }).filter(Boolean))).sort();
+    filterSel.innerHTML = '<option value="">Tất cả</option>' +
+      classes.map(function (c) { return '<option value="' + c + '">' + c + "</option>"; }).join("");
+    if (cur && classes.indexOf(cur) >= 0) filterSel.value = cur;
+    filterSel.onchange = function () { renderPublicScoreboard(); };
+  }
+
+  const filterCls = filterSel ? filterSel.value : "";
+  if (filterCls) rows = rows.filter(function (r) { return r.class === filterCls; });
+
+  // Sắp xếp theo Họ và tên (locale vi)
+  rows.sort(function (a, b) {
+    const c = (a.class || "").localeCompare(b.class || "", "vi");
+    if (c !== 0) return c;
+    return (a.name || "").localeCompare(b.name || "", "vi");
+  });
+
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function (r) {
+    const scoreColor = r.score >= 8 ? "#166534" : r.score >= 5 ? "#1D4ED8" : "#B91C1C";
+    return "<tr style=\"border-bottom:1px solid #E2E8F0\">" +
+      "<td style=\"padding:9px 8px;color:#64748B;font-size:.84rem\">" + (r.time || "—") + "</td>" +
+      "<td style=\"padding:9px 8px;font-weight:600\">" + (r.class || "—") + "</td>" +
+      "<td style=\"padding:9px 8px\">" + (r.name || "—") + "</td>" +
+      "<td style=\"padding:9px 8px;text-align:center;font-weight:800;color:" + scoreColor + "\">" + r.score + "</td>" +
+      "</tr>";
+  }).join("");
 }
 
 function renderResultBreakdown(reviewList, partScores, totalScore) {
@@ -2614,7 +2753,7 @@ async function pullScoresFromCloud() {
     return;
   }
 
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  let list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
   let added = 0, updated = 0;
   rows.forEach(function (rec) {
     const r = typeof normalizeCloudRow_ === "function" ? normalizeCloudRow_(rec) : rec;
@@ -2654,7 +2793,7 @@ async function pullScoresFromCloud() {
       added++;
     }
   });
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  localStorage.setItem(getStorageKey(), JSON.stringify(list));
   if (typeof renderScoreTable === "function") renderScoreTable();
   alert("Đã tải " + rows.length + " bài từ cloud (" + source + ").\nThêm mới: " + added + " · Cập nhật: " + updated + " · Tổng: " + list.length);
 }
@@ -3042,8 +3181,8 @@ function buildReviewFromPattern_(pattern) {
       text = q.text || text;
       const arr = q.correct || [];
       correctShow = arr.join(" | ");
-      const u = user.toLowerCase().trim();
-      if (u && arr.some(function (c) { return String(c).toLowerCase().trim() === u; })) calc = 0.5;
+      const u = normalizeAnswer(user);
+      if (u && arr.some(function (c) { return normalizeAnswer(c) === u; })) calc = 0.5;
     }
     let pts = (detailPts && detailPts[14 + si] != null) ? detailPts[14 + si] : calc;
     rev.push({
@@ -3304,23 +3443,26 @@ document.getElementById("btn-sch-clear")?.addEventListener("click", function () 
 /* ========== Thoát giữa chừng → 0 điểm ========== */
 function saveZeroScore(reason) {
   if (!selectedStudent || !selectedClass) return;
-  const takenMap = getTakenMap();
-  if (takenMap[selectedClass + "|" + selectedStudent] !== undefined) return; // đã có điểm
+  // Nếu đã đủ số lần làm thì không ghi thêm
+  if (getAttemptCount(selectedClass, selectedStudent) >= MAX_ATTEMPTS) return;
   const record = {
     name: selectedStudent, class: selectedClass, score: 0,
     correct: 0, wrong: 0, skip: 0, elapsed: 0,
     time: new Date().toLocaleString("vi-VN"),
     pattern: "THOAT/" + (reason || "no-submit"),
-    maDe: window._currentMaDe || ""
+    maDe: window._currentMaDe || "",
+    attempt: getAttemptCount(selectedClass, selectedStudent) + 1
   };
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
-  list = list.filter(r => !(r.class === selectedClass && r.name === selectedStudent));
-  list.push(record);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  let list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
+  list.push(record); // giữ lần cũ, điểm chính thức = max
+  localStorage.setItem(getStorageKey(), JSON.stringify(list));
   try { pushScoreToCloud(record); } catch (e) {}
   if (studentsByClass[selectedClass]) {
     const st = studentsByClass[selectedClass].find(s => s.name === selectedStudent);
-    if (st) st.score = 0;
+    if (st) {
+      const best = getBestScore(selectedClass, selectedStudent);
+      st.score = best != null ? best : 0;
+    }
   }
 }
 
