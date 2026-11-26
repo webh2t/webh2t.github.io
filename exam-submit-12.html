@@ -762,9 +762,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1446,7 +1446,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2591,7 +2591,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2608,7 +2608,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2688,7 +2688,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3600,7 +3600,20 @@ if (_cancelExam) {
     <h3 style="margin:0 0 8px;color:#1E3A8A;font-size:1rem">Bảng sản phẩm đã nộp</h3>
     
     <div style="overflow:auto">
-      <table id="htmlintro-result-table" class="hi-result-table" style="width:100%;border-collapse:collapse;font-size:.85rem">
+      
+    <div id="htmlintro-filters" style="display:flex;flex-wrap:wrap;gap:10px;margin:0 0 12px 0;align-items:center">
+      <label style="font-size:.85rem;color:#334155">Lọc lớp
+        <select id="htmlintro-filter-class" style="margin-left:6px;padding:6px 10px;border-radius:8px;border:1px solid #CBD5E1">
+          <option value="">Tất cả lớp</option>
+        </select>
+      </label>
+      <label style="font-size:.85rem;color:#334155">Họ tên
+        <input id="htmlintro-filter-name" type="text" placeholder="Tìm tên..." style="margin-left:6px;padding:6px 10px;border-radius:8px;border:1px solid #CBD5E1;min-width:160px">
+      </label>
+      <button type="button" id="htmlintro-filter-btn" style="padding:6px 14px;border-radius:8px;border:none;background:#2563EB;color:#fff;font-weight:600;cursor:pointer">Lọc</button>
+      <button type="button" id="htmlintro-filter-clear" style="padding:6px 12px;border-radius:8px;border:1px solid #CBD5E1;background:#fff;cursor:pointer">Xóa lọc</button>
+    </div>
+<table id="htmlintro-result-table" class="hi-result-table" style="width:100%;border-collapse:collapse;font-size:.85rem">
         <thead><tr style="background:#EEF2FF">
           <th style="padding:8px;text-align:left">Thời gian</th>
           <th style="padding:8px;text-align:left">Lớp</th>
@@ -3845,7 +3858,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+    WH = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4181,7 +4194,8 @@ function tidyBlogComment_(s) {
 
 try {
   if (document.readyState === "loading")
-    document.addEventListener("DOMContentLoaded", function () { try { renderHtmlIntroTable(); } catch (e) {} });
+    document.addEventListener("DOMContentLoaded", function () { try { try { bindHtmlIntroFilters_(); } catch(eF) {}
+renderHtmlIntroTable(); } catch (e) {} });
   else renderHtmlIntroTable();
 } catch (e0) {}
 
@@ -4202,7 +4216,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4691,8 +4705,8 @@ function initHtmlIntroUI() {
       var rec = {
         time: timeStr, class: lop, name: name, pin: pin, link: "",
         html: code, css: "", codeHash: (typeof simpleHash_ === "function" ? simpleHash_(code) : ""),
-        score: plag.flag ? 0 : localGrade.total,
-        note: plag.flag ? ("Trung ma voi " + plag.with + " -> 0 diem") : (localGrade.note || ""),
+        score: localGrade.total,
+        note: (localGrade.note || "") + (plag.flag ? (" | Nghi sao chép: " + plag.with) : ""),
         plagFlag: !!plag.flag, plagWith: plag.with || "", at: Date.now(), examId: "b11",
         breakdown: localGrade.breakdown || []
       };
@@ -4713,7 +4727,7 @@ function initHtmlIntroUI() {
             pattern: "HTML_INTRO|SOURCE|PIN:" + pin + (plag.flag ? "|PLAG:" + plag.with : ""),
             maDe: "B11-HTML", examId: "b11",
             review: [{ type: "html", text: code.slice(0, 8000) }],
-            note: rec.note, htmlSnapshot: code.slice(0, 90000), cssSnapshot: "",
+            note: rec.note, htmlSnapshot: code, cssSnapshot: "",
             pin: pin, html: code, action: "html_intro_grade"
           });
         }
@@ -5102,14 +5116,12 @@ function gradeHtmlIntroLocal_(source, name, lop) {
   }
 
   var note =
-    "1. Thông tin (" + pInfo + "/ 3,5 điểm)" + (missInfo.length ? " [thiếu: " + missInfo.join(", ") + "]" : "") +
-    (!hasNameOk ? " [Sai/thiếu Họ tên theo DS: " + nameFull + "]" : "") +
-    (!hasClassOk ? " [Sai/thiếu Lớp theo DS: " + (lop || "?") + "]" : "") + ". " +
-    "2. Chú thích (" + p1 + "/ 1,0 điểm). " +
-    "3. Tiêu đề (" + p2 + "/ 1,0 điểm). " +
-    "4. Ảnh đại diện (" + p3 + "/ 2 điểm)" + ((!hasRealImg || nonFace) ? " [thiếu ảnh người/chân dung]" : (p3 < 2 ? " [thiếu alt/bo tròn/căn giữa]" : "")) + ". " +
-    "5. Màu tháng sinh (" + p4 + "/ 1,0 điểm). " +
-    "6. Giao diện (" + ui + "/ 1,5 điểm). TỔNG: " + total + " điểm" + cssNote;
+    "Thông tin: " + pInfo + "/ 3.5 điểm. " +
+    "Chú thích: " + p1 + "/ 1 điểm. " +
+    "Tiêu đề: " + p2 + "/ 1 điểm. " +
+    "Ảnh đại diện: " + p3 + "/ 2 điểm. " +
+    "Màu theo tháng: " + p4 + "/ 1 điểm. " +
+    "Giao diện: " + ui + "/ 1.5 điểm";
 
   return {
     total: total,
@@ -5163,8 +5175,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbz-Aacl20eTphQmgYAoySMjFpjhojdnxGWkJknBEIvli0mVPR6XwcwwPWI2gyHePbI0/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec"; }
 }
 
 
@@ -5180,7 +5192,7 @@ function enqueueHtmlIntroCloud_(rec) {
       name: rec.name,
       class: rec.class,
       pin: rec.pin,
-      html: (rec.html || "").slice(0, 45000),
+      html: (rec.html || ""),
       score: rec.score,
       note: rec.note || "",
       time: rec.time || new Date().toLocaleString("vi-VN"),
@@ -5453,19 +5465,47 @@ function renderHtmlIntroTable() {
   if (!body) return;
   var all = [];
   try { all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]"); } catch (e) {}
+  var fCls = document.getElementById("htmlintro-filter-class");
+  if (fCls && fCls.options.length <= 1) {
+    var setC = {};
+    all.forEach(function (r) {
+      var c = String(r.class || r.lop || "").trim();
+      if (c) setC[c] = true;
+    });
+    Object.keys(setC).sort().forEach(function (c) {
+      var o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      fCls.appendChild(o);
+    });
+  }
+  var filterClass = fCls ? (fCls.value || "") : "";
+  var filterName = "";
+  var fName = document.getElementById("htmlintro-filter-name");
+  if (fName) filterName = String(fName.value || "").trim().toLowerCase();
   if (!all.length) {
-    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chua co du lieu</td></tr>';
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>';
     return;
   }
   all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
-  body.innerHTML = all.map(function (r) {
-    // Điểm: score cloud; nếu =0 mà note có TỔNG>0 → lấy TỔNG (tránh Tổng=0 / nhận xét=5)
+  var rows = all.filter(function (r) {
+    var c = String(r.class || r.lop || "").trim();
+    var n = String(r.name || r.hoTen || "").trim().toLowerCase();
+    if (filterClass && c !== filterClass) return false;
+    if (filterName && n.indexOf(filterName) < 0) return false;
+    return true;
+  });
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Không có bài khớp bộ lọc</td></tr>';
+    return;
+  }
+  body.innerHTML = rows.map(function (r) {
     var score = r.score;
-    if (score instanceof Date || (typeof score === "string" && /T\d{2}:\d{2}/.test(score))) score = "";
+    if (score instanceof Date || (typeof score === "string" && /T\d{2}:\d{2}/.test(String(score)))) score = "";
     if (typeof score === "string") score = score.replace(",", ".");
     var noteTong = null;
-    if (r.note && /TỔNG:\s*([\d.,]+)/i.test(r.note)) {
-      var mt0 = r.note.match(/TỔNG:\s*([\d.,]+)/i);
+    var noteStr = String(r.note || "");
+    if (/TỔNG:\s*([\d.,]+)/i.test(noteStr)) {
+      var mt0 = noteStr.match(/TỔNG:\s*([\d.,]+)/i);
       if (mt0) noteTong = Math.round(parseFloat(String(mt0[1]).replace(",", ".")) * 10) / 10;
     }
     if (score !== "" && score != null && !isNaN(Number(score))) {
@@ -5473,23 +5513,53 @@ function renderHtmlIntroTable() {
       if (score === 0 && noteTong != null && noteTong > 0) score = noteTong;
     } else if (noteTong != null) {
       score = noteTong;
-    } else if (r.breakdown && r.breakdown.length) {
-      var sumBd = r.breakdown.reduce(function (s, b) { return s + (Number(b.pts) || 0); }, 0);
-      score = Math.round(sumBd * 10) / 10;
     } else {
       score = "—";
     }
     if (score === "" || score == null || (typeof score === "number" && isNaN(score))) score = "—";
-    var rowStyle = r.plagFlag ? "background:#FEF2F2;" : "";
-    return '<tr style="' + rowStyle + '">'
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;white-space:nowrap">' + (r.time || "") + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9">' + (r.class || "") + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;min-width:180px;max-width:280px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + (r.name || '').replace(/"/g,'&quot;') + '">' + (r.name || "") + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;text-align:center;font-weight:700;color:#1D4ED8">' + score + "</td>"
-      + '<td style="padding:8px;border-bottom:1px solid #F1F5F9;font-size:.78rem;color:#475569;white-space:pre-wrap">' + (r.note || "") + "</td>"
-      + "</tr>";
+    var scoreHtml = (score === "—")
+      ? "—"
+      : '<span style="color:#1D4ED8;font-weight:800;font-size:1.08rem">' + score + '</span>';
+    var note = noteStr
+      .replace(/\[code CSS[^\]]*\]/gi, "")
+      .replace(/\[thiếu[^\]]*\]/gi, "")
+      .replace(/\[Sai\/thiếu[^\]]*\]/gi, "")
+      .trim();
+    return '<tr>' +
+      '<td style="padding:8px;border-bottom:1px solid #E2E8F0;white-space:nowrap">' + (r.time || "") + '</td>' +
+      '<td style="padding:8px;border-bottom:1px solid #E2E8F0">' + (r.class || r.lop || "") + '</td>' +
+      '<td style="padding:8px;border-bottom:1px solid #E2E8F0;font-weight:600">' + (r.name || "") + '</td>' +
+      '<td style="padding:8px;border-bottom:1px solid #E2E8F0;text-align:center">' + scoreHtml + '</td>' +
+      '<td style="padding:8px;border-bottom:1px solid #E2E8F0;font-size:.84rem;color:#334155;line-height:1.5">' + note + '</td>' +
+      '</tr>';
   }).join("");
 }
+
+function bindHtmlIntroFilters_() {
+  var btn = document.getElementById("htmlintro-filter-btn");
+  var clr = document.getElementById("htmlintro-filter-clear");
+  var fCls = document.getElementById("htmlintro-filter-class");
+  var fName = document.getElementById("htmlintro-filter-name");
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = "1";
+    btn.onclick = function () { renderHtmlIntroTable(); };
+  }
+  if (clr && !clr.dataset.bound) {
+    clr.dataset.bound = "1";
+    clr.onclick = function () {
+      if (fCls) fCls.value = "";
+      if (fName) fName.value = "";
+      renderHtmlIntroTable();
+    };
+  }
+  if (fName && !fName.dataset.bound) {
+    fName.dataset.bound = "1";
+    fName.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") renderHtmlIntroTable();
+    });
+  }
+}
+
 
 (function patchParseForPin() {
   if (typeof parseWorkbook !== "function") return;
