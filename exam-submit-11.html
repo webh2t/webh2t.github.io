@@ -2574,6 +2574,26 @@ function getDeadlineForClass(lop) {
     return pad(b.getDate()) + "/" + pad(b.getMonth() + 1) + "/" + b.getFullYear() + " " + pad(b.getHours()) + ":" + pad(b.getMinutes());
   } catch (e) { return "—"; }
 }
+/** true nếu lớp có lịch và đã HẾT toàn bộ khung giờ (quá hạn nộp) */
+function isClassExamOver(lop) {
+  try {
+    const list = (typeof loadSchedule === "function") ? loadSchedule() : [];
+    const slots = list.filter(function (s) { return s.lop === lop; });
+    if (!slots.length) return false; // không có lịch → không liệt vào "chưa nộp quá hạn"
+    const now = Date.now();
+    // OPEN (2020→2099) coi như chưa hết hạn
+    let maxTo = 0;
+    let hasOpen = false;
+    slots.forEach(function (s) {
+      const from = new Date(s.from).getTime();
+      const to = new Date(s.to).getTime();
+      if (from <= new Date("2021-01-01").getTime() && to >= new Date("2090-01-01").getTime()) hasOpen = true;
+      if (to > maxTo) maxTo = to;
+    });
+    if (hasOpen) return false;
+    return maxTo > 0 && now > maxTo;
+  } catch (e) { return false; }
+}
 /** Chấm lại Phần 3 (SA) theo normalizeAnswer cho 1 bản ghi có review */
 function rescoreRecordPart3(r) {
   if (!r || !r.review || !r.review.length) return r;
@@ -2721,17 +2741,20 @@ function renderPublicScoreboard() {
   const submitted = {};
   Object.keys(bestMap).forEach(function (k) { submitted[k] = true; });
   let pending = [];
+  // Chỉ liệt kê HS chưa nộp của lớp ĐÃ HẾT hạn thi (theo LichThi)
   const order = window._studentOrder || [];
   if (order.length) {
     order.forEach(function (s) {
       const k = s.class + "|" + s.name;
       if (submitted[k]) return;
+      if (!isClassExamOver(s.class)) return; // chưa đến/ còn trong giờ → không đưa vào bảng chưa nộp
       if (filterCls && s.class !== filterCls) return;
       if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
       pending.push({ stt: s.stt, class: s.class, name: s.name, deadline: getDeadlineForClass(s.class) });
     });
   } else {
     Object.keys(studentsByClass || {}).sort().forEach(function (lop) {
+      if (!isClassExamOver(lop)) return;
       if (filterCls && lop !== filterCls) return;
       (studentsByClass[lop] || []).forEach(function (s) {
         const k = lop + "|" + s.name;
@@ -2748,7 +2771,7 @@ function renderPublicScoreboard() {
   }
   pending.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
   const pendingHtml = !pending.length
-    ? '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Không còn học sinh chưa nộp (theo bộ lọc)</td></tr>'
+    ? '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Không có HS quá hạn chưa nộp (theo LichThi + bộ lọc)</td></tr>'
     : pending.map(function (r) {
         return "<tr style=\"border-bottom:1px solid #FED7AA\">" +
           "<td style=\"padding:9px 8px;text-align:center;color:#9A3412\">" + (r.stt < 99999 ? r.stt : "—") + "</td>" +
@@ -2986,7 +3009,9 @@ function pushScoreToCloud(record) {
 
 async function pullScoresFromCloud(silent) {
   const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
-  const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1w4Xpif6fiFZFZQ2x9K5dx_SdHGlZYpmx4NVIL1Vx0F8/export?format=csv";
+  // Sheet KetQua: cột Bài | Lớp | Họ tên | Điểm (D)
+  const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1w4Xpif6fiFZFZQ2x9K5dx_SdHGlZYpmx4NVIL1Vx0F8/gviz/tq?tqx=out:csv&sheet=KetQua";
+  const FALLBACK_CSV2 = "https://docs.google.com/spreadsheets/d/1w4Xpif6fiFZFZQ2x9K5dx_SdHGlZYpmx4NVIL1Vx0F8/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url_tin11") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
   silent = !!silent;
@@ -3031,7 +3056,8 @@ async function pullScoresFromCloud(silent) {
     const stamp = "?t=" + Date.now();
     const csvTargets = [
       "https://api.allorigins.win/raw?url=" + encodeURIComponent(csvUrl + (csvUrl.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now()),
-      "https://api.allorigins.win/raw?url=" + encodeURIComponent(FALLBACK_CSV + stamp),
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(FALLBACK_CSV + (FALLBACK_CSV.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now()),
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(FALLBACK_CSV2 + stamp),
       csvUrl + (csvUrl.indexOf("?") >= 0 ? "&" : "?") + "t=" + Date.now()
     ];
     for (let i = 0; i < csvTargets.length; i++) {
@@ -3112,9 +3138,55 @@ async function pullScoresFromCloud(silent) {
   }
 }
 
+/** Chuẩn hóa điểm từ Sheet (hỗ trợ "8,00" / "8.00") */
+function normalizeScore_(v) {
+  if (v == null || v === "") return 0;
+  if (typeof v === "number" && !isNaN(v)) return Math.round(v * 100) / 100;
+  let s = String(v).trim().replace(/\s/g, "");
+  // "8,00" (VN) → 8.00
+  if (/^\d{1,2},\d+$/.test(s)) s = s.replace(",", ".");
+  else s = s.replace(/,/g, "");
+  const n = parseFloat(s);
+  return isNaN(n) ? 0 : Math.round(n * 100) / 100;
+}
+/** Chuẩn hóa 1 dòng từ Apps Script JSON / CSV object → record local */
+function normalizeCloudRow_(rec) {
+  if (!rec || typeof rec !== "object") return {};
+  const lower = {};
+  Object.keys(rec).forEach(function (k) {
+    lower[String(k).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim()] = rec[k];
+  });
+  function pick() {
+    for (let i = 0; i < arguments.length; i++) {
+      const key = String(arguments[i]).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim();
+      if (lower[key] != null && String(lower[key]).trim() !== "") return lower[key];
+    }
+    return "";
+  }
+  const name = String(pick("name", "ho ten", "hoten", "ho va ten", "ten")).trim();
+  const lop = String(pick("class", "lop", "lop hoc")).trim();
+  const bai = String(pick("bai", "module", "ma bai")).trim();
+  return {
+    bai: bai,
+    module: bai,
+    name: name,
+    class: lop,
+    score: normalizeScore_(pick("score", "diem", "tong diem")),
+    correct: parseInt(pick("correct", "dung"), 10) || 0,
+    wrong: parseInt(pick("wrong", "sai"), 10) || 0,
+    skip: parseInt(pick("skip", "bo qua", "boqua"), 10) || 0,
+    pattern: String(pick("pattern", "bai lam", "bailam") || ""),
+    time: String(pick("time", "thoi diem nop", "thoigian", "timestamp") || ""),
+    maDe: String(pick("made", "ma de", "maDe") || ""),
+    examId: String(pick("examid", "examId") || ""),
+    review: Array.isArray(rec.review) ? rec.review : [],
+    partScores: rec.partScores || null,
+    hasReview: !!(rec.review && rec.review.length)
+  };
+}
 function parseScoreCsv_(text) {
-  text = String(text || "").replace(/^\uFEFF/, "").replace(/_bootstrap\\([^)]*\\);?/g, "");
-  const lines = text.split(/\\r?\\n/).filter(l => l.trim());
+  text = String(text || "").replace(/^\uFEFF/, "").replace(/_bootstrap\([^)]*\);?/g, "");
+  const lines = text.split(/\r?\n/).filter(function (l) { return l.trim(); });
   if (lines.length < 2) return [];
   const parseLine = function (line) {
     const out = []; let cur = "", q = false;
@@ -3127,35 +3199,44 @@ function parseScoreCsv_(text) {
     out.push(cur);
     return out;
   };
-  const header = parseLine(lines[0]).map(h => h.trim().toLowerCase());
+  const header = parseLine(lines[0]).map(function (h) {
+    return h.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+  });
   const idx = function (names) {
     for (let n = 0; n < names.length; n++) {
-      const i = header.findIndex(h => h.indexOf(names[n]) >= 0);
+      const i = header.findIndex(function (h) { return h.indexOf(names[n]) >= 0; });
       if (i >= 0) return i;
     }
     return -1;
   };
-  const iClass = idx(["lớp", "lop", "class"]);
-  const iName = idx(["họ", "ten", "name"]);
-  const iScore = idx(["điểm", "diem", "score"]);
-  const iCorrect = idx(["đúng", "dung", "correct"]);
+  // Sheet KetQua: Bài | Lớp | Họ tên | Điểm | ...
+  const iBai = idx(["bai", "module"]);
+  const iClass = idx(["lop", "class"]);
+  const iName = idx(["ho ten", "hoten", "ten", "name"]);
+  const iScore = idx(["diem", "score", "tong"]);
+  const iCorrect = idx(["dung", "correct"]);
   const iWrong = idx(["sai", "wrong"]);
-  const iSkip = idx(["bỏ", "bo", "skip"]);
-  const iPattern = idx(["bài làm", "bai lam", "pattern"]);
-  const iTime = idx(["thời", "time", "nộp"]);
-  const iMa = idx(["mã đề", "made", "ma de"]);
+  const iSkip = idx(["bo qua", "boqua", "skip"]);
+  const iPattern = idx(["bai lam", "bailam", "pattern"]);
+  const iTime = idx(["thoi", "time", "nop"]);
+  const iMa = idx(["ma de", "made"]);
   const rows = [];
   for (let li = 1; li < lines.length; li++) {
     const cols = parseLine(lines[li]);
     if (cols.length < 2) continue;
-    const name = (iName >= 0 ? cols[iName] : cols[1] || "").trim();
-    const lop = (iClass >= 0 ? cols[iClass] : cols[0] || "").trim();
+    // Cột theo ảnh: A=Bài B=Lớp C=Họ tên D=Điểm
+    const bai = (iBai >= 0 ? cols[iBai] : cols[0] || "").trim();
+    const lop = (iClass >= 0 ? cols[iClass] : cols[1] || "").trim();
+    const name = (iName >= 0 ? cols[iName] : cols[2] || "").trim();
     if (!name || !lop) continue;
     if (name.indexOf("bootstrap") >= 0) continue;
+    if (/^script/i.test(name) || /^←/.test(name)) continue;
     rows.push({
+      bai: bai,
+      module: bai,
       name: name,
       class: lop,
-      score: normalizeScore_(iScore >= 0 ? cols[iScore] : cols[2]),
+      score: normalizeScore_(iScore >= 0 ? cols[iScore] : cols[3]),
       correct: parseInt(iCorrect >= 0 ? cols[iCorrect] : "0", 10) || 0,
       wrong: parseInt(iWrong >= 0 ? cols[iWrong] : "0", 10) || 0,
       skip: parseInt(iSkip >= 0 ? cols[iSkip] : "0", 10) || 0,
