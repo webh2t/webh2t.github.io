@@ -1343,27 +1343,22 @@ function parseWorkbook(wb) {
   try { if (typeof rescoreAllStored === "function") rescoreAllStored(); } catch(e) {}
   loadBar.style.display = "none";
   if (isAdmin) renderScoreTable();
-  // Hiện bảng điểm trên màn chính + kéo điểm cloud (nếu có)
+  // Hiện bảng điểm ngay từ dữ liệu local (nhanh), sau đó đồng bộ cloud nền
   const mainBoards = document.getElementById("main-boards");
   if (mainBoards && currentExam) {
     mainBoards.style.display = "block";
-    // Mở rộng card để bảng dễ đọc
     const card = document.getElementById("select-card");
     if (card) { card.style.maxWidth = "960px"; }
   }
+  try { renderPublicScoreboard(); } catch (e0) {}
   try {
     if (typeof pullScoresFromCloud === "function") {
+      // Không chờ proxy chậm: ưu tiên webhook trực tiếp trong pullScoresFromCloud
       pullScoresFromCloud(true).then(function () {
         try { renderPublicScoreboard(); } catch (e1) {}
-      }).catch(function () {
-        try { renderPublicScoreboard(); } catch (e2) {}
-      });
-    } else {
-      renderPublicScoreboard();
+      }).catch(function () {});
     }
-  } catch (e3) {
-    try { renderPublicScoreboard(); } catch (e4) {}
-  }
+  } catch (e3) {}
 }
 
 function refreshClassDropdown() {
@@ -2538,16 +2533,24 @@ async function submitExam(auto) {
 }
 
 /** Bảng điểm tổng hợp: điểm cao nhất mỗi HS, lọc theo lớp, sắp xếp theo tên */
-/** Lấy STT học sinh từ sheet HocSinh (toàn trường) */
+/** Lấy STT học sinh từ sheet HocSinh (toàn trường) — khớp tên đã chuẩn hóa */
 function getStudentStt(cls, name) {
   const order = window._studentOrder || [];
+  const c = String(cls || "").trim().toUpperCase();
+  const n = normalizeAnswer(name);
   for (let i = 0; i < order.length; i++) {
-    if (order[i].class === cls && order[i].name === name) return order[i].stt;
+    if (String(order[i].class || "").trim().toUpperCase() === c && normalizeAnswer(order[i].name) === n) {
+      return order[i].stt;
+    }
   }
-  // fallback: tìm trong studentsByClass
-  const list = (studentsByClass[cls] || []);
-  for (let j = 0; j < list.length; j++) {
-    if (list[j].name === name && list[j].stt != null) return list[j].stt;
+  // fallback: tìm trong studentsByClass (mọi lớp nếu tên lớp lệch)
+  const keys = Object.keys(studentsByClass || {});
+  for (let k = 0; k < keys.length; k++) {
+    if (String(keys[k] || "").trim().toUpperCase() !== c) continue;
+    const list = studentsByClass[keys[k]] || [];
+    for (let j = 0; j < list.length; j++) {
+      if (normalizeAnswer(list[j].name) === n && list[j].stt != null) return list[j].stt;
+    }
   }
   return 99999;
 }
@@ -2740,25 +2743,43 @@ function renderPublicScoreboard() {
 
   const submitted = {};
   Object.keys(bestMap).forEach(function (k) { submitted[k] = true; });
+  // Lớp đã có người nộp → đối chiếu HocSinh để tìm thiếu; hoặc lớp đã hết hạn LichThi
+  const classesWithSubmit = {};
+  Object.keys(bestMap).forEach(function (k) {
+    if (bestMap[k].class) classesWithSubmit[String(bestMap[k].class).trim().toUpperCase()] = true;
+  });
+  function shouldListPending(lop) {
+    if (!lop) return false;
+    const key = String(lop).trim().toUpperCase();
+    if (classesWithSubmit[key]) return true;
+    if (typeof isClassExamOver === "function" && isClassExamOver(lop)) return true;
+    return false;
+  }
+  // Khớp tên không phân biệt hoa/thường, dấu, khoảng trắng thừa
+  function normKey(cls, name) {
+    return String(cls || "").trim().toUpperCase() + "|" + normalizeAnswer(name);
+  }
+  const submittedNorm = {};
+  Object.keys(bestMap).forEach(function (k) {
+    submittedNorm[normKey(bestMap[k].class, bestMap[k].name)] = true;
+  });
+
   let pending = [];
-  // Chỉ liệt kê HS chưa nộp của lớp ĐÃ HẾT hạn thi (theo LichThi)
   const order = window._studentOrder || [];
   if (order.length) {
     order.forEach(function (s) {
-      const k = s.class + "|" + s.name;
-      if (submitted[k]) return;
-      if (!isClassExamOver(s.class)) return; // chưa đến/ còn trong giờ → không đưa vào bảng chưa nộp
+      if (!shouldListPending(s.class)) return;
+      if (submittedNorm[normKey(s.class, s.name)]) return;
       if (filterCls && s.class !== filterCls) return;
       if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
       pending.push({ stt: s.stt, class: s.class, name: s.name, deadline: getDeadlineForClass(s.class) });
     });
   } else {
     Object.keys(studentsByClass || {}).sort().forEach(function (lop) {
-      if (!isClassExamOver(lop)) return;
+      if (!shouldListPending(lop)) return;
       if (filterCls && lop !== filterCls) return;
       (studentsByClass[lop] || []).forEach(function (s) {
-        const k = lop + "|" + s.name;
-        if (submitted[k]) return;
+        if (submittedNorm[normKey(lop, s.name)]) return;
         if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
         pending.push({
           stt: s.stt != null ? s.stt : 99999,
@@ -2771,7 +2792,7 @@ function renderPublicScoreboard() {
   }
   pending.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
   const pendingHtml = !pending.length
-    ? '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Không có HS quá hạn chưa nộp (theo LichThi + bộ lọc)</td></tr>'
+    ? '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Không có HS chưa nộp (đã đủ theo HocSinh / bộ lọc)</td></tr>'
     : pending.map(function (r) {
         return "<tr style=\"border-bottom:1px solid #FED7AA\">" +
           "<td style=\"padding:9px 8px;text-align:center;color:#9A3412\">" + (r.stt < 99999 ? r.stt : "—") + "</td>" +
@@ -3036,9 +3057,10 @@ async function pullScoresFromCloud(silent) {
     if (currentExam && currentExam.code) baiParam = "&bai=" + encodeURIComponent(currentExam.code);
   } catch (eBai) {}
   const listDirect = webhook + (webhook.indexOf("?") >= 0 ? "&" : "?") + "action=list" + baiParam + "&t=" + Date.now();
+  // Ưu tiên webhook trực tiếp (nhanh), allorigins chỉ khi cần
   const listUrls = [
-    "https://api.allorigins.win/raw?url=" + encodeURIComponent(listDirect),
-    listDirect
+    listDirect,
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(listDirect)
   ];
   for (let i = 0; i < listUrls.length; i++) {
     try {
