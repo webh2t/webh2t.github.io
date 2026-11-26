@@ -368,12 +368,8 @@ window.addEventListener("error", function (ev) {
     <div id="exam-picker" class="exam-picker" aria-label="Chọn bài kiểm tra"></div>
     <div class="stats-bar" id="stats-bar">
       <div class="st-title">📊 Lượt xem trang thi</div>
-      <div class="stats-grid">
+      <div class="stats-grid" style="grid-template-columns:1fr;max-width:160px">
         <div class="stat-chip total"><span class="n" id="stat-total">…</span><span class="l">Toàn trang</span></div>
-        <div class="stat-chip"><span class="n" id="stat-b5">…</span><span class="l">Bài 5</span></div>
-        <div class="stat-chip"><span class="n" id="stat-b11">…</span><span class="l">Bài 11</span></div>
-        <div class="stat-chip"><span class="n" id="stat-b21">…</span><span class="l">Bài 21</span></div>
-        <div class="stat-chip"><span class="n" id="stat-b26">…</span><span class="l">Bài 26</span></div>
       </div>
     </div>
     <div id="exam-current" class="exam-current">
@@ -576,17 +572,19 @@ window.addEventListener("error", function (ev) {
       <div id="public-scoreboard" style="margin-top:20px;border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;background:#fff">
         <div style="padding:12px 14px;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
           <h3 style="margin:0;font-size:1rem;font-weight:800;color:#1E3A8A">📊 Bảng điểm tổng hợp</h3>
-          <div style="display:flex;align-items:center;gap:8px">
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
             <label style="font-size:.85rem;font-weight:600;color:#475569">Lọc lớp:</label>
             <select id="sb-filter-class" style="padding:6px 10px;border:1px solid #CBD5E1;border-radius:8px;font-size:.85rem;font-family:inherit">
               <option value="">Tất cả</option>
             </select>
+            <input type="text" id="sb-search-name" placeholder="Tìm họ tên..." style="padding:6px 10px;border:1px solid #CBD5E1;border-radius:8px;font-size:.85rem;font-family:inherit;min-width:140px">
           </div>
         </div>
         <div style="overflow:auto;max-height:320px">
           <table style="width:100%;border-collapse:collapse;font-size:.88rem">
             <thead>
               <tr style="background:#F8FAFC;position:sticky;top:0">
+                <th style="padding:10px 8px;text-align:center;color:#1E3A8A;font-weight:700">STT</th>
                 <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Thời gian nộp</th>
                 <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Lớp</th>
                 <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Họ và tên</th>
@@ -594,7 +592,30 @@ window.addEventListener("error", function (ev) {
               </tr>
             </thead>
             <tbody id="sb-tbody">
-              <tr><td colspan="4" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>
+              <tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bảng học sinh chưa nộp -->
+      <div id="pending-scoreboard" style="margin-top:18px;border:1px solid #FED7AA;border-radius:14px;overflow:hidden;background:#fff">
+        <div style="padding:12px 14px;background:linear-gradient(135deg,#FFF7ED,#FFEDD5)">
+          <h3 style="margin:0;font-size:1rem;font-weight:800;color:#9A3412">📋 Học sinh chưa nộp bài</h3>
+        </div>
+        <div style="overflow:auto;max-height:280px">
+          <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+            <thead>
+              <tr style="background:#FFFBEB;position:sticky;top:0">
+                <th style="padding:10px 8px;text-align:center;color:#9A3412;font-weight:700">STT</th>
+                <th style="padding:10px 8px;text-align:left;color:#9A3412;font-weight:700">Lớp</th>
+                <th style="padding:10px 8px;text-align:left;color:#9A3412;font-weight:700">Họ tên HS chưa nộp</th>
+                <th style="padding:10px 8px;text-align:center;color:#9A3412;font-weight:700">Điểm</th>
+                <th style="padding:10px 8px;text-align:left;color:#9A3412;font-weight:700">Hạn nộp theo lịch thi</th>
+              </tr>
+            </thead>
+            <tbody id="pending-tbody">
+              <tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">—</td></tr>
             </tbody>
           </table>
         </div>
@@ -877,17 +898,41 @@ btnStart.addEventListener("click", startExam);
 
 function parseWorkbook(wb) {
   studentsByClass = {};
+  window._studentOrder = []; // [{stt, class, name}] toàn trường theo STT
   if (wb.Sheets["HocSinh"]) {
-    XLSX.utils.sheet_to_json(wb.Sheets["HocSinh"], { header: 1 }).forEach((row, idx) => {
-      if (idx === 0 && /lớp|lop|họ|tên/i.test(String(row[0] || ""))) return;
-      const lop = String(row[0] || "").trim();
-      const ten = String(row[1] || "").trim();
-      const diem = row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "" ? String(row[2]).trim() : "";
+    const hsRows = XLSX.utils.sheet_to_json(wb.Sheets["HocSinh"], { header: 1, defval: "" });
+    let iStt = -1, iLop = 0, iTen = 1, iNhom = 2;
+    if (hsRows.length) {
+      const h0 = hsRows[0].map(function (h) { return String(h || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d").trim(); });
+      h0.forEach(function (h, i) {
+        if (/^stt$|^tt$|^thu tu$|^#/.test(h)) iStt = i;
+        else if (/^lop$|^lớp$|^class$/.test(h)) iLop = i;
+        else if (/ho|ten|name|họ/.test(h)) iTen = i;
+        else if (/nhom|nhóm|group/.test(h)) iNhom = i;
+      });
+      // Nếu cột 0 là số (không có header STT rõ) → coi là STT
+      if (iStt < 0 && hsRows.length > 1 && /^\d+$/.test(String(hsRows[1][0] || "").trim())) {
+        iStt = 0; iLop = 1; iTen = 2; iNhom = 3;
+      }
+    }
+    let autoStt = 0;
+    hsRows.forEach(function (row, idx) {
+      if (idx === 0 && /lớp|lop|họ|tên|stt/i.test(String(row[0] || "") + String(row[1] || ""))) return;
+      const lop = String(row[iLop] || "").trim();
+      const ten = String(row[iTen] || "").trim();
       if (!ten || !lop) return;
+      autoStt++;
+      let stt = autoStt;
+      if (iStt >= 0) {
+        const v = parseInt(String(row[iStt] || "").trim(), 10);
+        if (!isNaN(v) && v > 0) stt = v;
+      }
+      const nhom = row[iNhom] !== undefined && row[iNhom] !== null && String(row[iNhom]).trim() !== "" ? String(row[iNhom]).trim() : "";
       if (!studentsByClass[lop]) studentsByClass[lop] = [];
-      const nhom = row[2] !== undefined && row[2] !== null && String(row[2]).trim() !== "" ? String(row[2]).trim() : "";
-      studentsByClass[lop].push({ name: ten, score: diem, group: nhom });
+      studentsByClass[lop].push({ name: ten, score: "", group: nhom, stt: stt });
+      window._studentOrder.push({ stt: stt, class: lop, name: ten });
     });
+    window._studentOrder.sort(function (a, b) { return a.stt - b.stt; });
   }
   questionBank = { part1: [], part2: [], part3: [] };
   window.examCodes = {}; // pool theo mã (nếu có) — buildExam xáo từ toàn bộ ngân hàng
@@ -1242,6 +1287,7 @@ function parseWorkbook(wb) {
   dataReady = true;
   refreshClassDropdown();
   try { if (typeof renderScheduleList === "function") renderScheduleList(); } catch(e) {}
+  try { if (typeof rescoreAllStored === "function") rescoreAllStored(); } catch(e) {}
   loadBar.style.display = "none";
   if (isAdmin) renderScoreTable();
 }
@@ -1268,35 +1314,22 @@ function refreshClassDropdown() {
     shown++;
   });
   classSelect.disabled = shown === 0;
+  // Ẩn khung vàng lịch thi chi tiết (không hiện suất LichThi trên giao diện HS)
   const lb = document.getElementById("load-bar");
   if (lb) {
     if (!hasAny) {
       lb.style.display = "flex";
       lb.style.background = "#FEF3C7";
       lb.style.color = "#92400E";
-      lb.textContent = "⚠️ Giáo viên chưa cấu hình khung giờ. Chỉ lớp trong lịch mới được thi.";
+      lb.textContent = "⚠️ Chưa có khung giờ làm bài. Liên hệ giáo viên.";
     } else if (!shown) {
       lb.style.display = "flex";
       lb.style.background = "#FEF3C7";
       lb.style.color = "#92400E";
-      let extra = "";
-      try {
-        const st = window._lichThiStatus;
-        if (st && st.detail && st.detail.length) {
-          extra = " Lịch đã nạp " + st.total + " suất (" + st.detail.join(" | ") + "). Máy: " + new Date().toLocaleString("vi-VN") + ".";
-        } else if (schList.length) {
-          extra = " Có " + schList.length + " suất nhưng ngoài giờ. Giờ máy: " + new Date().toLocaleString("vi-VN") + ".";
-        } else {
-          extra = " Chưa nạp được LichThi từ Excel. Ctrl+F5 hoặc xóa dữ liệu trang (localStorage).";
-        }
-      } catch (e) {}
-      lb.textContent = "⚠️ Hiện không có lớp nào trong khung giờ được phép làm bài." + extra;
+      lb.textContent = "⚠️ Hiện không có lớp nào trong khung giờ được phép làm bài.";
     } else {
-      lb.style.display = "flex";
-      lb.style.background = "#D1FAE5";
-      lb.style.color = "#065F46";
-      lb.textContent = "✅ Đang mở: " + Array.from(classSelect.options).filter(function(o){return o.value;}).map(function(o){return o.value;}).join(", ");
-      setTimeout(function () { if (lb && lb.textContent.indexOf("Đang mở") >= 0) lb.style.display = "none"; }, 8000);
+      lb.style.display = "none";
+      lb.textContent = "";
     }
   }
 }
@@ -1419,8 +1452,12 @@ function exitAdminHint() {
     if (picker) picker.style.display = "none";
     const sui = document.getElementById("student-ui");
     if (sui) sui.style.display = "block";
+    // Ẩn thống kê lượt xem khi đã chọn bài (chỉ hiện màn chính)
+    const statsBar = document.getElementById("stats-bar");
+    if (statsBar) statsBar.style.display = "none";
     // reset bank before load
     studentsByClass = {};
+    window._studentOrder = [];
     questionBank = { part1: [], part2: [], part3: [] };
     dataReady = false;
     const cs = document.getElementById("class-select");
@@ -1467,6 +1504,8 @@ function exitAdminHint() {
     if (blog) blog.style.display = "none";
     const sel = document.getElementById("screen-select");
     if (sel) sel.style.display = "flex";
+    const statsBar = document.getElementById("stats-bar");
+    if (statsBar) statsBar.style.display = "";
     const title = document.getElementById("page-title");
     const sub = document.getElementById("page-sub");
     if (title) title.textContent = "📝 Kiểm tra thường xuyên – Tin học 11";
@@ -2421,58 +2460,215 @@ async function submitExam(auto) {
 }
 
 /** Bảng điểm tổng hợp: điểm cao nhất mỗi HS, lọc theo lớp, sắp xếp theo tên */
+/** Lấy STT học sinh từ sheet HocSinh (toàn trường) */
+function getStudentStt(cls, name) {
+  const order = window._studentOrder || [];
+  for (let i = 0; i < order.length; i++) {
+    if (order[i].class === cls && order[i].name === name) return order[i].stt;
+  }
+  // fallback: tìm trong studentsByClass
+  const list = (studentsByClass[cls] || []);
+  for (let j = 0; j < list.length; j++) {
+    if (list[j].name === name && list[j].stt != null) return list[j].stt;
+  }
+  return 99999;
+}
+/** Hạn nộp theo lịch thi (suất gần nhất / đang mở) */
+function getDeadlineForClass(lop) {
+  try {
+    const list = (typeof loadSchedule === "function") ? loadSchedule() : [];
+    const slots = list.filter(function (s) { return s.lop === lop; });
+    if (!slots.length) return "—";
+    const now = Date.now();
+    // Ưu tiên suất đang mở, không thì suất sắp tới gần nhất, không thì suất cuối
+    let best = null;
+    slots.forEach(function (s) {
+      const from = new Date(s.from).getTime();
+      const to = new Date(s.to).getTime();
+      if (now >= from && now <= to) { best = s; }
+      else if (!best && now < from) { best = s; }
+    });
+    if (!best) best = slots[slots.length - 1];
+    const a = new Date(best.from);
+    const b = new Date(best.to);
+    if (a.getFullYear() <= 2020 && b.getFullYear() >= 2090) return "OPEN";
+    const pad = function (n) { return String(n).padStart(2, "0"); };
+    return pad(b.getDate()) + "/" + pad(b.getMonth() + 1) + "/" + b.getFullYear() + " " + pad(b.getHours()) + ":" + pad(b.getMinutes());
+  } catch (e) { return "—"; }
+}
+/** Chấm lại Phần 3 (SA) theo normalizeAnswer cho 1 bản ghi có review */
+function rescoreRecordPart3(r) {
+  if (!r || !r.review || !r.review.length) return r;
+  let changed = false;
+  let scoreP3 = 0;
+  r.review.forEach(function (it) {
+    if (it.type !== "sa") return;
+    const userShow = String(it.user || "");
+    const correctShow = String(it.correct || "");
+    const corrects = correctShow.split("|").map(function (s) { return s.trim(); }).filter(Boolean);
+    const userNorm = normalizeAnswer(userShow === "(bỏ)" ? "" : userShow);
+    let ok = false;
+    if (userNorm && corrects.length) {
+      ok = corrects.some(function (c) { return normalizeAnswer(c) === userNorm; });
+    }
+    const newPts = ok ? 0.5 : 0;
+    if (Number(it.pts) !== newPts) {
+      it.pts = newPts;
+      it.ok = ok;
+      changed = true;
+    }
+    scoreP3 += newPts;
+  });
+  if (!changed && r.partScores && r.partScores.p3 != null) return r;
+  // Tính lại tổng từ review
+  let p1 = 0, p2 = 0, p3 = 0;
+  r.review.forEach(function (it) {
+    const pts = Number(it.pts) || 0;
+    if (it.type === "mc") p1 += pts;
+    else if (it.type === "tf") p2 += pts;
+    else if (it.type === "sa") p3 += pts;
+  });
+  p1 = Math.round(p1 * 100) / 100;
+  p2 = Math.round(p2 * 100) / 100;
+  p3 = Math.round(p3 * 100) / 100;
+  const total = Math.round((p1 + p2 + p3) * 100) / 100;
+  r.score = total;
+  r.partScores = Object.assign({}, r.partScores || {}, { p1: p1, p2: p2, p3: p3 });
+  return r;
+}
+/** Chấm lại toàn bộ bài đã lưu (chủ yếu Phần 3) */
+function rescoreAllStored() {
+  try {
+    let list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
+    if (!list.length) return;
+    list = list.map(rescoreRecordPart3);
+    localStorage.setItem(getStorageKey(), JSON.stringify(list));
+  } catch (e) { console.warn("rescoreAllStored", e); }
+}
+
 function renderPublicScoreboard() {
   const tbody = document.getElementById("sb-tbody");
+  const pendingBody = document.getElementById("pending-tbody");
   const filterSel = document.getElementById("sb-filter-class");
+  const searchInp = document.getElementById("sb-search-name");
   if (!tbody) return;
+
+  // Chấm lại SA trước khi hiển thị
+  rescoreAllStored();
+
   let list = [];
   try { list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]"); } catch (e) {}
 
-  // Gộp theo HS → lấy điểm cao nhất + thời gian nộp tương ứng lần cao nhất
+  // Gộp theo HS → điểm cao nhất
   const bestMap = {};
   list.forEach(function (r) {
     const k = (r.class || "") + "|" + (r.name || "");
     const s = Number(r.score);
     if (isNaN(s) || !r.name) return;
     if (!bestMap[k] || s > bestMap[k].score) {
-      bestMap[k] = { class: r.class || "", name: r.name || "", score: s, time: r.time || "" };
+      bestMap[k] = {
+        class: r.class || "",
+        name: r.name || "",
+        score: s,
+        time: r.time || "",
+        stt: getStudentStt(r.class, r.name)
+      };
     }
   });
   let rows = Object.keys(bestMap).map(function (k) { return bestMap[k]; });
 
-  // Điền filter lớp
+  // Tập lớp cho filter: tất cả lớp trong HocSinh + đã nộp (kể cả không có lịch)
+  const allClassesSet = new Set();
+  Object.keys(studentsByClass || {}).forEach(function (c) { allClassesSet.add(c); });
+  rows.forEach(function (r) { if (r.class) allClassesSet.add(r.class); });
+  const allClasses = Array.from(allClassesSet).sort(function (a, b) { return a.localeCompare(b, "vi"); });
+
   if (filterSel) {
     const cur = filterSel.value;
-    const classes = Array.from(new Set(rows.map(function (r) { return r.class; }).filter(Boolean))).sort();
     filterSel.innerHTML = '<option value="">Tất cả</option>' +
-      classes.map(function (c) { return '<option value="' + c + '">' + c + "</option>"; }).join("");
-    if (cur && classes.indexOf(cur) >= 0) filterSel.value = cur;
+      allClasses.map(function (c) { return '<option value="' + c + '">' + c + "</option>"; }).join("");
+    if (cur && allClasses.indexOf(cur) >= 0) filterSel.value = cur;
     filterSel.onchange = function () { renderPublicScoreboard(); };
+  }
+  if (searchInp && !searchInp._bound) {
+    searchInp._bound = true;
+    searchInp.addEventListener("input", function () { renderPublicScoreboard(); });
   }
 
   const filterCls = filterSel ? filterSel.value : "";
+  const qName = searchInp ? normalizeAnswer(searchInp.value) : "";
   if (filterCls) rows = rows.filter(function (r) { return r.class === filterCls; });
+  if (qName) rows = rows.filter(function (r) { return normalizeAnswer(r.name).indexOf(qName) >= 0; });
 
-  // Sắp xếp theo Họ và tên (locale vi)
-  rows.sort(function (a, b) {
-    const c = (a.class || "").localeCompare(b.class || "", "vi");
-    if (c !== 0) return c;
-    return (a.name || "").localeCompare(b.name || "", "vi");
-  });
+  // Sắp xếp theo STT tăng dần
+  rows.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
 
   if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>';
-    return;
+    tbody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>';
+  } else {
+    tbody.innerHTML = rows.map(function (r) {
+      return "<tr style=\"border-bottom:1px solid #E2E8F0\">" +
+        "<td style=\"padding:9px 8px;text-align:center;color:#64748B\">" + (r.stt < 99999 ? r.stt : "—") + "</td>" +
+        "<td style=\"padding:9px 8px;color:#64748B;font-size:.84rem\">" + (r.time || "—") + "</td>" +
+        "<td style=\"padding:9px 8px;font-weight:600\">" + (r.class || "—") + "</td>" +
+        "<td style=\"padding:9px 8px\">" + (r.name || "—") + "</td>" +
+        "<td style=\"padding:9px 8px;text-align:center;font-weight:800;color:#1D4ED8\">" + r.score + "</td>" +
+        "</tr>";
+    }).join("");
   }
-  tbody.innerHTML = rows.map(function (r) {
-    const scoreColor = r.score >= 8 ? "#166534" : r.score >= 5 ? "#1D4ED8" : "#B91C1C";
-    return "<tr style=\"border-bottom:1px solid #E2E8F0\">" +
-      "<td style=\"padding:9px 8px;color:#64748B;font-size:.84rem\">" + (r.time || "—") + "</td>" +
-      "<td style=\"padding:9px 8px;font-weight:600\">" + (r.class || "—") + "</td>" +
-      "<td style=\"padding:9px 8px\">" + (r.name || "—") + "</td>" +
-      "<td style=\"padding:9px 8px;text-align:center;font-weight:800;color:" + scoreColor + "\">" + r.score + "</td>" +
-      "</tr>";
-  }).join("");
+
+  // —— Bảng chưa nộp ——
+  if (pendingBody) {
+    const submitted = {};
+    Object.keys(bestMap).forEach(function (k) { submitted[k] = true; });
+    let pending = [];
+    const order = window._studentOrder || [];
+    if (order.length) {
+      order.forEach(function (s) {
+        const k = s.class + "|" + s.name;
+        if (submitted[k]) return;
+        if (filterCls && s.class !== filterCls) return;
+        if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
+        pending.push({
+          stt: s.stt,
+          class: s.class,
+          name: s.name,
+          score: 0,
+          deadline: getDeadlineForClass(s.class)
+        });
+      });
+    } else {
+      Object.keys(studentsByClass || {}).sort().forEach(function (lop) {
+        if (filterCls && lop !== filterCls) return;
+        (studentsByClass[lop] || []).forEach(function (s) {
+          const k = lop + "|" + s.name;
+          if (submitted[k]) return;
+          if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
+          pending.push({
+            stt: s.stt != null ? s.stt : 99999,
+            class: lop,
+            name: s.name,
+            score: 0,
+            deadline: getDeadlineForClass(lop)
+          });
+        });
+      });
+    }
+    pending.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
+    if (!pending.length) {
+      pendingBody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Không còn học sinh chưa nộp (theo bộ lọc)</td></tr>';
+    } else {
+      pendingBody.innerHTML = pending.map(function (r) {
+        return "<tr style=\"border-bottom:1px solid #FED7AA\">" +
+          "<td style=\"padding:9px 8px;text-align:center;color:#9A3412\">" + (r.stt < 99999 ? r.stt : "—") + "</td>" +
+          "<td style=\"padding:9px 8px;font-weight:600\">" + (r.class || "—") + "</td>" +
+          "<td style=\"padding:9px 8px\">" + (r.name || "—") + "</td>" +
+          "<td style=\"padding:9px 8px;text-align:center;font-weight:800;color:#94A3B8\">0</td>" +
+          "<td style=\"padding:9px 8px;color:#B45309;font-size:.84rem\">" + (r.deadline || "—") + "</td>" +
+          "</tr>";
+      }).join("");
+    }
+  }
 }
 
 function renderResultBreakdown(reviewList, partScores, totalScore) {
@@ -3518,19 +3714,9 @@ if (_cancelExam) {
       })
       .catch(function () {});
   }
-  // Toàn trang: hit 1 lần mỗi lần mở trang
+  // Chỉ thống kê toàn trang (ẩn theo từng bài)
   hit("webh2t-exam11", "stat-total");
-  // 4 bài: chỉ GET để hiển thị (hit khi chọn bài)
-  get("webh2t-exam11-b4", "stat-b4");
-  get("webh2t-exam11-b11", "stat-b11");
-  get("webh2t-exam11-b18", "stat-b18");
-  get("webh2t-exam11-b25", "stat-b25");
-  window.hitExamView = function (examId) {
-    var map = { b5: "webh2t-exam11-b5", b11: "webh2t-exam11-b11", b21: "webh2t-exam11-b21", b26: "webh2t-exam11-b26" };
-    var elMap = { b5: "stat-b5", b11: "stat-b11", b21: "stat-b21", b26: "stat-b26" };
-    var k = map[examId];
-    if (k) hit(k, elMap[examId]);
-  };
+  window.hitExamView = function () { /* không đếm theo bài */ };
 })();
 </script>
 
