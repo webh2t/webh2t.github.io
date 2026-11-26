@@ -1243,6 +1243,18 @@ function parseWorkbook(wb) {
             from: new Date(2020, 0, 1, 0, 0, 0).toISOString(),
             to: new Date(2099, 11, 31, 23, 59, 59).toISOString()
           });
+          try {
+            window.htmlIntroLichThi = window.htmlIntroLichThi || {};
+            var denTxt = String(cDen != null ? cDen : "").trim();
+            var ngayTxt = String(cNgay != null ? cNgay : "").trim();
+            var han = denTxt || (ngayTxt && !/^OPEN$/i.test(ngayTxt) ? ngayTxt : "");
+            window.htmlIntroLichThi[lop] = {
+              status: "OPEN",
+              date: ngayTxt,
+              to: denTxt,
+              text: han ? ("Hạn: " + han) : "OPEN (theo LichThi)"
+            };
+          } catch (eH) {}
           console.log("LichThi OPEN", lop);
           return;
         }
@@ -1259,6 +1271,13 @@ function parseWorkbook(wb) {
             const toD = combine(d2, timeFromValue(cDen) || { h: 23, m: 59 }, 23, 59);
             if (fromD && toD && !isNaN(fromD.getTime()) && !isNaN(toD.getTime())) {
               slots.push({ id: "xls_" + i + "_" + Date.now(), lop: lop, from: fromD.toISOString(), to: toD.toISOString() });
+              try {
+                window.htmlIntroLichThi = window.htmlIntroLichThi || {};
+                window.htmlIntroLichThi[lop] = {
+                  status: "SCHEDULED",
+                  text: "Đến " + toD.toLocaleString("vi-VN")
+                };
+              } catch (eH2) {}
             }
             return;
           }
@@ -3629,6 +3648,38 @@ if (_cancelExam) {
   </div>
 </div>
 
+
+  <!-- HS chưa nộp theo HocSinh -->
+  <div id="htmlintro-missing-wrap" style="margin-top:22px;background:#fff;border-radius:14px;border:1px solid #E2E8F0;padding:16px 18px;box-shadow:0 1px 3px rgba(15,23,42,.06)">
+    <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <h3 style="margin:0;color:#1e3a5f;font-size:1.05rem">Học sinh chưa nộp bài</h3>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <label style="font-size:.85rem;color:#334155">Lọc lớp
+          <select id="htmlintro-missing-class" style="margin-left:6px;padding:6px 10px;border-radius:8px;border:1px solid #CBD5E1">
+            <option value="">Tất cả lớp</option>
+          </select>
+        </label>
+        <button type="button" id="htmlintro-missing-refresh" style="padding:6px 14px;border-radius:8px;border:none;background:#0F766E;color:#fff;font-weight:600;cursor:pointer">Làm mới</button>
+      </div>
+    </div>
+    <div style="overflow:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:.9rem">
+        <thead>
+          <tr style="background:#F0FDFA;color:#115E59;text-align:left">
+            <th style="padding:8px 10px;border-bottom:2px solid #99F6E4">STT</th>
+            <th style="padding:8px 10px;border-bottom:2px solid #99F6E4">Lớp</th>
+            <th style="padding:8px 10px;border-bottom:2px solid #99F6E4">Họ tên HS chưa nộp</th>
+            <th style="padding:8px 10px;border-bottom:2px solid #99F6E4;text-align:center">Điểm</th>
+            <th style="padding:8px 10px;border-bottom:2px solid #99F6E4">Hạn nộp theo lịch thi</th>
+          </tr>
+        </thead>
+        <tbody id="htmlintro-missing-body">
+          <tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Đang tải danh sách…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
 <div id="screen-blog">
   <div class="blog-card">
     <h2>NỘP SẢN PHẨM WEBSITE – TIN HỌC 12</h2>
@@ -5592,6 +5643,121 @@ function renderHtmlIntroTable() {
   }).join("");
 }
 
+
+function getHtmlIntroDeadlineForClass_(lop) {
+  try {
+    if (typeof window.htmlIntroLichThi === "object" && window.htmlIntroLichThi) {
+      var row = window.htmlIntroLichThi[lop] || window.htmlIntroLichThi[String(lop).toUpperCase()];
+      if (row) {
+        if (row.text) return row.text;
+        var parts = [];
+        if (row.date) parts.push(row.date);
+        if (row.from) parts.push("từ " + row.from);
+        if (row.to) parts.push("đến " + row.to);
+        if (row.status) parts.push("(" + row.status + ")");
+        if (parts.length) return parts.join(" ");
+      }
+    }
+    // fallback: scan global schedule arrays used by isClassOpenNow
+    if (typeof window.examSchedule === "object" && Array.isArray(window.examSchedule)) {
+      var hits = window.examSchedule.filter(function (s) {
+        return String(s.lop || s.class || "").trim().toUpperCase() === String(lop || "").trim().toUpperCase();
+      });
+      if (hits.length) {
+        var h = hits[0];
+        var t = [];
+        if (h.date || h.ngay) t.push(h.date || h.ngay);
+        if (h.to || h.den || h.end) t.push("đến " + (h.to || h.den || h.end));
+        if (t.length) return t.join(" ");
+      }
+    }
+  } catch (e) {}
+  return "—";
+}
+
+function renderHtmlIntroMissing_() {
+  var body = document.getElementById("htmlintro-missing-body");
+  if (!body) return;
+  var byClass = window.htmlIntroStudentsByClass || window.studentsByClass || {};
+  var filterEl = document.getElementById("htmlintro-missing-class");
+  // populate filter
+  if (filterEl && filterEl.options.length <= 1) {
+    Object.keys(byClass).sort().forEach(function (c) {
+      var o = document.createElement("option");
+      o.value = c; o.textContent = c;
+      filterEl.appendChild(o);
+    });
+  }
+  var filterClass = filterEl ? (filterEl.value || "") : "";
+  // submitted set
+  var submitted = {};
+  try {
+    var all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
+    all.forEach(function (r) {
+      var k = String(r.class || r.lop || "").trim().toLowerCase() + "||" + String(r.name || r.hoTen || "").trim().toLowerCase();
+      if (k !== "||") submitted[k] = true;
+    });
+  } catch (e) {}
+  // also merge cloud-listed if available
+  try {
+    if (Array.isArray(window.htmlIntroCloudList)) {
+      window.htmlIntroCloudList.forEach(function (r) {
+        var k = String(r.class || r.lop || "").trim().toLowerCase() + "||" + String(r.name || r.hoTen || "").trim().toLowerCase();
+        if (k !== "||") submitted[k] = true;
+      });
+    }
+  } catch (e2) {}
+
+  var missing = [];
+  Object.keys(byClass).sort().forEach(function (lop) {
+    if (filterClass && lop !== filterClass) return;
+    var arr = byClass[lop] || [];
+    arr.forEach(function (s) {
+      var name = typeof s === "string" ? s : (s.name || "");
+      var pin = typeof s === "object" ? String(s.pin || "") : "";
+      if (!name) return;
+      var k = String(lop).trim().toLowerCase() + "||" + String(name).trim().toLowerCase();
+      if (submitted[k]) return;
+      missing.push({ lop: lop, name: name, pin: pin });
+    });
+  });
+  // sort by class then PIN
+  missing.sort(function (a, b) {
+    if (a.lop !== b.lop) return String(a.lop).localeCompare(String(b.lop), "vi");
+    var pa = parseInt(a.pin, 10), pb = parseInt(b.pin, 10);
+    if (!isNaN(pa) && !isNaN(pb) && pa !== pb) return pa - pb;
+    return String(a.name).localeCompare(String(b.name), "vi");
+  });
+
+  if (!missing.length) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#64748B;padding:14px">Không còn HS chưa nộp' + (filterClass ? (" ở lớp " + filterClass) : "") + '</td></tr>';
+    return;
+  }
+  body.innerHTML = missing.map(function (m, i) {
+    var deadline = getHtmlIntroDeadlineForClass_(m.lop);
+    return '<tr>' +
+      '<td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:center">' + (i + 1) + '</td>' +
+      '<td style="padding:8px 10px;border-bottom:1px solid #E2E8F0">' + m.lop + '</td>' +
+      '<td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;font-weight:600">' + m.name + '</td>' +
+      '<td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;text-align:center;color:#DC2626;font-weight:700">0</td>' +
+      '<td style="padding:8px 10px;border-bottom:1px solid #E2E8F0;color:#475569">' + deadline + '</td>' +
+      '</tr>';
+  }).join("");
+}
+
+function bindHtmlIntroMissing_() {
+  var sel = document.getElementById("htmlintro-missing-class");
+  var btn = document.getElementById("htmlintro-missing-refresh");
+  if (sel && !sel.dataset.bound) {
+    sel.dataset.bound = "1";
+    sel.onchange = function () { renderHtmlIntroMissing_(); };
+  }
+  if (btn && !btn.dataset.bound) {
+    btn.dataset.bound = "1";
+    btn.onclick = function () { renderHtmlIntroMissing_(); };
+  }
+}
+
 function bindHtmlIntroFilters_() {
   var btn = document.getElementById("htmlintro-filter-btn");
   var clr = document.getElementById("htmlintro-filter-clear");
@@ -5615,6 +5781,8 @@ function bindHtmlIntroFilters_() {
       if (e.key === "Enter") renderHtmlIntroTable();
     });
   }
+  try { bindHtmlIntroMissing_(); } catch (e0) {}
+  try { renderHtmlIntroMissing_(); } catch (e1) {}
 }
 
 
