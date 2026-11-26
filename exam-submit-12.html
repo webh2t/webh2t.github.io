@@ -762,9 +762,9 @@ const STORAGE_KEY = "webh2t_kttx_tin12_bai4";
 const DATA_KEY = "webh2t_exam_data_bai4";
 const SCHEDULE_KEY = "webh2t_lich_thi_v2";
 const SCHEDULE_KEY_LEGACY = "webh2t_lich_thi";
-try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec"); } catch (e) {}
+try { localStorage.setItem("webh2t_webhook_url", "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec"); } catch (e) {}
 const DATA_BASE = "https://raw.githubusercontent.com/webh2t/webh2t.github.io/main/data/";
-const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+const HTML_INTRO_WEBHOOK = "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
 const HTML_INTRO_SHEET = "https://docs.google.com/spreadsheets/d/11zcuave5YEpFjclTAuZPdn1Zi5casiUjj9PI49022ss/edit?usp=sharing";
 const EXAMS = [
   { id: "b4", code: "B4", title: "Bài 4. Giao thức mạng", file: "B4GTMANG_TIN12.xlsx", sub: "Giao thức mạng · Kết nối tri thức" },
@@ -1446,7 +1446,7 @@ function exitAdminHint() {
 
 
 (function seedCloudDefaults() {
-  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+  var DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
   var DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem("webh2t_webhook_url")) localStorage.setItem("webh2t_webhook_url", DEFAULT_WEBHOOK);
   if (!localStorage.getItem("webh2t_cloud_read_url")) localStorage.setItem("webh2t_cloud_read_url", DEFAULT_READ);
@@ -2591,7 +2591,7 @@ const CLOUD_WEBHOOK_KEY = "webh2t_webhook_url";
 const CLOUD_READ_KEY = "webh2t_cloud_read_url";
 
 function loadCloudConfig() {
-  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+  const DEFAULT_WEBHOOK = "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
   const DEFAULT_READ = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   if (!localStorage.getItem(CLOUD_WEBHOOK_KEY)) localStorage.setItem(CLOUD_WEBHOOK_KEY, DEFAULT_WEBHOOK);
   if (!localStorage.getItem(CLOUD_READ_KEY)) localStorage.setItem(CLOUD_READ_KEY, DEFAULT_READ);
@@ -2608,7 +2608,7 @@ function saveCloudConfig() {
   alert("Đã lưu cấu hình cloud trên máy này.\nWebhook: " + (w ? "có" : "chưa") + "\nURL đọc: " + (r ? "có" : "chưa"));
 }
 function pushScoreToCloud(record) {
-  const WH = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+  const WH = "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
   try { localStorage.setItem("webh2t_webhook_url", WH); } catch (e) {}
   if (window._cloudSentExamId === record.examId && record.examId) {
     console.log("[Cloud] skip duplicate", record.examId);
@@ -2688,7 +2688,7 @@ function pushScoreToCloud(record) {
 
 
 async function pullScoresFromCloud() {
-  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+  const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1Lh7Uy9QPYly1po3rwNR8soLjEaboOKaLDdyqx0XvVwU/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
@@ -3858,7 +3858,7 @@ function refreshBlogScoresFromCloud() {
   var WH = "";
   try { WH = localStorage.getItem("webh2t_webhook_url") || ""; } catch (e) {}
   if (!WH) {
-    WH = "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+    WH = "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
   }
   fetch(WH + "?action=list&bai=B25&t=" + Date.now())
     .then(function (r) { return r.json(); })
@@ -4216,7 +4216,7 @@ var HTMLINTRO_SYNC_KEY = "webh2t_htmlintro11";
 
 (function bootHtmlIntroWebhook(){
   try {
-    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
+    var w = (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) ? HTML_INTRO_WEBHOOK : "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
     if (w) {
       localStorage.setItem("webh2t_cloud_webhook", w);
       localStorage.setItem("webh2t_htmlintro_webhook", w);
@@ -4567,7 +4567,7 @@ function initHtmlIntroUI() {
 
   // Hạn nộp  — khóa chọn lớp
   if (typeof isHtmlIntroSubmitLocked_ === "function" && isHtmlIntroSubmitLocked_()) {
-    classSel.innerHTML = '<option value="">— Không mở nộp (LichThi) —</option>';
+    classSel.innerHTML = '<option value="">— Đã hết thời gian nộp bài thi —</option>';
     classSel.disabled = true;
     if (stuSel) {
       stuSel.innerHTML = '<option value="">— Hết hạn —</option>';
@@ -4575,7 +4575,7 @@ function initHtmlIntroUI() {
     }
     try { applyHtmlIntroDeadlineLock_(); } catch (eL) {}
     var hintL = document.getElementById("htmlintro-hint");
-    if (hintL) hintL.textContent = typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Hết hạn nộp bài.";
+    if (hintL) hintL.textContent = typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Đã hết thời gian nộp bài thi";
   } else {
   var classes = Object.keys(studentsByClass || {}).sort();
   classSel.innerHTML = '<option value="">-- Chon lop --</option>';
@@ -4611,12 +4611,25 @@ function initHtmlIntroUI() {
     var lop = classSel.value;
     stuSel.innerHTML = '<option value="">-- Chon hoc sinh --</option>';
     if (!lop || !studentsByClass[lop]) { stuSel.disabled = true; fillPinFromSelection(); return; }
-    studentsByClass[lop].forEach(function (s) {
+    var list = (studentsByClass[lop] || []).slice().sort(function (a, b) {
+      var pa = parseInt(String(typeof a === "object" ? a.pin : ""), 10);
+      var pb = parseInt(String(typeof b === "object" ? b.pin : ""), 10);
+      if (!isNaN(pa) && !isNaN(pb) && pa !== pb) return pa - pb;
+      var na = typeof a === "string" ? a : (a.name || "");
+      var nb = typeof b === "string" ? b : (b.name || "");
+      return String(na).localeCompare(String(nb), "vi");
+    });
+    list.forEach(function (s) {
       var name = typeof s === "string" ? s : (s.name || "");
+      var pin = typeof s === "object" ? String(s.pin || "") : "";
       if (!name) return;
       var o = document.createElement("option");
       o.value = name;
-      o.textContent = name;
+      o.setAttribute("data-pin", pin);
+      var locked = false;
+      try { locked = isHtmlIntroNameLocked_(lop, name); } catch (eLk) {}
+      o.textContent = name + (pin ? (" · PIN " + pin) : "") + (locked ? " (đã nộp 2 lần)" : "");
+      if (locked) o.disabled = true;
       stuSel.appendChild(o);
     });
     stuSel.disabled = false;
@@ -4699,6 +4712,25 @@ function initHtmlIntroUI() {
       btn.disabled = true;
       btn.textContent = "Dang nop...";
 
+      // Tối đa 2 lần nộp / HS
+      var subCount = 0;
+      try { subCount = countHtmlIntroSubmissions_(lop, name); } catch (eC0) {}
+      if (subCount >= 2) {
+        alert("Bạn đã nộp đủ 2 lần. Không thể nộp thêm.");
+        if (hint) hint.textContent = "Đã khóa tên HS — nộp tối đa 2 lần.";
+        btn.disabled = false;
+        btn.textContent = "NỘP BÀI";
+        try {
+          var stuSelLock = document.getElementById("htmlintro-student");
+          if (stuSelLock) {
+            stuSelLock.disabled = true;
+            var opt = stuSelLock.querySelector('option[value="' + name.replace(/"/g, '') + '"]');
+            if (opt) opt.disabled = true;
+          }
+        } catch (eL) {}
+        return;
+      }
+
       var timeStr = new Date().toLocaleString("vi-VN");
       var plag = { flag: false, with: "" };
       try { plag = detectHtmlPlagiarism_(code, lop, name) || plag; } catch (ePl) {}
@@ -4734,8 +4766,8 @@ function initHtmlIntroUI() {
       } catch (eC) {}
       try {
         if (typeof isHtmlIntroSubmitLocked_ === "function" && isHtmlIntroSubmitLocked_()) {
-          alert(typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Không thể nộp bài theo lịch LichThi.");
-          if (hint) hint.textContent = "Không thể nộp bài (LichThi).";
+          alert(typeof htmlIntroDeadlineText_ === "function" ? htmlIntroDeadlineText_() : "Đã hết thời gian nộp bài thi");
+          if (hint) hint.textContent = "Đã hết thời gian nộp bài thi";
           return;
         }
         rec.html = code;
@@ -4843,7 +4875,7 @@ function isHtmlIntroSubmitLocked_() {
   try { return Date.now() >= HTMLINTRO_DEADLINE.getTime(); } catch (e) { return false; }
 }
 function htmlIntroDeadlineText_() {
-  return "Không thể chọn lớp / nộp bài (theo lịch LichThi).";
+  return "Đã hết thời gian nộp bài thi";
 }
 
 function applyHtmlIntroDeadlineLock_() {
@@ -4862,7 +4894,7 @@ function applyHtmlIntroDeadlineLock_() {
   });
   var cls = document.getElementById("htmlintro-class");
   if (cls && locked) {
-    cls.innerHTML = '<option value="">— Không mở nộp (LichThi) —</option>';
+    cls.innerHTML = '<option value="">— Đã hết thời gian nộp bài thi —</option>';
   }
   return locked;
 }
@@ -4875,6 +4907,23 @@ function applyHtmlIntroDeadlineLock_() {
   else tick();
   setInterval(tick, 30000);
 })();
+
+
+function countHtmlIntroSubmissions_(lop, name) {
+  var n = 0;
+  try {
+    var all = JSON.parse(localStorage.getItem(HTMLINTRO_SYNC_KEY) || "[]");
+    var ln = String(name || "").trim().toLowerCase();
+    var lc = String(lop || "").trim().toLowerCase();
+    all.forEach(function (r) {
+      if (String(r.name || "").trim().toLowerCase() === ln && String(r.class || r.lop || "").trim().toLowerCase() === lc) n++;
+    });
+  } catch (e) {}
+  return n;
+}
+function isHtmlIntroNameLocked_(lop, name) {
+  return countHtmlIntroSubmissions_(lop, name) >= 2;
+}
 
 function gradeHtmlIntroLocal_(source, name, lop) {
   var src = String(source || "");
@@ -5175,8 +5224,8 @@ function detectHtmlPlagiarism_(code, lop, name) {
 function getHtmlIntroWebhook_() {
   try {
     if (typeof HTML_INTRO_WEBHOOK === "string" && HTML_INTRO_WEBHOOK) return HTML_INTRO_WEBHOOK;
-    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec";
-  } catch (e) { return "https://script.google.com/macros/s/AKfycbzbCFEGovYsDV-FkEBNyHmRFCpzrNX72-JNULgjBruwb0UtvJg7eUaz1SLSwlHa0XI/exec"; }
+    return localStorage.getItem("webh2t_htmlintro_webhook") || localStorage.getItem("webh2t_cloud_webhook") || "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec";
+  } catch (e) { return "https://script.google.com/macros/s/AKfycbwYU5ihXZAKX9vYsa54tkbetn4sqVOLUxxbF8g0Ef_jRDEAzqWbr0yhhgP43W_C_klY/exec"; }
 }
 
 
@@ -5486,7 +5535,15 @@ function renderHtmlIntroTable() {
     body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#94A3B8;padding:12px">Chưa có dữ liệu</td></tr>';
     return;
   }
-  all.sort(function (a, b) { return (Number(b.at) || 0) - (Number(a.at) || 0); });
+  // Sắp xếp theo mã PIN tăng dần (cùng lớp ưu tiên filter)
+  all.sort(function (a, b) {
+    var pa = String(a.pin || "").trim();
+    var pb = String(b.pin || "").trim();
+    var na = parseInt(pa, 10); var nb = parseInt(pb, 10);
+    if (!isNaN(na) && !isNaN(nb) && na !== nb) return na - nb;
+    if (pa !== pb) return pa.localeCompare(pb, "vi");
+    return String(a.name || "").localeCompare(String(b.name || ""), "vi");
+  });
   var rows = all.filter(function (r) {
     var c = String(r.class || r.lop || "").trim();
     var n = String(r.name || r.hoTen || "").trim().toLowerCase();
