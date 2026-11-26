@@ -389,6 +389,59 @@ window.addEventListener("error", function (ev) {
       <button class="btn-start" id="btn-start" disabled>🚀 Bắt đầu thi</button>
     </div>
 
+    <!-- Bảng điểm + chưa nộp trên màn hình chính (theo từng bài) -->
+    <div id="main-boards" style="display:none;margin-top:20px;width:100%;max-width:100%">
+      <div id="public-scoreboard-main" style="border:1px solid #E2E8F0;border-radius:14px;overflow:hidden;background:#fff">
+        <div style="padding:12px 14px;background:linear-gradient(135deg,#EEF2FF,#E0E7FF);display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px">
+          <h3 style="margin:0;font-size:1rem;font-weight:800;color:#1E3A8A">📊 Bảng điểm tổng hợp</h3>
+          <div style="display:flex;flex-wrap:wrap;align-items:center;gap:8px">
+            <label style="font-size:.85rem;font-weight:600;color:#475569">Lọc lớp:</label>
+            <select id="main-sb-filter-class" style="padding:6px 10px;border:1px solid #CBD5E1;border-radius:8px;font-size:.85rem;font-family:inherit">
+              <option value="">Tất cả</option>
+            </select>
+            <input type="text" id="main-sb-search-name" placeholder="Tìm họ tên..." style="padding:6px 10px;border:1px solid #CBD5E1;border-radius:8px;font-size:.85rem;font-family:inherit;min-width:140px">
+          </div>
+        </div>
+        <div style="overflow:auto;max-height:360px">
+          <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+            <thead>
+              <tr style="background:#F8FAFC;position:sticky;top:0">
+                <th style="padding:10px 8px;text-align:center;color:#1E3A8A;font-weight:700">STT</th>
+                <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Thời gian nộp</th>
+                <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Lớp</th>
+                <th style="padding:10px 8px;text-align:left;color:#1E3A8A;font-weight:700">Họ và tên</th>
+                <th style="padding:10px 8px;text-align:center;color:#1E3A8A;font-weight:700">Tổng điểm</th>
+              </tr>
+            </thead>
+            <tbody id="main-sb-tbody">
+              <tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Đang tải…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div id="pending-scoreboard-main" style="margin-top:16px;border:1px solid #FED7AA;border-radius:14px;overflow:hidden;background:#fff">
+        <div style="padding:12px 14px;background:linear-gradient(135deg,#FFF7ED,#FFEDD5)">
+          <h3 style="margin:0;font-size:1rem;font-weight:800;color:#9A3412">📋 Học sinh chưa nộp bài</h3>
+        </div>
+        <div style="overflow:auto;max-height:300px">
+          <table style="width:100%;border-collapse:collapse;font-size:.88rem">
+            <thead>
+              <tr style="background:#FFFBEB;position:sticky;top:0">
+                <th style="padding:10px 8px;text-align:center;color:#9A3412;font-weight:700">STT</th>
+                <th style="padding:10px 8px;text-align:left;color:#9A3412;font-weight:700">Lớp</th>
+                <th style="padding:10px 8px;text-align:left;color:#9A3412;font-weight:700">Họ tên HS chưa nộp</th>
+                <th style="padding:10px 8px;text-align:center;color:#9A3412;font-weight:700">Điểm</th>
+                <th style="padding:10px 8px;text-align:left;color:#9A3412;font-weight:700">Hạn nộp theo lịch thi</th>
+              </tr>
+            </thead>
+            <tbody id="main-pending-tbody">
+              <tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
     <div class="teacher-panel" id="teacher-panel">
       <h3>📋 Quản trị điểm kiểm tra</h3>
       <div class="top-nav" style="justify-content:flex-start;margin-bottom:12px">
@@ -1290,6 +1343,27 @@ function parseWorkbook(wb) {
   try { if (typeof rescoreAllStored === "function") rescoreAllStored(); } catch(e) {}
   loadBar.style.display = "none";
   if (isAdmin) renderScoreTable();
+  // Hiện bảng điểm trên màn chính + kéo điểm cloud (nếu có)
+  const mainBoards = document.getElementById("main-boards");
+  if (mainBoards && currentExam) {
+    mainBoards.style.display = "block";
+    // Mở rộng card để bảng dễ đọc
+    const card = document.getElementById("select-card");
+    if (card) { card.style.maxWidth = "960px"; }
+  }
+  try {
+    if (typeof pullScoresFromCloud === "function") {
+      pullScoresFromCloud(true).then(function () {
+        try { renderPublicScoreboard(); } catch (e1) {}
+      }).catch(function () {
+        try { renderPublicScoreboard(); } catch (e2) {}
+      });
+    } else {
+      renderPublicScoreboard();
+    }
+  } catch (e3) {
+    try { renderPublicScoreboard(); } catch (e4) {}
+  }
 }
 
 function refreshClassDropdown() {
@@ -1506,6 +1580,10 @@ function exitAdminHint() {
     if (sel) sel.style.display = "flex";
     const statsBar = document.getElementById("stats-bar");
     if (statsBar) statsBar.style.display = "";
+    const mainBoards = document.getElementById("main-boards");
+    if (mainBoards) mainBoards.style.display = "none";
+    const card = document.getElementById("select-card");
+    if (card) { card.style.maxWidth = ""; }
     const title = document.getElementById("page-title");
     const sub = document.getElementById("page-sub");
     if (title) title.textContent = "📝 Kiểm tra thường xuyên – Tin học 11";
@@ -2547,19 +2625,19 @@ function rescoreAllStored() {
 }
 
 function renderPublicScoreboard() {
-  const tbody = document.getElementById("sb-tbody");
-  const pendingBody = document.getElementById("pending-tbody");
-  const filterSel = document.getElementById("sb-filter-class");
-  const searchInp = document.getElementById("sb-search-name");
-  if (!tbody) return;
+  // Hỗ trợ cả bảng màn chính (main-*) và bảng màn kết quả (sb-*)
+  const targets = [
+    { tbody: "main-sb-tbody", pending: "main-pending-tbody", filter: "main-sb-filter-class", search: "main-sb-search-name" },
+    { tbody: "sb-tbody", pending: "pending-tbody", filter: "sb-filter-class", search: "sb-search-name" }
+  ];
+  const hasAny = targets.some(function (t) { return document.getElementById(t.tbody); });
+  if (!hasAny) return;
 
-  // Chấm lại SA trước khi hiển thị
   rescoreAllStored();
 
   let list = [];
   try { list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]"); } catch (e) {}
 
-  // Gộp theo HS → điểm cao nhất
   const bestMap = {};
   list.forEach(function (r) {
     const k = (r.class || "") + "|" + (r.name || "");
@@ -2575,90 +2653,103 @@ function renderPublicScoreboard() {
       };
     }
   });
-  let rows = Object.keys(bestMap).map(function (k) { return bestMap[k]; });
 
-  // Tập lớp cho filter: tất cả lớp trong HocSinh + đã nộp (kể cả không có lịch)
   const allClassesSet = new Set();
   Object.keys(studentsByClass || {}).forEach(function (c) { allClassesSet.add(c); });
-  rows.forEach(function (r) { if (r.class) allClassesSet.add(r.class); });
+  Object.keys(bestMap).forEach(function (k) {
+    if (bestMap[k].class) allClassesSet.add(bestMap[k].class);
+  });
   const allClasses = Array.from(allClassesSet).sort(function (a, b) { return a.localeCompare(b, "vi"); });
 
-  if (filterSel) {
-    const cur = filterSel.value;
-    filterSel.innerHTML = '<option value="">Tất cả</option>' +
+  // Đồng bộ filter/search giữa 2 bảng: ưu tiên main nếu đang hiện
+  const mainFilter = document.getElementById("main-sb-filter-class");
+  const mainSearch = document.getElementById("main-sb-search-name");
+  const resFilter = document.getElementById("sb-filter-class");
+  const resSearch = document.getElementById("sb-search-name");
+  let filterCls = (mainFilter && mainFilter.offsetParent !== null ? mainFilter.value : "") || (resFilter ? resFilter.value : "") || "";
+  let qName = normalizeAnswer((mainSearch && mainSearch.value) || (resSearch && resSearch.value) || "");
+
+  function bindFilter(el) {
+    if (!el) return;
+    const cur = el.value || filterCls;
+    el.innerHTML = '<option value="">Tất cả</option>' +
       allClasses.map(function (c) { return '<option value="' + c + '">' + c + "</option>"; }).join("");
-    if (cur && allClasses.indexOf(cur) >= 0) filterSel.value = cur;
-    filterSel.onchange = function () { renderPublicScoreboard(); };
-  }
-  if (searchInp && !searchInp._bound) {
-    searchInp._bound = true;
-    searchInp.addEventListener("input", function () { renderPublicScoreboard(); });
-  }
-
-  const filterCls = filterSel ? filterSel.value : "";
-  const qName = searchInp ? normalizeAnswer(searchInp.value) : "";
-  if (filterCls) rows = rows.filter(function (r) { return r.class === filterCls; });
-  if (qName) rows = rows.filter(function (r) { return normalizeAnswer(r.name).indexOf(qName) >= 0; });
-
-  // Sắp xếp theo STT tăng dần
-  rows.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
-
-  if (!rows.length) {
-    tbody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu</td></tr>';
-  } else {
-    tbody.innerHTML = rows.map(function (r) {
-      return "<tr style=\"border-bottom:1px solid #E2E8F0\">" +
-        "<td style=\"padding:9px 8px;text-align:center;color:#64748B\">" + (r.stt < 99999 ? r.stt : "—") + "</td>" +
-        "<td style=\"padding:9px 8px;color:#64748B;font-size:.84rem\">" + (r.time || "—") + "</td>" +
-        "<td style=\"padding:9px 8px;font-weight:600\">" + (r.class || "—") + "</td>" +
-        "<td style=\"padding:9px 8px\">" + (r.name || "—") + "</td>" +
-        "<td style=\"padding:9px 8px;text-align:center;font-weight:800;color:#1D4ED8\">" + r.score + "</td>" +
-        "</tr>";
-    }).join("");
-  }
-
-  // —— Bảng chưa nộp ——
-  if (pendingBody) {
-    const submitted = {};
-    Object.keys(bestMap).forEach(function (k) { submitted[k] = true; });
-    let pending = [];
-    const order = window._studentOrder || [];
-    if (order.length) {
-      order.forEach(function (s) {
-        const k = s.class + "|" + s.name;
-        if (submitted[k]) return;
-        if (filterCls && s.class !== filterCls) return;
-        if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
-        pending.push({
-          stt: s.stt,
-          class: s.class,
-          name: s.name,
-          score: 0,
-          deadline: getDeadlineForClass(s.class)
-        });
-      });
-    } else {
-      Object.keys(studentsByClass || {}).sort().forEach(function (lop) {
-        if (filterCls && lop !== filterCls) return;
-        (studentsByClass[lop] || []).forEach(function (s) {
-          const k = lop + "|" + s.name;
-          if (submitted[k]) return;
-          if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
-          pending.push({
-            stt: s.stt != null ? s.stt : 99999,
-            class: lop,
-            name: s.name,
-            score: 0,
-            deadline: getDeadlineForClass(lop)
-          });
-        });
+    if (cur && allClasses.indexOf(cur) >= 0) el.value = cur;
+    if (!el._boundSb) {
+      el._boundSb = true;
+      el.addEventListener("change", function () {
+        // đồng bộ 2 dropdown
+        if (mainFilter && el !== mainFilter) mainFilter.value = el.value;
+        if (resFilter && el !== resFilter) resFilter.value = el.value;
+        renderPublicScoreboard();
       });
     }
-    pending.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
-    if (!pending.length) {
-      pendingBody.innerHTML = '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Không còn học sinh chưa nộp (theo bộ lọc)</td></tr>';
-    } else {
-      pendingBody.innerHTML = pending.map(function (r) {
+  }
+  function bindSearch(el) {
+    if (!el || el._boundSb) return;
+    el._boundSb = true;
+    el.addEventListener("input", function () {
+      if (mainSearch && el !== mainSearch) mainSearch.value = el.value;
+      if (resSearch && el !== resSearch) resSearch.value = el.value;
+      renderPublicScoreboard();
+    });
+  }
+  bindFilter(mainFilter);
+  bindFilter(resFilter);
+  bindSearch(mainSearch);
+  bindSearch(resSearch);
+  filterCls = (mainFilter && mainFilter.value) || (resFilter && resFilter.value) || "";
+  qName = normalizeAnswer((mainSearch && mainSearch.value) || (resSearch && resSearch.value) || "");
+
+  let rows = Object.keys(bestMap).map(function (k) { return bestMap[k]; });
+  if (filterCls) rows = rows.filter(function (r) { return r.class === filterCls; });
+  if (qName) rows = rows.filter(function (r) { return normalizeAnswer(r.name).indexOf(qName) >= 0; });
+  rows.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
+
+  const scoreRowsHtml = !rows.length
+    ? '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Chưa có dữ liệu điểm</td></tr>'
+    : rows.map(function (r) {
+        return "<tr style=\"border-bottom:1px solid #E2E8F0\">" +
+          "<td style=\"padding:9px 8px;text-align:center;color:#64748B\">" + (r.stt < 99999 ? r.stt : "—") + "</td>" +
+          "<td style=\"padding:9px 8px;color:#64748B;font-size:.84rem\">" + (r.time || "—") + "</td>" +
+          "<td style=\"padding:9px 8px;font-weight:600\">" + (r.class || "—") + "</td>" +
+          "<td style=\"padding:9px 8px\">" + (r.name || "—") + "</td>" +
+          "<td style=\"padding:9px 8px;text-align:center;font-weight:800;color:#1D4ED8\">" + r.score + "</td>" +
+          "</tr>";
+      }).join("");
+
+  const submitted = {};
+  Object.keys(bestMap).forEach(function (k) { submitted[k] = true; });
+  let pending = [];
+  const order = window._studentOrder || [];
+  if (order.length) {
+    order.forEach(function (s) {
+      const k = s.class + "|" + s.name;
+      if (submitted[k]) return;
+      if (filterCls && s.class !== filterCls) return;
+      if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
+      pending.push({ stt: s.stt, class: s.class, name: s.name, deadline: getDeadlineForClass(s.class) });
+    });
+  } else {
+    Object.keys(studentsByClass || {}).sort().forEach(function (lop) {
+      if (filterCls && lop !== filterCls) return;
+      (studentsByClass[lop] || []).forEach(function (s) {
+        const k = lop + "|" + s.name;
+        if (submitted[k]) return;
+        if (qName && normalizeAnswer(s.name).indexOf(qName) < 0) return;
+        pending.push({
+          stt: s.stt != null ? s.stt : 99999,
+          class: lop,
+          name: s.name,
+          deadline: getDeadlineForClass(lop)
+        });
+      });
+    });
+  }
+  pending.sort(function (a, b) { return (a.stt || 99999) - (b.stt || 99999); });
+  const pendingHtml = !pending.length
+    ? '<tr><td colspan="5" style="padding:16px;text-align:center;color:#94A3B8">Không còn học sinh chưa nộp (theo bộ lọc)</td></tr>'
+    : pending.map(function (r) {
         return "<tr style=\"border-bottom:1px solid #FED7AA\">" +
           "<td style=\"padding:9px 8px;text-align:center;color:#9A3412\">" + (r.stt < 99999 ? r.stt : "—") + "</td>" +
           "<td style=\"padding:9px 8px;font-weight:600\">" + (r.class || "—") + "</td>" +
@@ -2667,8 +2758,17 @@ function renderPublicScoreboard() {
           "<td style=\"padding:9px 8px;color:#B45309;font-size:.84rem\">" + (r.deadline || "—") + "</td>" +
           "</tr>";
       }).join("");
-    }
-  }
+
+  targets.forEach(function (t) {
+    const tb = document.getElementById(t.tbody);
+    const pb = document.getElementById(t.pending);
+    if (tb) tb.innerHTML = scoreRowsHtml;
+    if (pb) pb.innerHTML = pendingHtml;
+  });
+
+  // Hiện khối bảng trên màn chính khi đã chọn bài
+  const mainBoards = document.getElementById("main-boards");
+  if (mainBoards && currentExam) mainBoards.style.display = "block";
 }
 
 function renderResultBreakdown(reviewList, partScores, totalScore) {
@@ -2884,11 +2984,12 @@ function pushScoreToCloud(record) {
 }
 
 
-async function pullScoresFromCloud() {
+async function pullScoresFromCloud(silent) {
   const FALLBACK_WH = "https://script.google.com/macros/s/AKfycbxJMtyYe7GtyL5SE52x4xfhZOhjWm2GIB7qSK1U9ulUFLIz3Cff5LwhvrAwfsZPi-7A/exec";
   const FALLBACK_CSV = "https://docs.google.com/spreadsheets/d/1w4Xpif6fiFZFZQ2x9K5dx_SdHGlZYpmx4NVIL1Vx0F8/export?format=csv";
   const webhook = (localStorage.getItem("webh2t_webhook_url_tin11") || FALLBACK_WH).trim();
   const csvUrl = (localStorage.getItem("webh2t_cloud_read_url") || FALLBACK_CSV).trim();
+  silent = !!silent;
 
   let rows = null;
   let source = "";
@@ -2905,7 +3006,11 @@ async function pullScoresFromCloud() {
     return await res.text();
   }
 
-  const listDirect = webhook + (webhook.indexOf("?") >= 0 ? "&" : "?") + "action=list&t=" + Date.now();
+  let baiParam = "";
+  try {
+    if (currentExam && currentExam.code) baiParam = "&bai=" + encodeURIComponent(currentExam.code);
+  } catch (eBai) {}
+  const listDirect = webhook + (webhook.indexOf("?") >= 0 ? "&" : "?") + "action=list" + baiParam + "&t=" + Date.now();
   const listUrls = [
     "https://api.allorigins.win/raw?url=" + encodeURIComponent(listDirect),
     listDirect
@@ -2945,15 +3050,23 @@ async function pullScoresFromCloud() {
   }
 
   if (!rows || !rows.length) {
-    alert("Không tải được điểm từ cloud.\n\n1) Dán lại Apps Script đầy đủ và Deploy New version (Bất kỳ ai).\n2) Mở thử: " + listDirect + "\n   Phải thấy JSON [...]\n3) Thử lại Tải điểm từ cloud.");
+    if (!silent) {
+      alert("Không tải được điểm từ cloud.\n\n1) Dán lại Apps Script đầy đủ và Deploy New version (Bất kỳ ai).\n2) Mở thử: " + listDirect + "\n   Phải thấy JSON [...]\n3) Thử lại Tải điểm từ cloud.");
+    }
     return;
   }
 
   let list = JSON.parse(localStorage.getItem(getStorageKey()) || "[]");
   let added = 0, updated = 0;
+  const wantBai = (currentExam && currentExam.code) ? String(currentExam.code).toUpperCase() : "";
   rows.forEach(function (rec) {
     const r = typeof normalizeCloudRow_ === "function" ? normalizeCloudRow_(rec) : rec;
     if (!r.name || !r.class) return;
+    // Lọc theo mã bài nếu cloud có field bai/module
+    if (wantBai) {
+      const rowBai = String(r.bai || r.module || rec.bai || rec.module || "").toUpperCase();
+      if (rowBai && rowBai !== wantBai && rowBai.indexOf(wantBai) < 0) return;
+    }
     // Bỏ qua bản ghi cloud rỗng (không có điểm / pattern) nếu local đã có review đầy đủ
     const cloudEmpty = (r.score == null || r.score === "") && !r.pattern && !(r.review && r.review.length);
     const ix = list.findIndex(x => x.class === r.class && x.name === r.name);
@@ -2991,7 +3104,12 @@ async function pullScoresFromCloud() {
   });
   localStorage.setItem(getStorageKey(), JSON.stringify(list));
   if (typeof renderScoreTable === "function") renderScoreTable();
-  alert("Đã tải " + rows.length + " bài từ cloud (" + source + ").\nThêm mới: " + added + " · Cập nhật: " + updated + " · Tổng: " + list.length);
+  if (typeof renderPublicScoreboard === "function") {
+    try { renderPublicScoreboard(); } catch (eR) {}
+  }
+  if (!silent) {
+    alert("Đã tải " + rows.length + " bài từ cloud (" + source + ").\nThêm mới: " + added + " · Cập nhật: " + updated + " · Tổng: " + list.length);
+  }
 }
 
 function parseScoreCsv_(text) {
