@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>THỰC HÀNH | Practice – WEBH2T</title>
+  <link rel="icon" type="image/jpeg" href="assets/FAVICON.jpg" />
+  <!-- Google Analytics 4 – WEBH2T -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-JG88ZZBKGC', {
+      page_title: document.title,
+      page_location: window.location.href
+    });
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root {
+      --ink: #0a2f4a;
+      --teal: #00B4B4;
+      --teal-dark: #008C8C;
+      --chalk: #FFF9E6;
+      --muted: #64748b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+      background: linear-gradient(160deg, #f0faf9 0%, var(--chalk) 100%);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+      padding: 14px 22px;
+      background: linear-gradient(90deg, var(--ink), var(--teal-dark));
+      color: #fff;
+      box-shadow: 0 4px 18px rgba(0,0,0,.15);
+    }
+    .brand { font-weight: 800; font-size: 1.05rem; }
+    .brand span { font-weight: 500; opacity: .85; font-size: .9rem; margin-left: 8px; }
+    .topbar-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .view-badge {
+      background: rgba(255,255,255,.15);
+      border: 1px solid rgba(255,255,255,.28);
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: .9rem;
+      font-weight: 600;
+    }
+    .view-badge strong { font-size: 1.1rem; margin-left: 4px; }
+    .btn-home {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: #fff; color: var(--ink);
+      text-decoration: none; font-weight: 700; font-size: .92rem;
+      padding: 9px 16px; border-radius: 10px;
+      transition: .2s;
+    }
+    .btn-home:hover { background: #e0fafa; transform: translateY(-1px); }
+    main { max-width: 980px; margin: 0 auto; padding: 36px 20px 50px; }
+    h1 {
+      text-align: center; font-size: 1.85rem; font-weight: 800;
+      margin-bottom: 8px; color: var(--ink);
+    }
+    .sub {
+      text-align: center; color: var(--muted); margin-bottom: 32px;
+      font-size: 1.02rem;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    @media (max-width: 720px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      border: 1px solid rgba(0,180,180,.2);
+      box-shadow: 0 8px 28px rgba(0,80,80,.08);
+      padding: 28px 22px;
+      text-align: center;
+      text-decoration: none;
+      color: inherit;
+      transition: transform .25s, box-shadow .25s;
+      display: block;
+    }
+    .card:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 14px 36px rgba(0,120,120,.16);
+    }
+    .card .icon {
+      width: 64px; height: 64px; margin: 0 auto 16px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.6rem; color: #fff;
+    }
+    .card.py .icon { background: linear-gradient(135deg, #3776ab, #ffd43b); }
+    .card.cc .icon { background: linear-gradient(135deg, #00599c, #659ad2); }
+    .card.ht .icon { background: linear-gradient(135deg, #e44d26, #f16529); }
+    .card h2 { font-size: 1.2rem; font-weight: 800; margin-bottom: 8px; }
+    .card p { font-size: .9rem; color: var(--muted); line-height: 1.45; }
+    .card .views {
+      margin-top: 14px; font-size: .82rem; font-weight: 700;
+      color: var(--teal-dark);
+    }
+    .note {
+      text-align: center; margin-top: 28px; font-size: .85rem; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">WEBH2T <span>| Practice · THỰC HÀNH</span></div>
+    <div class="topbar-actions">
+      <div class="view-badge">👁 Lượt xem: <strong id="pageViewCount">—</strong></div>
+      <a class="btn-home" href="index.html"><i class="fas fa-home"></i> Về trang chủ</a>
+    </div>
+  </header>
+
+  <main>
+    <h1><i class="fas fa-code" style="color:var(--teal)"></i> THỰC HÀNH / Practice</h1>
+    <p class="sub">Chọn trình biên dịch để viết và chạy mã trực tuyến · Tin học THPT WEBH2T</p>
+
+    <div class="cards">
+      <a class="card py" href="thpython.html">
+        <div class="icon"><i class="fab fa-python"></i></div>
+        <h2>Python</h2>
+        <p>Trình biên dịch Python trực tuyến – viết, chạy và kiểm thử mã Python.</p>
+        <div class="views">Lượt xem: <span id="v-python">—</span></div>
+      </a>
+      <a class="card cc" href="thc.html">
+        <div class="icon"><i class="fas fa-file-code"></i></div>
+        <h2>C / C++</h2>
+        <p>Trình biên dịch C/C++ trực tuyến – thực hành thuật toán và cấu trúc dữ liệu.</p>
+        <div class="views">Lượt xem: <span id="v-c">—</span></div>
+      </a>
+      <a class="card ht" href="thhtml.html">
+        <div class="icon"><i class="fab fa-html5"></i></div>
+        <h2>HTML</h2>
+        <p>Trình biên dịch HTML – thiết kế và xem trước trang web ngay trong trình duyệt.</p>
+        <div class="views">Lượt xem: <span id="v-html">—</span></div>
+      </a>
+    </div>
+
+    <p class="note">
+      GA4: G-JG88ZZBKGC · CountAPI: <code>webh2t-thuchanh</code> ·
+      Trang con: <code>webh2t-python</code> · <code>webh2t-c</code> · <code>webh2t-html</code>
+    </p>
+  </main>
+
+  <script>
+    (function () {
+      var API = 'https://countapi.mileshilliard.com/api/v1/';
+      function getCount(key) {
+        return fetch(API + 'get/' + key)
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var n = parseInt(d.value, 10);
+            return isNaN(n) ? 0 : n;
+          })
+          .catch(function () { return 0; });
+      }
+      function hitCount(key) {
+        return fetch(API + 'hit/' + key)
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            var n = parseInt(d.value, 10);
+            return isNaN(n) ? 0 : n;
+          })
+          .catch(function () { return 0; });
+      }
+      hitCount('webh2t-thuchanh').then(function (n) {
+        var el = document.getElementById('pageViewCount');
+        if (el) el.textContent = n.toLocaleString('vi-VN');
+      });
+      Promise.all([
+        getCount('webh2t-python'),
+        getCount('webh2t-c'),
+        getCount('webh2t-html')
+      ]).then(function (vals) {
+        var ids = ['v-python', 'v-c', 'v-html'];
+        vals.forEach(function (n, i) {
+          var el = document.getElementById(ids[i]);
+          if (el) el.textContent = n.toLocaleString('vi-VN');
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

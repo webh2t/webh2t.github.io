@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trình biên dịch C/C++ | Practice – WEBH2T</title>
+  <link rel="icon" type="image/jpeg" href="assets/FAVICON.jpg" />
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-JG88ZZBKGC"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-JG88ZZBKGC', {
+      page_title: document.title,
+      page_location: window.location.href
+    });
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <style>
+    :root { --ink:#0a2f4a; --c:#00599c; }
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:system-ui,-apple-system,"Segoe UI",sans-serif; background:#f4f7fb; color:var(--ink); min-height:100vh; display:flex; flex-direction:column; }
+    .topbar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:12px 18px; background:linear-gradient(90deg,#0d2137,#00599c); color:#fff; }
+    .brand { font-weight:800; } .brand span { opacity:.85; font-weight:500; font-size:.9rem; margin-left:8px; }
+    .topbar-actions { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .view-badge { background:rgba(255,255,255,.15); border:1px solid rgba(255,255,255,.25); border-radius:999px; padding:6px 12px; font-size:.88rem; font-weight:600; }
+    .btn { display:inline-flex; align-items:center; gap:6px; background:#fff; color:var(--ink); text-decoration:none; font-weight:700; font-size:.88rem; padding:8px 14px; border-radius:10px; }
+    .btn:hover { background:#e3f2fd; }
+    main { flex:1; display:flex; flex-direction:column; max-width:1100px; width:100%; margin:0 auto; padding:16px; }
+    h1 { font-size:1.35rem; margin-bottom:10px; }
+    .frame-wrap { flex:1; min-height:70vh; border-radius:14px; overflow:hidden; border:1px solid #cde; box-shadow:0 8px 24px rgba(0,0,0,.08); background:#fff; }
+    iframe { width:100%; height:100%; min-height:70vh; border:0; }
+    .note { font-size:.8rem; color:#64748b; margin-top:10px; text-align:center; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">WEBH2T <span>| C / C++ Compiler</span></div>
+    <div class="topbar-actions">
+      <div class="view-badge">👁 <strong id="pageViewCount">—</strong></div>
+      <a class="btn" href="thuchanh.html"><i class="fas fa-code"></i> THỰC HÀNH</a>
+      <a class="btn" href="index.html"><i class="fas fa-home"></i> Trang chủ</a>
+    </div>
+  </header>
+  <main>
+    <h1><i class="fas fa-file-code" style="color:var(--c)"></i> Trình biên dịch C / C++</h1>
+    <div class="frame-wrap">
+      <iframe src="https://onecompiler.com/embed/cpp" title="C/C++ Online Compiler" allow="clipboard-read; clipboard-write"></iframe>
+    </div>
+    <p class="note">GA4: G-JG88ZZBKGC · CountAPI key: <code>webh2t-c</code> · Nguồn: OneCompiler (C++)</p>
+  </main>
+  <script>
+    fetch('https://countapi.mileshilliard.com/api/v1/hit/webh2t-c')
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        var n = parseInt(d.value, 10);
+        var el = document.getElementById('pageViewCount');
+        if (el) el.textContent = (isNaN(n) ? 0 : n).toLocaleString('vi-VN');
+      })
+      .catch(function () {});
+  </script>
+</body>
+</html>
